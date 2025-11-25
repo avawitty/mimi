@@ -1,0 +1,7 @@
+{
+  "name": "Mimi Zine Maker",
+  "description": "Aesthetic AI editor that transforms raw content into cinematic micro-zines.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
