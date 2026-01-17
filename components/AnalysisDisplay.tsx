@@ -1,1029 +1,619 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { ZineContent, ZinePage, ZineMetadata, Echo, ZineAnalysis, ToneTag, AspectRatio } from '../types';
-import { generateAudio, playAudio, createDebriefChat, getAspectRatioForTone, generateZineImage } from '../services/geminiService';
-import { Chat } from "@google/genai";
-import { fetchEchoes, addEcho, uploadBlob, addToPocket, deleteZine, deleteEcho, updateZine, uploadBase64Image } from '../services/firebase';
-import { useRecorder } from '../hooks/useRecorder';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { ZineMetadata, ZinePage, EditorElement, ToneTag } from '../types';
 import { useUser } from '../contexts/UserContext';
+import { generateAudio, refractTextLanguage } from '../services/geminiService';
+import { saveZineToProfile, addToPocket } from '../services/firebase';
+import { ChevronLeft, Volume2, Loader2, ArrowRight, CornerRightDown, Globe, Lock, Palette as PaletteIcon, FileText, Bookmark, Check, Download, Square, Languages, Share2, Mic, Settings2, Sparkles, AlertTriangle, Fingerprint, Eye } from 'lucide-react';
 import { Visualizer } from './Visualizer';
-import { Mic, Download, Loader2, Play, Pause, MessageCircle, Bookmark, Check, Trash2, Sparkles, Send, Grid, Layers, AlertTriangle } from 'lucide-react';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import { Tooltip } from './Tooltip';
+import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
+import { ZineLayoutEditor } from './ZineLayoutEditor';
 
-interface AnalysisDisplayProps {
-  metadata: ZineMetadata;
-  onReset: () => void;
-}
+const LANGUAGES = [
+  { label: 'Original', value: 'original' },
+  { label: '简体中文', value: 'Simplified Chinese' },
+  { label: '繁體中文', value: 'Traditional Chinese' },
+  { label: '日本語', value: 'Japanese' },
+  { label: 'Français', value: 'French' },
+  { label: 'Español', value: 'Spanish' }
+];
 
-// --- Cinematic Audio Effects ---
-const playCinematicReveal = () => {
-  try {
-    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContext) return;
-    
-    const ctx = new AudioContext();
-    
-    // Create noise buffer for "paper/whoosh" texture
-    const bufferSize = ctx.sampleRate * 2.0;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = Math.random() * 2 - 1;
-    }
-    
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-    
-    // Filter sweep to simulate movement
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(200, ctx.currentTime);
-    filter.frequency.exponentialRampToValueAtTime(2000, ctx.currentTime + 1.5);
-    
-    // Envelope for soft attack and release
-    const gain = ctx.createGain();
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 0.1); // Attack
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2); // Decay
-    
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-    
-    noise.start();
-  } catch (e) {
-    console.warn("Audio effect prevented by browser policy", e);
-  }
-};
-
-// --- Source Analysis Panel (The "Below" Band) ---
-const SourceAnalysisPanel: React.FC<{ analysis?: ZineAnalysis, userId?: string }> = ({ analysis, userId }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-
-  // If no analysis exists (legacy zine), do not render the panel
-  if (!analysis) return null;
-
-  const handleSavePalette = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!userId || isSaving || isSaved) return;
-
-    setIsSaving(true);
-    try {
-        await addToPocket(userId, 'palette', {
-           colors: analysis.visualPalette,
-           colorTheory: analysis.colorTheory,
-           emotions: analysis.emotionalPalette,
-           metaphor: analysis.centralMetaphor
-        });
-        setIsSaved(true);
-    } catch (e) {
-        console.error("Failed to save palette", e);
-    } finally {
-        setIsSaving(false);
-    }
-  };
-
-  return (
-    <div className="w-full max-w-2xl mx-auto mt-4 border-t border-stone-100 pt-4">
-      <div className="flex justify-between items-center">
-        <button 
-            onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center gap-2 font-sans text-[9px] uppercase tracking-widest text-nous-subtle hover:text-nous-text transition-colors"
-        >
-            <span>{isOpen ? 'Hide Analysis' : 'View Source Reading'}</span>
-            <span className="text-xs">{isOpen ? '−' : '+'}</span>
-        </button>
-
-        {isOpen && userId && (
-             <button 
-                onClick={handleSavePalette}
-                disabled={isSaved || isSaving}
-                className="flex items-center gap-2 font-sans text-[9px] uppercase tracking-widest text-nous-text hover:text-emerald-600 transition-colors disabled:opacity-50"
-             >
-                {isSaving ? <Loader2 size={10} className="animate-spin" /> : isSaved ? <Check size={10} /> : <Bookmark size={10} />}
-                {isSaved ? "Reading Saved" : "Save Reading"}
-             </button>
-        )}
-      </div>
-
-      {isOpen && (
-        <div className="mt-4 grid grid-cols-2 gap-6 animate-fade-in bg-stone-50 p-6 rounded-sm">
-          <div>
-            <div className="flex justify-between items-baseline mb-2">
-                <h4 className="font-sans text-[8px] uppercase tracking-[0.2em] text-stone-400">Visual Palette</h4>
-                {analysis.colorTheory && (
-                    <span className="font-sans text-[8px] uppercase tracking-widest text-nous-text">{analysis.colorTheory}</span>
-                )}
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {analysis.visualPalette?.map((color, i) => (
-                <div key={i} className="group relative">
-                  <div 
-                    className="w-8 h-8 rounded-full border border-stone-200 shadow-sm cursor-help transition-transform hover:scale-110"
-                    style={{ backgroundColor: color }}
-                  />
-                  {/* Tooltip now shows the Hex code */}
-                  <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-black/80 text-white text-[9px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 font-mono">
-                    {color}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h4 className="font-sans text-[8px] uppercase tracking-[0.2em] text-stone-400 mb-2">Emotional Tones</h4>
-             <div className="flex flex-wrap gap-2">
-              {analysis.emotionalPalette?.map((c, i) => (
-                <span key={i} className="font-serif text-sm italic text-nous-accent">{c}</span>
-              ))}
-            </div>
-          </div>
-          <div className="col-span-2">
-            <h4 className="font-sans text-[8px] uppercase tracking-[0.2em] text-stone-400 mb-2">Central Metaphor</h4>
-            <p className="font-serif text-lg italic text-nous-text leading-relaxed">"{analysis.centralMetaphor}"</p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Custom Media Player Components
-const AudioPlayer: React.FC<{ url: string }> = ({ url }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
-
-  const toggle = () => {
-    if (audioRef.current) {
-      if (isPlaying) audioRef.current.pause();
-      else audioRef.current.play();
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  return (
-    <div className="w-full border border-stone-200 p-4 flex items-center gap-4 bg-white/50 backdrop-blur-sm">
-      <audio ref={audioRef} src={url} onEnded={() => setIsPlaying(false)} className="hidden" />
-      <button onClick={toggle} className="w-8 h-8 flex items-center justify-center border border-stone-300 rounded-full hover:bg-stone-100 transition-colors">
-        {isPlaying ? (
-          <Pause className="w-3 h-3 text-nous-text" />
-        ) : (
-          <Play className="w-3 h-3 text-nous-text ml-0.5" />
-        )}
-      </button>
-      <div className="flex-1 h-px bg-stone-200 relative">
-        {isPlaying && <div className="absolute inset-0 bg-nous-text animate-[pulse_2s_infinite]" />}
-      </div>
-      <span className="text-[9px] uppercase tracking-widest text-nous-subtle">Voice Note</span>
-    </div>
-  );
-};
-
-const VideoLooper: React.FC<{ url: string }> = ({ url }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  return (
-      <video 
-        ref={videoRef}
-        src={url} 
-        autoPlay 
-        loop
-        muted 
-        playsInline 
-        className="w-full h-full object-cover grayscale contrast-125 brightness-90"
-        // Removed crossOrigin="anonymous" to fix broken icons if server doesn't support it for basic display
-      />
-  );
-};
-
-// Error-Handling Image Component
-const SafeImage: React.FC<{ src: string, alt: string, className?: string }> = ({ src, alt, className }) => {
-    const [hasError, setHasError] = useState(false);
-    
-    if (hasError) {
-        return (
-            <div className={`flex items-center justify-center bg-stone-100 text-stone-300 ${className}`}>
-                 <AlertTriangle size={16} />
-            </div>
-        )
-    }
-
-    return (
-        <img 
-            src={src} 
-            alt={alt} 
-            className={className} 
-            onError={() => setHasError(true)}
-            // Important: We do NOT use crossOrigin="anonymous" here for standard display
-            // This prevents broken image icons if the Firebase bucket isn't configured for strict CORS.
-        />
-    )
-}
-
-interface PageRendererProps {
-  page: ZinePage;
-  analysis?: ZineAnalysis;
-  tone: ToneTag;
-  userId?: string;
-  index: number;
-  zineTitle?: string;
-  zineId?: string;
-}
-
-const PageRenderer: React.FC<PageRendererProps> = ({ page, analysis, tone, userId, index, zineTitle, zineId }) => {
-  // Alternate aspect ratios based on index for mixed editorial feel
-  // Even index (excluding cover) = Landscape (16:9)
-  // Odd index = Portrait (9:16)
-  const isLandscape = index % 2 === 0;
-  const layoutRatio: AspectRatio = isLandscape ? '16:9' : '9:16';
+const PageRenderer: React.FC<{ page: ZinePage; index: number; onEdit: (idx: number, newImage?: string) => void }> = ({ page, index, onEdit }) => {
+  const isAlt = index % 2 !== 0;
   
-  // State for cover regeneration
-  const [coverUrl, setCoverUrl] = useState<string | null>(page.originalMediaUrl || null);
-  const [isGeneratingCover, setIsGeneratingCover] = useState(false);
-
-  // Determine Media Content
-  let mediaContent = null;
-  if (page.originalMediaUrl && page.mediaType === 'video') {
-    mediaContent = <VideoLooper url={page.originalMediaUrl} />;
-  } else if (page.originalMediaUrl && page.mediaType === 'audio') {
-    mediaContent = (
-      <div className="w-full h-full flex flex-col justify-center bg-stone-50 p-6">
-         <div className="w-full aspect-[4/3] flex items-center justify-center mb-4 border border-stone-200 bg-white">
-            <div className="text-center">
-              <Mic className="w-8 h-8 text-stone-300 mx-auto mb-2" />
-              <span className="font-sans text-[8px] uppercase tracking-widest text-stone-400">Audio Artifact</span>
-            </div>
-         </div>
-         <AudioPlayer url={page.originalMediaUrl} />
-      </div>
-    );
-  } else {
-    // If no user media, use the AI Visualizer.
-    const refImage = (page.originalMediaUrl && page.mediaType === 'image') ? page.originalMediaUrl : undefined;
-
-    mediaContent = (
-        <Visualizer 
-            prompt={page.imagePrompt} 
-            className={`w-full py-4`} 
-            defaultAspectRatio={layoutRatio} 
-            referenceImageUrl={refImage}
-        />
-    );
-  }
-
-  // Handle Cover Generation
-  const handleGenerateCover = async () => {
-    if (isGeneratingCover) return;
-    setIsGeneratingCover(true);
-    try {
-        const prompt = `Abstract, typographic, cinematic cover art for a zine titled "${zineTitle}". Metaphor: ${analysis?.centralMetaphor}. Minimalist editorial style.`;
-        const base64 = await generateZineImage(prompt, '3:4', '1K');
-        setCoverUrl(base64);
-        
-        // Persist to Firebase if zineId exists
-        if (zineId && zineId !== 'pending' && userId) {
-             try {
-                 const path = `covers/${zineId}/${Date.now()}.png`;
-                 const url = await uploadBase64Image(base64, path);
-                 await updateZine(zineId, { coverImageUrl: url });
-             } catch (err) {
-                 console.error("Failed to persist cover", err);
-             }
-        }
-    } catch (e) {
-        console.error("Failed to generate cover", e);
-    } finally {
-        setIsGeneratingCover(false);
-    }
-  };
-
-  // --- COLLAGE (EVIDENCE TABLE) ---
-  if (page.layoutType === 'collage') {
-      const artifacts = page.artifacts || (page.originalMediaUrl ? [{url: page.originalMediaUrl, type: page.mediaType || 'image'}] : []);
-      
-      return (
-        <div className="w-full mb-24 px-4">
-             <div className="flex items-center gap-4 mb-8 justify-center">
-                 <div className="h-px w-12 bg-stone-300" />
-                 <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-nous-subtle">
-                     {page.headline || "Evidence Table"}
-                 </span>
-                 <div className="h-px w-12 bg-stone-300" />
-             </div>
-
-             <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
-                 {artifacts.map((art, i) => (
-                     <div key={i} className="break-inside-avoid bg-white p-2 shadow-sm border border-stone-100 transform hover:rotate-1 transition-transform duration-300">
-                         {art.type === 'video' ? <VideoLooper url={art.url} /> :
-                          art.type === 'audio' ? <div className="p-4 bg-stone-50"><AudioPlayer url={art.url}/></div> :
-                          <SafeImage src={art.url} alt="Artifact" className="w-full h-auto grayscale hover:grayscale-0 transition-all duration-700" />
-                         }
-                         {art.caption && <p className="mt-2 font-mono text-[9px] text-stone-400">{art.caption}</p>}
-                     </div>
-                 ))}
-             </div>
-             
-             {page.bodyCopy && (
-                 <p className="mt-8 text-center font-serif italic text-stone-500 max-w-lg mx-auto">
-                     {page.bodyCopy}
-                 </p>
-             )}
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 1.2 }}
+      viewport={{ once: true, margin: "-50px" }}
+      className={`zine-page relative mb-24 md:mb-[40rem] flex flex-col items-start w-full border-t border-stone-100 dark:border-stone-800 pt-12 md:pt-32`}
+    >
+      <div className={`z-10 w-full max-w-7xl flex flex-col ${isAlt ? 'md:flex-row-reverse' : 'md:flex-row'} gap-8 md:gap-32 items-start`}>
+        <div className="absolute -top-10 left-0 md:-left-12 opacity-5 dark:opacity-10 pointer-events-none">
+           <span className="font-serif italic text-6xl md:text-[12rem] tracking-tighter leading-none select-none">
+             0{index + 1}
+           </span>
         </div>
-      );
-  }
 
-  // --- SOURCE ARTIFACT (RAW SIGNAL) ---
-  if (page.layoutType === 'source-artifact') {
-    return (
-      <div className="w-full mb-24 flex flex-col items-center justify-center border-l-2 border-nous-text pl-8 py-12 bg-stone-50/50 opacity-0 animate-slide-up">
-        <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-nous-subtle mb-8 block w-full">
-           Raw Signal // {page.headline || "The Spark"}
-        </span>
-        
-        {page.originalMediaUrl ? (
-           <div className="w-full max-w-lg shadow-lg bg-white p-2 border border-stone-200 transform rotate-1">
-              {page.mediaType === 'video' ? <VideoLooper url={page.originalMediaUrl} /> : 
-               page.mediaType === 'audio' ? (
-                  <div className="p-8 border border-stone-100">
-                    <p className="font-serif italic text-stone-400 mb-6 text-center">"Voice Note recorded at origin."</p>
-                    <AudioPlayer url={page.originalMediaUrl} />
-                  </div>
-               ) :
-               <SafeImage src={page.originalMediaUrl} className="w-full object-cover grayscale contrast-110" alt="Source" />
-              }
+        <div className="w-full md:w-3/5 magazine-border p-3 md:p-6 bg-white dark:bg-stone-950 shadow-[0_30px_60px_rgba(0,0,0,0.1)] overflow-hidden group">
+            <div className="relative overflow-hidden aspect-[4/5] bg-stone-50 dark:bg-stone-900">
+               <Visualizer 
+                  prompt={page.imagePrompt} 
+                  initialImage={page.originalMediaUrl}
+                  defaultAspectRatio='3:4' 
+                  className="h-full" 
+                  onUpdate={(newImage) => onEdit(index, newImage)}
+               />
+            </div>
+        </div>
+
+        <div className="w-full md:w-2/5 space-y-6 md:space-y-16 px-2 md:px-0">
+           <div className="flex items-center gap-4 md:gap-6 text-stone-200 dark:text-stone-800">
+              <span className="font-sans text-[7px] md:text-[10px] uppercase tracking-[0.6em] md:tracking-[0.8em] font-black shrink-0">LOG_FRAG_{index.toString().padStart(2, '0')}</span>
+              <div className="flex-1 h-px bg-current" />
            </div>
-        ) : (
-          <p className="font-mono text-lg md:text-xl text-nous-text leading-relaxed whitespace-pre-wrap max-w-2xl">
-             "{page.bodyCopy}"
-          </p>
-        )}
-        
-        <p className="mt-8 font-serif italic text-stone-400 text-sm">
-           {page.subhead || "Archived from input stream."}
-        </p>
-      </div>
-    );
-  }
 
-  // THREE-BAND STRUCTURE FOR VISUAL PAGES
-  if (page.layoutType === 'full-bleed-image' || page.layoutType === 'text-spread') {
-     // Process body copy for staggered animations
-     const copyLines = page.bodyCopy ? page.bodyCopy.split('\n').filter(line => line.trim() !== '') : [];
-
-     return (
-       <div className="w-full mb-24">
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
-           
-           {/* BAND 1: LEFT (Concept) */}
-           <div className={`order-2 md:order-1 flex flex-col justify-center h-full py-8 ${isLandscape ? 'md:pr-12' : ''}`}>
+           <div className="space-y-6 md:space-y-12">
               {page.headline && (
-                <h2 className="font-serif text-3xl italic text-nous-text mb-6 opacity-0 animate-slide-up" style={{ animationDelay: '200ms' }}>
+                <h2 className="font-serif text-4xl md:text-8xl italic tracking-tighter leading-[0.9] text-nous-text dark:text-white font-light text-balance">
                   {page.headline}
                 </h2>
               )}
-              
-              {copyLines.length > 0 && (
-                <div className="font-serif text-lg leading-loose text-nous-accent/90">
-                  {copyLines.map((line, i) => (
-                    <p 
-                      key={i} 
-                      className="opacity-0 animate-slide-up mb-4 last:mb-0" 
-                      style={{ animationDelay: `${400 + (i * 150)}ms` }}
-                    >
-                      {line}
-                    </p>
-                  ))}
+              {page.bodyCopy && (
+                <div className="space-y-6 md:space-y-10">
+                  <p className="font-serif text-xl md:text-4xl italic text-stone-500 dark:text-stone-400 leading-[1.3] drop-cap">
+                    {page.bodyCopy}
+                  </p>
+                  <div className="flex items-center gap-3 text-nous-text dark:text-white group cursor-pointer pt-2" onClick={() => onEdit(index)}>
+                     <span className="font-sans text-[8px] md:text-[9px] uppercase tracking-[0.4em] md:tracking-[0.6em] font-black border-b border-stone-200 dark:border-stone-800 group-hover:border-current transition-all">Calibrate Spread</span>
+                     <ArrowRight size={12} className="group-hover:translate-x-2 transition-transform" />
+                  </div>
                 </div>
               )}
-
-              {page.subhead && (
-                <p className="mt-4 font-sans text-xs uppercase tracking-widest text-stone-400 opacity-0 animate-slide-up" style={{ animationDelay: `${600 + (copyLines.length * 100)}ms` }}>
-                  {page.subhead}
-                </p>
-              )}
            </div>
-
-           {/* BAND 2: RIGHT (Vision) */}
-           <div className="order-1 md:order-2 opacity-0 animate-fade-in flex flex-col items-center" style={{ animationDelay: '300ms' }}>
-             {mediaContent}
-             {page.audioNotes && (
-               <p className="mt-2 font-sans text-[9px] text-nous-subtle text-right w-full max-w-md">Sound: {page.audioNotes}</p>
-             )}
-           </div>
-         </div>
-
-         {/* BAND 3: BOTTOM (Analysis) */}
-         <div className="opacity-0 animate-fade-in" style={{ animationDelay: '800ms' }}>
-            <SourceAnalysisPanel analysis={analysis} userId={userId} />
-         </div>
-       </div>
-     );
-  }
-
-  switch (page.layoutType) {
-    case 'cover':
-      return (
-        <div className={`w-full aspect-[3/4] md:aspect-[4/3] flex flex-col items-center justify-center border border-stone-200 bg-white p-12 mb-16 shadow-lg relative overflow-hidden group transition-all duration-700`}>
-          {coverUrl && (
-             <div className="absolute inset-0 z-0">
-               {page.mediaType === 'video' ? (
-                 <video src={coverUrl} autoPlay loop muted className="w-full h-full object-cover opacity-30 grayscale contrast-125" />
-               ) : (
-                 <SafeImage src={coverUrl} alt="Cover" className="w-full h-full object-cover opacity-30 grayscale contrast-125 scale-105 group-hover:scale-100 transition-transform duration-[2s]" />
-               )}
-               <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/50 to-white/20 backdrop-blur-[1px]" />
-             </div>
-          )}
-          
-          <div className="z-10 flex flex-col items-center relative mix-blend-multiply text-center max-w-3xl">
-            <span className="font-sans text-[9px] tracking-[0.4em] uppercase text-nous-subtle mb-8 opacity-0 animate-slide-up" style={{ animationDelay: '200ms' }}>
-              Issue No. 1
-            </span>
-            <h1 className="font-serif text-6xl md:text-8xl italic text-nous-text mb-8 leading-[0.85] tracking-tight opacity-0 animate-slide-up drop-shadow-sm" style={{ animationDelay: '400ms' }}>
-              {page.headline}
-            </h1>
-            {page.subhead && (
-              <p className="font-sans text-xs md:text-sm tracking-[0.2em] uppercase text-nous-accent mt-4 border-t border-nous-accent/30 pt-4 opacity-0 animate-slide-up" style={{ animationDelay: '600ms' }}>
-                {page.subhead}
-              </p>
-            )}
-          </div>
-
-          {/* Generate Cover Button */}
-          {userId && (
-            <div className="absolute bottom-6 right-6 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button 
-                    onClick={handleGenerateCover}
-                    disabled={isGeneratingCover}
-                    className="flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-md border border-stone-200 rounded-sm hover:border-nous-text transition-colors shadow-sm font-sans text-[9px] uppercase tracking-widest text-nous-text"
-                >
-                    {isGeneratingCover ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-                    {coverUrl ? 'Regenerate Cover' : 'Generate Cover'}
-                </button>
-            </div>
-          )}
         </div>
-      );
-
-    case 'minimal-quote':
-      return (
-        <div className="w-full min-h-[60vh] flex flex-col items-center justify-center px-8 py-16 mb-16 border-y border-transparent hover:border-stone-100 transition-colors">
-          <p className="font-serif text-3xl md:text-5xl leading-relaxed text-center text-nous-text max-w-3xl opacity-0 animate-slide-up" style={{ animationDelay: '200ms' }}>
-            "{page.headline}"
-          </p>
-          {page.originalMediaUrl && page.mediaType === 'audio' && (
-             <div className="mt-8 w-full max-w-xs animate-fade-in" style={{ animationDelay: '300ms' }}>
-               <AudioPlayer url={page.originalMediaUrl} />
-             </div>
-          )}
-          {page.bodyCopy && (
-            <p className="mt-8 font-sans text-xs tracking-widest text-nous-subtle max-w-md text-center leading-loose opacity-0 animate-slide-up" style={{ animationDelay: '400ms' }}>
-              {page.bodyCopy}
-            </p>
-          )}
-        </div>
-      );
-
-    case 'credits':
-      return (
-        <div className="w-full flex flex-col items-center justify-center py-24 mb-16 text-center animate-fade-in" style={{ animationDelay: '200ms' }}>
-            <h3 className="font-serif text-2xl italic text-nous-text mb-4">{page.headline}</h3>
-            <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle">{page.bodyCopy}</p>
-        </div>
-      );
-
-    default:
-      return null;
-  }
-};
-
-const EchoList: React.FC<{ zineId: string, zineOwnerId: string }> = ({ zineId, zineOwnerId }) => {
-  const [echoes, setEchoes] = useState<Echo[]>([]);
-  const [footnoteInput, setFootnoteInput] = useState('');
-  const [isSubmittingFootnote, setIsSubmittingFootnote] = useState(false);
-  const { user } = useUser();
-
-  useEffect(() => {
-    if (zineId !== 'pending') {
-      fetchEchoes(zineId).then(setEchoes);
-    }
-  }, [zineId]);
-
-  const handleAddFootnote = async () => {
-    if (!footnoteInput.trim() || !user || zineId === 'pending') return;
-    setIsSubmittingFootnote(true);
-    try {
-        const newEcho: Omit<Echo, 'id'> = {
-            userId: user.uid,
-            userHandle: user.displayName || user.email?.split('@')[0] || 'User',
-            type: 'text',
-            text: footnoteInput,
-            timestamp: Date.now()
-        };
-        const id = await addEcho(zineId, newEcho);
-        setEchoes(prev => [...prev, { ...newEcho, id } as Echo]);
-        setFootnoteInput('');
-    } catch (e) {
-        console.error("Failed to add footnote", e);
-    } finally {
-        setIsSubmittingFootnote(false);
-    }
-  };
-
-  const handleDeleteEcho = async (echoId: string) => {
-      try {
-          await deleteEcho(zineId, echoId);
-          setEchoes(prev => prev.filter(e => e.id !== echoId));
-      } catch (e) {
-          console.error("Failed to delete echo", e);
-      }
-  };
-
-  return (
-    <div className="w-full mt-12 mb-24 border-t border-stone-200 pt-12 animate-fade-in">
-       <div className="flex items-center gap-3 mb-8 justify-center">
-         <MessageCircle className="w-4 h-4 text-nous-subtle" />
-         <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] text-nous-subtle">Clique Echoes & Footnotes</h3>
-       </div>
-
-       {/* List of Echoes/Footnotes */}
-       <div className="flex flex-col gap-4 max-w-md mx-auto mb-8">
-         {echoes.length === 0 && (
-             <p className="text-center font-sans text-[9px] uppercase tracking-widest text-stone-300">No echoes yet.</p>
-         )}
-         {echoes.map((echo) => (
-           <div key={echo.id} className="group relative flex items-start gap-4 bg-white p-4 border border-stone-100 rounded-sm">
-              <div className="flex-shrink-0">
-                 <div className="w-6 h-6 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-[10px] text-stone-500 font-sans uppercase">
-                    {echo.userHandle.slice(0,1)}
-                 </div>
-              </div>
-              <div className="flex-1">
-                 {echo.type === 'text' || echo.text ? (
-                     <p className="font-serif text-sm text-nous-text mt-0.5">{echo.text}</p>
-                 ) : (
-                     <AudioPlayer url={echo.audioUrl || ''} />
-                 )}
-                 <div className="mt-2 flex gap-2 items-center">
-                    <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400">{echo.userHandle}</span>
-                    <span className="text-[7px] text-stone-300 font-sans">• {new Date(echo.timestamp).toLocaleDateString()}</span>
-                 </div>
-              </div>
-              
-              {/* Delete Button (If Zine Owner) */}
-              {user && user.uid === zineOwnerId && (
-                  <button 
-                    onClick={() => handleDeleteEcho(echo.id)}
-                    className="absolute top-2 right-2 p-1 bg-white border border-stone-100 rounded-full text-stone-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
-                    title="Delete Echo"
-                  >
-                      <Trash2 size={10} />
-                  </button>
-              )}
-           </div>
-         ))}
-       </div>
-
-       {/* Add Footnote Input */}
-       {user && zineId !== 'pending' && (
-           <div className="max-w-md mx-auto flex gap-2">
-               <input 
-                  value={footnoteInput}
-                  onChange={(e) => setFootnoteInput(e.target.value)}
-                  placeholder="Leave a footnote..."
-                  className="flex-1 bg-stone-50 border border-stone-200 p-3 font-serif text-sm focus:outline-none focus:border-nous-text rounded-sm"
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddFootnote()}
-               />
-               <button 
-                 onClick={handleAddFootnote}
-                 disabled={!footnoteInput.trim() || isSubmittingFootnote}
-                 className="px-4 bg-white border border-stone-200 hover:border-nous-text text-nous-text rounded-sm disabled:opacity-50"
-               >
-                  {isSubmittingFootnote ? <Loader2 size={14} className="animate-spin"/> : <Send size={14} />}
-               </button>
-           </div>
-       )}
-    </div>
+      </div>
+    </motion.div>
   );
 };
 
-const FloatingNousMic: React.FC<{ zineId: string }> = ({ zineId }) => {
+const PaintChip: React.FC<{ color: string; label: string; zineTitle: string }> = ({ color, label, zineTitle }) => {
   const { user } = useUser();
-  const { isRecording, startRecording, stopRecording, audioBlob, resetRecording } = useRecorder();
-  const [isUploading, setIsUploading] = useState(false);
-
-  useEffect(() => {
-    const saveEcho = async () => {
-      if (audioBlob && user && zineId && zineId !== 'pending') {
-        setIsUploading(true);
-        try {
-          const url = await uploadBlob(audioBlob, `echoes/${zineId}/${Date.now()}.webm`);
-          const newEcho: Omit<Echo, 'id'> = {
-            userId: user.uid,
-            userHandle: user.displayName || 'Guest',
-            type: 'audio',
-            audioUrl: url,
-            timestamp: Date.now(),
-            duration: 0 
-          };
-          await addEcho(zineId, newEcho);
-          resetRecording();
-        } catch (e) {
-          console.error("Failed to save echo", e);
-        } finally {
-          setIsUploading(false);
-        }
-      }
-    };
-    saveEcho();
-  }, [audioBlob, user, zineId, resetRecording]);
-
-  if (!user || zineId === 'pending') return null;
-
-  return (
-    <button
-      onClick={isRecording ? stopRecording : startRecording}
-      disabled={isUploading}
-      className={`
-        fixed bottom-24 right-6 md:bottom-12 md:right-12 z-50
-        w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300
-        ${isRecording ? 'bg-red-500 scale-110' : 'bg-nous-text hover:scale-105'}
-        ${isUploading ? 'opacity-70 cursor-wait' : 'cursor-pointer'}
-      `}
-      title="Think for us (Record Echo)"
-    >
-      {isUploading ? (
-         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-      ) : isRecording ? (
-         <div className="w-4 h-4 bg-white rounded-sm animate-pulse" />
-      ) : (
-         <Mic className="text-nous-base w-6 h-6" strokeWidth={1.5} />
-      )}
-    </button>
-  );
-};
-
-const DebriefChat: React.FC<{ context: ZineContent, onClose: () => void }> = ({ context, onClose }) => {
-  const [messages, setMessages] = useState<{role: 'user' | 'model', text: string}[]>([]);
-  const [input, setInput] = useState('');
+  const [isSaved, setIsSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const chatRef = useRef<Chat | null>(null);
-  
-  useEffect(() => {
-      chatRef.current = createDebriefChat(context);
-      setMessages([{ role: 'model', text: `I've finished curating "${context.title}". How does it feel to see it laid out like this?` }]);
-  }, [context]);
-  
-  const handleSend = async () => {
-    if (!input.trim() || isLoading || !chatRef.current) return;
-    const userMsg = input;
-    setInput('');
-    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
-    setIsLoading(true);
 
+  const handleCapture = async () => {
+    if (!user || isSaved || isLoading) return;
+    setIsLoading(true);
     try {
-      const result = await chatRef.current.sendMessage({ message: userMsg });
-      setMessages(prev => [...prev, { role: 'model', text: result.text || "..." }]);
+      await navigator.clipboard.writeText(color.toUpperCase());
+      await addToPocket(user.uid, 'palette', { 
+        colors: [color], 
+        zineTitle: zineTitle,
+        colorTheory: `Frequency extraction: ${label} from ${zineTitle}`
+      });
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 3000);
     } catch (e) {
-      console.error(e);
+      console.error("MIMI // Chip Extraction Failure:", e);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm flex items-end md:items-center justify-center p-4">
-      <div className="bg-nous-base w-full max-w-md h-[80vh] md:h-[600px] shadow-2xl flex flex-col animate-slide-up border border-stone-200">
-        <div className="p-4 border-b border-stone-200 flex justify-between items-center bg-white">
-          <span className="font-sans text-[10px] uppercase tracking-[0.2em] text-nous-text">Debrief with Mimi</span>
-          <button onClick={onClose} className="text-stone-400 hover:text-nous-text">✕</button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {messages.map((m, i) => (
-            <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] p-4 ${m.role === 'user' ? 'bg-stone-100 text-nous-text' : 'bg-transparent border border-stone-200 text-nous-accent'}`}>
-                <p className="font-serif text-sm leading-relaxed">{m.text}</p>
-              </div>
-            </div>
-          ))}
-          {isLoading && <div className="text-center text-[10px] uppercase animate-pulse text-stone-300">Mimi is thinking...</div>}
-        </div>
-        <div className="p-4 border-t border-stone-200 bg-white">
-          <div className="flex gap-2">
-            <input 
-              className="flex-1 bg-stone-50 border-none p-3 font-serif text-sm focus:ring-1 focus:ring-stone-300 outline-none"
-              placeholder="Type your thought..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            />
-            <button onClick={handleSend} disabled={isLoading} className="px-4 font-sans text-xs uppercase tracking-widest text-nous-text hover:bg-stone-100 transition-colors">
-              Send
-            </button>
+    <motion.div 
+      whileHover={{ y: -12, scale: 1.02 }}
+      className="flex flex-col w-32 md:w-48 bg-white dark:bg-stone-900 shadow-[0_20px_40px_rgba(0,0,0,0.08)] border border-stone-100 dark:border-stone-800 overflow-hidden group cursor-pointer"
+      onClick={handleCapture}
+    >
+      <div className="h-40 md:h-64 w-full relative" style={{ backgroundColor: color || '#A8A29E' }}>
+        <AnimatePresence>
+          {(isSaved || isLoading) && (
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/10 backdrop-blur-sm flex items-center justify-center"
+            >
+              {isLoading ? <Loader2 className="animate-spin text-white" size={24} /> : <Check className="text-white" size={24} />}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+      <div className="p-4 md:p-6 space-y-2">
+        <div className="flex justify-between items-center">
+          <span className="font-sans text-[8px] uppercase tracking-[0.3em] font-black text-stone-400">{label}</span>
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+            <Bookmark size={10} className="text-nous-text dark:text-white" />
           </div>
         </div>
+        <div className="font-mono text-[10px] md:text-xs uppercase tracking-widest text-nous-text dark:text-white font-bold">
+          {color || '#A8A29E'}
+        </div>
       </div>
-    </div>
+      <div className="h-1 w-full bg-stone-50 dark:bg-stone-800 opacity-20" />
+    </motion.div>
   );
 };
 
-const ArtifactsDeck: React.FC<{ pages: ZinePage[] }> = ({ pages }) => {
-    // Collect all pages that have an original media URL (inputs)
-    const artifacts = pages.filter(p => p.originalMediaUrl || (p.artifacts && p.artifacts.length > 0));
-    
-    // Flatten if needed (for collage pages)
-    const allArtifacts: {url: string, type: string, caption?: string}[] = [];
-    artifacts.forEach(p => {
-        if (p.artifacts) {
-            allArtifacts.push(...p.artifacts);
-        } else if (p.originalMediaUrl) {
-            allArtifacts.push({
-                url: p.originalMediaUrl,
-                type: p.mediaType || 'image',
-                caption: p.headline || "Source Fragment"
-            });
-        }
-    });
-
-    if (allArtifacts.length === 0) return null;
-
-    return (
-        <div className="w-full max-w-2xl mx-auto mb-24 pt-12 border-t border-stone-100">
-             <div className="flex items-center gap-3 mb-8">
-                 <Grid className="w-4 h-4 text-nous-subtle" />
-                 <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] text-nous-subtle">Evidence & Artifacts Table</h3>
-             </div>
-             
-             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                 {allArtifacts.map((art, i) => (
-                     <div key={i} className="group relative aspect-square bg-stone-100 overflow-hidden border border-stone-200 cursor-help">
-                         {art.type === 'video' ? (
-                             <VideoLooper url={art.url} />
-                         ) : art.type === 'audio' ? (
-                             <div className="w-full h-full flex items-center justify-center bg-stone-900 text-white">
-                                 <Mic size={20} />
-                             </div>
-                         ) : (
-                             <SafeImage src={art.url} alt="Artifact" className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500" />
-                         )}
-                         
-                         {/* WARNING / CAPTION OVERLAY */}
-                         <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/80 text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                             <p className="font-mono text-[9px] uppercase truncate">{art.caption || `Artifact ${i+1}`}</p>
-                         </div>
-                         
-                         {/* CORNER MARKER */}
-                         <div className="absolute top-0 right-0 p-1 bg-white/20 backdrop-blur-sm">
-                            <span className="font-mono text-[8px] font-bold text-white px-1">{i+1}</span>
-                         </div>
-                     </div>
-                 ))}
-             </div>
-        </div>
-    );
-};
-
-
-export const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ metadata, onReset }) => {
-  const { user } = useUser();
+export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => void }> = ({ metadata: initialMetadata, onReset }) => {
+  const { user, profile } = useUser();
+  const [metadata, setMetadata] = useState(initialMetadata);
+  const [originalMetadata] = useState(initialMetadata);
+  const [editingPageIndex, setEditingPageIndex] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
-  const [showDebrief, setShowDebrief] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const zineContainerRef = useRef<HTMLDivElement>(null);
-  const data = metadata.content;
+  const [isTransmissionLoading, setIsTransmissionLoading] = useState(false);
+  const [isPublic, setIsPublic] = useState(!!initialMetadata.isPublic);
+  const [shimmer, setShimmer] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [showLangMenu, setShowLangMenu] = useState(false);
+  const [currentLang, setCurrentLang] = useState('original');
+  const [isSharing, setIsSharing] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showThoughtReveal, setShowThoughtReveal] = useState(false);
+  const [isRotaryOpen, setIsRotaryOpen] = useState(false);
+  const rotaryRotate = useMotionValue(0);
+  const rotarySpring = useSpring(rotaryRotate, { stiffness: 60, damping: 15 });
 
-  // Trigger cinematic reveal sound on mount
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
+
+  // Structural Risk Assessment Logic
+  const museRegister = ['Ava', 'Catherine', 'Giselle', 'Paige', 'Jessica Yeunge', 'Milton', 'Amaan', 'Vyan'];
+  const hasSubjectSignal = museRegister.some(name => 
+    metadata.title.includes(name) || 
+    (metadata.content.originalThought && metadata.content.originalThought.includes(name)) ||
+    (metadata.content.expanded_reflection && metadata.content.expanded_reflection.includes(name))
+  );
+
   useEffect(() => {
-    playCinematicReveal();
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (sourceNodeRef.current) sourceNodeRef.current.stop();
+      if (audioCtxRef.current) audioCtxRef.current.close();
+    };
   }, []);
 
-  const handlePlayAudio = async () => {
-    if (isPlaying || isLoadingAudio) return;
-    
-    setIsLoadingAudio(true);
-    try {
-      const buffer = await generateAudio(data.voiceoverScript);
-      playAudio(buffer);
-      setIsPlaying(true);
-      setTimeout(() => setIsPlaying(false), buffer.duration * 1000);
-    } catch (e) {
-      console.error("Audio failed", e);
-    } finally {
-      setIsLoadingAudio(false);
+  const initAudio = async () => {
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
     }
+    if (audioCtxRef.current.state === 'suspended') {
+      await audioCtxRef.current.resume();
+    }
+    return audioCtxRef.current;
   };
 
-  const handleDeleteZine = async () => {
-      if (confirm("Are you sure you want to delete this issue? This action cannot be undone.")) {
-          setIsDeleting(true);
-          try {
-              if (metadata.id) {
-                 await deleteZine(metadata.id);
-              }
-              onReset();
-          } catch (e) {
-              console.error("Delete failed", e);
-              setIsDeleting(false);
-          }
-      }
-  };
+  const handleTranslate = async (lang: string) => {
+    if (lang === 'original') {
+      setMetadata(originalMetadata);
+      setCurrentLang('original');
+      setShowLangMenu(false);
+      return;
+    }
 
-  const handleExportPDF = async () => {
-    if (!zineContainerRef.current || isExporting) return;
-    setIsExporting(true);
-    
+    setIsTranslating(true);
+    setShimmer(true);
+    setShowLangMenu(false);
     try {
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const container = zineContainerRef.current;
-      const originalChildren = Array.from(container.children) as HTMLElement[];
-      
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-
-      for (let i = 0; i < originalChildren.length; i++) {
-        const element = originalChildren[i];
-        
-        // PRE-PROCESSING: Convert all remote images to Base64 to bypass CORS during html2canvas
-        // We do this by iterating the live DOM element before capture
-        const images = element.getElementsByTagName('img');
-        const originalSrcs = new Map<HTMLImageElement, string>();
-
-        for (let j = 0; j < images.length; j++) {
-            const img = images[j];
-            const src = img.src;
-            // Skip if already data URI
-            if (src.startsWith('data:')) continue;
-
-            try {
-                // Store original to revert later
-                originalSrcs.set(img, src);
-                
-                // Fetch as blob to get around strict cross-origin checks on simple img tags
-                const response = await fetch(src);
-                const blob = await response.blob();
-                const reader = new FileReader();
-                await new Promise((resolve) => {
-                    reader.onloadend = () => {
-                        img.src = reader.result as string;
-                        resolve(null);
-                    };
-                    reader.readAsDataURL(blob);
-                });
-            } catch (err) {
-                console.warn("Failed to inline image for PDF", src, err);
-            }
+      const refracted = await refractTextLanguage(metadata.content, lang);
+      setMetadata(prev => ({
+        ...prev,
+        title: refracted.title,
+        content: {
+          ...prev.content,
+          ...refracted
         }
-
-        const canvas = await html2canvas(element, {
-          scale: 2, 
-          useCORS: true,
-          backgroundColor: '#FDFBF7', 
-          logging: false
-        });
-
-        // REVERT IMAGES
-        originalSrcs.forEach((src, img) => {
-            img.src = src;
-        });
-
-        const imgData = canvas.toDataURL('image/jpeg', 0.95);
-        const imgProps = pdf.getImageProperties(imgData);
-        
-        const renderWidth = pageWidth;
-        const renderHeight = (imgProps.height * pageWidth) / imgProps.width;
-
-        if (i > 0) pdf.addPage();
-        
-        const yOffset = renderHeight < pageHeight ? (pageHeight - renderHeight) / 2 : 0;
-        
-        pdf.addImage(imgData, 'JPEG', 0, yOffset, renderWidth, renderHeight);
-      }
-
-      pdf.save(`${metadata.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_mimi_zine.pdf`);
+      }));
+      setCurrentLang(lang);
     } catch (e) {
-      console.error("PDF generation failed", e);
+      console.error("MIMI // Linguistic Refraction Failed:", e);
     } finally {
-      setIsExporting(false);
+      setIsTranslating(false);
+      setShimmer(false);
     }
   };
+
+  const handleShare = async () => {
+    if (!metadata.id) return;
+    setIsSharing(true);
+    const shareUrl = `${window.location.origin}${window.location.pathname}?zine=${metadata.id}`;
+    const shareData = {
+      title: `Witness refraction: ${metadata.title}`,
+      text: `A curated artifact from Mimi Zine. Tone: ${metadata.tone}`,
+      url: shareUrl
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        alert("Refraction link preserved to clipboard.");
+      }
+    } catch (e) {
+      console.warn("MIMI // Sharing Ritual interrupted.");
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleSaveWholePalette = async () => {
+    if (!user) return;
+    setShimmer(true);
+    try {
+      await addToPocket(user.uid, 'palette', { 
+        colors: metadata.content.analysis?.visualPalette || [], 
+        zineTitle: metadata.title,
+        colorTheory: metadata.content.analysis?.colorTheory || 'Sovereign Accord'
+      });
+    } catch (e) {} finally {
+      setTimeout(() => setShimmer(false), 1200);
+    }
+  };
+
+  const toggleTransmission = async () => {
+    const ctx = await initAudio();
+    if (isPlaying) {
+      if (sourceNodeRef.current) {
+        sourceNodeRef.current.stop();
+        sourceNodeRef.current = null;
+      }
+      setIsPlaying(false);
+      return;
+    }
+    setIsTransmissionLoading(true);
+    try {
+      const script = `${metadata.content.title}. ${metadata.content.voiceoverScript}`;
+      const buffer = await generateAudio(script);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.onended = () => {
+        setIsPlaying(false);
+        sourceNodeRef.current = null;
+      };
+      source.start(0);
+      sourceNodeRef.current = source;
+      setIsPlaying(true);
+    } catch (err) { 
+      console.error("MIMI // Transmission failed:", err); 
+    } finally { 
+      setIsTransmissionLoading(false); 
+    }
+  };
+
+  const handlePageMutation = async (index: number, newImage?: string) => {
+    const updatedPages = [...metadata.content.pages];
+    if (newImage) {
+      updatedPages[index] = { ...updatedPages[index], originalMediaUrl: newImage };
+    }
+    const updatedMetadata = { ...metadata, content: { ...metadata.content, pages: updatedPages } };
+    setMetadata(updatedMetadata);
+    if (user) {
+      await saveZineToProfile(user.uid, profile?.handle || 'Ghost', profile?.photoURL, updatedMetadata.content, metadata.tone, metadata.coverImageUrl || undefined, metadata.isDeepThinking, isPublic);
+    }
+  };
+
+  const handleSavePage = async (elements: EditorElement[]) => {
+    if (editingPageIndex === null) return;
+    const updatedPages = [...metadata.content.pages];
+    updatedPages[editingPageIndex] = { ...updatedPages[editingPageIndex], customLayout: { elements } };
+    const updatedMetadata = { ...metadata, content: { ...metadata.content, pages: updatedPages } };
+    setMetadata(updatedMetadata);
+    setEditingPageIndex(null);
+    if (user) await saveZineToProfile(user.uid, profile?.handle || 'Ghost', profile?.photoURL, updatedMetadata.content, metadata.tone, metadata.coverImageUrl || undefined, metadata.isDeepThinking, isPublic);
+  };
+
+  const handleTogglePublic = async () => {
+    const next = !isPublic;
+    setIsPublic(next);
+    if (user) {
+      await saveZineToProfile(user.uid, profile?.handle || 'Ghost', profile?.photoURL, metadata.content, metadata.tone, metadata.coverImageUrl || undefined, metadata.isDeepThinking, next);
+    }
+  };
+
+  const visualPalette = metadata.content.analysis?.visualPalette || [];
+  const paintChips = [
+    { color: visualPalette[0], label: 'Primary Base' },
+    { color: visualPalette[1], label: 'Manuscript' },
+    { color: visualPalette[2], label: 'Sovereign Accent' }
+  ];
+
+  const rotaryTools = [
+    { id: 'translate', icon: <Languages size={isMobile ? 20 : 24} />, label: 'Translate', action: () => setShowLangMenu(!showLangMenu), active: currentLang !== 'original' },
+    { id: 'share', icon: <Share2 size={isMobile ? 20 : 24} />, label: 'Share', action: handleShare, active: isSharing },
+    { id: 'public', icon: isPublic ? <Globe size={isMobile ? 20 : 24} /> : <Lock size={isMobile ? 20 : 24} />, label: isPublic ? 'Broadcasting' : 'Private', action: handleTogglePublic, active: isPublic },
+    { id: 'mic', icon: <Mic size={isMobile ? 20 : 24} />, label: 'Echo', action: () => alert("Voice Capture Ritual: Phase 02."), active: false },
+  ];
 
   return (
-    <div className="w-full max-w-4xl mx-auto py-12 md:py-24 px-6 animate-fade-in relative">
-      
-      {/* Controls Header */}
-      <div className="flex justify-between items-center mb-16 border-b border-stone-200 pb-6 sticky top-0 md:top-0 bg-nous-base/95 backdrop-blur-sm z-30 pt-4">
-        <div>
-           <h2 className="font-sans text-[10px] tracking-[0.2em] uppercase text-nous-subtle">
-             Curated by Mimi
-           </h2>
-           <p className="font-serif text-xl italic text-nous-text">{data.title}</p>
-        </div>
-        
-        <button 
-          onClick={handlePlayAudio}
-          disabled={isLoadingAudio || isPlaying}
-          className="group inline-flex items-center gap-3 px-5 py-2 border border-stone-200 rounded-full hover:border-nous-text transition-all duration-300 disabled:opacity-50 bg-white"
-        >
-          <span className="relative flex h-2 w-2">
-             {(isPlaying || isLoadingAudio) && (
-               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-stone-400 opacity-75"></span>
-             )}
-            <span className={`relative inline-flex rounded-full h-2 w-2 ${isPlaying ? 'bg-red-500' : 'bg-stone-800'}`}></span>
-          </span>
-          <span className="font-sans text-[9px] tracking-[0.2em] uppercase">
-            {isLoadingAudio ? 'Loading Audio...' : isPlaying ? 'Playing Narration' : 'Play Narration'}
-          </span>
-        </button>
-      </div>
-      
-      {/* Cultural Context Chip */}
-      {data.culturalContext && (
-        <div className="mb-12 p-6 bg-blue-50/50 border border-blue-100 text-center max-w-2xl mx-auto">
-          <p className="font-sans text-[9px] uppercase tracking-widest text-blue-400 mb-2">Zeitgeist Connection</p>
-          <p className="font-serif text-lg italic text-nous-accent">{data.culturalContext}</p>
-        </div>
-      )}
+    <div className={`w-full min-h-screen pb-48 bg-nous-base dark:bg-stone-950 relative selection:bg-nous-text selection:text-white overflow-x-hidden transition-all duration-700 ${shimmer ? 'opacity-40 grayscale blur-xl scale-95 pointer-events-none' : ''}`}>
+      <AnimatePresence>
+        {editingPageIndex !== null && (
+          <ZineLayoutEditor page={metadata.content.pages[editingPageIndex]} tone={metadata.tone} onSave={handleSavePage} onCancel={() => setEditingPageIndex(null)} />
+        )}
+      </AnimatePresence>
 
-      {/* Pages Render Loop */}
-      <div className="space-y-24" ref={zineContainerRef}>
-        {data.pages.map((page, index) => (
-          <div key={index} className="opacity-0 animate-slide-up" style={{ animationDelay: `${index * 150}ms` }}>
-            <PageRenderer 
-                page={page} 
-                analysis={data.analysis} 
-                tone={metadata.tone} 
-                userId={user?.uid} 
-                index={index}
-                zineTitle={data.title}
-                zineId={metadata.id}
-            />
+      <div className="fixed top-6 left-6 md:top-12 md:left-12 z-[110] flex flex-col gap-4 md:gap-6">
+          <Tooltip text="Return to Stand">
+            <button onClick={onReset} className="p-4 md:p-5 bg-white/95 dark:bg-black/95 magazine-border rounded-full shadow-2xl text-stone-400 hover:text-nous-text transition-all active:scale-90 border border-stone-200/50 dark:border-stone-800">
+              <ChevronLeft size={20}/>
+            </button>
+          </Tooltip>
+          
+          <Tooltip text={isPlaying ? "Silence Transmission" : "Listen to Manifest"}>
+            <button 
+              onClick={toggleTransmission} 
+              disabled={isTransmissionLoading} 
+              className={`p-4 md:p-5 bg-white/95 dark:bg-black/95 magazine-border rounded-full shadow-2xl transition-all border border-stone-200/50 dark:border-stone-800 ${isPlaying ? 'text-amber-500 shadow-inner ring-2 ring-amber-500/20' : 'text-stone-400 hover:text-nous-text'}`}
+            >
+              {isTransmissionLoading ? <Loader2 size={20} className="animate-spin" /> : isPlaying ? <Square size={20} /> : <Volume2 size={20} />}
+            </button>
+          </Tooltip>
+      </div>
+
+      <div className={`fixed ${isMobile ? 'bottom-6 left-6' : 'bottom-10 left-10'} z-[1000] flex items-end`}>
+          <div className="relative">
+              <AnimatePresence>
+                  {isRotaryOpen && (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.8, rotate: -45 }}
+                        animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                        exit={{ opacity: 0, scale: 0.8, rotate: -45 }}
+                        className={`absolute bottom-2 left-2 ${isMobile ? 'w-[220px] h-[220px]' : 'w-[360px] h-[360px]'} pointer-events-none`}
+                      >
+                          <motion.div 
+                            className="w-full h-full relative"
+                            style={{ rotate: rotarySpring }}
+                          >
+                             {rotaryTools.map((tool, i) => {
+                                const angle = (i * (360 / rotaryTools.length)) * (Math.PI / 180);
+                                const radius = isMobile ? 80 : 130; 
+                                return (
+                                  <motion.button
+                                    key={tool.id}
+                                    onClick={(e) => { e.stopPropagation(); tool.action(); }}
+                                    whileHover={{ scale: 1.1 }}
+                                    className={`pointer-events-auto absolute ${isMobile ? 'p-4' : 'p-7'} rounded-full bg-white dark:bg-stone-900 border-2 border-stone-100 dark:border-stone-800 shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all active:scale-95 group ${tool.active ? 'text-nous-text dark:text-white ring-2 ring-nous-text/10' : 'text-stone-300 dark:text-stone-700 hover:text-stone-500'}`}
+                                    style={{ 
+                                      left: `calc(50% + ${Math.cos(angle) * radius}px - ${isMobile ? '24px' : '32px'})`,
+                                      top: `calc(50% + ${Math.sin(angle) * radius}px - ${isMobile ? '24px' : '32px'})`,
+                                    }}
+                                  >
+                                    <div className="flex flex-col items-center justify-center">
+                                      {tool.icon}
+                                      {!isMobile && (
+                                        <motion.span className="absolute -bottom-4 font-sans text-[6px] uppercase tracking-widest font-black opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap text-nous-text dark:text-white">
+                                          {tool.label}
+                                        </motion.span>
+                                      )}
+                                    </div>
+                                  </motion.button>
+                                )
+                             })}
+                          </motion.div>
+                      </motion.div>
+                  )}
+              </AnimatePresence>
+
+              <button 
+                onClick={() => {
+                  setIsRotaryOpen(!isRotaryOpen);
+                  if(!isRotaryOpen) rotaryRotate.set(rotaryRotate.get() + 90);
+                }}
+                className={`relative z-20 ${isMobile ? 'p-5' : 'p-9'} rounded-full shadow-[0_30px_70px_rgba(0,0,0,0.25)] transition-all active:scale-90 border-2 ${isRotaryOpen ? 'bg-nous-text text-white dark:bg-white dark:text-black border-transparent' : 'bg-white/90 dark:bg-stone-900/90 backdrop-blur-3xl text-stone-400 hover:text-nous-text border-stone-100 dark:border-stone-800'}`}
+              >
+                  <motion.div animate={{ rotate: isRotaryOpen ? 180 : 0 }} transition={{ type: "spring", stiffness: 200, damping: 20 }}>
+                    {isRotaryOpen ? <Sparkles size={isMobile ? 22 : 28} /> : <Settings2 size={isMobile ? 22 : 28} />}
+                  </motion.div>
+              </button>
           </div>
-        ))}
-      </div>
 
-      {/* DEDICATED ARTIFACTS DECK */}
-      <div className="opacity-0 animate-fade-in" style={{ animationDelay: '1000ms' }}>
-          <ArtifactsDeck pages={data.pages} />
-      </div>
-
-      {/* Ambient Direction Footer */}
-      <div className="mt-12 pt-12 border-t border-stone-200 text-center opacity-70">
-         <p className="font-sans text-[10px] tracking-[0.2em] uppercase text-nous-subtle mb-2">Ambient Direction</p>
-         <p className="font-serif italic text-nous-accent">{data.ambientDirection}</p>
-      </div>
-      
-      {/* Echoes List (Comments) */}
-      <EchoList zineId={metadata.id} zineOwnerId={metadata.userId} />
-
-      {/* Floating Action Buttons */}
-      <FloatingNousMic zineId={metadata.id} />
-
-      <div className="mt-12 flex flex-col items-center gap-6 pb-24">
-        <div className="flex gap-4">
-             <button
-              onClick={() => setShowDebrief(true)}
-              className="px-8 py-3 bg-nous-text text-nous-base font-sans text-xs tracking-[0.2em] uppercase hover:bg-nous-accent transition-colors shadow-sm"
-            >
-              Debrief Issue
-            </button>
-            
-            <button
-              onClick={handleExportPDF}
-              disabled={isExporting}
-              className="px-8 py-3 border border-nous-text text-nous-text font-sans text-xs tracking-[0.2em] uppercase hover:bg-stone-100 transition-colors disabled:opacity-50 flex items-center gap-2"
-            >
-              {isExporting ? <Loader2 className="w-3 h-3 animate-spin"/> : <Download className="w-3 h-3"/>}
-              {isExporting ? "Printing..." : "Export PDF"}
-            </button>
-        </div>
-        
-        <div className="flex gap-4 items-center">
-            <button
-              onClick={onReset}
-              className="font-sans text-xs tracking-[0.2em] uppercase text-nous-subtle hover:text-nous-text transition-colors duration-300 pb-1 border-b border-transparent hover:border-nous-text"
-            >
-              Curate Another Issue
-            </button>
-
-            {/* Delete Zine (Only if Owner) */}
-            {user && user.uid === metadata.userId && (
-                <button
-                  onClick={handleDeleteZine}
-                  disabled={isDeleting}
-                  className="font-sans text-xs tracking-[0.2em] uppercase text-red-300 hover:text-red-500 transition-colors duration-300 pb-1 border-b border-transparent hover:border-red-500 ml-4 flex items-center gap-2"
-                >
-                  {isDeleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
-                  Delete Issue
-                </button>
+          <AnimatePresence>
+            {showLangMenu && (
+              <motion.div 
+                initial={{ opacity: 0, x: -20, scale: 0.9 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -20, scale: 0.9 }}
+                className={`${isMobile ? 'fixed bottom-24 left-6 right-6' : 'ml-12 mb-4 min-w-[220px]'} bg-white/95 dark:bg-stone-900/95 backdrop-blur-3xl border-2 border-stone-100 dark:border-stone-800 shadow-[0_40px_80px_rgba(0,0,0,0.2)] rounded-[2.5rem] p-8 flex flex-col gap-3 z-[1100]`}
+              >
+                <div className="flex items-center gap-3 mb-4 px-2 border-b border-stone-100 dark:border-stone-800 pb-4">
+                  <Languages size={14} className="text-stone-400" />
+                  <span className="font-sans text-[8px] uppercase tracking-[0.4em] text-stone-400 font-black">Linguistic Refraction</span>
+                </div>
+                {LANGUAGES.map(lang => (
+                  <button 
+                    key={lang.value} 
+                    onClick={() => handleTranslate(lang.value)}
+                    className={`text-left px-5 py-3 rounded-xl font-sans text-[11px] uppercase tracking-widest hover:bg-stone-50 dark:hover:bg-stone-800 transition-all ${currentLang === lang.value ? 'text-nous-text dark:text-white font-black bg-stone-50 dark:bg-stone-800' : 'text-stone-400 hover:translate-x-1'}`}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </motion.div>
             )}
-        </div>
+          </AnimatePresence>
       </div>
 
-      {showDebrief && <DebriefChat context={data} onClose={() => setShowDebrief(false)} />}
+      <div className="max-w-7xl mx-auto px-6 md:px-8 pt-24 md:pt-64">
+        {/* Mode Mode Note: Structural Risk Assessment Sentinel - Now persistent on all scenes */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`mb-12 flex items-center gap-6 p-6 border rounded-xl max-w-fit transition-colors duration-700 ${hasSubjectSignal ? 'bg-red-600/5 dark:bg-red-600/10 border-red-600/20' : 'bg-amber-600/5 dark:bg-amber-600/10 border-amber-600/20'}`}
+        >
+          <div className="flex -space-x-3">
+            <div className={`w-12 h-12 rounded-full border-4 border-white dark:border-black flex items-center justify-center transition-colors ${hasSubjectSignal ? 'bg-red-600' : 'bg-amber-500'}`}>
+              <AlertTriangle size={20} className="text-white" />
+            </div>
+            <div className="w-12 h-12 rounded-full border-4 border-white dark:border-black bg-stone-900 flex items-center justify-center">
+              <Fingerprint size={20} className="text-white" />
+            </div>
+          </div>
+          <div>
+            <span className={`font-sans text-[10px] uppercase tracking-[0.6em] font-black ${hasSubjectSignal ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400'}`}>
+              Structural Risk Assessment: {hasSubjectSignal ? 'CRITICAL' : 'ROUTINE'}
+            </span>
+            <p className="font-serif italic text-sm text-stone-500">
+              {hasSubjectSignal 
+                ? 'Subject detected in Social Register. Witness with extreme caution.' 
+                : 'Routine frequency check complete. No critical debris detected.'}
+            </p>
+          </div>
+        </motion.div>
+
+        <header className="mb-24 md:mb-[45rem] flex flex-col">
+          <div className="w-full flex flex-col md:flex-row justify-between items-start md:items-end gap-8 md:gap-12 mb-12 md:mb-24 border-b-2 border-nous-text dark:border-white pb-8 md:pb-16">
+             <div className="flex flex-col text-left">
+                <span className="font-mono text-[8px] md:text-[11px] uppercase tracking-[0.6em] md:tracking-[1em] text-stone-400 mb-4 md:mb-6">ISSUE_ID // {metadata.id?.slice(-8)}</span>
+                <h1 className={`font-serif text-[clamp(2.5rem,10vw,14rem)] italic tracking-tighter leading-[0.85] luminescent-text font-light text-nous-text dark:text-white -ml-1 md:-ml-4 ${hasSubjectSignal ? 'uppercase' : ''}`}>
+                  {metadata.title}
+                </h1>
+             </div>
+             <div className="flex flex-col items-start md:items-end text-left md:text-right shrink-0">
+                <span className="font-sans text-[8px] md:text-[11px] uppercase tracking-[0.6em] md:tracking-[0.8em] text-stone-400 font-black mb-1 md:mb-3">Refraction Cycle</span>
+                <span className="font-serif italic text-2xl md:text-4xl text-nous-text dark:text-white">{profile?.currentSeason || 'Perpetual'}</span>
+             </div>
+          </div>
+
+          <div className="w-full grid md:grid-cols-12 gap-10 md:gap-20">
+             <div className="md:col-span-8 space-y-8 md:space-y-16">
+                <p className="font-serif italic text-3xl md:text-7xl text-stone-400 dark:text-stone-600 leading-tight">
+                  "{metadata.content.oracular_mirror}"
+                </p>
+                <div className="flex items-center gap-6 md:gap-8">
+                   <CornerRightDown size={20} className="text-stone-200" />
+                   <span className="font-sans text-[8px] md:text-[11px] uppercase tracking-[1em] md:tracking-[1em] text-stone-300 font-black">Scroll Manifest</span>
+                </div>
+             </div>
+             <div className="md:col-span-4 p-6 md:p-12 border border-stone-100 dark:border-stone-800 bg-stone-50/30 dark:bg-stone-900/50">
+                <h4 className="font-sans text-[8px] md:text-[10px] uppercase tracking-[0.5em] md:tracking-[0.6em] text-stone-400 font-black mb-6 md:mb-8">Metadata Tombstone</h4>
+                <div className="space-y-4 md:space-y-6 font-serif italic text-sm md:text-lg text-stone-500 leading-relaxed">
+                   <p><span className="font-sans text-[7px] uppercase tracking-widest block mb-1">Components</span> {metadata.content.tombstone.materials}</p>
+                   <p><span className="font-sans text-[7px] uppercase tracking-widest block mb-1">Temporal</span> {metadata.content.tombstone.temporal_range}</p>
+                   <p><span className="font-sans text-[7px] uppercase tracking-widest block mb-1">Origin</span> {metadata.content.tombstone.source}</p>
+                </div>
+             </div>
+          </div>
+        </header>
+
+        <section className="mb-24 md:mb-[45rem] max-w-5xl mx-auto px-2">
+            <div className="grid md:grid-cols-2 gap-10 md:gap-32 items-start">
+               <div className="space-y-4 md:space-y-8">
+                  <span className="font-sans text-[8px] md:text-[11px] uppercase tracking-[0.6em] md:tracking-[0.8em] text-stone-400 font-black">The Refraction</span>
+                  <div className="w-12 md:w-20 h-[2px] md:h-[3px] bg-nous-text dark:bg-white" />
+               </div>
+               <p className="font-serif text-2xl md:text-5xl leading-[1.3] text-stone-800 dark:text-stone-200 font-light italic text-justify hyphens-auto">
+                  {metadata.content.expanded_reflection}
+               </p>
+            </div>
+        </section>
+
+        <main className="space-y-24 md:space-y-[40rem]">
+          {metadata.content.pages.map((page, i) => (
+            <PageRenderer 
+              key={i} 
+              page={page} 
+              index={i} 
+              onEdit={(idx, newImg) => newImg ? handlePageMutation(idx, newImg) : setEditingPageIndex(idx)} 
+            />
+          ))}
+        </main>
+
+        <section className="py-32 md:py-64 border-t border-stone-100 dark:border-stone-800 mt-64 space-y-32">
+            <div className="max-w-6xl mx-auto space-y-24">
+               <div className="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-12">
+                  <div className="flex items-center gap-6 text-stone-400">
+                      <div className="p-4 bg-stone-50 dark:bg-stone-900 rounded-full">
+                        <PaletteIcon size={24} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-sans text-[11px] uppercase tracking-[0.8em] font-black">The Chromatic Accord</span>
+                        <span className="font-serif italic text-stone-400 text-sm mt-1">Fragmentary paint chip logic.</span>
+                      </div>
+                  </div>
+                  <Tooltip text="Capture Entire Manifesto">
+                    <button 
+                      onClick={handleSaveWholePalette}
+                      className="group flex items-center gap-4 px-8 py-4 bg-stone-50 dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-full text-stone-400 hover:text-nous-text hover:border-nous-text transition-all"
+                    >
+                      <Download size={18} className="group-hover:translate-y-1 transition-transform" />
+                      <span className="font-sans text-[9px] uppercase tracking-[0.4em] font-black">Extract All</span>
+                    </button>
+                  </Tooltip>
+               </div>
+               
+               <div className="flex flex-wrap gap-8 md:gap-16 justify-center md:justify-start">
+                  {paintChips.map((chip, i) => (
+                    <PaintChip key={i} color={chip.color} label={chip.label} zineTitle={metadata.title} />
+                  ))}
+               </div>
+
+               <div className="max-w-3xl border-l-4 border-stone-100 dark:border-stone-800 pl-12 md:pl-20 py-4">
+                  <p className="font-serif italic text-2xl md:text-5xl text-stone-500 leading-[1.3] tracking-tight">
+                    {metadata.content.analysis?.colorTheory}
+                  </p>
+               </div>
+            </div>
+
+            <div className="max-w-4xl mx-auto space-y-16 pt-32 border-t border-stone-50 dark:border-stone-900">
+               <div className="flex items-center gap-4 text-stone-400">
+                  <FileText size={18} />
+                  <span className="font-sans text-[10px] uppercase tracking-[0.6em] font-black">Manifesto Script // End-Note</span>
+               </div>
+               <div className="space-y-8">
+                  <h3 className="font-serif text-4xl md:text-6xl italic text-nous-text dark:text-white tracking-tighter leading-tight">
+                    {metadata.content.title}
+                  </h3>
+                  <p className="font-serif italic text-2xl md:text-4xl text-stone-400 dark:text-stone-600 leading-[1.4] max-w-3xl">
+                    {metadata.content.voiceoverScript}
+                  </p>
+               </div>
+            </div>
+
+            <div className="max-w-4xl mx-auto pt-32 border-t border-stone-100 dark:border-stone-800 flex flex-col items-center gap-12">
+                <button 
+                  onClick={() => setShowThoughtReveal(!showThoughtReveal)}
+                  className="group flex items-center gap-4 text-stone-300 hover:text-nous-text transition-all"
+                >
+                  <Eye size={18} className="group-hover:scale-110 transition-transform" />
+                  <span className="font-sans text-[9px] uppercase tracking-[0.8em] font-black">Reveal Catalan Thought</span>
+                </button>
+                
+                <AnimatePresence>
+                  {showThoughtReveal && (
+                    <motion.div 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="w-full text-center"
+                    >
+                      <div className="p-12 md:p-20 bg-stone-50 dark:bg-stone-900/50 rounded-3xl border border-stone-100 dark:border-stone-800 relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-nous-text/10 dark:via-white/10 to-transparent" />
+                        <span className="font-sans text-[8px] uppercase tracking-[1em] text-stone-300 mb-12 block">ORIGINAL_DEBRIS</span>
+                        <p className="font-serif italic text-2xl md:text-5xl text-stone-400 dark:text-stone-500 leading-tight">
+                          "{metadata.content.originalThought || "The seed was reclaimed by the void."}"
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+            </div>
+        </section>
+
+        <footer className="py-[15vh] md:py-[30vh] text-center border-t border-stone-100 dark:border-stone-800 mt-[10vh] md:mt-[20vh] relative overflow-hidden">
+            <h3 className="font-serif text-[clamp(4rem,18vw,30rem)] italic tracking-tighter mb-6 opacity-[0.02] select-none">Mimi.</h3>
+            <div className="flex flex-col items-center gap-3">
+              <span className="font-sans text-[8px] md:text-[11px] uppercase tracking-[1.2em] md:tracking-[2em] font-black opacity-40 ml-[1.2em] md:ml-[2em]">Refraction Terminated</span>
+              <div className="w-16 md:w-32 h-px bg-stone-200 dark:bg-stone-800" />
+            </div>
+        </footer>
+      </div>
     </div>
   );
 };

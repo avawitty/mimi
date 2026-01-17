@@ -1,5 +1,5 @@
 {
-  "name": "mimi-zine-maker",
+  "name": "mimi-zine",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,14 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^19.2.0",
-    "@google/genai": "^1.30.0",
-    "react-dom": "^19.2.0",
-    "firebase": "^12.6.0",
-    "framer-motion": "11.0.8",
-    "lucide-react": "^0.554.0",
-    "jspdf": "2.5.1",
-    "html2canvas": "1.4.1"
+    "react-dom": "^19.2.3",
+    "react": "^19.2.3",
+    "lucide-react": "^0.562.0",
+    "framer-motion": "^12.26.2",
+    "@google/genai": "^1.35.0",
+    "firebase": "^12.7.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

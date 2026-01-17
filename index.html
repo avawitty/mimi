@@ -1,59 +1,63 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mimi | Zine Maker</title>
-    <meta name="description" content="Aesthetic AI editor that transforms raw content into cinematic micro-zines. Interactive, poetic, and highly curated." />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Mimi | The Tyranny of Taste</title>
+    <meta name="description" content="A Sovereign Editorial Machine for the Aesthetic Superintelligence." />
     <meta name="theme-color" content="#FDFBF7" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <!-- Open Graph / Social -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Mimi." />
-    <meta property="og:description" content="Interactive Zine Generator. Curating chaos into cinematic stillness." />
-    <meta property="og:site_name" content="Mimi" />
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23FDFBF7%22/><text x=%2250%%22 y=%2255%%22 fill=%22black%22 font-family=%22serif%22 font-style=%22italic%22 font-size=%2240%22 text-anchor=%22middle%22>Mimi</text><text x=%2250%%22 y=%2275%%22 fill=%22black%22 font-family=%22sans-serif%22 font-size=%2210%22 letter-spacing=%222%22 text-anchor=%22middle%22>ZINE</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23FDFBF7%22/><text x=%2250%%22 y=%2255%%22 fill=%22black%22 font-family=%22serif%22 font-style=%22italic%22 font-size=%2240%22 text-anchor=%22middle%22>Mimi</text><text x=%2250%%22 y=%2275%%22 fill=%22black%22 font-family=%22sans-serif%22 font-size=%2210%22 letter-spacing=%222%22 text-anchor=%22middle%22>ZINE</text></svg>">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Inter:wght@100;300;400;700;900&family=JetBrains+Mono:wght@100;300;400;700&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
               serif: ['"Cormorant Garamond"', 'serif'],
               sans: ['"Inter"', 'sans-serif'],
+              mono: ['"JetBrains Mono"', 'monospace'],
+              dynamic: ['var(--nous-font-primary)', 'serif'],
+              header: ['var(--nous-font-header)', 'serif'],
             },
             colors: {
               nous: {
-                base: '#FDFBF7', // Warm paper
-                text: '#1C1917', // Warm black
-                subtle: '#A8A29E', // Stone 400
-                accent: '#44403C', // Stone 700
-                blush: '#F2E8E5', // Dusty blush
-                lilac: '#E5E4E8', // Lilac haze
+                base: 'var(--nous-base)',
+                text: 'var(--nous-text)',
+                subtle: 'var(--nous-subtle)',
+                accent: 'var(--nous-accent)',
               }
             },
             animation: {
-              'fade-in': 'fadeIn 1s ease-out forwards',
-              'slide-up': 'slideUp 0.8s ease-out forwards',
-              'slide-up-slow': 'slideUpInfinite 20s linear infinite',
+              'grain': 'grain 8s steps(10) infinite',
+              'float': 'float 6s ease-in-out infinite',
+              'marquee': 'marquee 40s linear infinite',
             },
             keyframes: {
-              fadeIn: {
-                '0%': { opacity: '0' },
-                '100%': { opacity: '1' },
+              grain: {
+                '0%, 100%': { transform: 'translate(0, 0)' },
+                '10%': { transform: 'translate(-5%, -10%)' },
+                '20%': { transform: 'translate(-15%, 5%)' },
+                '30%': { transform: 'translate(7%, -25%)' },
+                '40%': { transform: 'translate(-5%, 25%)' },
+                '50%': { transform: 'translate(-15%, 10%)' },
+                '60%': { transform: 'translate(15%, 0%)' },
+                '70%': { transform: 'translate(0%, 15%)' },
+                '80%': { transform: 'translate(3%, 35%)' },
+                '90%': { transform: 'translate(-10%, 10%)' },
               },
-              slideUp: {
-                '0%': { opacity: '0', transform: 'translateY(20px)' },
-                '100%': { opacity: '1', transform: 'translateY(0)' },
-              },
-              slideUpInfinite: {
-                '0%': { transform: 'translateY(20vh)' },
-                '100%': { transform: 'translateY(-100vh)' },
+              marquee: {
+                '0%': { transform: 'translateX(0%)' },
+                '100%': { transform: 'translateX(-50%)' }
               }
             }
           },
@@ -61,55 +65,122 @@
       }
     </script>
     <style>
+      :root {
+        --nous-base: #FDFBF7;
+        --nous-text: #1C1917;
+        --nous-subtle: #A8A29E;
+        --nous-accent: #44403C;
+        --nous-font-primary: "Cormorant Garamond", serif;
+        --nous-font-header: "Cormorant Garamond", serif;
+        --nous-font-weight: 400;
+        --nous-font-style: normal;
+        --nous-letter-spacing: normal;
+        --nous-line-height: 1.5;
+        --vh: 1vh;
+      }
+      
+      html, body {
+        height: 100%;
+        height: calc(var(--vh, 1vh) * 100);
+        overflow-x: hidden;
+        overscroll-behavior: none;
+        background-color: var(--nous-base);
+      }
+
       body {
-        background-color: #FDFBF7;
-        color: #1C1917;
+        color: var(--nous-text);
+        margin: 0;
+        -webkit-font-smoothing: antialiased;
+        font-family: var(--nous-font-primary);
+        font-weight: var(--nous-font-weight);
+        font-style: var(--nous-font-style);
+        letter-spacing: var(--nous-letter-spacing);
+        line-height: var(--nous-line-height);
+        transition: background-color 0.8s ease, color 0.8s ease, font-family 0.8s ease;
       }
-      /* Custom scrollbar for subtle feel */
-      ::-webkit-scrollbar {
-        width: 4px; /* Thinner */
-        height: 4px;
+
+      #root {
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
       }
-      ::-webkit-scrollbar-track {
-        background: transparent;
+
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+      .magazine-border {
+        border: 1px solid rgba(0,0,0,0.06);
       }
-      ::-webkit-scrollbar-thumb {
-        background: #E7E5E4;
-        border-radius: 4px;
+      .dark .magazine-border {
+        border: 1px solid rgba(255,255,255,0.06);
       }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #A8A29E;
+
+      .drop-cap::first-letter {
+        font-family: var(--nous-font-primary);
+        font-weight: 300;
+        float: left;
+        font-size: 5rem;
+        line-height: 0.8;
+        padding-right: 0.5rem;
+        font-style: italic;
       }
-      .hide-scrollbar::-webkit-scrollbar {
-        display: none;
+
+      .grain-overlay {
+        position: fixed;
+        top: -100%;
+        left: -100%;
+        width: 300%;
+        height: 300%;
+        background-image: url("https://www.transparenttextures.com/patterns/noise.png");
+        opacity: 0.05;
+        pointer-events: none;
+        z-index: 9999;
+        animation: grain 8s steps(10) infinite;
       }
-      .hide-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
+      
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 20px;
+        border: 1px solid var(--nous-text);
+        opacity: 0.1;
+        pointer-events: none;
+        z-index: 100;
+      }
+
+      .luminescent-text {
+        text-shadow: 0 0 40px rgba(0,0,0,0.05);
+      }
+      .dark .luminescent-text {
+        text-shadow: 0 0 40px rgba(255,255,255,0.1);
       }
     </style>
+    <script>
+      // Fix for mobile 100vh issues
+      const setVh = () => {
+        let vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+      };
+      window.addEventListener('resize', setVh);
+      window.addEventListener('orientationchange', setVh);
+      setVh();
+    </script>
   <script type="importmap">
 {
   "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "firebase/app": "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js",
-    "firebase/auth": "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js",
-    "firebase/firestore": "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js",
-    "firebase/storage": "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js",
-    "firebase/analytics": "https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js",
-    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/",
-    "framer-motion": "https://esm.sh/framer-motion@11.0.8?external=react,react-dom",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
-    "jspdf": "https://esm.sh/jspdf@2.5.1",
-    "html2canvas": "https://esm.sh/html2canvas@1.4.1"
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "framer-motion": "https://esm.sh/framer-motion@^12.26.2",
+    "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
+    "firebase/": "https://esm.sh/firebase@^12.7.0/"
   }
 }
 </script>
 </head>
   <body>
+    <div class="grain-overlay"></div>
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
   </body>

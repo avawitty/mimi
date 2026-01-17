@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { ZineMetadata } from '../types';
-import { fetchArchive } from '../services/firebase';
+// Fixed: Using fetchCommunityZines from firebase service as fetchArchive is not exported.
+import { fetchCommunityZines } from '../services/firebase';
 import { MIMI_THEMES, ArchetypeKey } from '../themes/archetypes';
 
 interface ArchetypeIndexProps {
@@ -27,7 +28,8 @@ export const ArchetypeIndex: React.FC<ArchetypeIndexProps> = ({ onSelectZine }) 
   const [selectedColorFilter, setSelectedColorFilter] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchArchive().then((data) => {
+    // Fixed: fetchCommunityZines is used to retrieve data for the index.
+    fetchCommunityZines(100).then((data) => {
       setZines(data);
       setLoading(false);
     });
