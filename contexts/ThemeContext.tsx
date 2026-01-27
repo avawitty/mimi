@@ -3,173 +3,127 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 
 export interface Palette {
   name: string;
-  genre: string;
   base: string;
   text: string;
   subtle: string;
   accent: string;
   isDark: boolean;
-  fontFamily: 'serif' | 'sans' | 'mono' | 'editorial' | 'indie';
-  headerFont: string;
-  letterSpacing: string;
-  lineHeight: string;
+  genre?: string;
+  fontFamily?: string;
+  headerFont?: string;
+  logoStyle?: 'serif' | 'brutalist';
+  logoItalic?: boolean;
 }
 
 export const PALETTES: Record<string, Palette> = {
-  Void: { 
-    name: 'Void', 
-    genre: 'Avant-Garde', 
-    base: '#000000', 
-    text: '#FFFFFF', 
-    subtle: '#57534E', 
-    accent: '#A8A29E', 
-    isDark: true,
-    fontFamily: 'mono',
-    headerFont: '"JetBrains Mono", monospace',
-    letterSpacing: '-0.05em',
-    lineHeight: '1'
+  'The Journal': { 
+    name: 'The Journal', genre: 'Parchment & Stone', base: '#FDFBF7', text: '#1C1917', subtle: '#78716C', accent: '#44403C', isDark: false,
+    fontFamily: 'sans', headerFont: '"Space Grotesk", sans-serif', logoStyle: 'serif', logoItalic: true
   },
-  Stone: { 
-    name: 'Stone', 
-    genre: 'Lifestyle', 
-    base: '#FDFBF7', 
-    text: '#1C1917', 
-    subtle: '#333333', // Mode Mode Decree: Darker charcoal for legibility
-    accent: '#44403C', 
-    isDark: false,
-    fontFamily: 'sans',
-    headerFont: '"Inter", sans-serif',
-    letterSpacing: '0.02em',
-    lineHeight: '1.5'
+  'Editorial ’94': { 
+    name: 'Editorial ’94', genre: 'Blush & Bordeaux', base: '#FFF5F5', text: '#7F1D1D', subtle: '#B91C1C', accent: '#EF4444', isDark: false,
+    fontFamily: 'serif', headerFont: '"Cormorant Garamond", serif', logoStyle: 'serif', logoItalic: true
   },
-  Blush: { 
-    name: 'Blush', 
-    genre: 'High Fashion', 
-    base: '#F2E8E5', 
-    text: '#333333', // Mode Mode Decree: Charcoal Gray for the Sovereign Edit
-    subtle: '#4A4A4A', // Mode Mode Decree: Darker subtle text for legibility
-    accent: '#3D1C1C', 
-    isDark: false,
-    fontFamily: 'editorial',
-    headerFont: '"Cormorant Garamond", serif',
-    letterSpacing: '0.05em',
-    lineHeight: '1.2'
+  'The Atelier': {
+    name: 'The Atelier', genre: 'Moss & Plum Debris', base: '#F5F7F1', text: '#300C2E', subtle: '#6E7A62', accent: '#5B2154', isDark: false,
+    fontFamily: 'serif', headerFont: '"Cormorant Garamond", serif', logoStyle: 'serif', logoItalic: false
   },
-  Moss: { 
-    name: 'Moss', 
-    genre: 'Indie', 
-    base: '#1C1D1A', 
-    text: '#E2E8CE', 
-    subtle: '#4F5B4E', 
-    accent: '#78716C', 
-    isDark: true,
-    fontFamily: 'indie',
-    headerFont: '"Cormorant Garamond", serif',
-    letterSpacing: '-0.02em',
-    lineHeight: '1.1'
+  'Cinémathèque': { 
+    name: 'Cinémathèque', genre: 'Kodak Red & Yellow', base: '#080808', text: '#FDE047', subtle: '#71717A', accent: '#EF4444', isDark: true,
+    fontFamily: 'serif', headerFont: '"Cormorant Garamond", serif', logoStyle: 'serif', logoItalic: false
   },
-  Blood: { 
-    name: 'Blood', 
-    genre: 'Tabloid', 
-    base: '#2D0606', 
-    text: '#FFFAF5', 
-    subtle: '#B91C1C', 
-    accent: '#D1D5DB', 
-    isDark: true,
-    fontFamily: 'sans',
-    headerFont: '"Inter", sans-serif',
-    letterSpacing: '0.08em',
-    lineHeight: '0.9'
+  'Concrete Gallery': { 
+    name: 'Concrete Gallery', genre: 'Brutalist Mint', base: '#1A1A1A', text: '#99F6E4', subtle: '#71717A', accent: '#2DD4BF', isDark: true,
+    fontFamily: 'mono', headerFont: '"Space Mono", monospace', logoStyle: 'brutalist', logoItalic: false
   },
+  'Haute Void': { 
+    name: 'Haute Void', genre: 'High-Fashion Silence', base: '#000000', text: '#FFFFFF', subtle: '#A8A29E', accent: '#D4D4D4', isDark: true,
+    fontFamily: 'mono', headerFont: '"Space Mono", monospace', logoStyle: 'brutalist', logoItalic: false
+  }
 };
 
-interface ThemeContextType {
-  theme: 'light' | 'dark';
-  currentPalette: Palette;
-  toggleTheme: () => void;
-  applyPalette: (name: string) => void;
-}
-
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const ThemeContext = createContext<any>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentPalette, setCurrentPalette] = useState<Palette>(() => {
-    const saved = localStorage.getItem('mimi_palette_name');
-    return (saved && PALETTES[saved]) ? PALETTES[saved] : PALETTES.Stone;
+    const saved = localStorage.getItem('mimi_manifest_palette');
+    if (saved) {
+      try {
+        const p = JSON.parse(saved);
+        // Clean migration: map old keys if necessary or return valid palette
+        const nameMap: Record<string, string> = {
+            'Lifestyle': 'The Journal',
+            '90s Editorial': 'Editorial ’94',
+            'Velvet': 'The Atelier',
+            'Cinematic': 'Cinémathèque',
+            'Brutalist': 'Concrete Gallery',
+            'Avant-Garde': 'Haute Void'
+        };
+        const mappedName = nameMap[p.name] || p.name;
+        return PALETTES[mappedName] || p;
+      } catch (e) {
+        return PALETTES['The Journal'];
+      }
+    }
+    return PALETTES['The Journal'];
   });
-
-  const [theme, setTheme] = useState<'light' | 'dark'>(currentPalette.isDark ? 'dark' : 'light');
 
   useEffect(() => {
     const root = document.documentElement;
-    root.style.setProperty('--nous-base', currentPalette.base);
-    root.style.setProperty('--nous-text', currentPalette.text);
-    root.style.setProperty('--nous-subtle', currentPalette.subtle);
-    root.style.setProperty('--nous-accent', currentPalette.accent);
+    const p = currentPalette;
     
-    const fontMapping = {
-      serif: '"Cormorant Garamond", serif',
-      editorial: '"Cormorant Garamond", serif',
-      indie: '"Cormorant Garamond", serif',
-      sans: '"Inter", sans-serif',
-      mono: '"JetBrains Mono", monospace'
-    };
+    root.style.setProperty('--nous-base', p.base);
+    root.style.setProperty('--nous-text', p.text);
+    root.style.setProperty('--nous-subtle', p.subtle);
+    root.style.setProperty('--nous-accent', p.accent);
+    root.style.setProperty('--nous-font-header', p.headerFont || '"Cormorant Garamond", serif');
+
+    document.body.style.backgroundColor = p.base;
+    document.body.style.color = p.text;
+
+    if (p.isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
     
-    root.style.setProperty('--nous-font-primary', fontMapping[currentPalette.fontFamily]);
-    root.style.setProperty('--nous-font-header', currentPalette.headerFont);
-    root.style.setProperty('--nous-letter-spacing', currentPalette.letterSpacing);
-    root.style.setProperty('--nous-line-height', currentPalette.lineHeight);
-
-    if (currentPalette.name === 'Blush') {
-      root.style.setProperty('--nous-font-weight', '300');
-      root.style.setProperty('--nous-font-style', 'italic');
-    } else if (currentPalette.name === 'Moss') {
-      root.style.setProperty('--nous-font-weight', '700');
-      root.style.setProperty('--nous-font-style', 'normal');
-    } else {
-      root.style.setProperty('--nous-font-weight', '400');
-      root.style.setProperty('--nous-font-style', 'normal');
+    if (p.name.includes("Manifest")) {
+      localStorage.setItem('mimi_manifest_palette', JSON.stringify(p));
     }
-
-    const body = document.body;
-    if (currentPalette.isDark) {
-      body.classList.add('dark');
-      body.classList.remove('light');
-      setTheme('dark');
-      root.classList.add('dark');
-    } else {
-      body.classList.add('light');
-      body.classList.remove('dark');
-      setTheme('light');
-      root.classList.remove('dark');
-    }
-
-    localStorage.setItem('mimi_palette_name', currentPalette.name);
   }, [currentPalette]);
-
-  const toggleTheme = () => {
-    const nextPaletteName = currentPalette.isDark ? 'Stone' : 'Void';
-    applyPalette(nextPaletteName);
-  };
 
   const applyPalette = (name: string) => {
     if (PALETTES[name]) {
-      const palette = PALETTES[name];
-      setCurrentPalette(palette);
-      setTheme(palette.isDark ? 'dark' : 'light');
-      localStorage.setItem('mimi_palette_name', name);
+        setCurrentPalette(PALETTES[name]);
+    } else {
+        // Check if it was a manifested palette in storage
+        const saved = localStorage.getItem('mimi_manifest_palette');
+        if (saved) {
+            try {
+                const p = JSON.parse(saved);
+                if (p.name === name) setCurrentPalette(p);
+            } catch(e) {}
+        }
     }
   };
 
+  const manifestPalette = (palette: Palette) => {
+    // Explicitly cast finalPalette to Palette to ensure logoStyle is typed correctly as 'serif' | 'brutalist'
+    const finalPalette: Palette = {
+      ...palette,
+      fontFamily: 'serif',
+      headerFont: '"Cormorant Garamond", serif',
+      logoStyle: 'serif'
+    };
+    setCurrentPalette(finalPalette);
+    localStorage.setItem('mimi_manifest_palette', JSON.stringify(finalPalette));
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, currentPalette, toggleTheme, applyPalette }}>
+    <ThemeContext.Provider value={{ currentPalette, applyPalette, manifestPalette }}>
       {children}
     </ThemeContext.Provider>
   );
 };
 
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) throw new Error('useTheme must be used within ThemeProvider');
-  return context;
-};
+export const useTheme = () => useContext(ThemeContext);

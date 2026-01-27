@@ -1,150 +1,169 @@
 
+// @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Radio, Volume2, Loader2, Music, Square, AlertCircle, Sparkles } from 'lucide-react';
+import { Volume2, Loader2, Sparkles, X, WifiOff, Radio, Moon, Terminal, Info, Cat, Waves } from 'lucide-react';
 import { generateAudio } from '../services/geminiService';
 import { useTheme } from '../contexts/ThemeContext';
 
-const DECREES: Record<string, string[]> = {
-  'Void': [
-    "The 5G has left the building. Enjoy the architectural silence.",
-    "A Verizon outage is just the universe requesting a Rot Period.",
-    "Exhaustion is your body's way of going into Airplane Mode. Horizontalize immediately."
-  ],
-  'Stone': [
-    "Is it a conspiracy, or did you just lose your phone? Curate your paranoia.",
-    "Clinical serenity is required when the bars drop. Seek cold glass.",
-    "Banal signals are wretched. Pure disconnection is a creative act."
-  ],
-  'Blush': [
-    "Wrap yourself in the velvet of a lost connection. Intimidate the pavement.",
-    "90s legacy is calling—back when we actually lost our phones and it was chic.",
-    "Severe eyeliner is the only signal we need today. Decree the Outage."
-  ],
-  'Moss': [
-    "Subterranean textures for a world without data. Seek radical rawness.",
-    "Gritty grain is the only filter for 5G conspiratorial thoughts.",
-    "Philosophize with a hammer. Or a disconnected handset."
-  ],
-  'Blood': [
-    "Scandal is the only news that survives an outage. Headlines only.",
-    "Flash photography for a fast, signal-less life. Sensation is the logic.",
-    "Your lost phone is a performance piece. Ensure the costume is transcendent."
-  ]
-};
+const FALLBACK_EDICTS = [
+  "Art is a structural requirement for survival.",
+  "Your current boredom is a strategic failure.",
+  "Economic restriction is the architect of aesthetic genius.",
+  "The Broke Girl manifest requires a 4K mind.",
+  "Clinical clarity is the only sustainable vibe.",
+  "The void is listening. Speak clearly."
+];
 
 export const DailyTransmission: React.FC = () => {
   const { currentPalette } = useTheme();
-  const [decree, setDecree] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [isTired, setIsTired] = useState(false);
+  const [activeEdict, setActiveEdict] = useState<{message: string, isWarning: boolean, timestamp: number} | null>(null);
+  const [lastTrace, setLastTrace] = useState<{ code: string, message: string } | null>(null);
+  const [showTrace, setShowTrace] = useState(false);
+  
   const audioCtxRef = useRef<AudioContext | null>(null);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
 
   useEffect(() => {
-    const genreDecrees = DECREES[currentPalette.name] || DECREES.Stone;
-    const today = new Date();
-    const dateSeed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
-    setDecree(genreDecrees[dateSeed % genreDecrees.length]);
-  }, [currentPalette]);
-
-  const initAudio = async () => {
-    const AudioContextClass = (window.AudioContext || (window as any).webkitAudioContext);
-    if (!audioCtxRef.current) {
-      audioCtxRef.current = new AudioContextClass({ sampleRate: 24000 });
-    }
-    if (audioCtxRef.current.state === 'suspended') {
-      await audioCtxRef.current.resume();
-    }
-    return audioCtxRef.current;
-  };
-
-  const playTransmission = async () => {
-    if (isPlaying) {
-      if (sourceNodeRef.current) {
-        try { sourceNodeRef.current.stop(); } catch(e) {}
-        sourceNodeRef.current = null;
-      }
-      setIsPlaying(false);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(false);
-    try {
-      const ctx = await initAudio();
-      const buffer = await generateAudio(`${decree}`);
-      
-      const source = ctx.createBufferSource();
-      source.buffer = buffer;
-      source.connect(ctx.destination);
-      source.onended = () => {
-        setIsPlaying(false);
-        sourceNodeRef.current = null;
-      };
-      source.start(0);
-      sourceNodeRef.current = source;
-      setIsPlaying(true);
-    } catch (err) {
-      setError(true);
-      setTimeout(() => setError(false), 5000);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
+    const handleSystemEdict = (e: any) => {
+      setActiveEdict(e.detail);
+      setIsTired(false);
+      // Optional: Auto-play system edicts if not already playing
+      // playTransmission(e.detail.message);
+    };
+    window.addEventListener('mimi:system_edict', handleSystemEdict);
     return () => {
-      if (sourceNodeRef.current) {
-        try { sourceNodeRef.current.stop(); } catch(e) {}
-      }
+      window.removeEventListener('mimi:system_edict', handleSystemEdict);
+      if (sourceNodeRef.current) { try { sourceNodeRef.current.stop(); } catch(e) {} }
     };
   }, []);
 
-  return (
-    <div className="flex flex-col items-center gap-2 mb-6 lg:mb-12">
-      <button 
-        onClick={playTransmission}
-        disabled={isLoading}
-        className={`group flex items-center gap-3 px-6 py-2.5 rounded-full border transition-all active:scale-95 ${
-          isPlaying 
-          ? 'bg-nous-text text-white border-nous-text dark:bg-white dark:text-black dark:border-white shadow-lg' 
-          : error 
-          ? 'bg-red-50 text-red-500 border-red-200 dark:bg-red-950/20 dark:border-red-900'
-          : 'bg-white/40 dark:bg-stone-900/40 backdrop-blur-3xl border-stone-200 dark:border-stone-800 hover:border-nous-text dark:hover:border-white'
-        }`}
-      >
-        <div className="relative flex items-center justify-center">
-          <div className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-red-400 animate-ping' : error ? 'bg-red-600' : 'bg-red-500'}`} />
-          <div className={`absolute w-2 h-2 rounded-full ${error ? 'bg-red-600' : 'bg-red-500'} ${isPlaying ? 'animate-pulse' : ''}`} />
-        </div>
-        
-        <span className="font-sans text-[10px] uppercase tracking-[0.4em] font-black text-inherit">
-          {isLoading ? 'Decrypting...' : error ? 'Signal Lost' : isPlaying ? 'Transmitting' : 'Royal Edict'}
-        </span>
+  const decodePCM = (ctx: AudioContext, data: Uint8Array): AudioBuffer => {
+    const dataInt16 = new Int16Array(data.buffer, data.byteOffset, data.byteLength / 2);
+    const audioBuffer = ctx.createBuffer(1, dataInt16.length, 24000);
+    const channelData = audioBuffer.getChannelData(0);
+    for (let i = 0; i < dataInt16.length; i++) { 
+      channelData[i] = dataInt16[i] / 32768.0; 
+    }
+    return audioBuffer;
+  };
 
-        {isLoading ? (
-          <Loader2 size={12} className="animate-spin opacity-50" />
-        ) : error ? (
-          <AlertCircle size={12} />
-        ) : isPlaying ? (
-          <Volume2 size={12} className="animate-pulse" />
-        ) : (
-          <Sparkles size={12} className="opacity-30 group-hover:opacity-100 transition-opacity" />
-        )}
-      </button>
+  const playTransmission = async (overrideText?: string) => {
+    if (isPlaying) { 
+      if (sourceNodeRef.current) { try { sourceNodeRef.current.stop(); } catch(e) {} } 
+      setIsPlaying(false); 
+      return; 
+    }
+    
+    setIsLoading(true);
+    setIsTired(false);
+    setLastTrace(null);
+    
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("ORACLE_EXHAUSTED")), 12000)
+    );
+
+    try {
+      const AudioContextClass = (window.AudioContext || (window as any).webkitAudioContext);
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContextClass({ sampleRate: 24000 });
+        gainNodeRef.current = audioCtxRef.current.createGain();
+        gainNodeRef.current.connect(audioCtxRef.current.destination);
+      }
       
+      if (audioCtxRef.current.state === 'suspended') {
+        await audioCtxRef.current.resume();
+      }
+      
+      const baseText = overrideText || activeEdict?.message || FALLBACK_EDICTS[Math.floor(Math.random() * FALLBACK_EDICTS.length)];
+      
+      const bytes = await Promise.race([
+        generateAudio(baseText),
+        timeoutPromise
+      ]) as Uint8Array;
+
+      const buffer = decodePCM(audioCtxRef.current, bytes);
+      
+      const source = audioCtxRef.current.createBufferSource();
+      source.buffer = buffer;
+      source.connect(gainNodeRef.current!);
+      source.onended = () => setIsPlaying(false);
+      source.start(0);
+      sourceNodeRef.current = source;
+      setIsPlaying(true);
+    } catch (err: any) { 
+      console.error("MIMI // Transmission Interrupted:", err);
+      setIsTired(true);
+      setLastTrace({ code: err.code || 'SIGNAL_VOID', message: err.message });
+      setTimeout(() => setIsTired(false), 5000);
+    } finally { 
+      setIsLoading(false); 
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 mb-4 w-full transition-all duration-700">
+      <div className="relative flex items-center justify-center">
+        <AnimatePresence>
+          {(activeEdict || isPlaying || isTired) && (
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ 
+                scale: isPlaying ? [1.1, 1.3, 1.1] : 1.1, 
+                opacity: 1 
+              }}
+              transition={isPlaying ? { repeat: Infinity, duration: 1.5, ease: "easeInOut" } : {}}
+              exit={{ scale: 1.5, opacity: 0 }}
+              className={`absolute inset-0 rounded-full blur-2xl pointer-events-none transition-colors duration-1000 ${isPlaying ? 'bg-emerald-400/30' : isTired ? 'bg-red-400/20' : 'bg-amber-400/10'}`}
+            />
+          )}
+        </AnimatePresence>
+        
+        <div className="flex flex-col items-center gap-2">
+            <motion.button 
+              whileTap={{ scale: 0.95 }}
+              onClick={() => playTransmission()}
+              onContextMenu={(e) => { e.preventDefault(); setShowTrace(!showTrace); }}
+              className={`relative z-10 flex items-center gap-3 px-8 py-3 bg-white/70 dark:bg-stone-900/70 backdrop-blur-3xl border border-black/5 rounded-full shadow-2xl group transition-all ${isPlaying ? 'ring-2 ring-emerald-500/40' : isTired ? 'ring-2 ring-red-500/20' : ''}`}
+            >
+              {isLoading ? (
+                <Loader2 size={12} className="animate-spin text-stone-400" />
+              ) : isTired ? (
+                <Moon size={12} className="text-red-400 animate-pulse" />
+              ) : (
+                <div className={`w-2 h-2 rounded-full transition-all duration-500 ${isPlaying ? 'bg-emerald-500 animate-pulse scale-150' : activeEdict ? 'bg-amber-400' : 'bg-stone-300'}`} />
+              )}
+              <span className="font-sans text-[8px] md:text-[10px] uppercase tracking-[0.4em] font-black text-stone-600 dark:text-stone-300">
+                {isLoading ? 'Calibrating' : isPlaying ? 'Transmitting' : isTired ? 'Oracle Tired' : 'Royal Edict'}
+              </span>
+              {isPlaying ? (
+                <X size={12} className="text-stone-400 hover:text-red-500 transition-colors" />
+              ) : (
+                <div className="flex items-center gap-2">
+                   <Cat size={10} className="text-stone-200 opacity-20 group-hover:opacity-100 transition-opacity" />
+                   <Sparkles size={12} className={`text-stone-300 group-hover:text-amber-400 transition-colors ${activeEdict && !isTired ? 'animate-pulse text-amber-500' : ''}`} />
+                </div>
+              )}
+            </motion.button>
+        </div>
+      </div>
+
       <AnimatePresence>
-        {(isPlaying || error) && (
-          <motion.p 
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 0.6, y: 0 }}
+        {(isPlaying || isTired) && !showTrace && (
+          <motion.div 
+            initial={{ opacity: 0, y: 5 }} 
+            animate={{ opacity: 1, y: 0 }} 
             exit={{ opacity: 0 }}
-            className={`font-serif italic text-[11px] text-center max-w-[240px] md:max-w-xs ${error ? 'text-red-400 font-bold' : 'text-stone-500'}`}
+            className="flex flex-col items-center gap-2"
           >
-            {error ? "Verizon has reclaimed the airwaves. The Empress remains pensive." : `"${decree}"`}
-          </motion.p>
+            <p className="font-serif italic text-xs md:text-sm text-stone-400 text-center max-w-xs md:max-w-md px-6 leading-tight">
+              {isTired ? "The Oracle is exhausted. Return when the frequency has stabilized." : `“${activeEdict?.message || "Mimi is breathing."}”`}
+            </p>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

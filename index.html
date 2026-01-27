@@ -4,30 +4,42 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>Mimi | The Tyranny of Taste</title>
+    <title>Mimi Zine</title>
     <meta name="description" content="A Sovereign Editorial Machine for the Aesthetic Superintelligence." />
+    
+    <!-- CACHE SUPPRESSION PROTOCOL -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <link rel="manifest" href="./metadata.json">
     <meta name="theme-color" content="#FDFBF7" />
+    
+    <!-- iOS Sovereign Manifestation -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23FDFBF7%22/><text x=%2250%%22 y=%2255%%22 fill=%22black%22 font-family=%22serif%22 font-style=%22italic%22 font-size=%2240%22 text-anchor=%22middle%22>Mimi</text><text x=%2250%%22 y=%2275%%22 fill=%22black%22 font-family=%22sans-serif%22 font-size=%2210%22 letter-spacing=%222%22 text-anchor=%22middle%22>ZINE</text></svg>">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23FDFBF7%22/><text x=%2250%%22 y=%2255%%22 fill=%22black%22 font-family=%22serif%22 font-style=%22italic%22 font-size=%2240%22 text-anchor=%22middle%22>Mimi</text><text x=%2250%%22 y=%2275%%22 fill=%22black%22 font-family=%22sans-serif%22 font-size=%2210%22 letter-spacing=%222%22 text-anchor=%22middle%22>ZINE</text></svg>">
+    <meta name="apple-mobile-web-app-title" content="Mimi Zine">
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/Aris-A-C/mimi-assets/main/mimi_logo_new.png">
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Aris-A-C/mimi-assets/main/mimi_logo_new.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Inter:wght@100;300;400;700;900&family=JetBrains+Mono:wght@100;300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
     <script>
+      if (typeof window.process === 'undefined') {
+        window.process = { env: { API_KEY: "" } };
+      }
       tailwind.config = {
         darkMode: 'class',
         theme: {
           extend: {
             fontFamily: {
               serif: ['"Cormorant Garamond"', 'serif'],
-              sans: ['"Inter"', 'sans-serif'],
-              mono: ['"JetBrains Mono"', 'monospace'],
-              dynamic: ['var(--nous-font-primary)', 'serif'],
-              header: ['var(--nous-font-header)', 'serif'],
+              sans: ['"Space Grotesk"', 'sans-serif'],
+              mono: ['"Space Mono"', 'monospace'],
+              header: ['"Cormorant Garamond"', 'serif'],
             },
             colors: {
               nous: {
@@ -35,29 +47,6 @@
                 text: 'var(--nous-text)',
                 subtle: 'var(--nous-subtle)',
                 accent: 'var(--nous-accent)',
-              }
-            },
-            animation: {
-              'grain': 'grain 8s steps(10) infinite',
-              'float': 'float 6s ease-in-out infinite',
-              'marquee': 'marquee 40s linear infinite',
-            },
-            keyframes: {
-              grain: {
-                '0%, 100%': { transform: 'translate(0, 0)' },
-                '10%': { transform: 'translate(-5%, -10%)' },
-                '20%': { transform: 'translate(-15%, 5%)' },
-                '30%': { transform: 'translate(7%, -25%)' },
-                '40%': { transform: 'translate(-5%, 25%)' },
-                '50%': { transform: 'translate(-15%, 10%)' },
-                '60%': { transform: 'translate(15%, 0%)' },
-                '70%': { transform: 'translate(0%, 15%)' },
-                '80%': { transform: 'translate(3%, 35%)' },
-                '90%': { transform: 'translate(-10%, 10%)' },
-              },
-              marquee: {
-                '0%': { transform: 'translateX(0%)' },
-                '100%': { transform: 'translateX(-50%)' }
               }
             }
           },
@@ -70,118 +59,80 @@
         --nous-text: #1C1917;
         --nous-subtle: #A8A29E;
         --nous-accent: #44403C;
-        --nous-font-primary: "Cormorant Garamond", serif;
-        --nous-font-header: "Cormorant Garamond", serif;
-        --nous-font-weight: 400;
-        --nous-font-style: normal;
-        --nous-letter-spacing: normal;
-        --nous-line-height: 1.5;
-        --vh: 1vh;
       }
       
       html, body {
         height: 100%;
-        height: calc(var(--vh, 1vh) * 100);
-        overflow-x: hidden;
-        overscroll-behavior: none;
-        background-color: var(--nous-base);
-      }
-
-      body {
-        color: var(--nous-text);
+        width: 100%;
         margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: var(--nous-base);
+        color: var(--nous-text);
         -webkit-font-smoothing: antialiased;
-        font-family: var(--nous-font-primary);
-        font-weight: var(--nous-font-weight);
-        font-style: var(--nous-font-style);
-        letter-spacing: var(--nous-letter-spacing);
-        line-height: var(--nous-line-height);
-        transition: background-color 0.8s ease, color 0.8s ease, font-family 0.8s ease;
+        font-family: "Cormorant Garamond", serif;
       }
 
-      #root {
-        min-height: 100%;
+      /* THE PERICARDIUM: Re-enforced Structural Sac */
+      .pericardium-seal {
+        position: fixed;
+        inset: 0.5rem;
+        border: 1px solid rgba(0,0,0,0.05);
+        border-radius: 1rem;
+        background-color: var(--nous-base);
+        box-shadow: inset 0 0 100px rgba(0,0,0,0.02);
         display: flex;
         flex-direction: column;
+        overflow: hidden;
+        transition: inset 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        z-index: 10;
+      }
+      .dark .pericardium-seal {
+        border-color: rgba(255,255,255,0.05);
+        box-shadow: inset 0 0 100px rgba(0,0,0,0.4);
       }
 
-      .no-scrollbar::-webkit-scrollbar { display: none; }
-      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-      .magazine-border {
-        border: 1px solid rgba(0,0,0,0.06);
-      }
-      .dark .magazine-border {
-        border: 1px solid rgba(255,255,255,0.06);
-      }
-
-      .drop-cap::first-letter {
-        font-family: var(--nous-font-primary);
-        font-weight: 300;
-        float: left;
-        font-size: 5rem;
-        line-height: 0.8;
-        padding-right: 0.5rem;
-        font-style: italic;
+      /* MOBILE GEOMETRY OVERRIDE */
+      .geometry-mobile .pericardium-seal {
+        inset: 1.5rem auto 1.5rem 50%;
+        width: 375px;
+        transform: translateX(-50%);
+        border: 8px solid rgba(0,0,0,0.1);
       }
 
       .grain-overlay {
         position: fixed;
-        top: -100%;
-        left: -100%;
-        width: 300%;
-        height: 300%;
+        inset: 0;
         background-image: url("https://www.transparenttextures.com/patterns/noise.png");
-        opacity: 0.05;
+        opacity: 0.12;
         pointer-events: none;
         z-index: 9999;
-        animation: grain 8s steps(10) infinite;
+        mix-blend-mode: multiply;
       }
       
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 20px;
-        border: 1px solid var(--nous-text);
-        opacity: 0.1;
-        pointer-events: none;
-        z-index: 100;
-      }
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-      .luminescent-text {
-        text-shadow: 0 0 40px rgba(0,0,0,0.05);
-      }
-      .dark .luminescent-text {
-        text-shadow: 0 0 40px rgba(255,255,255,0.1);
-      }
+      .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+      .pt-safe { padding-top: env(safe-area-inset-top); }
     </style>
-    <script>
-      // Fix for mobile 100vh issues
-      const setVh = () => {
-        let vh = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty('--vh', `${vh}px`);
-      };
-      window.addEventListener('resize', setVh);
-      window.addEventListener('orientationchange', setVh);
-      setVh();
-    </script>
   <script type="importmap">
 {
   "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "framer-motion": "https://esm.sh/framer-motion@^12.26.2",
-    "@google/genai": "https://esm.sh/@google/genai@^1.35.0",
-    "firebase/": "https://esm.sh/firebase@^12.7.0/"
+    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
+    "framer-motion": "https://esm.sh/framer-motion@^12.29.2",
+    "firebase/": "https://esm.sh/firebase@^12.8.0/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0"
   }
 }
 </script>
 </head>
   <body>
     <div class="grain-overlay"></div>
-    <div id="root"></div>
+    <div id="root" class="h-full w-full"></div>
     <script type="module" src="./index.tsx"></script>
   </body>
 </html>

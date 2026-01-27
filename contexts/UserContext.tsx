@@ -1,9 +1,11 @@
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { UserProfile } from '../types';
 import { getLocalProfile, saveProfileLocally } from '../services/localArchive';
-import { ensureAuth, getUserProfile, saveUserProfile, linkGoogleAccount } from '../services/firebase';
-import { onAuthStateChanged, getRedirectResult } from 'firebase/auth';
+import { bootstrapAuth, ensureAuth, getUserProfile, saveUserProfile, anchorIdentity, handleAuthRedirect, startGhostSession, initializeAuthPersistence } from '../services/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { logEvent } from 'firebase/analytics';
+import { analytics } from '../services/firebaseInit';
 
 interface UserContextType {
   user: { uid: string, isAnonymous: boolean, email?: string | null } | null;
@@ -11,13 +13,15 @@ interface UserContextType {
   loading: boolean;
   updateProfile: (profile: UserProfile) => Promise<void>;
   isOnboardingComplete: boolean;
-  login: () => Promise<void>;
+  login: (forceRedirect?: boolean) => Promise<void>;
   ghostLogin: () => Promise<void>;
-  linkAccount: () => Promise<void>;
+  speedGhostEntrance: () => Promise<void>;
+  linkAccount: (forceRedirect?: boolean) => Promise<void>;
   isEnvironmentRestricted: boolean;
   authError: string | null;
-  openKeySelector?: () => void;
-  hasApiKey?: boolean;
+  hasApiKey: boolean;
+  openKeySelector: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -33,153 +37,204 @@ export const useUser = () => {
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<{ uid: string, isAnonymous: boolean, email?: string | null } | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true); 
-  const [isEnvironmentRestricted, setIsEnvironmentRestricted] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [isEnvironmentRestricted, setIsEnvironmentRestricted] = useState(false);
+  const [hasApiKey, setHasApiKey] = useState(true);
+  
+  const initStarted = useRef(false);
+  const reconciliationInProgress = useRef<string | null>(null);
 
   const reconcileProfile = useCallback(async (fbUser: any) => {
+    if (!fbUser) {
+      setUser(null);
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
+
+    if (reconciliationInProgress.current === fbUser.uid) return;
+    reconciliationInProgress.current = fbUser.uid;
+    
     try {
-      console.log(`MIMI // Identity Trace: Analyzing signal for ${fbUser.email || fbUser.uid}`);
-      
-      // Step 1: Query the Sovereign Cloud for an existing profile
       const cloudProfile = await getUserProfile(fbUser.uid);
-      const local = getLocalProfile();
+      const currentLocal = await getLocalProfile();
       
       let finalProfile: UserProfile;
 
       if (cloudProfile) {
-        // Cloud Profile is the absolute truth. If you are logged in elsewhere, this is you.
-        console.log("MIMI // Cloud Registry: Match found. Manifesting Sovereign Identity.");
-        finalProfile = {
-          ...cloudProfile,
-          // Merge in any fresh local taste debris if we don't have it in cloud
-          tasteProfile: cloudProfile.tasteProfile || local?.tasteProfile
-        };
-      } else if (local && local.uid === fbUser.uid) {
-        // We have local data that matches the current auth - use it
-        finalProfile = local;
+        finalProfile = { ...cloudProfile, uid: fbUser.uid, isSwan: !fbUser.isAnonymous, email: fbUser.email, lastActive: Date.now() };
       } else {
-        // Truly a new Muse in the registry
-        console.log("MIMI // Registry: Initiating new Muse record.");
         finalProfile = {
           uid: fbUser.uid,
-          handle: fbUser.displayName?.split(' ')[0] || local?.handle || 'Subject_' + fbUser.uid.slice(0, 4),
-          photoURL: fbUser.photoURL || local?.photoURL || null,
+          handle: fbUser.displayName?.split(' ')[0] || currentLocal?.handle || 'Subject_' + fbUser.uid.slice(-4),
+          photoURL: fbUser.photoURL || currentLocal?.photoURL || null,
           isSwan: !fbUser.isAnonymous,
-          processingMode: local?.processingMode || 'movie',
-          currentSeason: local?.currentSeason || 'blooming',
-          coreNeed: local?.coreNeed || 'truth',
-          createdAt: Date.now()
+          processingMode: currentLocal?.processingMode || 'movie',
+          currentSeason: currentLocal?.currentSeason || 'blooming',
+          coreNeed: currentLocal?.coreNeed || 'truth',
+          createdAt: currentLocal?.createdAt || Date.now(),
+          email: fbUser.email,
+          lastActive: Date.now(),
+          zodiacSign: currentLocal?.zodiacSign,
+          tasteProfile: currentLocal?.tasteProfile,
+          manifestos: currentLocal?.manifestos || []
         };
       }
 
-      // Ensure the email is anchored in the record for cross-device certainty
-      if (fbUser.email) {
-        (finalProfile as any).email = fbUser.email;
+      await saveProfileLocally(finalProfile);
+      
+      if (!isEnvironmentRestricted && !fbUser.isAnonymous) {
+        try { await saveUserProfile(finalProfile); } catch (e) {}
       }
-
-      // Synchronize back to Cloud and Local
-      await saveUserProfile(finalProfile);
-      saveProfileLocally(finalProfile);
       
       setProfile(finalProfile);
-      setUser({ uid: fbUser.uid, isAnonymous: fbUser.isAnonymous, email: fbUser.email });
+      setUser({ uid: fbUser.uid, isAnonymous: !!fbUser.isAnonymous, email: fbUser.email });
+      setAuthError(null);
+    } catch (e: any) {
+      console.error("MIMI // Reconcile Failure:", e);
+    } finally {
+      setLoading(false);
+      reconciliationInProgress.current = null;
+    }
+  }, [isEnvironmentRestricted]);
 
-    } catch (e) {
-      console.error("MIMI // Identity reconciliation failed in O2.", e);
+  const ghostLogin = useCallback(async () => {
+    try {
+      setLoading(true);
+      const result = await startGhostSession();
+      await reconcileProfile(result.user);
+    } catch (e: any) {
+      if (e.code === 'auth/unauthorized-domain') setIsEnvironmentRestricted(true);
+      setLoading(false);
+    }
+  }, [reconcileProfile]);
+
+  const speedGhostEntrance = useCallback(async () => {
+    try {
+      setLoading(true);
+      const result = await startGhostSession();
+      const fbUser = result.user;
+      
+      const speedProfile: UserProfile = {
+        uid: fbUser.uid,
+        handle: 'Ghost_' + fbUser.uid.slice(-4),
+        photoURL: `https://ui-avatars.com/api/?name=G&background=1c1917&color=fff`,
+        isSwan: false,
+        processingMode: 'movie',
+        currentSeason: 'blooming',
+        coreNeed: 'chaos',
+        createdAt: Date.now(),
+        lastActive: Date.now(),
+        tasteProfile: {
+          inspirations: "Clinical, Siberian, High-Fidelity",
+          keywords: "minimalist, ghost, void",
+          dominant_archetypes: ["minimalist-sans"]
+        },
+        manifestos: []
+      };
+
+      await saveProfileLocally(speedProfile);
+      setProfile(speedProfile);
+      setUser({ uid: fbUser.uid, isAnonymous: true });
+      setAuthError(null);
+    } catch (e: any) {
+      console.error("MIMI // Speed Ghost Failure:", e);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
+    if (initStarted.current) return;
+    initStarted.current = true;
     
-    const initAuth = async () => {
-      try {
-        const auth = await ensureAuth();
-
-        // Check for redirect results (crucial for mobile handshakes)
-        const result = await getRedirectResult(auth);
-        if (result && result.user) {
-          await reconcileProfile(result.user);
-        }
-
-        unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-          if (fbUser) {
-            await reconcileProfile(fbUser);
+    const performRitual = async () => {
+      const authRitual = async () => {
+        try {
+          await initializeAuthPersistence();
+          
+          const redirectResult = await handleAuthRedirect();
+          if (redirectResult && redirectResult.uid) {
+             await reconcileProfile(redirectResult);
           } else {
-            // If no user, stay with local profile if it exists as a fallback
-            const local = getLocalProfile();
-            if (local) {
-              setProfile(local);
-              setUser({ uid: local.uid, isAnonymous: !local.isSwan });
-            }
+             const bUser = await bootstrapAuth();
+             if (bUser) {
+               await reconcileProfile(bUser);
+             } else {
+               // SILENT GHOST INITIATION: No gateway required.
+               await speedGhostEntrance();
+             }
           }
+
+          const authInstance = await ensureAuth();
+          onAuthStateChanged(authInstance, (fbUser) => {
+            if (fbUser) reconcileProfile(fbUser);
+            else setLoading(false);
+          });
+        } catch (e) {
+          console.warn("MIMI // Ritual Error:", e);
           setLoading(false);
-        });
-      } catch (err) {
-        console.warn("MIMI // O2 Restricted Environment detected.");
-        setIsEnvironmentRestricted(true);
-        setLoading(false);
-      }
+        }
+      };
+
+      await authRitual();
     };
 
-    initAuth();
-    return () => { if (unsubscribe) unsubscribe(); };
-  }, [reconcileProfile]);
+    performRitual();
+  }, [reconcileProfile, speedGhostEntrance]);
 
   const updateProfile = async (newProfile: UserProfile) => {
-    saveProfileLocally(newProfile);
-    setProfile(newProfile);
-    if (newProfile.uid && !newProfile.uid.startsWith('ghost_')) {
-      await saveUserProfile(newProfile);
-    }
-  };
-
-  const login = async () => {
-    setAuthError(null);
     try {
-      await linkGoogleAccount();
-    } catch (e: any) {
-      setAuthError(e.message || "Handshake Rejected by O2.");
+      const currentUid = user?.uid || newProfile.uid;
+      const updated = { ...newProfile, uid: currentUid, lastActive: Date.now() };
+      await saveProfileLocally(updated);
+      setProfile(updated);
+      if (!isEnvironmentRestricted && user && !user.isAnonymous) {
+        await saveUserProfile(updated);
+      }
+    } catch (e) {
       throw e;
     }
   };
 
-  const ghostLogin = async () => {
-    const local = getLocalProfile();
-    const uid = local?.uid && local.uid.startsWith('ghost_') ? local.uid : `ghost_${Date.now()}`;
-    const ephemeral: UserProfile = {
-      uid, 
-      handle: local?.handle || 'Ghost', 
-      processingMode: local?.processingMode || 'movie', 
-      currentSeason: local?.currentSeason || 'blooming',
-      coreNeed: local?.coreNeed || 'chaos', 
-      createdAt: local?.createdAt || Date.now(),
-      isSwan: false,
-      tasteProfile: local?.tasteProfile || { inspirations: '', keywords: '' }
-    };
-    setUser({ uid, isAnonymous: true });
-    setProfile(ephemeral);
-    saveProfileLocally(ephemeral);
+  const login = async (forceRedirect = false) => {
+    setAuthError(null);
+    try {
+      await anchorIdentity(forceRedirect);
+    } catch (e: any) {
+      setAuthError(e.code || e.message);
+      throw e;
+    }
+  };
+
+  const openKeySelector = async () => {
+    try {
+      const aistudio = (window as any).aistudio;
+      if (aistudio?.openSelectKey) {
+        await aistudio.openSelectKey();
+        setHasApiKey(true);
+      } else {
+        alert("The Imperial Key Registry is currently obscured.");
+      }
+    } catch (e) {}
+  };
+
+  const logout = async () => {
+    const authInstance = await ensureAuth();
+    await authInstance.signOut();
+    setUser(null);
+    setProfile(null);
     setLoading(false);
-  };
-
-  const linkAccount = async () => {
-    setAuthError(null);
-    try {
-      await linkGoogleAccount();
-    } catch (e: any) {
-      setAuthError(e.code === 'auth/credential-already-in-use' ? "Identity collision in O2." : "O2 Link Failed.");
-      throw e;
-    }
+    // Restart as ghost immediately
+    await speedGhostEntrance();
   };
 
   return (
     <UserContext.Provider value={{ 
       user, profile, loading, updateProfile, isOnboardingComplete: !!profile, 
-      login, ghostLogin, linkAccount, isEnvironmentRestricted, authError,
-      openKeySelector: () => {},
-      hasApiKey: true
+      login, ghostLogin, speedGhostEntrance, linkAccount: login, isEnvironmentRestricted, authError,
+      hasApiKey, openKeySelector, logout
     }}>
       {children}
     </UserContext.Provider>

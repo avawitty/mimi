@@ -1,78 +1,79 @@
 
-import { FirebaseApp, initializeApp, getApps } from "firebase/app";
-import { Auth, getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from "firebase/auth";
-import { Firestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, CACHE_SIZE_UNLIMITED } from "firebase/firestore";
-import { FirebaseStorage, getStorage } from "firebase/storage";
+import { setPersistence, browserLocalPersistence, onAuthStateChanged, User } from "firebase/auth";
+import { auth, db, storage } from "./firebaseInit";
 
-console.log("%c MIMI // Engine: Structural Calibration initiated. ", "color: #A8A29E; font-weight: bold;");
+export { auth, db, storage };
+
+// INITIALIZE PERSISTENCE ONCE
+let persistenceInitialized = false;
+
+export const initializeAuthPersistence = async (): Promise<void> => {
+  if (persistenceInitialized) return;
+  
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+    persistenceInitialized = true;
+    console.info("MIMI // Persistence Locked: browserLocal");
+  } catch (err: any) {
+    console.error("MIMI // Persistence Calibration Failed:", err.code, err.message);
+    persistenceInitialized = true;
+  }
+};
 
 /**
- * THE O2 ANCHOR: Project 0210674664
- * This is the definitive registry for the Mimi Zine Hivemind.
+ * BOOTSTRAP AUTH
+ * Extended timeout for network latency and cold starts.
  */
-const firebaseConfig = {
-  apiKey: "AIzaSyCQ1x1jKvezGsjRcsp8nCJF5rSlMYWwimY",
-  authDomain: "gen-lang-client-0210674664.firebaseapp.com",
-  projectId: "gen-lang-client-0210674664",
-  storageBucket: "gen-lang-client-0210674664.firebasestorage.app",
-  messagingSenderId: "867494793836",
-  appId: "1:867494793836:web:3a8606e94c895b8b61be49"
-};
-
-let _app: FirebaseApp | undefined;
-let _db: Firestore | undefined;
-let _auth: Auth | undefined;
-let _storage: FirebaseStorage | undefined;
-
-const getOrInitializeApp = (): FirebaseApp => {
-  if (!_app) {
-    const existingApps = getApps();
-    _app = existingApps.length > 0 ? existingApps[0] : initializeApp(firebaseConfig);
-    console.log("%c MIMI // Engine: Manifested in Project O2 (021067). ", "color: #10B981; font-weight: bold;");
-  }
-  return _app;
-};
-
-export const ensureAuth = async (): Promise<Auth> => {
-  if (!_auth) {
-    const app = getOrInitializeApp();
-    _auth = getAuth(app);
-    // Force local persistence to prevent session decay on mobile
-    await setPersistence(_auth, browserLocalPersistence);
-  }
-  return _auth;
-};
-
-export const ensureDb = async (): Promise<Firestore> => {
-  if (!_db) {
-    const app = getOrInitializeApp();
+export const bootstrapAuth = async (): Promise<User | null> => {
+  try {
+    await initializeAuthPersistence();
     
-    // Hardened Offline Persistence for restricted mobile environments
-    _db = initializeFirestore(app, {
-      localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager(),
-        cacheSizeBytes: CACHE_SIZE_UNLIMITED
-      }),
-      experimentalAutoDetectLongPolling: true,
-      experimentalForceLongPolling: true, 
+    if (auth.currentUser) {
+      console.info("MIMI // Bootstrap: Identity detected in memory.");
+      return auth.currentUser;
+    }
+    
+    return new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        console.warn("MIMI // Bootstrap: Timeout reached, proceeding as Guest.");
+        resolve(null);
+      }, 3500); // Resilient 3.5s timeout
+
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        clearTimeout(timeout);
+        unsubscribe();
+        if (user) {
+          console.info("MIMI // Bootstrap: Identity anchored via state change.");
+        }
+        resolve(user);
+      }, (error) => {
+        console.error("MIMI // Bootstrap: Auth failure.", error);
+        clearTimeout(timeout);
+        resolve(null);
+      });
     });
-    
-    console.log("%c MIMI // Engine: Cloud-Synchronized Archive calibrated. ", "color: #3B82F6; font-weight: bold;");
+  } catch (error: any) {
+    console.error("MIMI // Bootstrap: Fatal error.", error);
+    return null;
   }
-  return _db;
 };
 
-export const ensureStorage = async (): Promise<FirebaseStorage> => {
-  if (!_storage) {
-    const app = getOrInitializeApp();
-    _storage = getStorage(app);
-  }
-  return _storage;
+export const ensureAuth = async () => {
+  await initializeAuthPersistence();
+  return auth;
 };
+
+export const ensureDb = async () => db;
+export const ensureStorage = async () => storage;
 
 export { 
   uploadBlob, saveZineToProfile, fetchUserZines, fetchCommunityZines, 
   addToPocket, fetchPocketItems, 
-  deleteFromPocket, recordTasteEdit, getUserProfile, saveUserProfile,
-  fetchZineById, linkGoogleAccount
+  // removed recordTasteEdit as it is not exported from firebaseUtils
+  deleteFromPocket, getUserProfile, saveUserProfile,
+  fetchZineById, isHandleAvailable,
+  // removed migrateGhostToCloud as it is not exported from firebaseUtils
+  isCaptiveInWebview, handleAuthRedirect,
+  initiatePasswordReset, anchorIdentity, startGhostSession,
+  updateZineVisibility
 } from './firebaseUtils';

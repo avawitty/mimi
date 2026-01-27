@@ -1,11 +1,10 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { fetchCommunityZines, fetchUserZines } from '../services/firebase';
 import { generateSeasonReport } from '../services/geminiService';
 import { getLocalZines } from '../services/localArchive';
 import { ZineMetadata, SeasonReport } from '../types';
 import { useUser } from '../contexts/UserContext';
-import { Sparkles, Map as MapIcon, Ghost, Eye, Loader2, AlertCircle, RefreshCcw, Zap } from 'lucide-react';
+import { Ghost, Loader2, RefreshCcw, Zap, Archive } from 'lucide-react';
 import { ZineCard } from './ZineCard'; 
 import { SeasonReportTicker } from './SeasonReportTicker';
 
@@ -21,60 +20,69 @@ export const Shelf: React.FC<ShelfProps> = ({ variant, onSelectZine }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<boolean>(false);
 
-  const loadShelf = async () => {
-    setLoading(true);
+  const loadShelf = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     setError(false);
     try {
       let finalZines: ZineMetadata[] = [];
       
       if (variant === 'personal') {
-        const localData = getLocalZines() || [];
+        const localData = await getLocalZines() || [];
         let cloudData: ZineMetadata[] = [];
-        
+
         if (user && !user.isAnonymous) {
           try {
             cloudData = await fetchUserZines(user.uid) || [];
           } catch (cloudErr) {
-            console.warn("Mimi: Cloud archives temporarily obscured.", cloudErr);
+            console.warn("MIMI // Stand: Cloud registry obscured.");
           }
         }
         
-        const dataMap = new Map<string, ZineMetadata>();
-        cloudData.forEach((z: ZineMetadata) => { if (z && z.id) dataMap.set(z.id, z); });
-        localData.forEach((z: ZineMetadata) => {
-            if (z && z.id && !dataMap.has(z.id)) {
-              dataMap.set(z.id, z);
-            }
-        });
+        const registry = new Map<string, ZineMetadata>();
+        cloudData.forEach(z => { if (z && z.id) registry.set(z.id, z); });
+        localData.forEach(z => { if (z && z.id) registry.set(z.id, z); });
         
-        finalZines = Array.from(dataMap.values()).sort((a, b) => b.timestamp - a.timestamp);
+        finalZines = Array.from(registry.values())
+          .filter(z => z && z.id)
+          .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
       } else {
-         finalZines = await fetchCommunityZines(20) || [];
+         const data = await fetchCommunityZines(20);
+         finalZines = (data || []).filter(z => z && z.id);
       }
       
       setZines(finalZines);
 
       if (finalZines.length > 0 && (variant === 'community' || variant === 'clique')) {
           try {
-              const r = await generateSeasonReport(finalZines.slice(0, 10));
+              const r = await generateSeasonReport(finalZines.slice(0, 5));
               setReport(r);
           } catch (re) {
-              console.warn("Mimi: Seasonal analysis disrupted.");
+              console.warn("MIMI // Stand: Seasonal analysis deferred.");
           }
       }
     } catch (e) {
-      console.error("Mimi: Shelf collapse.", e);
+      console.error("MIMI // Stand Collapse:", e);
       setError(true);
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
-  };
+  }, [variant, user]);
 
   useEffect(() => {
     loadShelf();
-  }, [variant, user]);
+    
+    // LISTEN FOR NEW ARTIFACTS
+    const handleArchiveUpdate = () => {
+      if (variant === 'personal') {
+        loadShelf(true); // Silent re-hydration
+      }
+    };
+    
+    window.addEventListener('mimi:artifact_finalized', handleArchiveUpdate);
+    return () => window.removeEventListener('mimi:artifact_finalized', handleArchiveUpdate);
+  }, [loadShelf, variant]);
 
-  if (loading) {
+  if (loading && zines.length === 0) {
     return (
       <div className="w-full flex flex-col items-center justify-center p-24 gap-4 animate-pulse">
         <Loader2 className="animate-spin text-stone-300" size={32} />
@@ -91,42 +99,32 @@ export const Shelf: React.FC<ShelfProps> = ({ variant, onSelectZine }) => {
         <div className="flex items-center justify-between mb-16 border-b border-stone-100 dark:border-stone-800 pb-10">
            <div className="flex flex-col gap-2">
               <div className="flex items-center gap-3">
-                {variant === 'community' && <Zap size={18} className="text-amber-400" />}
-                <h3 className="font-serif text-4xl italic text-nous-text dark:text-nous-dark-text luminescent-text tracking-tighter">
-                  {variant === 'personal' ? 'Shadow Archive' : variant === 'clique' ? 'Clique Radar' : 'Transmissions'}
+                {variant === 'personal' ? <Archive size={18} className="text-stone-400" /> : <Zap size={18} className="text-amber-400" />}
+                <h3 className="font-serif text-4xl italic text-nous-text dark:text-white luminescent-text tracking-tighter">
+                  {variant === 'personal' ? 'Deep Archive' : variant === 'clique' ? 'Clique Radar' : 'Transmissions'}
                 </h3>
               </div>
               <span className="font-sans text-[8px] uppercase tracking-[0.5em] text-stone-400 font-black">
-                {variant === 'community' ? 'BROADCASTING_HIVEMIND' : 'TEMPORAL_LOGS'}: {zines.length}
+                {variant === 'personal' ? 'PERMANENT_RECORD' : 'BROADCAST_FEED'}: {zines.length} Artifacts
               </span>
            </div>
-           <div className="flex items-center gap-4">
-              <button onClick={loadShelf} className="p-3 bg-stone-50 dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-full text-stone-400 hover:text-nous-text transition-all active:rotate-180" title="Refresh Frequency">
-                  <RefreshCcw size={16} className={loading ? 'animate-spin' : ''} />
-              </button>
-              {error && (
-                  <div className="flex items-center gap-2 text-red-500">
-                      <AlertCircle size={14} />
-                      <span className="font-sans text-[8px] uppercase tracking-widest font-black">Signal Obscured</span>
-                  </div>
-              )}
-           </div>
+           <button onClick={() => loadShelf()} className="p-3 bg-stone-50 dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-full text-stone-400 hover:text-nous-text dark:hover:text-white transition-all active:rotate-180" title="Refresh">
+               <RefreshCcw size={16} className={loading ? 'animate-spin' : ''} />
+           </button>
         </div>
 
         {zines.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-48 opacity-30 text-center">
              <Ghost size={64} className="mb-8 text-stone-200" />
-             <p className="font-serif italic text-3xl mb-4">Silence in the archives.</p>
+             <p className="font-serif italic text-3xl mb-4">“Nothing here yet.”</p>
              <p className="font-sans text-[9px] uppercase tracking-[0.5em] font-black leading-relaxed max-w-sm">
-                {variant === 'personal' ? 'Manifest a refraction in the studio to begin your log.' : 'The community is currently in a state of quietude.'}
+                The archive is currently a void waiting for manifest.
              </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-12 gap-y-20">
             {zines.map((zine) => (
-              zine && zine.id ? (
-                <ZineCard key={zine.id} zine={zine} onClick={() => onSelectZine(zine)} currentUserId={user?.uid} />
-              ) : null
+              <ZineCard key={zine.id} zine={zine} onClick={() => onSelectZine(zine)} currentUserId={user?.uid} />
             ))}
           </div>
         )}

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, Sparkles, Radio, Activity, RefreshCw, Bookmark, Check, Loader2, Zap, Waves, MessageSquare, ExternalLink, Copy, CornerDownRight, Orbit, Sun, Moon, Info, Fingerprint, AlertTriangle } from 'lucide-react';
 import { fetchCommunityZines, addToPocket } from '../services/firebase';
-import { generateMirrorRefraction } from '../services/geminiService';
+import { generateMesopicRefraction } from '../services/geminiService';
 import { useUser } from '../contexts/UserContext';
 
 const DissonanceCanvas: React.FC<{ score: number }> = ({ score }) => {
@@ -49,7 +49,7 @@ const DissonanceCanvas: React.FC<{ score: number }> = ({ score }) => {
   return <canvas ref={canvasRef} width={400} height={80} className="w-full h-12 opacity-60" />;
 };
 
-export const ObsidianMirror: React.FC = () => {
+export const MesopicLens: React.FC = () => {
   const { user, profile } = useUser();
   const [omen, setOmen] = useState<string | null>(null);
   const [provenance, setProvenance] = useState<string | null>(null);
@@ -63,12 +63,12 @@ export const ObsidianMirror: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const RITUAL_TEXTS = [
-    "Analyzing mesopic threshold...",
-    "Calibrating rod/cone resonance...",
-    "Intercepting structural signals...",
-    "Binding architectural omens...",
-    "Reconciling taste manifesto...",
-    "Re-syncing with the collective void..."
+    "Calibrating the threshold...",
+    "Reconciling rods with cones...",
+    "Adjusting scotopic sensitivity...",
+    "Awaiting photopic manifest...",
+    "Detecting chromatic dissonance...",
+    "Entering the Mesopic state..."
   ];
 
   const fetchOmen = async () => {
@@ -84,7 +84,7 @@ export const ObsidianMirror: React.FC = () => {
       const zines = await fetchCommunityZines(12);
       const titles = (zines || []).map(z => z.title).join(', ');
 
-      const data = await generateMirrorRefraction(profile, titles);
+      const data = await generateMesopicRefraction(profile, titles);
       
       setOmen(data.omen);
       setDissonance(data.dissonance);
@@ -93,7 +93,7 @@ export const ObsidianMirror: React.FC = () => {
 
     } catch (e: any) {
       console.error("MIMI // Mesopic Signal Failure:", e);
-      const errorMsg = e.message || "The signal was obscured by structural dissonance.";
+      const errorMsg = e.message || "The scotopic signal was too noisy.";
       setError(errorMsg);
       setOmen(null);
     } finally {
@@ -111,7 +111,7 @@ export const ObsidianMirror: React.FC = () => {
         omenText: omen, 
         provenance: provenance,
         imageUrl: manifestationUrl || undefined,
-        metaphor: `Mesopic refraction captured for ${profile?.zodiacSign || "Ghost"}`,
+        metaphor: `Mesopic refraction captured at the rod-cone threshold.`,
         zodiacSign: profile?.zodiacSign
       });
       setIsArchived(true);
@@ -128,15 +128,9 @@ export const ObsidianMirror: React.FC = () => {
     <div className="w-full min-h-screen flex flex-col items-center justify-start pt-24 md:pt-32 p-4 md:p-6 bg-stone-50/30 dark:bg-[#080707] transition-colors duration-1000 pb-32">
       <div className="relative z-10 w-full max-w-4xl flex flex-col items-center text-center">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 space-y-2">
-              <h2 className="font-serif text-3xl md:text-5xl italic tracking-tighter luminescent-text text-nous-text dark:text-white">Mesopic Lens</h2>
+              <h2 className="font-serif text-3xl md:text-5xl italic tracking-tighter luminescent-text text-nous-text dark:text-white">The Mesopic.</h2>
               <div className="flex items-center justify-center gap-4">
-                <span className="font-sans text-[7px] uppercase tracking-[1em] text-stone-400 font-black">Twilight Refraction</span>
-                {profile?.zodiacSign && (
-                  <div className="flex items-center gap-2 px-3 py-0.5 bg-indigo-500/10 border border-indigo-500/20 rounded-full">
-                    <Sun size={10} className="text-amber-500" />
-                    <span className="font-sans text-[7px] uppercase tracking-widest font-black text-indigo-400">{profile.zodiacSign} Signature</span>
-                  </div>
-                )}
+                <span className="font-sans text-[7px] uppercase tracking-[1em] text-stone-400 font-black">Rod-Cone Threshold Audit</span>
               </div>
           </motion.div>
 
@@ -153,13 +147,13 @@ export const ObsidianMirror: React.FC = () => {
                            <AlertTriangle size={32} className="text-red-500 animate-pulse" />
                         </div>
                         <div className="space-y-4 max-w-md mx-auto">
-                            <h3 className="font-sans text-[10px] uppercase tracking-[0.4em] font-black text-red-500">Handshake Failure</h3>
+                            <h3 className="font-sans text-[10px] uppercase tracking-[0.4em] font-black text-red-500">Threshold Failure</h3>
                             <p className="font-serif italic text-xl md:text-2xl text-stone-500 dark:text-stone-400 leading-tight">
                               "{error}"
                             </p>
                         </div>
                         <button onClick={fetchOmen} className="px-8 py-3 bg-nous-text dark:bg-white text-white dark:text-black font-sans text-[10px] uppercase tracking-[0.5em] font-black rounded-full shadow-2xl active:scale-95 transition-all flex items-center gap-3">
-                           <RefreshCw size={14} /> Re-Align Threshold
+                           <RefreshCw size={14} /> Re-Align Sensitivity
                         </button>
                     </motion.div>
                 ) : (
@@ -183,7 +177,7 @@ export const ObsidianMirror: React.FC = () => {
                               >
                                 <div className="flex items-center gap-2 mb-2 text-stone-400">
                                    <Fingerprint size={10} />
-                                   <span className="font-sans text-[7px] uppercase tracking-widest font-black">Mesopic Provenance</span>
+                                   <span className="font-sans text-[7px] uppercase tracking-widest font-black">Neurological Provenance</span>
                                 </div>
                                 <p className="font-serif italic text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
                                   {provenance}
@@ -202,7 +196,7 @@ export const ObsidianMirror: React.FC = () => {
                               </button>
                               <button onClick={handleArchiveOmen} disabled={isArchived || isArchiving} className={`px-8 py-2 rounded-full font-sans text-[8px] uppercase tracking-[0.4em] font-black transition-all flex items-center gap-3 ${isArchived ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-inner' : 'bg-nous-text dark:bg-white text-white dark:text-black shadow-xl active:scale-95'}`}>
                                   {isArchiving ? <Loader2 size={10} className="animate-spin" /> : isArchived ? <Check size={10} /> : <Bookmark size={10} />}
-                                  {isArchived ? 'Captured' : 'Commit'}
+                                  {isArchived ? 'Captured' : 'Anchor Omen'}
                               </button>
                           </div>
                         </div>
@@ -213,15 +207,15 @@ export const ObsidianMirror: React.FC = () => {
 
           <div className="mt-12 w-full max-w-2xl grid md:grid-cols-2 gap-10 border-t border-stone-100 dark:border-stone-900 pt-10">
               <div className="space-y-4 text-left">
-                  <div className="flex items-center gap-2 text-stone-400"><Zap size={10} className="text-amber-500" /><span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black">Dissonance</span></div>
+                  <div className="flex items-center gap-2 text-stone-400"><Zap size={10} className="text-amber-500" /><span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black">Retinal Friction</span></div>
                   <DissonanceCanvas score={dissonance} />
-                  <p className="font-serif italic text-xs text-stone-400">Current structural friction detected in the collective threshold.</p>
+                  <p className="font-serif italic text-xs text-stone-400">Current rod/cone dissonance detected in the collective void.</p>
               </div>
               
               <div className="space-y-6">
-                <div className="flex items-center gap-2 text-stone-400"><Orbit size={10} /><span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black">The Mesopic Registry</span></div>
+                <div className="flex items-center gap-2 text-stone-400"><Orbit size={10} /><span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black">The Mesopic Stand</span></div>
                 <button 
-                  onClick={() => alert("The Mesopic is for threshold reflection. To actively commit artifacts to the shadow registry, descend into the Obsidian Studio.")}
+                  onClick={() => alert("The Mesopic is for threshold awareness. Access the Shadow Studio for active scotopic drafting.")}
                   className="w-full flex items-center justify-between p-4 md:p-5 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-2xl group hover:border-nous-text dark:hover:border-white transition-all shadow-sm relative overflow-hidden"
                 >
                   <div className="flex items-center gap-4">
@@ -230,9 +224,9 @@ export const ObsidianMirror: React.FC = () => {
                     </div>
                     <div className="flex flex-col text-left">
                       <span className="font-sans text-[9px] md:text-[10px] uppercase tracking-[0.4em] font-black text-nous-text dark:text-white">
-                        Shadow Studio
+                        Shadow Registry
                       </span>
-                      <span className="font-serif italic text-[10px] md:text-xs text-stone-400">Commit Omens to form</span>
+                      <span className="font-serif italic text-[10px] md:text-xs text-stone-400">Review Scotopic Artifacts</span>
                     </div>
                   </div>
                   <ExternalLink size={14} className="text-stone-300 group-hover:text-nous-text dark:group-hover:text-white transition-colors" />

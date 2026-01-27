@@ -3,7 +3,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchCommunityZines } from '../services/firebase';
 import { generateSeasonReport } from '../services/geminiService';
-import { ZineMetadata, SeasonReport, CliqueRole } from '../types';
+// Corrected CliqueRole to ProsceniumRole as defined in types.ts
+import { ZineMetadata, SeasonReport, ProsceniumRole } from '../types';
 import { Radio, Activity, Clock, Shield, Eye, MessageSquare, Headphones, Loader2, Zap, ChevronRight, Sparkles, Layers, PenTool, Wind, Map, Info } from 'lucide-react';
 import { ZineCard } from './ZineCard';
 import { useUser } from '../contexts/UserContext';
@@ -18,9 +19,11 @@ export const CliqueRadar: React.FC<{ onSelectZine: (zine: ZineMetadata) => void 
   const [syncLevel, setSyncLevel] = useState(90);
   const [showGuide, setShowGuide] = useState(true);
 
-  const myRole: CliqueRole = useMemo(() => {
+  // Corrected CliqueRole to ProsceniumRole usage
+  const myRole: ProsceniumRole = useMemo(() => {
     if (!profile) return 'Ghost';
-    const roles: CliqueRole[] = ['Editor', 'Witness', 'Ghost'];
+    // Corrected CliqueRole array type to ProsceniumRole
+    const roles: ProsceniumRole[] = ['Editor', 'Witness', 'Ghost'];
     const index = (profile.handle.length + (new Date().getDate())) % 3;
     return roles[index];
   }, [profile]);
@@ -70,7 +73,7 @@ export const CliqueRadar: React.FC<{ onSelectZine: (zine: ZineMetadata) => void 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${seconds.toString().padStart(2, '0')}`;
   };
 
   if (loading) return (

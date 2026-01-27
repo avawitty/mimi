@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { X, ExternalLink, CreditCard, Sparkles } from 'lucide-react';
+import { X, ExternalLink, CreditCard, Sparkles, Terminal } from 'lucide-react';
 
 interface StructuralPageProps {
   type: 'orientation' | 'evolution' | 'access';
@@ -36,25 +36,25 @@ const CONTENT = {
       <div className="space-y-12">
         <div className="space-y-6">
           <div className="flex justify-between items-baseline border-b border-stone-100 dark:border-stone-800 pb-2">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400">v1.4 — Influence Protocol</span>
-            <span className="font-serif italic text-sm text-stone-300">Mimi Müse Handshake</span>
+            <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400">v1.6.2 — Registry Stability</span>
+            <span className="font-serif italic text-sm text-stone-300">Handshake Refined</span>
           </div>
-          <p className="font-serif italic text-stone-500 text-base">Implementation of the **Müse Registry**. Users may now anchor their identity to become Mimi Müses and join our aesthetic broadcast.</p>
+          <p className="font-serif italic text-stone-500 text-base">Formalized the **Sovereign Local Sanctum** protocol. Developers and Muses may now oscillate between localhost and production without losing structural integrity.</p>
         </div>
         <div className="space-y-6 opacity-60">
           <div className="flex justify-between items-baseline border-b border-stone-100 dark:border-stone-800 pb-2">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400">v1.3</span>
-            <span className="font-serif italic text-sm text-stone-300">Acoustic Handshake</span>
+            <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400">v1.4</span>
+            <span className="font-serif italic text-sm text-stone-300">Influence Protocol</span>
           </div>
-          <p className="font-serif italic text-stone-500 text-base">Refined PCM decoding to ensure Coral's transmissions survive browser horizontalization.</p>
+          <p className="font-serif italic text-stone-500 text-base">Implementation of the Müse Registry for cloud-based identity anchoring.</p>
         </div>
         <div className="pt-8 flex flex-col gap-4">
           <div className="flex items-center gap-4">
             <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black text-stone-400">Müse Status</span>
+            <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black text-stone-400">Environment Logic</span>
           </div>
           <p className="font-serif italic text-stone-400 text-sm">
-            Registry is open via the emerald Zap. Anchored identities are prioritized for the **Sovereign Spotlight** and highlighted artifacts.
+            Registry Handshakes are authorized for `localhost` and verified `*.web.app` domains only. Any other frequency will be rejected by the Auth Sentinel.
           </p>
         </div>
       </div>
@@ -71,9 +71,12 @@ const CONTENT = {
         <p>
           **Permanent Anchors** (Mimi Müses) enjoy cloud-registry persistence, meaning your artifacts survive the purging of browser caches. We do not harvest your taste; we merely archive it for your future self.
         </p>
-        <div className="pt-8 border-t border-stone-100 dark:border-stone-800">
-           <span className="font-sans text-[9px] uppercase tracking-[0.3em] text-stone-400 font-black block mb-2">Visibility Protocol</span>
-           <p className="text-sm">Default state is **Vaulted**. Artifacts only appear in the **Season** (Social Floor) if you explicitly decree them as **Broadcasting**.</p>
+        <div className="pt-8 border-t border-stone-100 dark:border-stone-800 flex flex-col gap-4">
+           <div className="flex items-center gap-3">
+             <Terminal size={14} className="text-stone-300" />
+             <span className="font-sans text-[9px] uppercase tracking-[0.3em] text-stone-400 font-black block">Development Sanctum</span>
+           </div>
+           <p className="text-sm">Local testing on `localhost` is encouraged. The machine's auth-sentinel is configured to trust the local frequency for iterative manifestation.</p>
         </div>
       </div>
     )
@@ -110,7 +113,7 @@ export const StructuralPage: React.FC<StructuralPageProps> = ({ type, onClose })
         </motion.div>
         
         <div className="mt-24 pt-8 border-t border-stone-100 dark:border-stone-800 opacity-20 text-center">
-          <span className="font-mono text-[8px] uppercase tracking-widest">Colophon // 2024</span>
+          <span className="font-mono text-[8px] uppercase tracking-widest">Colophon // v1.6.2</span>
         </div>
       </div>
     </motion.div>

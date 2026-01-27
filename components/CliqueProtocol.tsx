@@ -1,36 +1,51 @@
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Anchor, Sparkles, UserPlus, Fingerprint, Loader2, Check, Radio } from 'lucide-react';
+import { X, Anchor, Sparkles, UserPlus, Fingerprint, Loader2, Check, Radio, Mail, Key } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 
 export const CliqueProtocol: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-  const { profile, updateProfile } = useUser();
-  const [signalKey, setSignalKey] = useState('');
+  const { profile, updateProfile, user } = useUser();
+  const [frequencyKey, setFrequencyKey] = useState('');
   const [isBinding, setIsBinding] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const myFrequency = useMemo(() => {
+    if (!user?.uid) return "O2-VOID-000";
+    return `O2-${user.uid.slice(0, 4).toUpperCase()}-${Math.floor(Math.random() * 999)}`;
+  }, [user]);
 
   const handleAnchorMuse = async () => {
-    if (!signalKey.trim() || !profile) return;
-    setIsBinding(true);
+    if (!frequencyKey.trim() || !profile) return;
     
-    // Simulate spectral handshake
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    if (!frequencyKey.startsWith('O2-')) {
+      setError("The frequency key is structurally invalid. It must begin with O2-.");
+      return;
+    }
+
+    setIsBinding(true);
+    setError(null);
+    
+    // Simulate spectral handshake with the O2 Registry
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
     try {
-      const updatedSynced = [...(profile.syncedUsers || []), signalKey.trim()];
+      const updatedSynced = [...(profile.syncedUsers || []), frequencyKey.trim().toLowerCase()];
+      const uniqueMuses = Array.from(new Set(updatedSynced));
+      
       await updateProfile({
         ...profile,
-        syncedUsers: updatedSynced
+        syncedUsers: uniqueMuses
       });
+      
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
-        setSignalKey('');
+        setFrequencyKey('');
         onClose();
       }, 2000);
     } catch (e) {
-      console.error("MUSE_ANCHOR_FAILURE");
+      setError("The O2 Registry rejected this frequency.");
     } finally {
       setIsBinding(false);
     }
@@ -58,45 +73,59 @@ export const CliqueProtocol: React.FC<{ isOpen: boolean; onClose: () => void }> 
           </div>
 
           <div className="space-y-8">
-            <div className="flex items-center gap-4 p-6 bg-stone-50 dark:bg-stone-950 border border-stone-100 dark:border-stone-800 rounded-xl">
+            <div className="flex items-center gap-4 p-6 bg-stone-50 dark:bg-stone-950 border border-stone-100 dark:border-stone-800 rounded-xl cursor-pointer active:scale-95 transition-all" onClick={() => {
+                navigator.clipboard.writeText(myFrequency);
+                alert("Your frequency has been preserved to the clipboard.");
+            }}>
                <div className="p-3 bg-white dark:bg-stone-900 rounded-full shadow-sm">
-                  <Fingerprint size={20} className="text-nous-text dark:text-white" />
+                  <Radio size={20} className="text-emerald-500 animate-pulse" />
                </div>
                <div className="flex flex-col">
-                  <span className="font-sans text-[8px] uppercase tracking-widest text-stone-400 font-black">Your Signal Key</span>
-                  <span className="font-mono text-xs text-nous-text dark:text-white select-all">{profile?.uid.slice(0, 12)}...</span>
+                  <span className="font-sans text-[8px] uppercase tracking-widest text-stone-400 font-black">Your Frequency Key</span>
+                  <span className="font-mono text-xs text-nous-text dark:text-white font-black tracking-tighter">
+                    {myFrequency}
+                  </span>
                </div>
             </div>
 
             <div className="space-y-4">
-              <label className="font-sans text-[9px] uppercase tracking-[0.5em] text-stone-500 font-black block">Enter Muse Key</label>
+              <label className="font-sans text-[9px] uppercase tracking-[0.5em] text-stone-500 font-black block">Enter Muse Frequency</label>
               <input 
                 type="text" 
-                value={signalKey}
-                onChange={(e) => setSignalKey(e.target.value)}
-                placeholder="Spectral Signature"
-                className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-4 font-serif text-2xl italic focus:outline-none focus:border-nous-text dark:focus:border-white transition-colors"
+                value={frequencyKey}
+                onChange={(e) => setFrequencyKey(e.target.value.toUpperCase())}
+                placeholder="O2-XXXX-000"
+                required
+                pattern="O2-[A-Z0-9]{4}-[0-9]{3}"
+                className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-4 font-mono text-2xl font-black focus:outline-none focus:border-nous-text dark:focus:border-white transition-colors tracking-tighter"
               />
+              <AnimatePresence>
+                {error && (
+                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-500 font-sans text-[8px] uppercase tracking-widest font-black">
+                    {error}
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </div>
 
             <button 
               onClick={handleAnchorMuse}
-              disabled={!signalKey.trim() || isBinding || success}
+              disabled={!frequencyKey.trim() || isBinding || success}
               className={`w-full py-6 flex items-center justify-center gap-4 font-sans text-xs tracking-[0.6em] uppercase font-black shadow-2xl transition-all active:scale-95 rounded-full ${success ? 'bg-emerald-500 text-white' : 'bg-nous-text dark:bg-white text-white dark:text-black'}`}
             >
               {isBinding ? <Loader2 size={16} className="animate-spin" /> : success ? <Check size={16} /> : <Anchor size={16} />}
-              <span>{isBinding ? 'Calibrating Sync' : success ? 'Muse Anchored' : 'Anchor Muse'}</span>
+              <span>{isBinding ? 'Calibrating Sync' : success ? 'Frequency Locked' : 'Anchor Muse'}</span>
             </button>
           </div>
 
           <div className="pt-8 border-t border-stone-100 dark:border-stone-800 text-center space-y-4">
             <div className="flex items-center justify-center gap-3 opacity-20">
-               <Radio size={12} />
+               <Key size={12} />
                <div className="h-px w-12 bg-stone-400" />
                <Sparkles size={12} />
             </div>
-            <p className="font-serif italic text-stone-400 text-xs">
-              Muses can witness your **Broadcasting** refractions. Vaulted items remain clinical and private.
+            <p className="font-serif italic text-stone-400 text-xs px-4">
+              Exchange frequencies to bind your aesthetic manifests.
             </p>
           </div>
         </div>

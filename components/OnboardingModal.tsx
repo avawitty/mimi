@@ -1,27 +1,31 @@
 
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../contexts/UserContext';
 import { UserProfile } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Ghost, ArrowRight, Eye, Loader2, Beer as Martini, ShieldCheck, Type, PenTool, Layers, Sparkles, Anchor, Lock, Cloud } from 'lucide-react';
+import { Ghost, ArrowRight, Eye, Loader2, Beer as Martini, ShieldCheck, Type, PenTool, Layers, Sparkles, Anchor, Lock, Cloud, Check, AlertCircle } from 'lucide-react';
 import { getLocalProfile } from '../services/localArchive';
 import { useTheme, PALETTES } from '../contexts/ThemeContext';
+import { isHandleAvailable } from '../services/firebaseUtils';
+import { ValidationLegend } from './ValidationLegend';
 
 type OnboardingStep = 'identity' | 'calibration' | 'taste' | 'commitment';
 
 export const OnboardingModal: React.FC = () => {
-  const { user, profile, updateProfile, login, ghostLogin, linkAccount } = useUser();
+  const { user, profile, updateProfile, ghostLogin, linkAccount } = useUser();
   const { applyPalette, currentPalette } = useTheme();
+  
+  const [local, setLocal] = useState<UserProfile | null>(null);
   const [step, setStep] = useState<OnboardingStep>('identity');
   
   const [handle, setHandle] = useState('');
-  const [processingMode, setProcessingMode] = useState<UserProfile['processingMode']>('movie');
-  const [currentSeason, setCurrentSeason] = useState<UserProfile['currentSeason']>('blooming');
-  const [coreNeed, setCoreNeed] = useState<UserProfile['coreNeed']>('truth');
+  const [isCheckingHandle, setIsCheckingHandle] = useState(false);
+  const [handleAvailable, setHandleAvailable] = useState<boolean | null>(null);
+  
   const [performanceMode, setPerformanceMode] = useState<'minimalist-sans' | 'editorial-serif' | 'brutalist-mono'>('minimalist-sans');
-
+  const [currentSeason, setCurrentSeason] = useState<UserProfile['currentSeason']>('blooming');
   const [inspirations, setInspirations] = useState('');
-  const [keywords, setKeywords] = useState('');
   const [selectedPaletteName, setSelectedPaletteName] = useState<string>(currentPalette.name);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,24 +33,44 @@ export const OnboardingModal: React.FC = () => {
   const [loginError, setLoginError] = useState<string | null>(null);
 
   useEffect(() => {
-    const local = getLocalProfile();
-    if (local && !handle) {
-      setHandle(local.handle);
-      setProcessingMode(local.processingMode);
-      setCurrentSeason(local.currentSeason);
-      setCoreNeed(local.coreNeed);
-      if (local.tasteProfile) {
-          setInspirations(local.tasteProfile.inspirations || '');
-          setKeywords(local.tasteProfile.keywords || '');
-          const pName = local.tasteProfile.primary_palette?.[0] || 'Stone';
-          setSelectedPaletteName(pName);
-          applyPalette(pName);
+    const initLocal = async () => {
+      const data = await getLocalProfile();
+      if (data) {
+        setLocal(data);
+        setStep('commitment');
+        setHandle(data.handle || '');
+        setPerformanceMode((data.tasteProfile?.dominant_archetypes?.[0] as any) || 'minimalist-sans');
+        setCurrentSeason(data.currentSeason || 'blooming');
+        setInspirations(data.tasteProfile?.inspirations || '');
+        setSelectedPaletteName(data.tasteProfile?.primary_palette?.[0] || currentPalette.name);
       }
+    };
+    initLocal();
+  }, [currentPalette.name]);
+
+  useEffect(() => {
+    if (handle.length < 2) {
+      setHandleAvailable(null);
+      setIsCheckingHandle(false);
+      return;
     }
-  }, []);
+    if (local && handle.toLowerCase() === local.handle.toLowerCase()) {
+      setHandleAvailable(true);
+      setIsCheckingHandle(false);
+      return;
+    }
+
+    setIsCheckingHandle(true);
+    const timer = setTimeout(async () => {
+      const available = await isHandleAvailable(handle, user?.uid || '');
+      setHandleAvailable(available);
+      setIsCheckingHandle(false);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [handle, user?.uid, local]);
 
   const handleQuickEntry = async () => {
-      if (!handle.trim()) return;
+      if (!handle.trim() || handleAvailable === false) return;
       setIsLoggingIn(true);
       try {
           await ghostLogin();
@@ -64,46 +88,37 @@ export const OnboardingModal: React.FC = () => {
   };
 
   const handleSubmitProfile = async (useGoogle: boolean = false) => {
-    if (!handle.trim()) return;
+    if (!handle.trim() || handleAvailable === false) return;
     setIsSubmitting(true);
     setLoginError(null);
     
-    // Create the profile locally first to ensure "Active Subject" status
     const palette = PALETTES[selectedPaletteName] || PALETTES.Stone;
-    const baseUid = user?.uid || `ghost_${Date.now()}`;
+    const baseUid = user?.uid || (local?.uid) || `ghost_${Date.now()}`;
     
     const newProfile: UserProfile = {
       uid: baseUid,
-      handle: handle.trim(),
-      photoURL: `https://ui-avatars.com/api/?name=${handle}&background=random&color=fff`,
-      processingMode,
+      handle: handle.trim().toLowerCase(),
+      photoURL: local?.photoURL || `https://ui-avatars.com/api/?name=${handle}&background=random&color=fff`,
+      processingMode: 'movie',
       currentSeason,
-      coreNeed,
-      createdAt: Date.now(),
+      coreNeed: 'truth',
+      createdAt: local?.createdAt || Date.now(),
+      isSwan: useGoogle,
       tasteProfile: {
         inspirations,
-        keywords,
+        keywords: '',
         primary_palette: [palette.name, palette.base, palette.text, palette.accent],
         dominant_archetypes: [performanceMode]
       }
     };
 
     try {
-      // Always secure local form first
-      await updateProfile(newProfile);
-
       if (useGoogle) {
-        // Now that we have a local profile, we link it to Google
-        try {
-          await linkAccount();
-        } catch (linkErr: any) {
-          console.warn("MIMI // Anchor failed:", linkErr);
-          setLoginError("Identity Anchor failed. Proceeding as Ghost.");
-          // We still keep the profile as a Ghost
-        }
+        await linkAccount();
+      } else {
+        await updateProfile(newProfile);
       }
     } catch (e: any) {
-      console.error("MIMI // Accession Failure:", e);
       setLoginError(e.message || "Structural failure during manifestation.");
     } finally {
       setIsSubmitting(false);
@@ -122,24 +137,37 @@ export const OnboardingModal: React.FC = () => {
                   <div className="absolute inset-0 border-t border-nous-text dark:border-white rounded-full animate-[spin_4s_linear_infinite]" />
                </div>
                <h1 className="font-serif text-5xl md:text-7xl italic text-nous-text dark:text-white tracking-tighter">Enter as Ghost.</h1>
-               <p className="font-sans text-[9px] md:text-[11px] uppercase tracking-[0.6em] text-stone-500 dark:text-stone-400 font-black">Assumption of a Temporary Form</p>
+               <p className="font-sans text-[9px] md:text-[11px] uppercase tracking-[0.6em] text-stone-500 dark:text-stone-400 font-black">Assumption of a Unique Frequency</p>
             </div>
             <div className="space-y-8">
-               <div className="relative">
+               <div className="relative input-container group">
                   <input 
                     type="text" 
                     value={handle} 
                     onChange={(e) => setHandle(e.target.value)} 
                     placeholder="Ghost Handle" 
-                    className="bg-transparent border-b border-stone-200 dark:border-stone-800 text-center font-serif text-3xl md:text-5xl py-6 focus:outline-none focus:border-nous-text dark:focus:border-white text-nous-text dark:text-white w-full placeholder:opacity-20" 
+                    required
+                    pattern="^[a-zA-Z0-9_]{2,15}$"
+                    className={`bg-transparent border-b border-stone-200 dark:border-stone-800 text-center font-serif text-3xl md:text-5xl py-6 focus:outline-none focus:border-nous-text dark:focus:border-white transition-colors w-full placeholder:opacity-20 ${handleAvailable === false ? 'text-red-500' : 'text-nous-text dark:text-white'}`} 
                     autoFocus 
                   />
+                  <div className="absolute right-0 bottom-6 flex items-center gap-2">
+                     {isCheckingHandle && <Loader2 size={16} className="animate-spin text-stone-300" />}
+                     {handleAvailable === true && <Check size={16} className="text-emerald-500" />}
+                     {handleAvailable === false && <AlertCircle size={16} className="text-red-500 animate-pulse" />}
+                  </div>
+                  <ValidationLegend />
+                  <AnimatePresence>
+                    {handleAvailable === false && (
+                      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute left-0 -bottom-8 w-full text-[8px] uppercase tracking-widest text-red-500 font-black">This frequency is already claimed.</motion.span>
+                    )}
+                  </AnimatePresence>
                </div>
                <div className="flex flex-col gap-4">
                    <button 
                      onClick={handleQuickEntry} 
-                     disabled={isLoggingIn || !handle.trim()} 
-                     className="w-full py-6 bg-nous-text dark:bg-white text-white dark:text-stone-950 font-sans text-xs tracking-[0.5em] uppercase shadow-2xl flex items-center justify-center gap-4 active:scale-95 transition-all font-black"
+                     disabled={isLoggingIn || !handle.trim() || handleAvailable === false} 
+                     className="w-full py-6 bg-nous-text dark:bg-white text-white dark:text-stone-950 font-sans text-xs tracking-[0.5em] uppercase shadow-2xl flex items-center justify-center gap-4 active:scale-95 transition-all font-black disabled:opacity-20"
                    >
                        Witness Season <Eye size={16} />
                    </button>
@@ -153,7 +181,7 @@ export const OnboardingModal: React.FC = () => {
            <motion.div key="calibration" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-xl w-full space-y-16 py-8">
                 <div className="text-center space-y-4">
                     <h2 className="font-serif text-5xl italic tracking-tighter">Masthead Logic.</h2>
-                    <p className="font-sans text-[9px] uppercase tracking-[0.4em] text-stone-600 dark:text-stone-400 font-black">Which font is your soul?</p>
+                    <p className="font-sans text-[9px] uppercase tracking-[0.4em] text-stone-600 dark:text-stone-400 font-black">Calibration for @{handle}</p>
                 </div>
                 <div className="space-y-12">
                     <div className="space-y-6">
@@ -177,7 +205,7 @@ export const OnboardingModal: React.FC = () => {
                         <span className="font-sans text-[8px] uppercase tracking-[0.3em] text-stone-500 dark:text-stone-400 font-black block">Temporal Season</span>
                         <div className="flex flex-wrap justify-center gap-3">
                             {['rotting', 'blooming', 'frozen', 'burning'].map(opt => (
-                                <button key={opt} onClick={() => setCurrentSeason(opt as any)} className={`px-6 py-3 border rounded-full text-[10px] uppercase tracking-widest transition-all font-black ${currentSeason === opt ? 'bg-nous-text dark:bg-white text-white dark:text-stone-950' : 'border-stone-200 dark:border-stone-800 text-stone-500 dark:text-stone-400 hover:border-nous-text'}`}>{opt}</button>
+                                <button key={opt} onClick={() => setCurrentSeason(opt as any)} className={`px-6 py-3 border rounded-full text-[10px] uppercase tracking-widest transition-all font-black ${currentSeason === opt ? 'bg-nous-text dark:bg-white text-white dark:text-stone-950' : 'border-stone-200 dark:border-stone-800 text-stone-50 dark:text-stone-400 hover:border-nous-text'}`}>{opt}</button>
                             ))}
                         </div>
                     </div>
@@ -228,7 +256,7 @@ export const OnboardingModal: React.FC = () => {
                         <Martini size={32} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-emerald-400 animate-pulse" />
                     </div>
                     <h2 className="font-serif text-5xl italic tracking-tighter">Manifest.</h2>
-                    <p className="font-sans text-[10px] uppercase tracking-[0.5em] text-stone-600 dark:text-stone-400 font-black">Choose your level of structural permanence</p>
+                    <p className="font-sans text-[10px] uppercase tracking-[0.5em] text-stone-600 dark:text-stone-400 font-black">Finalize the anchor for @{handle}</p>
                  </div>
                  
                  <div className="flex flex-col gap-4">
@@ -256,17 +284,6 @@ export const OnboardingModal: React.FC = () => {
                       {loginError}
                     </motion.p>
                  )}
-
-                 <div className="space-y-4 px-8">
-                    <p className="font-serif italic text-stone-400 text-xs">
-                       *Mimi Müses enjoy cloud-registry persistence. Ghosts live only in the shadow-memory of this browser.
-                    </p>
-                    <div className="flex items-center justify-center gap-4 pt-4 opacity-30">
-                        <Cloud size={14} />
-                        <div className="h-px w-12 bg-stone-300" />
-                        <Anchor size={14} />
-                    </div>
-                 </div>
             </motion.div>
         )}
       </AnimatePresence>

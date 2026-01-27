@@ -1,20 +1,19 @@
 
 {
   "hosting": {
-    "site": "mimizine",
     "public": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**",
-      "*.log",
-      ".gitignore"
+      "**/node_modules/**"
     ],
     "rewrites": [
       {
         "source": "**",
         "destination": "/index.html"
       }
-    ]
+    ],
+    "cleanUrls": true,
+    "trailingSlash": false
   }
 }

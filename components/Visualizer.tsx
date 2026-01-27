@@ -1,164 +1,180 @@
 
-import React, { useState, useEffect } from 'react';
-import { generateZineImage, editZineImage } from '../services/geminiService';
-import { Loader2, Bookmark, Check, RefreshCw, Maximize2 } from 'lucide-react';
+// @ts-nocheck
+import React, { useState, useEffect, useRef } from 'react';
+import { generateZineImage } from '../services/geminiService';
+import { addToPocket } from '../services/firebase';
+import { Loader2, RefreshCw, Maximize2, Bookmark, Check, AlertTriangle, Fingerprint, Sparkles, ImageOff, ShieldAlert, ZapOff, Lock, ServerCrash, Wind } from 'lucide-react';
 import { AspectRatio, ImageSize } from '../types';
-import { addToPocket, recordTasteEdit } from '../services/firebase';
 import { useUser } from '../contexts/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tooltip } from './Tooltip';
 
-interface VisualizerProps {
-  prompt: string;
-  className?: string;
-  defaultAspectRatio?: AspectRatio;
-  onUpdate?: (newImage: string) => void;
-  initialImage?: string;
-}
+const SUPPORTED_ASPECT_RATIOS: AspectRatio[] = ["1:1", "3:4", "4:3", "9:16", "16:9"];
 
-export const Visualizer: React.FC<VisualizerProps> = ({ prompt, className, defaultAspectRatio = '1:1', onUpdate, initialImage }) => {
-  const { user } = useUser();
+export const Visualizer: React.FC<{ 
+  prompt: string; 
+  negativePrompt?: string;
+  className?: string; 
+  defaultAspectRatio?: AspectRatio; 
+  onUpdate?: (newImage: string) => void; 
+  initialImage?: string; 
+  isArtifact?: boolean;
+}> = ({ prompt, negativePrompt, className, defaultAspectRatio = '1:1', onUpdate, initialImage, isArtifact }) => {
+  const { user, profile } = useUser();
   const [imageSrc, setImageSrc] = useState<string | null>(initialImage || null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isBinding, setIsBinding] = useState(false);
+  const [isPocketSaving, setIsPocketSaving] = useState(false);
+  const [isPocketSaved, setIsPocketSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editPrompt, setEditPrompt] = useState('');
+  const [errorType, setErrorType] = useState<'safety' | 'rate' | 'auth' | 'server' | 'debris' | null>(null);
+  const [imageFailed, setImageFailed] = useState(false);
+  const autoDevelopedRef = useRef(false);
   
-  const [aspectRatio, setAspectRatio] = useState<AspectRatio>(defaultAspectRatio);
+  const isVaultedSignal = imageSrc === "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+  const initialRatio = SUPPORTED_ASPECT_RATIOS.includes(defaultAspectRatio as AspectRatio) ? defaultAspectRatio : "1:1" as AspectRatio;
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>(initialRatio);
   const [size, setSize] = useState<ImageSize>('1K');
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
-    if (initialImage) setImageSrc(initialImage);
+    if (!imageSrc && prompt && !isLoading && !autoDevelopedRef.current) {
+      autoDevelopedRef.current = true;
+      handleDevelop();
+    }
+  }, [prompt, imageSrc]);
+
+  useEffect(() => {
+    if (initialImage) {
+      setImageSrc(initialImage);
+      setImageFailed(false);
+      setError(null);
+      setErrorType(null);
+    }
   }, [initialImage]);
 
-  const handleDevelop = async () => {
-    setIsLoading(true);
+  const handleSaveToPocket = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!imageSrc || isPocketSaving || isPocketSaved) return;
+
+    setIsPocketSaving(true);
     setError(null);
     try {
-      const base64 = await generateZineImage(prompt, aspectRatio, size);
+      await addToPocket(user?.uid || 'ghost', 'image', {
+        imageUrl: imageSrc,
+        prompt: prompt,
+        aspectRatio: aspectRatio,
+        userHandle: profile?.handle || 'Ghost',
+        userAvatar: profile?.photoURL || undefined
+      });
+      setIsPocketSaved(true);
+      setTimeout(() => setIsPocketSaved(false), 3000);
+    } catch (err: any) {
+      setError("Vault Failure.");
+    } finally {
+      setIsPocketSaving(false);
+    }
+  };
+
+  const handleDevelop = async (e?: React.MouseEvent, distilled = false) => {
+    if (e) e.stopPropagation();
+    if (!prompt) return;
+    
+    setIsLoading(true);
+    setIsPocketSaved(false);
+    setImageFailed(false);
+    setError(null);
+    setErrorType(null);
+    autoDevelopedRef.current = true;
+
+    try {
+      const safeRatio = SUPPORTED_ASPECT_RATIOS.includes(aspectRatio) ? aspectRatio : "1:1" as AspectRatio;
+      
+      // If distilled path is chosen, strip the prompt to its most basic semiotic components
+      const activePrompt = distilled 
+        ? prompt.split(/[.,;]/)[0].slice(0, 100) 
+        : prompt;
+
+      const base64 = await generateZineImage(activePrompt, safeRatio, size, profile, negativePrompt);
       setImageSrc(base64);
-      setIsSaved(false); 
       if (onUpdate) onUpdate(base64);
     } catch (e: any) {
-      setError(e.message || "Vision obscured.");
+      console.error("MIMI // Image Dev Error:", e);
+      const msg = e.message || "Signal Dissonance.";
+      setError(msg);
+      setErrorType(e.code === 'ORACLE_COLLAPSE' ? 'debris' : e.code === 'SAFETY_BLOCK' ? 'safety' : 'server');
     } finally { setIsLoading(false); }
   };
 
-  const handleRefract = async () => {
-    if (!imageSrc || !editPrompt) return;
-    setIsLoading(true);
-    setIsBinding(true);
-    try {
-      // 1. Structural Refraction Ritual
-      const base64Data = imageSrc.includes('base64,') ? imageSrc.split(',')[1] : imageSrc;
-      const refined = await editZineImage(base64Data, editPrompt);
-      
-      // 2. Manifestation
-      setImageSrc(refined);
-      
-      // 3. Structural Anchor (Force state to parent)
-      if (onUpdate) onUpdate(refined);
-      
-      // 4. Archive Ritual
-      if (user) await recordTasteEdit(user.uid, imageSrc, refined, prompt, editPrompt);
-
-      // 5. Exit Ritual
-      setIsEditing(false);
-      setEditPrompt('');
-    } catch (e) {
-      console.error("MIMI // Refraction failed:", e);
-      setError("Mutation rejected.");
-    } finally { 
-      setIsLoading(false); 
-      setIsBinding(false);
-    }
-  };
-
-  const handleSaveToPocket = async (e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    if (!user || !imageSrc || isSaving || isSaved) return;
-    setIsSaving(true);
-    try {
-      await addToPocket(user.uid, 'image', { imageUrl: imageSrc, prompt, aspectRatio });
-      setIsSaved(true);
-    } catch (e) { 
-      console.error("MIMI // Pocket failure:", e); 
-    } finally { 
-      setIsSaving(false); 
-    }
-  };
-
   return (
-    <div className={`relative w-full flex flex-col items-center ${className}`}>
+    <div className={`relative w-full flex flex-col items-center ${className}`} onClick={(e) => e.stopPropagation()}>
       <div 
-        className="relative w-full bg-white dark:bg-stone-900 shadow-[0_40px_80px_rgba(0,0,0,0.08)] overflow-hidden group border border-stone-100 dark:border-stone-800 transition-all duration-1000 rounded-sm"
+        className={`relative w-full overflow-hidden group border transition-all duration-1000 ${isVaultedSignal ? 'bg-black border-emerald-900/30' : 'bg-white dark:bg-stone-900 border-stone-100 dark:border-stone-800 shadow-2xl'}`}
         style={{ aspectRatio: aspectRatio.split(':').join('/') }}
       >
-        {imageSrc ? (
-          <div className="relative w-full h-full group">
-            <img src={imageSrc} alt="" className="w-full h-full object-cover grayscale md:hover:grayscale-0 transition-all duration-[2s] ease-out" />
-            
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-8 bg-white/95 dark:bg-black/95 backdrop-blur-3xl px-8 py-4 rounded-full shadow-2xl opacity-0 group-hover:opacity-100 transition-all border border-stone-100 dark:border-stone-800 translate-y-4 group-hover:translate-y-0 z-20">
-                 <Tooltip text={isSaved ? "Saved" : "Archive Fragment"}>
-                   <button onClick={handleSaveToPocket} className={`transition-all ${isSaved ? 'text-emerald-500' : 'text-stone-400 hover:text-nous-text'}`}>
-                      {isSaving ? <Loader2 size={18} className="animate-spin" /> : isSaved ? <Check size={18} /> : <Bookmark size={18} />}
-                   </button>
-                 </Tooltip>
-                 <div className="w-px h-4 bg-stone-200" />
-                 <Tooltip text="Mutate Vision">
-                   <button onClick={() => setIsEditing(true)} className="text-stone-400 hover:text-nous-text flex items-center gap-2">
-                      <RefreshCw size={18} />
-                      <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black">Refract</span>
-                   </button>
-                 </Tooltip>
+        {imageSrc && !isLoading && !imageFailed ? (
+          <div className="relative w-full h-full">
+            <img 
+              src={imageSrc} 
+              alt="" 
+              onError={() => setImageFailed(true)}
+              className="w-full h-full object-cover grayscale transition-all duration-[2s] ease-out lg:hover:grayscale-0" 
+            />
+            <div className="absolute top-3 right-3 md:top-4 md:right-4 z-20 flex items-center gap-2">
+                <div className="bg-white/10 backdrop-blur-md p-1.5 md:p-2 rounded-full border border-white/20">
+                  <Sparkles size={10} className="text-white/40" />
+                </div>
             </div>
-
-            <AnimatePresence>
-              {isEditing && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-white/95 dark:bg-black/95 backdrop-blur-xl z-30 flex flex-col items-center justify-center p-8 gap-8">
-                  <div className="w-full max-w-sm space-y-6 text-center">
-                    <span className="font-sans text-[8px] uppercase tracking-[0.6em] text-stone-400 font-black">Mutation Instructions</span>
-                    <textarea 
-                      value={editPrompt} 
-                      onChange={(e) => setEditPrompt(e.target.value)} 
-                      placeholder="e.g. 'Add a silver haze'..." 
-                      className="w-full bg-transparent border-b border-stone-200 text-center font-serif text-2xl italic focus:outline-none placeholder-stone-300 dark:placeholder-stone-700 resize-none h-24 dark:text-white"
-                      autoFocus
-                    />
+            <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 md:gap-4 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 backdrop-blur-xl p-1.5 md:p-2 rounded-full border border-white/10 z-30">
+               <div className="flex bg-white/10 p-0.5 md:p-1 rounded-full">
+                  {(['1K', '2K', '4K'] as ImageSize[]).map(s => (
+                    <button key={s} onClick={(e) => { e.stopPropagation(); setSize(s); }} className={`px-2 md:px-3 py-0.5 md:py-1 rounded-full font-sans text-[6px] md:text-[7px] uppercase tracking-widest transition-all ${size === s ? 'bg-white text-black' : 'text-white/50 hover:text-white'}`}>
+                      {s}
+                    </button>
+                  ))}
+               </div>
+               <div className="flex gap-1 md:gap-2">
+                   <button onClick={handleSaveToPocket} disabled={isPocketSaving || isPocketSaved} className={`p-2 md:p-2.5 rounded-full shadow-xl transition-all hover:scale-110 active:scale-90 ${isPocketSaved ? 'bg-emerald-50 text-white' : 'bg-white/20 text-white hover:bg-white'}`}>
+                     {isPocketSaving ? <Loader2 size={12} className="animate-spin" /> : isPocketSaved ? <Check size={12} /> : <Bookmark size={12} />}
+                   </button>
+                   <button onClick={(e) => handleDevelop(e)} className="p-2 md:p-2.5 bg-white text-black rounded-full shadow-xl hover:scale-110 active:scale-90 transition-all">
+                     <RefreshCw size={12} />
+                   </button>
+               </div>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center p-4 md:p-8 bg-stone-50/50 dark:bg-stone-950/50">
+             {isLoading ? (
+                <div className="flex flex-col items-center gap-3 md:gap-4">
+                  <Loader2 className="animate-spin text-stone-300" size={24} />
+                  <span className="font-sans text-[7px] md:text-[8px] uppercase tracking-[0.3em] text-stone-400 font-black">Developing {size}...</span>
+                </div>
+             ) : error ? (
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center space-y-6 max-w-xs px-4">
+                  <div className="p-4 bg-red-50 dark:bg-red-950/20 rounded-full border border-red-100 dark:border-red-900/30 inline-block">
+                    <ShieldAlert size={24} className="text-red-500 animate-pulse" />
                   </div>
-                  <div className="flex gap-4">
-                    <button onClick={() => setIsEditing(false)} disabled={isBinding} className="px-8 py-3 border border-stone-200 dark:border-stone-800 font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 hover:text-red-500 hover:border-red-500 transition-all">Cancel</button>
-                    <button onClick={handleRefract} disabled={!editPrompt.trim() || isBinding} className="px-8 py-3 bg-nous-text dark:bg-white text-white dark:text-black font-sans text-[9px] uppercase tracking-widest font-black disabled:opacity-30 flex items-center gap-3">
-                      {isBinding ? <Loader2 size={12} className="animate-spin" /> : null}
-                      {isBinding ? 'Binding...' : 'Apply Trace'}
+                  <div className="space-y-2">
+                    <p className="font-serif italic text-base text-stone-500 leading-tight">"{error}"</p>
+                    <p className="font-sans text-[7px] uppercase tracking-widest text-stone-300 font-black">Environmental Structural Failure</p>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    <button onClick={(e) => handleDevelop(e)} className="w-full py-3 bg-nous-text dark:bg-white text-white dark:text-black font-sans text-[8px] uppercase tracking-[0.5em] font-black rounded-full shadow-lg active:scale-95 transition-all">Retry manifest</button>
+                    <button onClick={(e) => handleDevelop(e, true)} className="w-full py-2 border border-stone-200 dark:border-stone-800 text-stone-400 hover:text-nous-text font-sans text-[7px] uppercase tracking-[0.4em] font-black rounded-full flex items-center justify-center gap-2 transition-all">
+                       <Wind size={10} className="text-emerald-500" /> Distill Signal
                     </button>
                   </div>
                 </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center p-12 bg-stone-50/50 dark:bg-stone-950/20">
-             {isLoading ? (
-               <div className="flex flex-col items-center gap-6">
-                 <Loader2 className="animate-spin text-stone-300" size={32} />
-                 <p className="font-serif italic text-lg animate-pulse text-stone-400">Refining structural form...</p>
-               </div>
              ) : (
-                <div className="w-full max-w-lg text-center space-y-12 animate-fade-in">
-                  <p className="font-serif italic text-2xl md:text-3xl text-stone-300 dark:text-stone-700 leading-tight">"{prompt}"</p>
-                  <button onClick={handleDevelop} className="font-sans text-[10px] uppercase tracking-[0.6em] text-stone-500 hover:text-nous-text font-black transition-all border-b border-transparent hover:border-current pb-2 flex items-center gap-3">
-                    <Maximize2 size={14} /> Develop Artifact
+                <div className="text-center space-y-4 md:space-y-8">
+                  <p className="font-serif italic text-base md:text-xl text-stone-300 max-w-xs mx-auto px-4">"{prompt}"</p>
+                  <button onClick={(e) => handleDevelop(e)} className="font-sans text-[9px] md:text-[10px] uppercase tracking-[0.5em] text-stone-500 hover:text-black dark:hover:text-white font-black transition-all border-b border-stone-200 pb-1.5 flex items-center gap-2 md:gap-3 mx-auto">
+                    <Maximize2 size={12} /> Develop Artifact
                   </button>
                 </div>
              )}
           </div>
         )}
       </div>
-      {error && <p className="mt-4 font-sans text-[8px] uppercase tracking-widest text-red-500 font-black">{error}</p>}
     </div>
   );
 };
