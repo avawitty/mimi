@@ -1,21 +1,22 @@
 
 // @ts-nocheck
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '../contexts/UserContext';
 import { useTasteLogging } from '../hooks/useTasteLogging';
 import { scryTrendSynthesis } from '../services/geminiService';
 import { scryShadowMemory } from '../services/vectorSearch';
 import { fetchPocketItems } from '../services/firebase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Sparkles, Radar, ArrowRight, Eye, RefreshCw, X, BrainCircuit, Search, Ghost, Filter, Clock, Layers, Info, CornerDownRight } from 'lucide-react';
+import { Loader2, Sparkles, Radar, ArrowRight, Eye, RefreshCw, X, BrainCircuit, Search, Ghost, Filter, Clock, Layers, Info, CornerDownRight, Terminal, Zap, Hash, AlignCenter, Radio, Activity, Link as LinkIcon } from 'lucide-react';
 
 export const ScryView: React.FC = () => {
   const { user, profile } = useUser();
   const { logEvent } = useTasteLogging();
   
-  const [activeTab, setActiveTab] = useState<'trend' | 'shadow'>('trend');
+  const [activeTab, setActiveTab] = useState<'trend' | 'shadow' | 'pattern'>('trend');
   
   // Trend Scry State
+  const [trendQuery, setTrendQuery] = useState('');
   const [scryResult, setScryResult] = useState<any>(null);
   const [isScrying, setIsScrying] = useState(false);
 
@@ -24,20 +25,68 @@ export const ScryView: React.FC = () => {
   const [shadowResults, setShadowResults] = useState<any[]>([]);
   const [isShadowSearching, setIsShadowSearching] = useState(false);
   
-  // New Filters
-  const [filterType, setFilterType] = useState<'all' | 'zine' | 'shard'>('all');
-  const [timeRange, setTimeRange] = useState<'all' | 'week' | 'month'>('all');
+  // Predictive State
+  const [predictiveSuggestions, setPredictiveSuggestions] = useState<any[]>([]);
+  
+  // Erratic VFX State
+  const [staticIntensity, setStaticIntensity] = useState(0.05);
+
+  // Handle Incoming Signal from Zine View
+  useEffect(() => {
+      const handleIncomingSignal = (e: any) => {
+          if (e.detail === 'scry' && e.detail_data?.signal) {
+              const signal = e.detail_data.signal;
+              setTrendQuery(signal);
+              setActiveTab('trend'); 
+          }
+      };
+      window.addEventListener('mimi:change_view', handleIncomingSignal);
+      return () => window.removeEventListener('mimi:change_view', handleIncomingSignal);
+  }, []);
+
+  // Predictive Logic
+  useEffect(() => {
+      if (activeTab !== 'shadow' || !shadowQuery || shadowQuery.length < 3) {
+          setPredictiveSuggestions([]);
+          return;
+      }
+
+      const timer = setTimeout(async () => {
+          try {
+              const results = await scryShadowMemory(shadowQuery);
+              setPredictiveSuggestions(results.slice(0, 4));
+          } catch(e) { console.error(e); } 
+      }, 600); // 600ms debounce
+
+      return () => clearTimeout(timer);
+  }, [shadowQuery, activeTab]);
 
   const handleTrendScry = async () => {
-    if (!user) return;
+    // Allow scrying even if user is anonymous/ghost
     setIsScrying(true);
+    setStaticIntensity(0.15); // Ramp up noise
+    
     try {
-      const pocket = await fetchPocketItems(user.uid);
-      const result = await scryTrendSynthesis(pocket, profile);
+      let contextItems: any[] = [];
+      
+      // Attempt to fetch context, but fail gracefully if permissions deny it (e.g. ghost user)
+      if (user?.uid) {
+          try {
+            contextItems = await fetchPocketItems(user.uid);
+          } catch (err) {
+            console.warn("MIMI // Scry: Archive context unavailable (Permissions or Network). Proceeding with Cold Start.");
+          }
+      }
+      
+      // Fallback for empty pocket: Send generic request context
+      const safeContext = contextItems && contextItems.length > 0 ? contextItems : []; 
+      
+      const result = await scryTrendSynthesis(safeContext, profile, trendQuery);
       setScryResult(result);
+      setActiveTab('pattern'); // Switch to pattern view for results
       
       logEvent('scry', {
-        raw_text: 'Aesthetic divination from pocket archive',
+        raw_text: trendQuery || 'Aesthetic divination from pocket archive',
         user_intent: 'Understanding taste trajectory'
       }, {
         scry_insights: result,
@@ -45,35 +94,26 @@ export const ScryView: React.FC = () => {
       }).catch(err => console.warn(err));
     } catch (e) {
       console.error("MIMI // Scry Failed:", e);
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Oracle Dissonance. The signal failed.", type: 'error' } }));
     } finally {
       setIsScrying(false);
+      setStaticIntensity(0.05); // Reset noise
     }
   };
 
   const handleShadowSearch = async () => {
     if (!shadowQuery.trim()) return;
     setIsShadowSearching(true);
+    setPredictiveSuggestions([]); // Clear predictions on commit
+    
     try {
-        const results = await scryShadowMemory(shadowQuery, { filterType, timeRange });
+        const results = await scryShadowMemory(shadowQuery);
         setShadowResults(results);
     } catch (e) {
         console.error("MIMI // Shadow Search Failed:", e);
     } finally {
         setIsShadowSearching(false);
     }
-  };
-
-  const handleApplyInsights = () => {
-    if (!scryResult) return;
-    const payload = {
-        suggestedExperiments: scryResult.pattern_signals || [],
-        identifiedDrifts: scryResult.structural_shifts || "",
-        culturalContext: scryResult.cultural_forces || ""
-    };
-    window.dispatchEvent(new CustomEvent('mimi:change_view', {
-      detail: 'tailor',
-      detail_data: payload
-    }));
   };
 
   const handleNavigateToResult = (result: any) => {
@@ -91,213 +131,224 @@ export const ScryView: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 w-full h-full overflow-y-auto no-scrollbar pb-64 px-6 md:px-16 pt-12 md:pt-20 bg-[#050505] text-white transition-all duration-1000 relative selection:bg-emerald-500 selection:text-white">
+    <div className="w-full h-full overflow-hidden bg-[#050505] text-stone-300 flex flex-col items-center relative transition-colors duration-1000">
         
-        <div className="max-w-4xl mx-auto space-y-16 py-12">
-            <header className="space-y-6 text-center">
-                <div className="flex items-center justify-center gap-3 text-emerald-500">
-                    <Eye size={24} className="animate-pulse" />
-                    <span className="font-sans text-[10px] uppercase tracking-[0.6em] font-black italic">The Oracle Divines</span>
-                </div>
-                <h1 className="font-header text-6xl md:text-8xl italic tracking-tighter leading-none text-white">Trajectory.</h1>
-                <p className="font-serif italic text-xl text-stone-400 max-w-lg mx-auto leading-tight">
-                    Cast the runes against your accumulated debris. See where your taste is drifting before it arrives.
-                </p>
-                
-                <div className="flex justify-center gap-8 pt-8">
-                    <button 
-                        onClick={() => setActiveTab('trend')} 
-                        className={`font-sans text-[9px] uppercase tracking-widest font-black pb-2 border-b-2 transition-all ${activeTab === 'trend' ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-stone-500 hover:text-stone-300'}`}
-                    >
-                        Trend Synthesis
-                    </button>
-                    <button 
-                        onClick={() => setActiveTab('shadow')} 
-                        className={`font-sans text-[9px] uppercase tracking-widest font-black pb-2 border-b-2 transition-all ${activeTab === 'shadow' ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-stone-500 hover:text-stone-300'}`}
-                    >
-                        Shadow Memory
-                    </button>
-                </div>
-            </header>
+        {/* ERRATIC STATIC OVERLAY */}
+        <div 
+            className="absolute inset-0 pointer-events-none mix-blend-overlay z-0 transition-opacity duration-500"
+            style={{ 
+                backgroundImage: "url('https://www.transparenttextures.com/patterns/noise.png')",
+                opacity: staticIntensity 
+            }} 
+        />
+        
+        {/* EDITORIAL HEADER / TOGGLE */}
+        <div className="w-full max-w-4xl text-center pt-24 md:pt-32 px-6 space-y-8 shrink-0 z-10 relative">
+            <div className="flex items-center justify-center gap-12 border-b border-white/10 pb-6">
+                <button 
+                    onClick={() => setActiveTab('trend')}
+                    className={`font-sans text-[10px] uppercase tracking-[0.4em] font-black transition-all ${activeTab === 'trend' ? 'text-white scale-110' : 'text-stone-600 hover:text-stone-400'}`}
+                >
+                    Oracle_Logic
+                </button>
+                <div className="w-px h-4 bg-stone-800" />
+                <button 
+                    onClick={() => setActiveTab('shadow')}
+                    className={`font-sans text-[10px] uppercase tracking-[0.4em] font-black transition-all ${activeTab === 'shadow' ? 'text-white scale-110' : 'text-stone-600 hover:text-stone-400'}`}
+                >
+                    Shadow_Recall
+                </button>
+                <div className="w-px h-4 bg-stone-800" />
+                <button 
+                    onClick={() => setActiveTab('pattern')}
+                    className={`font-sans text-[10px] uppercase tracking-[0.4em] font-black transition-all flex items-center gap-2 ${activeTab === 'pattern' ? 'text-emerald-500 scale-110' : 'text-stone-600 hover:text-stone-400'}`}
+                >
+                    <Activity size={12} className={scryResult ? "animate-pulse" : ""} /> Pattern_Rec
+                </button>
+            </div>
 
-            <AnimatePresence mode="wait">
-                {activeTab === 'trend' ? (
-                    <motion.div key="trend" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12">
-                        {!scryResult ? (
-                            <div className="flex justify-center py-12">
+            {/* DEFINITION BLOCK */}
+            <div className="min-h-[40px] flex items-center justify-center">
+                <AnimatePresence mode="wait">
+                    {activeTab === 'trend' && (
+                        <motion.p key="trend-desc" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="font-serif italic text-sm text-stone-500">
+                            "Synthesize future trajectories from current debris."
+                        </motion.p>
+                    )}
+                    {activeTab === 'shadow' && (
+                        <motion.p key="shadow-desc" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="font-serif italic text-sm text-stone-500">
+                            "Query the latent space of your archived material."
+                        </motion.p>
+                    )}
+                    {activeTab === 'pattern' && (
+                        <motion.p key="pattern-desc" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="font-serif italic text-sm text-stone-500">
+                            {scryResult ? "High-fidelity structural analysis of the current query." : "No signal analyzed yet."}
+                        </motion.p>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            <div className="relative group min-h-[120px] w-full flex items-center justify-center mt-8">
+                <AnimatePresence mode="wait">
+                    {activeTab === 'trend' && (
+                        <motion.div key="trend-input" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full relative">
+                            <div className="relative w-full max-w-2xl mx-auto group">
+                                <LinkIcon size={16} className="absolute left-0 top-1/2 -translate-y-1/2 text-emerald-500 opacity-50 group-focus-within:opacity-100 transition-opacity" />
+                                <input 
+                                    type="text"
+                                    value={trendQuery}
+                                    onChange={(e) => setTrendQuery(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleTrendScry()}
+                                    placeholder="Enter trajectory coordinates..."
+                                    className="w-full bg-transparent border-b border-stone-800 py-4 pl-8 pr-12 font-mono text-xl text-white focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-stone-700"
+                                    autoFocus
+                                />
                                 <button 
                                     onClick={handleTrendScry} 
-                                    disabled={isScrying}
-                                    className="group relative px-12 py-6 bg-emerald-500/10 border border-emerald-500/30 rounded-full overflow-hidden hover:bg-emerald-500/20 transition-all active:scale-95 disabled:opacity-50"
+                                    disabled={isScrying || !trendQuery.trim()}
+                                    className="absolute right-0 top-1/2 -translate-x-0 -translate-y-1/2 text-stone-500 hover:text-emerald-500 disabled:opacity-30 transition-colors p-2"
                                 >
-                                    <div className="flex items-center gap-4 relative z-10">
-                                        {isScrying ? <Loader2 size={20} className="animate-spin text-emerald-400" /> : <Sparkles size={20} className="text-emerald-400" />}
-                                        <span className="font-sans text-[10px] uppercase tracking-[0.4em] font-black text-emerald-100">
-                                            {isScrying ? 'Parsing Resonance...' : 'Cast Runes'}
-                                        </span>
-                                    </div>
+                                    {isScrying ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
                                 </button>
                             </div>
-                        ) : (
-                            <div className="space-y-12">
-                                <div className="grid md:grid-cols-2 gap-12 border-t border-emerald-900/30 pt-12">
-                                    <section className="space-y-6">
-                                        <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-500 block border-b border-white/10 pb-2">Pattern Signals</span>
-                                        <ul className="space-y-4">
-                                            {scryResult.pattern_signals?.map((signal: string, i: number) => (
-                                                <motion.li 
-                                                    key={i} 
-                                                    initial={{ opacity: 0, x: -10 }} 
-                                                    animate={{ opacity: 1, x: 0 }} 
-                                                    transition={{ delay: i * 0.1 }}
-                                                    className="pl-4 border-l-2 border-emerald-500 font-serif italic text-xl md:text-2xl text-stone-200"
-                                                >
-                                                    {signal}
-                                                </motion.li>
-                                            ))}
-                                        </ul>
-                                    </section>
+                        </motion.div>
+                    )}
 
-                                    <section className="space-y-10">
-                                        <div className="space-y-4">
-                                            <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-500 block border-b border-white/10 pb-2">Structural Shifts</span>
-                                            <p className="font-serif italic text-lg text-emerald-100/80 leading-relaxed">
+                    {activeTab === 'shadow' && (
+                        <motion.div key="shadow-input" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full relative">
+                            <div className="relative w-full max-w-2xl mx-auto group">
+                                <Search size={16} className="absolute left-0 top-1/2 -translate-y-1/2 text-stone-500 opacity-50 group-focus-within:opacity-100 transition-opacity" />
+                                <input 
+                                    type="text"
+                                    value={shadowQuery}
+                                    onChange={(e) => setShadowQuery(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleShadowSearch()}
+                                    placeholder="Search the void..."
+                                    className="w-full bg-transparent border-b border-stone-800 py-4 pl-8 pr-12 font-mono text-xl text-white focus:outline-none focus:border-stone-500 transition-colors placeholder:text-stone-700"
+                                    autoFocus
+                                />
+                                <button 
+                                    onClick={handleShadowSearch} 
+                                    disabled={isShadowSearching || !shadowQuery.trim()}
+                                    className="absolute right-0 top-1/2 -translate-x-0 -translate-y-1/2 text-stone-500 hover:text-white disabled:opacity-30 transition-colors p-2"
+                                >
+                                    {isShadowSearching ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
+                                </button>
+                            </div>
+                            
+                            {predictiveSuggestions.length > 0 && (
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-center flex-wrap gap-2 mt-6">
+                                    {predictiveSuggestions.map((s, i) => (
+                                        <button key={i} onClick={() => { setShadowQuery(s.content_preview); handleShadowSearch(); }} className="px-3 py-1 border border-stone-800 rounded-full text-stone-500 hover:text-emerald-500 hover:border-emerald-500 transition-all font-mono text-[9px] uppercase">
+                                            {s.content_preview}
+                                        </button>
+                                    ))}
+                                </motion.div>
+                            )}
+                        </motion.div>
+                    )}
+
+                    {activeTab === 'pattern' && (
+                        <motion.div key="pattern-output" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="w-full text-left space-y-12">
+                            {scryResult ? (
+                                <>
+                                    <div className="flex flex-col md:flex-row gap-12 items-start justify-center border-b border-white/10 pb-12">
+                                        <div className="space-y-4 max-w-lg">
+                                            <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-emerald-500 flex items-center gap-2">
+                                                <Radio size={14} className="animate-pulse" /> Horizon Signal
+                                            </span>
+                                            <h2 className="font-serif text-5xl md:text-6xl italic tracking-tighter leading-[0.9] text-white">
+                                                {scryResult.time_horizon}
+                                            </h2>
+                                            <p className="font-serif italic text-xl text-stone-400 leading-relaxed text-balance">
                                                 "{scryResult.structural_shifts}"
                                             </p>
                                         </div>
-                                        <div className="space-y-4">
-                                            <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-500 block border-b border-white/10 pb-2">Cultural Forces</span>
-                                            <p className="font-serif italic text-lg text-stone-400 leading-relaxed">
+                                        <div className="p-6 bg-[#0A0A0A] border border-stone-800 rounded-sm w-full md:w-80 font-mono text-[10px] text-stone-300 space-y-4 shadow-2xl relative overflow-hidden">
+                                            {/* Scanline Effect */}
+                                            <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.5)_50%)] bg-[length:100%_4px]" />
+                                            
+                                            <div className="flex justify-between border-b border-stone-700 pb-2">
+                                                <span>DATA_STREAM</span>
+                                                <span className="text-emerald-500 animate-pulse">ACTIVE</span>
+                                            </div>
+                                            <div className="space-y-2">
+                                                {scryResult.pattern_signals?.map((s, i) => (
+                                                    <div key={i} className="flex gap-2">
+                                                        <span className="text-stone-500">0{i+1}:</span>
+                                                        <span className="uppercase text-emerald-400/80">{s}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="pt-4 border-t border-stone-700 text-stone-500 italic">
                                                 {scryResult.cultural_forces}
-                                            </p>
+                                            </div>
                                         </div>
-                                    </section>
-                                </div>
-
-                                <section className="p-8 bg-emerald-950/20 border border-emerald-900/40 rounded-sm text-center space-y-4">
-                                    <span className="font-sans text-[8px] uppercase tracking-widest font-black text-emerald-600">Projected Horizon</span>
-                                    <p className="font-serif text-3xl italic text-white tracking-tight">{scryResult.time_horizon}</p>
-                                </section>
-
-                                <div className="flex flex-col md:flex-row justify-center gap-6 pt-8">
-                                    <button onClick={handleApplyInsights} className="px-10 py-4 bg-white text-black rounded-full font-sans text-[9px] uppercase tracking-[0.3em] font-black hover:bg-emerald-400 transition-all flex items-center gap-4 shadow-xl">
-                                        Apply to Tailor <ArrowRight size={14} />
-                                    </button>
-                                    <button onClick={() => setScryResult(null)} className="px-10 py-4 border border-white/10 text-stone-400 rounded-full font-sans text-[9px] uppercase tracking-[0.3em] font-black hover:text-white transition-all flex items-center gap-4">
-                                        <RefreshCw size={14} /> Recalibrate
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </motion.div>
-                ) : (
-                    <motion.div key="shadow" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-10">
-                        
-                        <div className="flex items-start gap-4 p-6 bg-indigo-900/20 border border-indigo-500/20 rounded-xl">
-                           <Info size={18} className="text-indigo-400 shrink-0 mt-1" />
-                           <div className="space-y-2">
-                              <span className="font-sans text-[9px] uppercase tracking-widest font-black text-indigo-300">Shadow Memory Protocol</span>
-                              <p className="font-serif italic text-sm text-indigo-100/80 leading-relaxed">
-                                Local-first, vector indexing, and sovereign privacy mandate. Query the conceptual shadow of your archive. Vector embeddings identify resonance over exact terminology.
-                              </p>
-                           </div>
-                        </div>
-
-                        <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-                           <div className="inline-flex bg-stone-900/80 border border-indigo-900/30 rounded-full p-1 gap-1">
-                              <button onClick={() => setFilterType('all')} className={`px-4 py-1.5 rounded-full font-sans text-[9px] uppercase font-black tracking-widest transition-all ${filterType === 'all' ? 'bg-indigo-600 text-white shadow-lg' : 'text-stone-500 hover:text-stone-300'}`}>All Signals</button>
-                              <button onClick={() => setFilterType('zine')} className={`px-4 py-1.5 rounded-full font-sans text-[9px] uppercase font-black tracking-widest transition-all ${filterType === 'zine' ? 'bg-indigo-600 text-white shadow-lg' : 'text-stone-500 hover:text-stone-300'}`}>Zines</button>
-                              <button onClick={() => setFilterType('shard')} className={`px-4 py-1.5 rounded-full font-sans text-[9px] uppercase font-black tracking-widest transition-all ${filterType === 'shard' ? 'bg-indigo-600 text-white shadow-lg' : 'text-stone-500 hover:text-stone-300'}`}>Shards</button>
-                           </div>
-
-                           <div className="inline-flex bg-stone-900/80 border border-indigo-900/30 rounded-full p-1 gap-1">
-                              <button onClick={() => setTimeRange('all')} className={`px-4 py-1.5 rounded-full font-sans text-[9px] uppercase font-black tracking-widest transition-all ${timeRange === 'all' ? 'bg-stone-700 text-white' : 'text-stone-500 hover:text-stone-300'}`}>Ever</button>
-                              <button onClick={() => setTimeRange('week')} className={`px-4 py-1.5 rounded-full font-sans text-[9px] uppercase font-black tracking-widest transition-all ${timeRange === 'week' ? 'bg-stone-700 text-white' : 'text-stone-500 hover:text-stone-300'}`}>Week</button>
-                              <button onClick={() => setTimeRange('month')} className={`px-4 py-1.5 rounded-full font-sans text-[9px] uppercase font-black tracking-widest transition-all ${timeRange === 'month' ? 'bg-stone-700 text-white' : 'text-stone-500 hover:text-stone-300'}`}>Month</button>
-                           </div>
-                        </div>
-
-                        <div className="relative max-w-xl mx-auto group">
-                            <input 
-                                type="text" 
-                                value={shadowQuery}
-                                onChange={(e) => setShadowQuery(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleShadowSearch()}
-                                placeholder="e.g. Themes of sadness, or specific moods..."
-                                className="w-full bg-stone-900/50 border border-indigo-900/30 rounded-full py-5 pl-8 pr-16 text-white font-serif italic text-2xl focus:outline-none focus:border-indigo-500 transition-all shadow-[0_0_40px_rgba(79,70,229,0.05)] placeholder:text-stone-700"
-                            />
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                <button 
-                                    onClick={handleShadowSearch}
-                                    disabled={isShadowSearching || !shadowQuery.trim()}
-                                    className="p-3 bg-indigo-600 rounded-full text-white hover:bg-indigo-500 disabled:opacity-50 transition-all shadow-xl active:scale-95"
-                                >
-                                    {isShadowSearching ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="grid md:grid-cols-2 gap-8 min-h-[400px] pt-8">
-                            <AnimatePresence>
-                                {shadowResults.map((result, idx) => (
-                                    <motion.div 
-                                        key={result.id}
-                                        layout
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: idx * 0.05 }}
-                                        onClick={() => handleNavigateToResult(result)}
-                                        className="group p-8 bg-stone-900/40 border border-white/5 rounded-sm flex items-start gap-6 hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all cursor-pointer relative overflow-hidden"
-                                    >
-                                        {result.display_image ? (
-                                            <div className="w-20 h-28 shrink-0 bg-black rounded-sm overflow-hidden border border-white/5 shadow-2xl">
-                                                <img src={result.display_image} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-[1s]" />
-                                            </div>
-                                        ) : (
-                                            <div className="w-20 h-28 shrink-0 bg-stone-800 rounded-sm flex items-center justify-center text-stone-600 border border-white/5">
-                                                {result.type === 'zine' ? <Layers size={32} /> : <Filter size={32} />}
-                                            </div>
-                                        )}
-                                        <div className="flex-1 min-w-0 space-y-4">
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-sans text-[8px] uppercase tracking-widest font-black text-indigo-400">
-                                                    {result.type.toUpperCase()} • {(result.similarity * 100).toFixed(0)}% Refraction
-                                                </span>
-                                                <CornerDownRight size={12} className="text-stone-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            </div>
-                                            <p className="font-serif italic text-stone-300 text-lg md:text-xl line-clamp-4 leading-snug group-hover:text-white transition-colors">
-                                                "{result.content_preview}"
-                                            </p>
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </AnimatePresence>
-                            
-                            {shadowResults.length === 0 && !isShadowSearching && shadowQuery && (
-                                <div className="col-span-full py-32 text-center opacity-20 space-y-6">
-                                    <Ghost size={64} className="mx-auto" />
-                                    <p className="font-serif italic text-3xl">“No resonance found in the shadow.”</p>
-                                    <button onClick={() => setShadowQuery('')} className="font-sans text-[8px] uppercase tracking-widest font-black text-indigo-400 border-b border-indigo-400 pb-0.5">Clear Threshold</button>
+                                    </div>
+                                    <div className="flex justify-center">
+                                        <button onClick={() => { window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'tailor', detail_data: { suggestedExperiments: scryResult.pattern_signals } })); }} className="px-8 py-3 border border-stone-800 rounded-full font-sans text-[9px] uppercase tracking-widest font-black hover:bg-stone-900 transition-colors text-stone-400 hover:text-white">
+                                            Inject Logic into Tailor
+                                        </button>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-24 gap-6 opacity-30">
+                                    <Activity size={48} className="text-stone-500" />
+                                    <p className="font-serif italic text-2xl">“The pattern buffer is empty.”</p>
+                                    <button onClick={() => setActiveTab('trend')} className="text-emerald-500 font-sans text-[9px] uppercase tracking-widest font-black border-b border-emerald-500 pb-1">Initialize Oracle Logic</button>
                                 </div>
                             )}
-                            
-                            {!shadowQuery && shadowResults.length === 0 && !isShadowSearching && (
-                                <div className="col-span-full flex flex-col items-center justify-center py-32 opacity-10 gap-6">
-                                    <BrainCircuit size={80} strokeWidth={0.5} />
-                                    <p className="font-sans text-[10px] uppercase tracking-[0.8em] font-black">Shadow_Registry_Standby</p>
-                                </div>
-                            )}
-                        </div>
-                        
-                        <footer className="text-center pt-12 opacity-30 border-t border-stone-900">
-                            <p className="font-sans text-[8px] uppercase tracking-[0.5em] font-black text-stone-500">
-                                Local-First Vector Indexing // Sovereign Privacy Mandate
-                            </p>
-                        </footer>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
         </div>
+
+        {/* SHADOW RESULTS GRID */}
+        {shadowResults.length > 0 && activeTab === 'shadow' && (
+            <div className="flex-1 w-full overflow-y-auto no-scrollbar px-6 pb-32">
+                <div className="max-w-6xl mx-auto pt-12">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {shadowResults.map((result, idx) => (
+                            <motion.div 
+                                key={result.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.05 }}
+                                onClick={() => handleNavigateToResult(result)}
+                                className="group cursor-pointer space-y-4"
+                            >
+                                <div className="aspect-[4/3] bg-stone-900 overflow-hidden relative border border-stone-800 rounded-sm">
+                                    {result.display_image ? (
+                                        <img src={result.display_image} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-stone-700">
+                                            {result.type === 'zine' ? <Layers size={24} /> : <Terminal size={24} />}
+                                        </div>
+                                    )}
+                                    <div className="absolute top-3 right-3 bg-black/90 px-2 py-1 rounded-sm text-[8px] font-mono uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity text-white">
+                                        {(result.similarity * 100).toFixed(0)}% MATCH
+                                    </div>
+                                </div>
+                                <div className="space-y-2 px-2">
+                                    <div className="flex items-center gap-2 text-stone-500">
+                                        <span className="font-sans text-[7px] uppercase tracking-widest font-black">{result.type}</span>
+                                        <div className="w-1 h-1 bg-stone-600 rounded-full" />
+                                        <span className="font-mono text-[8px]">{new Date(result.synced_at).toLocaleDateString()}</span>
+                                    </div>
+                                    <p className="font-serif italic text-xl leading-tight text-stone-300 line-clamp-2 group-hover:text-emerald-500 transition-colors">
+                                        "{result.content_preview}"
+                                    </p>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                </div>
+            </div>
+        )}
+        
+        {/* VERSION MARKER FOR DEBUGGING */}
+        <div className="absolute bottom-2 right-4 text-[7px] font-mono text-stone-800 pointer-events-none">v4.5-ERRATIC</div>
     </div>
   );
 };

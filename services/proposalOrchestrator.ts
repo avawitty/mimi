@@ -12,33 +12,43 @@ import { saveProposal, fetchPocketItems } from "./firebaseUtils";
 
 interface ProposalGenerationConfig {
   userId: string;
-  folderId: string;
+  folderId?: string; // Optional if sourceItems provided
+  sourceItems?: PocketItem[]; // New: Allow direct injection
   selectedPreset: string;
   selectedModules: string[];
   profile: UserProfile | null;
+  folderName?: string; // Fallback name
+  notes?: string; // Fallback notes
 }
 
 export const generateProposalFromFolder = async (
   config: ProposalGenerationConfig
 ): Promise<Proposal> => {
   
-  // 1. FETCH FOLDER & ARTIFACTS
-  // In the absence of a specific folder fetcher that returns items directly,
-  // we fetch all items and filter by folderId (or parentShardId if using that logic, 
-  // but ArchivalView uses 'moodboard' items with content.itemIds).
-  
-  const allItems = await fetchPocketItems(config.userId);
-  
-  // Find the folder (Moodboard)
-  const folderItem = allItems.find(i => i.id === config.folderId && i.type === 'moodboard');
-  
-  if (!folderItem) {
-      throw new Error("Source Folder Logic Corrupted.");
-  }
+  let sourceItems: PocketItem[] = [];
+  let folderName = config.folderName || "Untitled Strategy";
+  let baseNotes = config.notes || "";
 
-  // Filter items that belong to this folder
-  const folderItemIds = folderItem.content.itemIds || [];
-  const sourceItems = allItems.filter(i => folderItemIds.includes(i.id));
+  // 1. FETCH ARTIFACTS
+  if (config.sourceItems && config.sourceItems.length > 0) {
+      // Manual Selection / Direct Folder Injection Path
+      sourceItems = config.sourceItems;
+  } else if (config.folderId) {
+      // Folder Registry Path (Legacy)
+      const allItems = await fetchPocketItems(config.userId);
+      const folderItem = allItems.find(i => i.id === config.folderId && i.type === 'moodboard');
+      
+      if (!folderItem) {
+          throw new Error("Source Folder Logic Corrupted.");
+      }
+
+      const folderItemIds = folderItem.content.itemIds || [];
+      sourceItems = allItems.filter(i => folderItemIds.includes(i.id));
+      folderName = folderItem.content.name || folderName;
+      baseNotes = folderItem.notes || baseNotes;
+  } else {
+      throw new Error("No source data provided for proposal assembly.");
+  }
 
   // 2. PRE-PROCESS ITEMS TO EXTRACT ZINE CONTEXT
   let zineContext = "";
@@ -53,20 +63,41 @@ export const generateProposalFromFolder = async (
       }
   });
 
-  // Folder notes provide the primary directive
-  const fullNotes = `${folderItem.notes || ''}\n\n${zineContext}`;
-  const folderName = folderItem.content.name || "Untitled Strategy";
+  // Combine notes
+  const fullNotes = `${baseNotes}\n\n${zineContext}`;
+
+  const presetMap: Record<string, string> = {
+    'creative_brief': 'Creative Brief',
+    'market_analysis': 'Market Analysis',
+    'product_proposal': 'Product Proposal',
+    'campaign_strategy': 'Campaign Strategy',
+    'portfolio_case': 'Portfolio Case Study',
+    'reflection': 'Reflection Report'
+  };
+  
+  const proposalType = presetMap[config.selectedPreset] || "Strategic Proposal";
 
   // 3. GENERATE RAW STRATEGY FROM ORACLE
   const strategyResponse = await generateProposalStrategy(
     folderName,
     sourceItems,
     fullNotes,
-    config.profile
+    config.profile,
+    proposalType
   );
 
-  if (!strategyResponse || !strategyResponse.chapters) {
-    throw new Error("Oracle failed to structure the proposal.");
+  // Fallback construction if chapters array is missing but summary exists
+  if ((!strategyResponse || !strategyResponse.chapters) && strategyResponse?.manifesto_summary) {
+      console.warn("MIMI // Proposal Partial Fail: Reconstructing from Summary");
+      strategyResponse.chapters = [
+          {
+              title: "Strategic Summary",
+              body: strategyResponse.manifesto_summary,
+              visual_directive: "Abstract minimal layout representing clarity"
+          }
+      ];
+  } else if (!strategyResponse || !strategyResponse.chapters) {
+      throw new Error("Oracle failed to structure the proposal.");
   }
 
   // 4. TRANSFORM RAW AI OUTPUT INTO EDITOR ELEMENTS
@@ -128,7 +159,7 @@ export const generateProposalFromFolder = async (
     id: proposalId,
     userId: config.userId,
     title: folderName,
-    sourceFolderId: config.folderId,
+    sourceFolderId: config.folderId || 'manual_selection',
     sourceArtifactIds: sourceItems.map(i => i.id),
     
     content: {

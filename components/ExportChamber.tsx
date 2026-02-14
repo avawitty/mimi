@@ -2,9 +2,10 @@
 // @ts-nocheck
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Download, Share2, FileText, LayoutGrid, Layers, Printer, Check, Copy, Shield, Info, Palette, Maximize2, Smartphone, Square, ArrowDown, ChevronDown, CheckCircle2, Terminal, Stamp, Loader2, Zap } from 'lucide-react';
-import { ZineMetadata, AspectRatio } from '../types';
+import { X, Download, Share2, FileText, LayoutGrid, Layers, Printer, Check, Copy, Shield, Info, Palette, Maximize2, Smartphone, Square, ArrowDown, ChevronDown, CheckCircle2, Terminal, Stamp, Loader2, Zap, Monitor, Scroll, Image } from 'lucide-react';
+import { ZineMetadata } from '../types';
 import { SocialShareModal } from './SocialShareModal';
+import html2canvas from 'html2canvas';
 
 interface ExportChamberProps {
   metadata: ZineMetadata;
@@ -21,9 +22,9 @@ const SECTION_DEFS = [
 ];
 
 const EXPORT_MODES = [
-  { id: 'scroll', label: 'Master Scroll', desc: 'Continuous vertical flow. Optimized for mobile witnessing and long screenshots.' },
-  { id: 'assets', label: 'Asset Stack', desc: 'Separated high-fidelity cards. Designed for individual saving or social carousel processing.' },
-  { id: 'print', label: 'Physical (A4)', desc: 'Standard architectural layout calibrated for physical ink manifestation and archival binding.' }
+  { id: 'scroll', label: 'Master Scroll', desc: 'Continuous vertical flow. Optimized for mobile witnessing and long screenshots.', icon: <Scroll size={16} /> },
+  { id: 'assets', label: 'Asset Stack', desc: 'Separated high-fidelity cards. Designed for individual saving or social carousel processing.', icon: <Image size={16} /> },
+  { id: 'print', label: 'Physical (A4)', desc: 'Standard architectural layout calibrated for physical ink manifestation and archival binding.', icon: <Printer size={16} /> }
 ];
 
 const SectionHeader: React.FC<{ label: string; icon: any }> = ({ label, icon: Icon }) => (
@@ -64,22 +65,51 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
     });
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (isGenerating) return;
     setIsGenerating(true);
     setHasError(false);
     
-    // Allow UI to update before print dialog
-    setTimeout(() => {
-      try {
+    // Allow UI to update before processing
+    await new Promise(r => setTimeout(r, 500));
+
+    try {
+      if (exportMode === 'print') {
         window.print();
-      } catch (e) {
-        console.error("Export Failed:", e);
-        setHasError(true);
-      } finally {
-        setTimeout(() => setIsGenerating(false), 2000);
+      } else {
+        // Digital Export (Scroll/Assets) - Render to PNG
+        const element = document.getElementById('export-target');
+        if (!element) throw new Error("Capture target not found");
+
+        const canvas = await html2canvas(element, {
+          scale: 2, // High resolution for Retina displays
+          useCORS: true, // Crucial for external images
+          allowTaint: true,
+          backgroundColor: null, 
+          logging: false,
+          onclone: (doc) => {
+             // Ensure visible elements are rendered clearly
+             const el = doc.getElementById('export-target');
+             if (el) {
+                 el.style.transform = 'none';
+                 el.style.maxHeight = 'none';
+             }
+          }
+        });
+
+        const link = document.createElement('a');
+        link.download = `Mimi_${metadata.title.replace(/[^a-z0-9]/gi, '_')}_${exportMode}.png`;
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
-    }, 1500);
+    } catch (e) {
+      console.error("Export Failed:", e);
+      setHasError(true);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const content = metadata.content;
@@ -93,9 +123,12 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
 
   const blockClass = useMemo(() => {
       const base = "bg-white dark:bg-stone-950 flex flex-col justify-center overflow-hidden relative";
-      if (exportMode === 'print') return `${base} h-[297mm] w-full p-16 print:break-after-page print:page-break-after-always border-b-0`;
+      // Print Mode: Forced Page Breaks
+      if (exportMode === 'print') return `${base} h-[297mm] w-full p-16 print:break-after-page print:page-break-after-always border-b-0 print:border-0`;
+      // Asset Stack: Separated Cards
       if (exportMode === 'assets') return `${base} aspect-[3/4] w-full p-12 mb-12 rounded-sm shadow-xl border border-stone-100 dark:border-stone-800 print:break-after-page`;
-      return `${base} py-16 px-10 border-b border-stone-100 dark:border-stone-900 last:border-0`; // Scroll
+      // Scroll Mode: Continuous Flow
+      return `${base} py-16 px-10 border-b border-stone-100 dark:border-stone-900 last:border-0`;
   }, [exportMode]);
 
   return (
@@ -123,10 +156,13 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
                 {EXPORT_MODES.map(m => (
                    <button key={m.id} onClick={() => setExportMode(m.id as any)} className={`text-left p-5 rounded-lg border transition-all ${exportMode === m.id ? 'bg-stone-50 dark:bg-black/20 border-emerald-500 shadow-sm ring-1 ring-emerald-500/20' : 'text-stone-400 border-stone-100 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-800'}`}>
                       <div className="flex items-center justify-between mb-2">
-                          <p className={`font-serif italic text-lg ${exportMode === m.id ? 'text-nous-text dark:text-white' : 'text-stone-500'}`}>{m.label}</p>
+                          <div className="flex items-center gap-3">
+                              <div className={exportMode === m.id ? 'text-emerald-500' : 'text-stone-300'}>{m.icon}</div>
+                              <p className={`font-serif italic text-lg ${exportMode === m.id ? 'text-nous-text dark:text-white' : 'text-stone-500'}`}>{m.label}</p>
+                          </div>
                           {exportMode === m.id && <CheckCircle2 size={14} className="text-emerald-500" />}
                       </div>
-                      <p className="font-sans text-[9px] text-stone-400 leading-relaxed uppercase tracking-wide opacity-80">{m.desc}</p>
+                      <p className="font-sans text-[9px] text-stone-400 leading-relaxed uppercase tracking-wide opacity-80 pl-9">{m.desc}</p>
                    </button>
                 ))}
              </div>
@@ -146,10 +182,10 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
         </div>
 
         <div className="mt-auto pt-12 space-y-4">
-           {hasError && <p className="text-red-500 text-xs font-mono text-center">Export Handshake Failed.</p>}
-           <button onClick={handleExport} disabled={isGenerating} className="w-full py-5 bg-nous-text dark:bg-white text-white dark:text-black rounded-full font-sans text-[10px] tracking-[0.4em] uppercase font-black shadow-xl flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95 transition-all">
-              {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />}
-              {isGenerating ? 'Rendering...' : 'Print Manifest'}
+           {hasError && <p className="text-red-500 text-xs font-mono text-center">Export Handshake Failed. Try refreshing.</p>}
+           <button onClick={handleExport} disabled={isGenerating} className="w-full py-5 bg-nous-text dark:bg-white text-white dark:text-black rounded-full font-sans text-[10px] tracking-[0.4em] uppercase font-black shadow-xl flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50">
+              {isGenerating ? <Loader2 size={16} className="animate-spin" /> : (exportMode === 'print' ? <Printer size={16} /> : <Download size={16} />)}
+              {isGenerating ? 'Rendering...' : (exportMode === 'print' ? 'Print Manifest' : 'Download Asset')}
            </button>
         </div>
       </aside>
@@ -248,14 +284,14 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
              )}
 
              {/* 6. DEBRIS (NEW) */}
-             {selectedSections.has('debris') && metadata.originalInput && (
+             {selectedSections.has('debris') && (metadata.originalInput || metadata.content.meta?.intent) && (
                 <div className={`${blockClass} bg-stone-50 dark:bg-stone-900 print:bg-gray-50`}>
                     <SectionHeader label="Field Debris" icon={<Info />} />
                     <div className="flex-1 flex flex-col justify-center">
                         <div className="p-8 border-l-4 border-stone-200 dark:border-stone-700 print:border-gray-300">
                             <span className="font-mono text-[9px] text-stone-400 mb-4 block">// RAW_INPUT_LOG</span>
                             <p className="font-mono text-xs md:text-sm text-stone-600 dark:text-stone-300 print:text-black leading-relaxed whitespace-pre-wrap">
-                                {metadata.originalInput}
+                                {metadata.originalInput || metadata.content.meta?.intent || "Debris data obscured."}
                             </p>
                         </div>
                     </div>

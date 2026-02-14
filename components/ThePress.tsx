@@ -1,116 +1,304 @@
 
 // @ts-nocheck
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Globe, CornerDownRight, FileText, ArrowRight, Layers, Target, Terminal, Briefcase } from 'lucide-react';
+import { Globe, ArrowRight, BookOpen, Compass, Grid3X3, List, Search, ArrowUpRight, Hash, FileText, Layers, Archive, Zap } from 'lucide-react';
 import { EditorialSpread } from './EditorialSpread';
 
-const CASE_STUDIES = [
+// --- DATA ---
+
+const FIELD_GUIDE_CONTENT = [
   {
-    id: 'foundational-article',
-    brand: "What Is Mimi Zine?",
-    tag: "Foundational",
-    headline: "A visual research system for turning fragmented inspiration into coherent direction.",
-    subtitle: "Formalizing the invisible work of taste.",
-    content: {
-       author: "Mimi Editorial",
-       body: [
-          "Mimi Zine is a visual research and synthesis tool designed for creatives who work in fragments long before anything becomes public.",
-          "Most creative work doesn’t begin with a brief—it begins with screenshots, half-formed references, aesthetic instincts, and unarticulated taste. Mimi Zine exists to formalize that early stage without flattening it.",
-          "At its core, Mimi is a system for curation as logic. Users collect images, language, and references, then use Mimi to organize, group, and synthesize those materials into structured editorial outputs—zines, reports, and visual artifacts that articulate creative direction with clarity.",
-          "Rather than optimizing for speed or automation alone, Mimi is built for coherence. It helps users translate intuition into legible strategy, preserve aesthetic nuance while adding structure, and produce portable artifacts that can be shared, presented, or executed upon.",
-          "Mimi is used by strategists, designers, and creative operators who need to move fluidly between inspiration and execution—often wearing many hats, often working without a traditional team.",
-          "This is not a moodboard tool. This is a thinking surface. Mimi Zine formalizes the invisible work of taste, making it communicable without compromising its soul."
-       ],
-       captions: ["Curation as Logic.", "Structured Intuition.", "Portable Artifacts."]
-    },
-    stats: "Read Time: 3m // Topic: System",
-    color: "#10B981"
+    domain: "CREATION",
+    modules: [
+      { 
+        name: "Studio", 
+        role: "Composition Engine",
+        desc: "Studio is where you compose. Use it to draft zines, arrange text and image, structure ideas into form, and build visual narratives.",
+        bestPractice: "Do not start with a blank concept. Pull material from Archive or insights from The Ward first. Studio performs best when fed."
+      },
+      { 
+        name: "The Stand", 
+        role: "Presentation Layer", 
+        desc: "This is where work becomes visible. Published zines, public-facing artifacts, and sharable outputs live here. Think of The Stand as your editorial storefront." 
+      },
+      { 
+        name: "Scry", 
+        role: "Semantic Retrieval", 
+        desc: "Scry is semantic retrieval. It does not search filenames; it searches meaning. Use it to surface images by tone or discover latent clusters.",
+        bestPractice: "Search 'austere severity', not 'black coat'. If results feel thin, your Archive may need density."
+      }
+    ]
   },
   {
-    id: 'user-case-study',
-    brand: "From Fragment to Direction",
-    tag: "Case Study",
-    headline: "How one creator used Mimi to transform scattered references into a unified creative system.",
-    subtitle: "A workflow on Selection, Synthesis, and Integration.",
-    content: {
-       author: "User Report",
-       body: [
-          "When creative work is fast-moving, references pile up quickly. Screenshots live in camera rolls. Notes live in apps. Ideas remain unspoken because they’re hard to summarize.",
-          "A Mimi Zine user—working across creative strategy, design, and digital publishing—entered the platform with a familiar problem: too much material, no unifying structure.",
-          "Using Mimi, the workflow unfolded in three phases.",
-          "1. Selection: The user imported visual references, written fragments, and conceptual notes without pressure to immediately define meaning. Mimi treats early collection as valid data, not noise.",
-          "2. Synthesis: Through grouping and editorial structuring, Mimi generated written and visual reports that articulated patterns across the material—recurring aesthetics, tonal through-lines, and strategic implications. What was previously 'a vibe' became a defensible creative direction.",
-          "3. Integration: The final output wasn’t just insight—it was portable. The resulting zine functioned as a personal creative manifesto, a presentation artifact, and a decision-making reference for future work.",
-          "Instead of starting from scratch on each new project, the user now works from a living system—one that evolves as new inputs are added. Mimi didn’t replace creative intuition. It gave it structure, memory, and leverage."
-       ],
-       captions: ["Valid Data, Not Noise.", "Defensible Direction.", "Living Systems."]
-    },
-    stats: "Read Time: 4m // Topic: Workflow",
-    color: "#F59E0B"
+    domain: "ALCHEMY",
+    modules: [
+      {
+        name: "Tailor",
+        role: "Manifesto Layer",
+        desc: "Tailor is your declared direction. Define aesthetic principles, articulate tone, and state constraints. The Sentinel inside The Ward reads Tailor.",
+        bestPractice: "Write Tailor as principle, not trend. Weak: 'Minimal fashion'. Strong: 'Structured femininity through shadow and restraint'."
+      },
+      {
+        name: "The Ward",
+        role: "Governance System",
+        desc: "Contains The Curator (analyzes patterns) and The Sentinel (compares Archive activity against Tailor). Use The Ward to view emerging motifs and detect drift."
+      },
+      {
+        name: "Archive",
+        role: "Memory Field",
+        desc: "Everything uploaded enters here. Patterns reveal themselves through proximity. Archive is not Pinterest; it is a dataset."
+      },
+      {
+        name: "Mesopic",
+        role: "Perception Adjustment",
+        desc: "Use Mesopic to shift contrast and recalibrate tonal perception. It is about seeing differently, not just editing."
+      },
+      {
+        name: "Darkroom",
+        role: "Transformation",
+        desc: "Where active intervention occurs. Image manipulation, controlled distortion, and texture refinement."
+      }
+    ]
   },
   {
-    id: 'creative-infrastructure',
-    brand: "Creative Infrastructure",
-    tag: "Professional",
-    headline: "Why teams and organizations need systems for taste, not just tools for output.",
-    subtitle: "Bridging the gap between intuition and execution.",
-    content: {
-       author: "Strategic Brief",
-       body: [
-          "Modern creative work is increasingly interdisciplinary. Strategy, design, content, and product thinking now overlap—but the tools used to support them remain siloed.",
-          "Mimi Zine addresses a structural gap: the absence of shared infrastructure for early-stage creative thinking.",
-          "For teams, Mimi functions as a centralized visual research layer, a system for documenting creative rationale, and a bridge between intuition and execution. Unlike traditional documentation tools, Mimi preserves aesthetic context. Unlike moodboards, it produces legible insight. The result is alignment without oversimplification.",
-          "Organizations use Mimi to maintain continuity across projects and contributors, onboard collaborators into an existing creative logic, and reduce misinterpretation between strategy and execution.",
-          "In an era where creative decisions must be justified, portable, and repeatable, Mimi offers a way to make taste operational—without reducing it to templates or trends.",
-          "Mimi Zine is not just a creative product. It is creative infrastructure for people and teams who take thinking seriously."
-       ],
-       captions: ["Operational Taste.", "Visual Research Layer.", "Alignment w/o Oversimplification."]
-    },
-    stats: "Read Time: 5m // Topic: B2B",
-    color: "#8B5CF6"
+    domain: "DISCOVER",
+    modules: [
+      {
+        name: "Proposal",
+        role: "Structure Generator",
+        desc: "Converts fragments into structure. Use Proposal to generate creative briefs, editorial decks, and concept outlines.",
+        bestPractice: "Proposal scaffolds. You direct."
+      },
+      {
+        name: "Press",
+        role: "Narrative Positioning",
+        desc: "Where Mimi explains itself. Platform philosophy and public-facing framing."
+      },
+      {
+        name: "Profile",
+        role: "Identity Management",
+        desc: "Account presence and published works. The human layer of the system."
+      }
+    ]
   }
 ];
 
+const PRESS_ITEMS = [
+  {
+    id: 'field-guide',
+    ref: '001.FD',
+    timestamp: '10:42 AM',
+    brand: "Mimi Field Manual",
+    tag: "Protocol",
+    headline: "The Architecture of Sovereign Aesthetics.",
+    subtitle: "A working guide to the interface.",
+    isLocked: false,
+    hex: "#064E3B", // Deep Emerald
+    content: {
+       author: "System Registry",
+       intro: "Mimi Zine is structured in three domains: Creation, Alchemy, and Discover. Each menu item has a role. Use them in sequence. Return to them cyclically.",
+       sections: FIELD_GUIDE_CONTENT,
+       outro: "Mimi does not automate taste. It externalizes it. The more intentional your inputs, the more precise the system becomes."
+    },
+    stats: "Read Time: 5m"
+  },
+  {
+    id: 'fragment-direction',
+    ref: '002.CS',
+    timestamp: '09:15 AM',
+    brand: "Fragment to Direction",
+    tag: "Case Study",
+    headline: "Unified Creative Systems.",
+    subtitle: "How one creator transformed scattered references.",
+    isLocked: false,
+    hex: "#78350F", // Deep Amber/Bronze
+    content: {
+       author: "User Report",
+       intro: "When creative work is fast-moving, references pile up quickly. Screenshots live in camera rolls. Notes live in apps. Ideas remain unspoken because they’re hard to summarize.",
+       sections: [],
+       bodyText: "A Mimi Zine user—working across creative strategy, design, and digital publishing—entered the platform with a familiar problem: too much material, no unifying structure. Using Mimi, the workflow unfolded in three phases: Selection, Synthesis, and Integration."
+    },
+    stats: "Read Time: 4m"
+  },
+  {
+    id: 'creative-infra',
+    ref: '003.PR',
+    timestamp: 'Yesterday',
+    brand: "Creative Infrastructure",
+    tag: "Professional",
+    headline: "Systems for Taste.",
+    subtitle: "Bridging the gap between intuition and execution.",
+    isLocked: true,
+    hex: "#312E81", // Deep Indigo
+    content: {
+       author: "Strategic Brief",
+       intro: "Modern creative work is increasingly interdisciplinary. Strategy, design, content, and product thinking now overlap—but the tools used to support them remain siloed.",
+       sections: [],
+       bodyText: "Mimi Zine addresses a structural gap: the absence of shared infrastructure for early-stage creative thinking. For teams, Mimi functions as a centralized visual research layer."
+    },
+    stats: "Read Time: 6m"
+  },
+  {
+    id: 'foundational',
+    ref: '004.TH',
+    timestamp: 'Archived',
+    brand: "What Is Mimi Zine?",
+    tag: "Theory",
+    headline: "Foundational Theory.",
+    subtitle: "A visual research system for turning fragmented inspiration.",
+    isLocked: false,
+    hex: "#18181B", // Zinc 900
+    content: {
+       author: "Mimi Editorial",
+       intro: "Mimi Zine is a visual research and synthesis tool designed for creatives who work in fragments long before anything becomes public.",
+       sections: [],
+       bodyText: "Most creative work doesn’t begin with a brief—it begins with screenshots, half-formed references, aesthetic instincts, and unarticulated taste. Mimi Zine exists to formalize that early stage without flattening it."
+    },
+    stats: "Read Time: 3m"
+  }
+];
+
+// --- COMPONENTS ---
+
 export const ThePress: React.FC = () => {
   const [activeArticle, setActiveArticle] = useState<any | null>(null);
+  const [filter, setFilter] = useState('All Entries');
+
+  const filteredItems = useMemo(() => {
+      if (filter === 'All Entries') return PRESS_ITEMS;
+      if (filter === 'Protocols') return PRESS_ITEMS.filter(i => i.tag === 'Protocol' || i.tag === 'Theory');
+      if (filter === 'Case Studies') return PRESS_ITEMS.filter(i => i.tag === 'Case Study' || i.tag === 'Professional');
+      return PRESS_ITEMS;
+  }, [filter]);
 
   return (
-    <div className="flex-1 w-full h-full overflow-y-auto no-scrollbar pb-64 relative bg-nous-base dark:bg-[#050505] transition-colors duration-1000 px-6 md:px-16 pt-12 md:pt-20">
-      <header className="space-y-8 mb-20 border-b border-black/5 dark:border-white/5 pb-12">
-         <div className="space-y-3">
-            <div className="flex items-center gap-3 text-emerald-500">
-               <Globe size={14} />
-               <span className="font-sans text-[8px] uppercase tracking-[0.6em] font-black italic">Strategic Demonstration</span>
+    <div className="flex-1 w-full h-full overflow-y-auto no-scrollbar relative bg-[#F9F8F6] dark:bg-[#050505] transition-colors duration-1000 text-nous-text dark:text-white font-sans">
+      
+      {/* BACKGROUND GRID LINES */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.05]" 
+           style={{ backgroundImage: 'linear-gradient(to right, currentColor 1px, transparent 1px)', backgroundSize: '25% 100%' }} />
+
+      {/* HEADER SECTION */}
+      <header className="border-b border-stone-200 dark:border-stone-800 bg-[#F9F8F6]/90 dark:bg-[#050505]/90 backdrop-blur-sm sticky top-0 z-20">
+         <div className="max-w-[1920px] mx-auto px-6 md:px-12 py-8 md:py-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+            <div className="space-y-6">
+               <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-500">
+                  <Globe size={16} />
+                  <span className="font-mono text-[10px] uppercase tracking-[0.2em]">Strategic Demonstration</span>
+               </div>
+               <h1 className="font-serif text-7xl md:text-9xl italic tracking-tighter leading-[0.8]">The Press.</h1>
+               <p className="font-serif italic text-2xl md:text-3xl text-stone-500 dark:text-stone-400 max-w-2xl leading-tight pt-2">
+                  Insight into the <span className="border-b border-emerald-500 text-nous-text dark:text-white">Mimi Workflow</span> for creators. An index of sovereign aesthetics.
+               </p>
             </div>
-            <h1 className="font-serif text-5xl md:text-6xl italic tracking-tighter leading-none text-nous-text dark:text-white">The Press.</h1>
+            
+            <div className="flex flex-col items-end gap-1 text-right">
+               <span className="font-mono text-[10px] text-stone-400 uppercase tracking-widest">Current Edition</span>
+               <span className="font-serif text-4xl">Oct — 24</span>
+            </div>
          </div>
-         <p className="font-serif italic text-lg md:text-2xl text-stone-400 leading-tight max-w-2xl">
-            Insight into the <span className="text-nous-text dark:text-white underline decoration-emerald-500 underline-offset-4">Mimi Workflow</span> for creators and strategists.
-         </p>
+
+         {/* FILTER BAR */}
+         <div className="flex flex-wrap justify-between items-center gap-4 px-6 md:px-12 py-4 border-t border-stone-200 dark:border-stone-800 bg-[#F9F8F6] dark:bg-[#050505]">
+            <div className="flex gap-8 overflow-x-auto no-scrollbar">
+                {['All Entries', 'Protocols', 'Case Studies'].map(f => (
+                    <button 
+                        key={f}
+                        onClick={() => setFilter(f)}
+                        className={`font-mono text-[10px] uppercase tracking-widest transition-colors whitespace-nowrap ${filter === f ? 'text-emerald-600 dark:text-emerald-400 border-b border-emerald-500 pb-0.5' : 'text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 opacity-50 hover:opacity-100'}`}
+                    >
+                        {f}
+                    </button>
+                ))}
+            </div>
+            <div className="font-mono text-[10px] text-stone-400 hidden md:block opacity-50">
+                Displaying 1-{filteredItems.length} of {PRESS_ITEMS.length} Records
+            </div>
+         </div>
       </header>
-      <div className="grid grid-cols-1 gap-0 border-t border-black/5 dark:border-white/5">
-         {CASE_STUDIES.map((study, index) => (
-           <motion.div key={study.id} onClick={() => setActiveArticle(study)} className="group cursor-pointer border-b border-black/5 dark:border-white/5 py-12 flex flex-col md:flex-row gap-12 items-start hover:bg-stone-50 dark:hover:bg-white/5 transition-all px-4 -mx-4">
-              <div className="md:w-1/4 space-y-3">
-                 <div className="flex items-center gap-3">
-                    <span className="font-mono text-[8px] text-stone-300">0{index + 1}</span>
-                    <span className="font-sans text-[8px] uppercase tracking-widest font-black" style={{ color: study.color }}>{study.tag}</span>
-                 </div>
-                 <h3 className="font-header text-3xl italic tracking-tighter leading-none group-hover:translate-x-1 transition-transform duration-500">{study.brand}.</h3>
-              </div>
-              <div className="md:w-2/4">
-                 <p className="font-serif italic text-xl text-stone-500 group-hover:text-nous-text dark:group-hover:text-white transition-colors leading-snug">{study.headline}</p>
-                 <p className="font-sans text-[8px] text-stone-400 mt-3 leading-relaxed max-w-md uppercase tracking-wide opacity-60">{study.subtitle}</p>
-              </div>
-              <div className="md:w-1/4 flex justify-end items-center h-full">
-                 <div className="w-10 h-10 rounded-full border border-black/5 dark:border-white/5 flex items-center justify-center group-hover:bg-nous-text group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-black transition-all">
-                    <ArrowRight size={14} className="-rotate-45 group-hover:rotate-0 transition-transform duration-500" />
-                 </div>
-              </div>
-           </motion.div>
+
+      {/* GRID LAYOUT */}
+      <div className="max-w-[1920px] mx-auto border-l border-stone-200 dark:border-stone-800">
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+            {filteredItems.map((item, i) => (
+               <motion.article 
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  onClick={() => setActiveArticle(item)}
+                  className="group relative border-r border-b border-stone-200 dark:border-stone-800 min-h-[500px] flex flex-col justify-between hover:bg-stone-50 dark:hover:bg-white/5 transition-colors duration-500 cursor-pointer overflow-hidden"
+               >
+                  <div className="p-6 h-full flex flex-col">
+                      {/* TOP META */}
+                      <div className="flex justify-between items-start mb-6 font-mono text-[10px] tracking-widest uppercase opacity-60">
+                         <span>ID: {item.ref}</span>
+                         <span>{item.timestamp}</span>
+                      </div>
+
+                      {/* VISUAL PLACEHOLDER (COLOR SWATCH) */}
+                      <div className="aspect-[3/4] w-full mb-6 relative overflow-hidden group-hover:scale-[1.02] transition-transform duration-700" style={{ backgroundColor: item.hex }}>
+                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-20 mix-blend-overlay pointer-events-none" />
+                         
+                         <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="font-serif italic text-6xl text-white/10 mix-blend-overlay pr-4 select-none pointer-events-none">
+                                {item.ref.split('.')[0]}
+                            </span>
+                         </div>
+
+                         <div className="absolute top-4 left-4">
+                            <span className="font-mono text-[8px] uppercase tracking-widest text-white/90 bg-black/10 backdrop-blur-md px-2 py-1">{item.tag}</span>
+                         </div>
+                      </div>
+
+                      <div className="mt-auto">
+                          <h3 className="font-serif text-4xl leading-[0.9] mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                             {item.brand}
+                          </h3>
+                          <p className="font-mono text-[10px] uppercase tracking-wider opacity-70 mb-6">{item.headline}</p>
+                      </div>
+                  </div>
+
+                  <div className="p-6 pt-0 border-t border-transparent group-hover:border-stone-200 dark:group-hover:border-stone-800 transition-colors">
+                     <p className="font-serif italic text-lg text-stone-500 dark:text-stone-400 group-hover:text-nous-text dark:group-hover:text-white transition-colors leading-tight">
+                        {item.subtitle}
+                     </p>
+                     <div className="mt-6 flex items-center justify-between">
+                        <span className="font-mono text-[9px] uppercase border border-nous-text dark:border-white px-2 py-1">Read Entry</span>
+                        <ArrowUpRight size={14} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                     </div>
+                  </div>
+               </motion.article>
+            ))}
+            
+            {/* FILLER CELLS (For Grid Aesthetic) */}
+            {Array.from({ length: Math.max(0, 4 - (filteredItems.length % 4 === 0 ? 4 : filteredItems.length % 4)) }).map((_, i) => (
+                <div key={`filler-${i}`} className="hidden lg:block border-r border-b border-stone-200 dark:border-stone-800 min-h-[500px] bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-[0.03]" />
+            ))}
+         </div>
+      </div>
+
+      {/* FOOTER METRICS */}
+      <div className="grid grid-cols-2 lg:grid-cols-6 border-b border-stone-200 dark:border-stone-800 bg-[#F9F8F6]/50 dark:bg-[#050505]/50">
+         {[
+            { label: 'The Muse', type: 'Visual Archive', ref: '01.99' },
+            { label: 'Texture Packs', type: 'Resource Drop', ref: '02.4B' },
+            { label: 'Editorial 09', type: 'Opinion Piece', ref: '05.AX' },
+            { label: 'Sovereign', type: 'Concept', ref: '88.00' },
+            { label: 'Interviews', type: 'People', ref: '12.12' },
+            { label: 'Manifesto', type: 'Core Value', ref: 'XX.XX' }
+         ].map((item, i) => (
+            <div key={i} className="col-span-1 border-r border-stone-200 dark:border-stone-800 p-6 h-32 flex flex-col justify-between hover:bg-stone-50 dark:hover:bg-white/5 transition-colors cursor-default group">
+               <span className="font-mono text-[9px] uppercase tracking-widest opacity-40 group-hover:opacity-100 transition-opacity">Ref: {item.ref}</span>
+               <div>
+                  <p className="font-serif text-xl italic group-hover:underline decoration-emerald-500 decoration-1 underline-offset-4">{item.label}</p>
+                  <p className="text-[9px] font-mono mt-1 opacity-60 uppercase tracking-widest">{item.type}</p>
+               </div>
+            </div>
          ))}
       </div>
+
       <AnimatePresence>
         {activeArticle && (
           <EditorialSpread article={activeArticle} onClose={() => setActiveArticle(null)} />

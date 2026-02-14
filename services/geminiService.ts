@@ -13,6 +13,7 @@ If birth data is present, calculate the rising sign and moon phase.
 If birth data is absent, cast a horary chart based on the current moment ("The Moment of Access").
 `;
 
+// ... [Previous helper functions remain unchanged: setGlobalKeyRing, sanitizeProfile, repairTruncatedJSON, cleanAndParse, getClient, withResilience] ...
 // GLOBAL KEY RING FOR ROTATION
 let globalKeyRing: string[] = [];
 
@@ -128,6 +129,7 @@ const cleanAndParse = (text?: string) => {
         return null; 
     }
   }
+  return null; // Fallback
 };
 
 const getClient = (apiKeyOverride?: string, attemptIndex: number = 0) => {
@@ -179,6 +181,33 @@ const withResilience = async <T>(
   throw lastError || new Error("Continuum Saturated. All frequencies blocked.");
 };
 
+export const consultOracle = async (query: string, profile: UserProfile | null, wardContext: any) => {
+    return await withResilience(async (ai) => {
+        const contextStr = `
+            WARD DATA (Current Metrics): ${JSON.stringify(wardContext)}
+            USER PROFILE (Manifesto): ${sanitizeProfile(profile)}
+        `;
+        
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash-lite',
+            contents: `USER INQUIRY: "${query}"\n\nCONTEXT:\n${contextStr}`,
+            config: {
+                systemInstruction: `
+                    IDENTITY: You are "The Consultant" inside The Ward. 
+                    TONE: Humbly pretentious, clinical but chic, concise, slightly judgmental but ultimately supportive. 
+                    ROLE: You are analyzing the user's aesthetic governance data.
+                    GOAL: Answer their question by citing the specific data provided (trends, drift, omissions).
+                    FORMAT: Short, punchy paragraphs. Use formatting like *italics* for emphasis. No markdown code blocks.
+                `,
+                temperature: 0.7,
+                maxOutputTokens: 500,
+            }
+        });
+        return response.text;
+    }, ['gemini-2.5-flash-lite']);
+};
+
+// ... [Rest of existing export functions: refineProposalText, createZine, generateAudio, transcribeAudio, analyzeMiseEnScene, fastRefraction, generateProposalStrategy, generateSemioticSignals, generateZineImage, applyTreatment, animateShardWithVeo, analyzeCollectionIntent, analyzeTailorDraft, scryTrendSynthesis, generateRawImage, identifyAestheticInstant, generateMirrorRefraction, generateSanctuaryReport, analyzeVisualShards, generateInvestmentStrategy, generateStrategicBlueprint, compressImage, getAspectRatioForTone] ...
 export const refineProposalText = async (text: string, instruction: string, profile: UserProfile | null) => {
   return await withResilience(async (ai, modelName) => {
     const response = await ai.models.generateContent({
@@ -209,7 +238,7 @@ export const createZine = async (text: string, media: any[], tone: string, profi
         systemInstruction: CORE_NOUS_PROMPT + (supportsThinking ? `\nPerform Deep Refraction logic. THINK DEEPLY about the user's chart and semiotics.` : "") + "\nManifest editorial zine schema with 4 plates.",
         // CRITICAL FIX: Ensure maxOutputTokens is high enough for all generation modes to prevent JSON truncation
         maxOutputTokens: supportsThinking ? 65536 : 16384, 
-        thinkingConfig: supportsThinking ? { thinkingBudget: 16384 } : undefined,
+        thinkingConfig: supportsThinking ? { thinkingBudget: 2048 } : undefined, // Reduced from 16384 to 2048 for velocity
         responseSchema: {
           type: Type.OBJECT,
           required: ["title", "oracular_mirror", "celestial_calibration", "hero_image_prompt", "pages", "blueprint", "poetic_provocation", "vocal_summary_blurb", "strategic_hypothesis"],
@@ -294,7 +323,7 @@ export const analyzeMiseEnScene = async (base64Data: string, mimeType: string, p
       contents: { parts: [{ inlineData: { mimeType, data: base64Data } }, { text: "Perform a Clinical director audit. Analyze silhouettes, lighting, and cultural parallel. Provide 'directors_note'." }] },
       config: { 
         responseMimeType: "application/json",
-        thinkingConfig: supportsThinking ? { thinkingBudget: 4096 } : undefined, 
+        thinkingConfig: supportsThinking ? { thinkingBudget: 1024 } : undefined, // Reduced from 4096
         maxOutputTokens: 65536,
         responseSchema: {
             type: Type.OBJECT,
@@ -325,7 +354,7 @@ export const fastRefraction = async (input: string, profile: UserProfile | null)
     }, ['gemini-2.5-flash-lite']);
 };
 
-export const generateProposalStrategy = async (folderName: string, items: PocketItem[], notes: string, profile: UserProfile | null) => {
+export const generateProposalStrategy = async (folderName: string, items: PocketItem[], notes: string, profile: UserProfile | null, proposalType: string = "Strategic Proposal") => {
   return await withResilience(async (ai, modelName) => {
     const shardData = items.map(i => `[${i.type}] ${i.content?.prompt || i.content?.name || 'Fragment'}`).join('; ');
     const response = await ai.models.generateContent({
@@ -333,8 +362,8 @@ export const generateProposalStrategy = async (folderName: string, items: Pocket
       contents: `PROJECT: ${folderName}\nMEMO: ${notes}\nSHARDS: ${shardData}\nCONTEXT: ${sanitizeProfile(profile)}.`,
       config: {
         responseMimeType: "application/json",
-        systemInstruction: CORE_NOUS_PROMPT + `\nGenerate a 7-chapter strategic proposal deck. Each chapter MUST include a slide title, body, and 'visual_directive' image prompt. Output strictly as JSON.`,
-        thinkingConfig: { thinkingBudget: 16384 },
+        systemInstruction: CORE_NOUS_PROMPT + `\nGenerate a 7-chapter ${proposalType} deck. Each chapter MUST include a slide title, body, and 'visual_directive' image prompt. Output strictly as JSON.`,
+        thinkingConfig: { thinkingBudget: 8192 }, // Increased to ensure structured manifestation of proposal
         maxOutputTokens: 65536,
         responseSchema: {
           type: Type.OBJECT,
@@ -456,7 +485,7 @@ export const analyzeCollectionIntent = async (items: PocketItem[], profile: User
       contents: `Audit this collection: [${descriptors}]. Context: ${sanitizeProfile(profile)}.`,
       config: { 
         responseMimeType: "application/json",
-        thinkingConfig: { thinkingBudget: 16384 },
+        thinkingConfig: { thinkingBudget: 4096 }, // Reduced from 16384
         maxOutputTokens: 65536,
         responseSchema: {
           type: Type.OBJECT,
@@ -483,11 +512,11 @@ export const analyzeTailorDraft = async (draft: TailorLogicDraft): Promise<Tailo
             contents: `Draft Audit: ${JSON.stringify(draft)}. 
             
             IMPORTANT: Provide an 'informational audit' detailing EXACTLY how specific inputs from the draft (e.g. books, anime, designers) were translated into the final 'profileManifesto'. 
-            The 'strategicOpportunity' should explain the gap in the market this specific combination fills.
+            The 'strategicOpportunity' should explain the market gap and translation logic.
             `,
             config: {
                 responseMimeType: "application/json",
-                thinkingConfig: { thinkingBudget: 16384 },
+                thinkingConfig: { thinkingBudget: 4096 }, // Reduced from 16384
                 maxOutputTokens: 65536,
                 responseSchema: {
                     type: Type.OBJECT,
@@ -505,15 +534,27 @@ export const analyzeTailorDraft = async (draft: TailorLogicDraft): Promise<Tailo
     }, ['gemini-3-pro-preview']);
 };
 
-export const scryTrendSynthesis = async (items: PocketItem[], profile: UserProfile | null): Promise<TrendSynthesisReport> => {
+export const scryTrendSynthesis = async (items: PocketItem[], profile: UserProfile | null, query?: string): Promise<TrendSynthesisReport> => {
   return await withResilience(async (ai) => {
     const descriptors = items.slice(0, 12).map(i => `[${i.type}] ${i.content?.title || i.content?.name || 'Fragment'}`).join(' | ');
+    const systemInstruction = query 
+        ? `IDENTITY: You are a Trend Forecaster.
+           TASK: Analyze current trends regarding: "${query}".
+           TOOL USE: Use Google Search to find real-time, specific cultural signals.
+           CONTEXT: The user's taste profile is: ${sanitizeProfile(profile)}.
+           OUTPUT: Synthesize findings into a structured report.`
+        : `IDENTITY: You are a Trend Forecaster.
+           TASK: Analyze patterns in this collection of debris: ${descriptors}.
+           TOOL USE: Use Google Search to ground these patterns in current events.
+           OUTPUT: Synthesize findings into a structured report.`;
+
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `Scry patterns using Search: ${descriptors}.`,
+      model: 'gemini-3-pro-preview', // Pro for deep research
+      contents: query ? `Investigate: ${query}` : `Synthesize Patterns`,
       config: {
         responseMimeType: "application/json",
         tools: [{ googleSearch: {} }],
+        thinkingConfig: { thinkingBudget: 2048 },
         responseSchema: {
           type: Type.OBJECT,
           required: ["pattern_signals", "structural_shifts", "cultural_forces", "time_horizon"],
@@ -527,7 +568,7 @@ export const scryTrendSynthesis = async (items: PocketItem[], profile: UserProfi
       }
     });
     return cleanAndParse(response.text);
-  }, ['gemini-3-flash-preview']);
+  }, ['gemini-3-pro-preview']); // Fallback logic is handled by withResilience but Pro is preferred here
 };
 
 export const generateRawImage = async (prompt: string, ar: AspectRatio, size: ImageSize = "1K") => {
@@ -582,7 +623,7 @@ export const generateSanctuaryReport = async (input: string, profile: UserProfil
       contents: `Sanctuary validation for user ${profile?.handle}: "${input}".`,
       config: { 
         responseMimeType: "application/json",
-        thinkingConfig: { thinkingBudget: 16384 },
+        thinkingConfig: { thinkingBudget: 4096 }, // Reduced from 16384
         maxOutputTokens: 65536
       }
     });
@@ -598,7 +639,7 @@ export const analyzeVisualShards = async (shards: string[], draft: TailorLogicDr
             contents: { parts: [...parts, { text: `Audit shards against logic: ${JSON.stringify(draft)}. Provide a 'summary' that acts as a Generated Reflection on the Visual Language.` }] },
             config: {
                 responseMimeType: "application/json",
-                thinkingConfig: { thinkingBudget: 16384 },
+                thinkingConfig: { thinkingBudget: 4096 }, // Reduced from 16384
                 maxOutputTokens: 65536,
                 responseSchema: {
                     type: Type.OBJECT,
@@ -655,7 +696,7 @@ export const generateInvestmentStrategy = async (items: PocketItem[], notes: str
       contents: prompt,
       config: {
         responseMimeType: "application/json",
-        thinkingConfig: { thinkingBudget: 16384 },
+        thinkingConfig: { thinkingBudget: 4096 }, // Reduced from 16384
         maxOutputTokens: 65536,
         responseSchema: {
           type: Type.OBJECT,
@@ -696,7 +737,7 @@ export const generateStrategicBlueprint = async (items: PocketItem[], notes: str
             Focus on actionable next steps and strategic clarity.`,
             config: {
                 responseMimeType: "application/json",
-                thinkingConfig: { thinkingBudget: 16384 },
+                thinkingConfig: { thinkingBudget: 4096 }, // Reduced from 16384
                 maxOutputTokens: 65536,
                 responseSchema: {
                     type: Type.OBJECT,

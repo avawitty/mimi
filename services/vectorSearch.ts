@@ -5,7 +5,11 @@ import { signInAnonymously } from "firebase/auth";
 import { collection, doc, setDoc, getDocs, deleteDoc, getDoc, query, where } from "firebase/firestore";
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const getAiClient = () => {
+    const key = process.env.API_KEY;
+    if (!key) return null;
+    return new GoogleGenAI({ apiKey: key });
+};
 
 const ensureAnonymousAuth = async () => {
   if (auth.currentUser) return auth.currentUser.uid;
@@ -27,6 +31,9 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
 
 export const syncToShadowMemory = async (item: any) => {
   try {
+    const ai = getAiClient();
+    if (!ai) return;
+
     const uid = await ensureAnonymousAuth();
     let textToEmbed = "";
     
@@ -40,8 +47,9 @@ export const syncToShadowMemory = async (item: any) => {
 
     if (!textToEmbed.trim()) return;
 
-    // OPTIMIZATION: Truncate text to avoid token bloat in embedding model (Performance Fix)
-    if (textToEmbed.length > 8000) textToEmbed = textToEmbed.slice(0, 8000);
+    // OPTIMIZATION: Truncate text strictly to avoid token bloat (Embedding models often have 2048/8192 limits)
+    // 2000 chars is safe for almost all embedding models
+    if (textToEmbed.length > 2000) textToEmbed = textToEmbed.slice(0, 2000);
 
     const response = await ai.models.embedContent({
       model: "text-embedding-004",
@@ -53,7 +61,7 @@ export const syncToShadowMemory = async (item: any) => {
       await setDoc(doc(db, `users/${uid}/memory`, item.id), {
         originalId: item.id,
         type: item.content?.pages ? 'zine' : 'shard',
-        content_preview: textToEmbed.slice(0, 300),
+        content_preview: textToEmbed.slice(0, 200),
         display_image: item.coverImageUrl || item.content?.imageUrl || null,
         synced_at: Date.now(),
         embedding_field: embedding,
@@ -76,12 +84,15 @@ export const deleteFromShadowMemory = async (itemId: string) => {
 
 export const scryShadowMemory = async (userQuery: string, options: { filterType?: string, timeRange?: string } = {}) => {
   try {
+    const ai = getAiClient();
+    if (!ai) return [];
+
     const uid = await ensureAnonymousAuth();
     
     // Generate embedding for the query
     const response = await ai.models.embedContent({
       model: "text-embedding-004",
-      contents: [{ parts: [{ text: userQuery }] }]
+      contents: [{ parts: [{ text: userQuery.slice(0, 2000) }] }]
     });
     const queryVector = response.embeddings?.[0]?.values;
     if (!queryVector) return [];
@@ -104,7 +115,7 @@ export const scryShadowMemory = async (userQuery: string, options: { filterType?
     })
     .filter(r => {
         // 1. Minimum relevance threshold
-        if (r.similarity < 0.35) return false;
+        if (r.similarity < 0.4) return false;
 
         // 2. Type filtering
         if (options.filterType && options.filterType !== 'all') {

@@ -10,17 +10,25 @@ const getClient = (apiKeyOverride?: string) => {
     return new GoogleGenAI({ apiKey: key });
 };
 
+export interface AgentConfig {
+  curatorEnabled: boolean;
+  sentinelEnabled: boolean;
+  thinkingBudget: number;
+}
+
 /**
  * THE CURATOR
  * Systemic Mandate: Analyze incoming debris (images/text) and enrich it with 
  * high-fidelity metadata, connecting it to broader cultural canons.
  */
-export const runCuratorAgent = async (item: PocketItem, profile: UserProfile | null) => {
+export const runCuratorAgent = async (item: PocketItem, profile: UserProfile | null, config?: AgentConfig) => {
+    if (config && !config.curatorEnabled) return null;
     console.info("MIMI // AGENT: The Curator is observing...");
     
     try {
         const ai = getClient();
         const model = "gemini-3-pro-preview"; // Thinking model required for deep semiotic analysis
+        const budget = config?.thinkingBudget || 1024;
 
         let promptParts = [];
         if (item.type === 'image' && item.content.imageUrl) {
@@ -30,7 +38,7 @@ export const runCuratorAgent = async (item: PocketItem, profile: UserProfile | n
         } else if (item.type === 'text' || item.type === 'voicenote') {
             promptParts.push({ text: `Analyze this shard: "${item.content.prompt || item.content.transcript || item.content.text}"` });
         } else {
-            return; // Curator only handles raw debris
+            return null; // Curator only handles raw debris
         }
 
         const response = await ai.models.generateContent({
@@ -49,7 +57,7 @@ export const runCuratorAgent = async (item: PocketItem, profile: UserProfile | n
                 `,
                 tools: [{ googleSearch: {} }], // Anchor to reality
                 responseMimeType: "application/json",
-                thinkingConfig: { thinkingBudget: 1024 }, // Allocating budget for cultural cross-referencing
+                thinkingConfig: { thinkingBudget: budget }, 
                 responseSchema: {
                     type: Type.OBJECT,
                     properties: {
@@ -73,7 +81,7 @@ export const runCuratorAgent = async (item: PocketItem, profile: UserProfile | n
 
     } catch (e) {
         console.warn("MIMI // AGENT: The Curator was obstructed.", e);
-        return null;
+        throw new Error("The Curator was obstructed: " + (e.message || "Unknown Error"));
     }
 };
 
@@ -82,7 +90,8 @@ export const runCuratorAgent = async (item: PocketItem, profile: UserProfile | n
  * Systemic Mandate: Monitor the user's accumulation of debris against their 
  * stated 'Tailor' profile. Detect drift or dissonance.
  */
-export const runSentinelAgent = async (recentItems: PocketItem[], profile: UserProfile) => {
+export const runSentinelAgent = async (recentItems: PocketItem[], profile: UserProfile, config?: AgentConfig) => {
+    if (config && !config.sentinelEnabled) return null;
     if (!profile.tailorDraft || recentItems.length < 3) return null;
     
     console.info("MIMI // AGENT: The Sentinel is auditing...");
@@ -90,6 +99,7 @@ export const runSentinelAgent = async (recentItems: PocketItem[], profile: UserP
     try {
         const ai = getClient();
         const model = "gemini-3-pro-preview";
+        const budget = config?.thinkingBudget || 1024;
 
         const shardSummaries = recentItems.map(i => i.content.prompt || i.content.name || i.agentEnrichment?.visualSemiotics || "Visual Shard").join("; ");
         const manifesto = JSON.stringify(profile.tailorDraft);
@@ -104,9 +114,9 @@ export const runSentinelAgent = async (recentItems: PocketItem[], profile: UserP
                     IDENTITY: You are "The Sentinel", a background auditor for Mimi Zine.
                     MANDATE: Compare the user's recent behavior (Debris) against their stated intent (Manifesto).
                     GOAL: Detect "Drift". Are they accumulating debris that contradicts their aesthetic core?
-                    OUTPUT: A silent report. If drift is high, provide a warning.
+                    OUTPUT: A silent report. If drift is high, provide a warning and explanation.
                 `,
-                thinkingConfig: { thinkingBudget: 1024 },
+                thinkingConfig: { thinkingBudget: budget },
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: Type.OBJECT,
@@ -125,6 +135,6 @@ export const runSentinelAgent = async (recentItems: PocketItem[], profile: UserP
 
     } catch (e) {
         console.warn("MIMI // AGENT: The Sentinel sleeps.", e);
-        return null;
+        throw new Error("The Sentinel was obstructed: " + (e.message || "Unknown Error"));
     }
 };

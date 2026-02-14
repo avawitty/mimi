@@ -4,8 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
 import { fetchDossierFolders, fetchDossierArtifacts, createDossierFolder, createDossierArtifactFromImage, createDossierArtifactFromText, updateDossierFolder, fetchPocketItems } from '../services/firebase';
-import { DossierFolder, DossierArtifact, FruitionTrajectory } from '../types';
-import { Briefcase, Folder, Plus, ChevronRight, FileText, Share2, Layout, ArrowRight, Loader2, X, Archive, Eye, Trash2, Globe, ExternalLink, Upload, ImageIcon, HeartHandshake, FolderOpen, LayoutGrid, FolderPlus, PenTool, Save, Quote, Info, StickyNote, Compass, Map, Terminal } from 'lucide-react';
+import { DossierFolder, DossierArtifact, FruitionTrajectory, Task } from '../types';
+import { Briefcase, Folder, Plus, ChevronRight, FileText, Share2, Layout, ArrowRight, Loader2, X, Archive, Eye, Trash2, Globe, ExternalLink, Upload, ImageIcon, HeartHandshake, FolderOpen, LayoutGrid, FolderPlus, PenTool, Save, Quote, Info, StickyNote, Compass, Map, Terminal, Check, Calendar, AlertTriangle, ListChecks } from 'lucide-react';
 import { DossierArtifactView } from './DossierArtifactView';
 import { generateStrategicBlueprint } from '../services/geminiService';
 
@@ -33,6 +33,12 @@ export const DossierView: React.FC = () => {
   // Strategic Blueprint State
   const [isGeneratingBlueprint, setIsGeneratingBlueprint] = useState(false);
   const [activeBlueprint, setActiveBlueprint] = useState<FruitionTrajectory | null>(null);
+
+  // Task Management State
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [newTaskText, setNewTaskText] = useState('');
+  const [newTaskDate, setNewTaskDate] = useState('');
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -62,10 +68,12 @@ export const DossierView: React.FC = () => {
     if (activeFolder) {
         loadArtifacts(activeFolder.id);
         setFolderMemo(activeFolder.notes || '');
+        setTasks(activeFolder.tasks || []);
     }
     else {
         setArtifacts([]);
         setFolderMemo('');
+        setTasks([]);
     }
   }, [activeFolder]);
 
@@ -137,9 +145,6 @@ export const DossierView: React.FC = () => {
       if (!activeFolder) return;
       setIsGeneratingBlueprint(true);
       try {
-          // For now, we simulate pulling items from pocket that might be related, or just pass empty if Dossier items aren't fully PocketItems yet.
-          // In a full implementation, DossierArtifacts would need to be convertible to PocketItems or handled directly.
-          // Here we'll pass an empty array and rely on the memo for context if no items found.
           const res = await generateStrategicBlueprint([], folderMemo, profile);
           setActiveBlueprint(res);
       } catch (e) {
@@ -148,6 +153,55 @@ export const DossierView: React.FC = () => {
       } finally {
           setIsGeneratingBlueprint(false);
       }
+  };
+
+  // --- TASK MANAGEMENT LOGIC ---
+
+  const handleAddTask = async () => {
+    if (!newTaskText.trim() || !activeFolder) return;
+    const newTask: Task = {
+        id: `task_${Date.now()}`,
+        text: newTaskText.trim(),
+        completed: false,
+        dueDate: newTaskDate || undefined,
+        createdAt: Date.now()
+    };
+    const updatedTasks = [...tasks, newTask];
+    
+    setTasks(updatedTasks);
+    setNewTaskText('');
+    setNewTaskDate('');
+    
+    // Persist
+    try {
+        await updateDossierFolder(activeFolder.id, { tasks: updatedTasks });
+        // Update local folders list to reflect state
+        setFolders(prev => prev.map(f => f.id === activeFolder.id ? { ...f, tasks: updatedTasks } : f));
+    } catch(e) {
+        console.error("Task persistence failed", e);
+    }
+  };
+
+  const toggleTask = async (taskId: string) => {
+      if (!activeFolder) return;
+      const updatedTasks = tasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t);
+      setTasks(updatedTasks);
+      try {
+          await updateDossierFolder(activeFolder.id, { tasks: updatedTasks });
+          setFolders(prev => prev.map(f => f.id === activeFolder.id ? { ...f, tasks: updatedTasks } : f));
+      } catch(e) {}
+  };
+
+  const confirmDeleteTask = async () => {
+      if (!activeFolder || !taskToDelete) return;
+      const updatedTasks = tasks.filter(t => t.id !== taskToDelete);
+      setTasks(updatedTasks);
+      setTaskToDelete(null);
+      try {
+          await updateDossierFolder(activeFolder.id, { tasks: updatedTasks });
+          setFolders(prev => prev.map(f => f.id === activeFolder.id ? { ...f, tasks: updatedTasks } : f));
+          window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Imperative Purged.", icon: <Trash2 size={14} /> } }));
+      } catch(e) {}
   };
 
   const handleVent = () => {
@@ -212,7 +266,7 @@ export const DossierView: React.FC = () => {
                  </motion.div>
                ))}
                {folders.length === 0 && (
-                 <div className="col-span-full py-48 text-center opacity-20 space-y-8 border-2 border-dashed border-stone-100 dark:border-stone-800 rounded-sm">
+                 <div className="col-span-full py-48 text-center opacity-20 space-y-6 border-2 border-dashed border-stone-100 dark:border-stone-800 rounded-sm">
                     <Archive size={48} strokeWidth={1} className="mx-auto" />
                     <p className="font-serif italic text-3xl">“Registry currently void.”</p>
                  </div>
@@ -286,11 +340,70 @@ export const DossierView: React.FC = () => {
                     value={folderMemo} 
                     onChange={e => setFolderMemo(e.target.value)} 
                     placeholder="Describe the semiotic throughline. High-density copy-pasting of references, motifs, and conceptual debris is encouraged here..." 
-                    className="w-full bg-[#FDFBF7] dark:bg-stone-950 border border-stone-100 dark:border-stone-800 p-8 font-serif italic text-lg md:text-xl focus:outline-none min-h-[200px] rounded-sm text-stone-600 dark:text-stone-300 shadow-inner resize-none border-l-4 border-l-emerald-500/20"
+                    className="w-full bg-[#FDFBF7] dark:bg-stone-900 border border-stone-100 dark:border-stone-800 p-8 font-serif italic text-lg md:text-xl focus:outline-none min-h-[200px] rounded-sm text-stone-600 dark:text-stone-300 shadow-inner resize-none border-l-4 border-l-emerald-500/20"
                   />
                   <div className="flex items-center gap-3 opacity-30">
                      <Info size={12} />
                      <p className="font-serif italic text-xs">"Constituent fragments require a singular strategic logic to manifest as form."</p>
+                  </div>
+               </section>
+
+               {/* STRATEGIC IMPERATIVES (TASKS) */}
+               <section className="space-y-6">
+                  <div className="flex items-center gap-3 text-stone-400 border-b border-stone-100 dark:border-stone-800 pb-4">
+                     <ListChecks size={14} className="text-amber-500" />
+                     <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black">Strategic Imperatives</span>
+                  </div>
+                  
+                  <div className="bg-stone-50/50 dark:bg-stone-900/30 p-6 rounded-sm space-y-6 border border-stone-100 dark:border-stone-800">
+                      <div className="flex gap-4">
+                          <input 
+                            type="text" 
+                            value={newTaskText} 
+                            onChange={(e) => setNewTaskText(e.target.value)} 
+                            onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
+                            placeholder="Add strategic requirement..."
+                            className="flex-1 bg-white dark:bg-stone-900 border-b border-stone-200 dark:border-stone-800 py-3 px-4 font-serif italic text-lg focus:outline-none focus:border-amber-500 transition-colors"
+                          />
+                          <div className="relative group">
+                             <input 
+                                type="date" 
+                                value={newTaskDate} 
+                                onChange={(e) => setNewTaskDate(e.target.value)} 
+                                className="w-12 h-full opacity-0 absolute inset-0 cursor-pointer z-10"
+                             />
+                             <div className={`h-full px-4 flex items-center justify-center border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 ${newTaskDate ? 'text-amber-500' : 'text-stone-300'}`}>
+                                <Calendar size={18} />
+                             </div>
+                          </div>
+                          <button onClick={handleAddTask} disabled={!newTaskText.trim()} className="px-6 bg-nous-text dark:bg-white text-white dark:text-stone-900 rounded-sm font-sans text-[8px] uppercase tracking-widest font-black disabled:opacity-30">
+                             Add
+                          </button>
+                      </div>
+
+                      <div className="space-y-2">
+                          {tasks.map(task => (
+                              <motion.div layout key={task.id} className="flex items-center gap-4 p-3 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-sm group hover:border-amber-500/30 transition-colors">
+                                  <button onClick={() => toggleTask(task.id)} className="shrink-0 w-6 h-6 border border-stone-300 dark:border-stone-700 rounded-full flex items-center justify-center hover:border-amber-500 transition-colors">
+                                      <motion.div initial={false} animate={{ scale: task.completed ? 1 : 0 }} className="text-amber-500">
+                                          <Check size={14} />
+                                      </motion.div>
+                                  </button>
+                                  <div className="flex-1 flex items-baseline gap-4">
+                                      <span className={`font-serif text-lg transition-all ${task.completed ? 'line-through text-stone-300 decoration-stone-300' : 'text-stone-700 dark:text-stone-200'}`}>{task.text}</span>
+                                      {task.dueDate && (
+                                          <span className="font-mono text-[9px] text-stone-400 bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded-sm uppercase">{new Date(task.dueDate).toLocaleDateString()}</span>
+                                      )}
+                                  </div>
+                                  <button onClick={() => setTaskToDelete(task.id)} className="text-stone-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-2">
+                                      <Trash2 size={14} />
+                                  </button>
+                              </motion.div>
+                          ))}
+                          {tasks.length === 0 && (
+                              <p className="text-center font-serif italic text-stone-400 text-sm py-4">No structural mandates active.</p>
+                          )}
+                      </div>
                   </div>
                </section>
 
@@ -309,7 +422,7 @@ export const DossierView: React.FC = () => {
                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                        {artifacts.map(artifact => (
                          <motion.div key={artifact.id} onClick={() => setActiveArtifact(artifact)} whileHover={{ y: -5 }} className="group cursor-pointer bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 p-1 shadow-sm hover:shadow-2xl transition-all rounded-sm flex flex-col">
-                           <div className="aspect-[4/3] bg-stone-50 dark:bg-stone-950 overflow-hidden relative">
+                           <div className="aspect-[4/3] bg-stone-50 dark:bg-stone-900 overflow-hidden relative">
                                {artifact.elements?.[0]?.type === 'image' ? (
                                  <img src={artifact.elements[0].content} className="w-full h-full object-cover grayscale transition-all group-hover:grayscale-0 duration-[2s]" />
                                ) : (
@@ -367,7 +480,7 @@ export const DossierView: React.FC = () => {
                     onChange={e => setNewFolderName(e.target.value)} 
                     onKeyDown={e => e.key === 'Enter' && handleCreateFolder()}
                     placeholder="Project Namespace..." 
-                    className="w-full bg-stone-50 dark:bg-stone-950 border-b border-stone-100 dark:border-stone-800 p-4 font-serif italic text-2xl focus:outline-none focus:border-emerald-500 transition-colors" 
+                    className="w-full bg-stone-50 dark:bg-stone-900 border-b border-stone-100 dark:border-stone-800 p-4 font-serif italic text-2xl focus:outline-none focus:border-emerald-500 transition-colors" 
                     autoFocus
                   />
                   <div className="flex gap-4">
@@ -401,7 +514,7 @@ export const DossierView: React.FC = () => {
                         value={noteContent} 
                         onChange={e => setNoteContent(e.target.value)} 
                         placeholder="Paste semiotic touchpoints, fragments, or transcripts here..." 
-                        className="w-full bg-[#FDFBF7] dark:bg-stone-950 border border-stone-100 dark:border-stone-800 p-8 font-serif italic text-lg focus:outline-none min-h-[300px] rounded-sm text-stone-600 dark:text-stone-300 shadow-inner resize-none"
+                        className="w-full bg-[#FDFBF7] dark:bg-stone-900 border border-stone-100 dark:border-stone-800 p-8 font-serif italic text-lg focus:outline-none min-h-[300px] rounded-sm text-stone-600 dark:text-stone-300 shadow-inner resize-none"
                      />
                   </div>
                   <div className="flex gap-4 pt-4">
@@ -413,6 +526,27 @@ export const DossierView: React.FC = () => {
                   </div>
                </motion.div>
             </motion.div>
+         )}
+
+         {/* DELETE TASK CONFIRMATION */}
+         {taskToDelete && (
+             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[7000] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+                 <motion.div initial={{ scale: 0.9, y: 10 }} animate={{ scale: 1, y: 0 }} className="bg-white dark:bg-stone-900 p-8 rounded-sm border border-red-500/20 shadow-2xl max-w-sm w-full text-center space-y-6">
+                     <div className="flex justify-center">
+                         <div className="p-4 bg-red-500/10 rounded-full text-red-500">
+                             <AlertTriangle size={24} />
+                         </div>
+                     </div>
+                     <div className="space-y-2">
+                         <h3 className="font-serif text-2xl italic">Purge Imperative?</h3>
+                         <p className="font-sans text-[9px] uppercase tracking-widest text-stone-400 font-black">This action removes the strategic requirement.</p>
+                     </div>
+                     <div className="flex gap-3">
+                         <button onClick={() => setTaskToDelete(null)} className="flex-1 py-3 border border-stone-200 dark:border-stone-800 rounded-sm font-sans text-[8px] uppercase tracking-widest font-black text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 transition-all">Retain</button>
+                         <button onClick={confirmDeleteTask} className="flex-1 py-3 bg-red-600 text-white rounded-sm font-sans text-[8px] uppercase tracking-widest font-black hover:bg-red-700 transition-all">Purge</button>
+                     </div>
+                 </motion.div>
+             </motion.div>
          )}
       </AnimatePresence>
 

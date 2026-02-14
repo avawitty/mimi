@@ -5,10 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MediaFile, ToneTag } from '../types';
 import { useRecorder } from '../hooks/useRecorder';
 import { useTasteLogging } from '../hooks/useTasteLogging';
-import { Plus, BrainCircuit, X, Globe, Mic, Loader2, Square, Radio, Martini, Info, Sparkles, AlertCircle, Eraser, Zap, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
+import { Plus, BrainCircuit, X, Globe, Mic, Loader2, Square, Radio, Mail, Info, Sparkles, AlertCircle, Eraser, Zap, Image as ImageIcon, Link as LinkIcon, Twitter, Instagram, Shield, Users } from 'lucide-react';
 import { transcribeAudio } from '../services/geminiService';
 import { CuratorNote } from './CuratorNote';
 import { useUser } from '../contexts/UserContext';
+import { LegalOverlay } from './LegalOverlay';
 
 const TONE_OPTIONS: ToneTag[] = ['chic', 'nostalgia', 'dream', 'unhinged', 'panic', 'editorial'];
 
@@ -65,6 +66,10 @@ export const InputStudio: React.FC<{
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [showColophon, setShowColophon] = useState(false);
   const [promptIndex, setPromptIndex] = useState(0);
+  const [legalType, setLegalType] = useState<'privacy' | 'terms' | null>(null);
+  
+  // CONTINUUM STATE
+  const [activeProvocation, setActiveProvocation] = useState<string | null>(null);
   
   const { isRecording, startRecording, stopRecording, audioBlob, permissionError } = useRecorder();
   const mediaInputRef = useRef<HTMLInputElement>(null);
@@ -75,6 +80,35 @@ export const InputStudio: React.FC<{
     }, 10000);
     return () => clearInterval(timer);
   }, [selectedTone]);
+
+  // Handle Incoming Signal
+  useEffect(() => {
+      if (initialValue && typeof initialValue === 'object') {
+          if (initialValue.includes('PROVOCATION:')) {
+              const parts = initialValue.split('PROVOCATION: "');
+              if (parts[1]) {
+                  const prov = parts[1].split('"')[0];
+                  setActiveProvocation(prov);
+                  setInput(''); 
+                  return;
+              }
+          }
+          setInput(initialValue);
+      } else if (initialValue) {
+          if (initialValue.includes('PROVOCATION: "')) {
+              const parts = initialValue.split('PROVOCATION: "');
+              if (parts[1]) {
+                  const prov = parts[1].split('"')[0];
+                  setActiveProvocation(prov);
+                  setInput(''); 
+              } else {
+                  setInput(initialValue);
+              }
+          } else {
+              setInput(initialValue);
+          }
+      }
+  }, [initialValue]);
 
   useEffect(() => {
     if (initialMedia && initialMedia.length > 0) setMediaFiles(initialMedia);
@@ -102,16 +136,19 @@ export const InputStudio: React.FC<{
   const triggerAccession = useCallback((e?: React.MouseEvent) => {
     if (e) { e.preventDefault(); e.stopPropagation(); }
     if ((input.trim() || mediaFiles.length > 0) && !isThinking) {
-      // Explicitly passing the current state values
-      onRefine(input.trim(), [...mediaFiles], selectedTone, { 
+      let finalInput = input.trim();
+      if (activeProvocation) {
+          finalInput = `[CONTEXT: Responding to Provocation: "${activeProvocation}"]\n\nRESPONSE: ${input}`;
+      }
+      onRefine(finalInput, [...mediaFiles], selectedTone, { 
           useSearch: useSearch, 
           deepThinking: deepThinking, 
-          isLite: liteMode, // Fixed: Changed from liteMode to isLite to match App.tsx expectation
+          isLite: liteMode, 
           ignoreTailor: freshState, 
           isPublic: true 
       });
     }
-  }, [input, mediaFiles, isThinking, selectedTone, useSearch, deepThinking, liteMode, freshState, onRefine]);
+  }, [input, mediaFiles, isThinking, selectedTone, useSearch, deepThinking, liteMode, freshState, onRefine, activeProvocation]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -136,18 +173,27 @@ export const InputStudio: React.FC<{
   return (
     <div className="w-full h-full flex flex-col items-center relative overflow-x-hidden transition-all duration-1000 bg-transparent">
       <CuratorNote isOpen={showColophon} onClose={() => setShowColophon(false)} />
+      <AnimatePresence>
+        {legalType && <LegalOverlay type={legalType} onClose={() => setLegalType(null)} />}
+      </AnimatePresence>
       
       <div className="w-full max-w-4xl flex-1 flex flex-col items-center min-h-0 relative px-4 mt-8 md:mt-24 overflow-y-auto no-scrollbar transition-all z-0">
-        <div className="h-16 flex flex-col items-center justify-center mb-8 px-6 relative">
+        
+        {/* PROMPT HEADER / CONTINUUM PROVOCATION */}
+        <div className="flex flex-col items-center justify-center mb-8 px-6 relative w-full text-center space-y-6">
            <AnimatePresence mode="wait">
-             {continuumContext ? (
+             {activeProvocation ? (
                <motion.div
                  initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-                 className="flex items-center gap-2 px-4 py-2 bg-stone-100 dark:bg-stone-900 rounded-full border border-emerald-500/20"
+                 className="flex flex-col items-center gap-4 p-8 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-sm shadow-xl max-w-2xl"
                >
-                  <LinkIcon size={12} className="text-emerald-500" />
-                  <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-500">Continuum Active:</span>
-                  <span className="font-serif italic text-xs text-nous-text dark:text-white truncate max-w-[200px]">{continuumContext.previousTitle}</span>
+                  <div className="flex items-center gap-2 text-emerald-500">
+                      <LinkIcon size={14} />
+                      <span className="font-sans text-[9px] uppercase tracking-[0.4em] font-black">Continuum Active</span>
+                  </div>
+                  <p className="font-serif italic text-2xl md:text-3xl text-nous-text dark:text-white leading-tight">
+                      "{activeProvocation}"
+                  </p>
                </motion.div>
              ) : (
                <motion.p 
@@ -167,7 +213,7 @@ export const InputStudio: React.FC<{
             name="input"
             value={input} 
             onChange={(e) => setInput(e.target.value)} 
-            placeholder={continuumContext ? "Continue the thread..." : "Deposit your memetic debris..."}
+            placeholder={activeProvocation ? "Type your answer..." : "Deposit your memetic debris..."}
             className="w-full bg-transparent border-none font-serif italic focus:outline-none resize-none leading-[0.9] text-center tracking-tight text-nous-text dark:text-white text-5xl md:text-7xl lg:text-8xl placeholder:text-stone-300/50 dark:placeholder:text-stone-700/50 relative transition-colors" 
             style={{ minHeight: '200px' }}
           />
@@ -216,7 +262,7 @@ export const InputStudio: React.FC<{
                      <>
                        <Sparkles size={14} className={deepThinking ? 'animate-pulse' : ''} />
                        <span className="font-sans text-[10px] uppercase tracking-[0.4em] font-black">
-                        {continuumContext ? 'Thread Logic' : deepThinking ? 'Imperial Refraction' : 'Generate Zine'}
+                        {activeProvocation ? 'Bind Response' : deepThinking ? 'Imperial Refraction' : 'Generate Zine'}
                        </span>
                      </>
                   )}
@@ -231,43 +277,20 @@ export const InputStudio: React.FC<{
         
         {/* TOOLS ROW */}
         <div className="flex items-center justify-center gap-8 md:gap-12 mb-8 px-4">
-            <button
-                onClick={() => mediaInputRef.current?.click()}
-                className="text-stone-400 hover:text-emerald-500 transition-all duration-300 transform hover:scale-110"
-                title="Inject Shard"
-            >
+            <button onClick={() => mediaInputRef.current?.click()} className="text-stone-400 hover:text-emerald-500 transition-all duration-300 transform hover:scale-110" title="Inject Shard">
                 <Plus size={24} strokeWidth={1} />
             </button>
-
-            <button 
-                onClick={isRecording ? stopRecording : startRecording} 
-                className={`transition-all duration-500 ${isRecording ? 'text-red-500 scale-125 animate-pulse' : permissionError ? 'text-red-300' : 'text-stone-400 hover:text-emerald-500'}`}
-                title="Vocal Note"
-            >
+            <button onClick={isRecording ? stopRecording : startRecording} className={`transition-all duration-500 ${isRecording ? 'text-red-500 scale-125 animate-pulse' : permissionError ? 'text-red-300' : 'text-stone-400 hover:text-emerald-500'}`} title="Vocal Note">
                 {isRecording ? <Square size={20} fill="currentColor" /> : <Mic size={20} strokeWidth={1} />}
             </button>
-            
             <div className="w-px h-6 bg-stone-200 dark:bg-stone-800 mx-2" />
-
-            {/* PROTOCOL TOGGLES */}
-            <button 
-              onClick={() => { setLiteMode(!liteMode); if(!liteMode) setDeepThinking(false); }} 
-              className={`transition-colors flex items-center gap-2 ${liteMode ? 'text-cyan-500' : 'text-stone-400 hover:text-stone-600'}`}
-              title="Lite Protocol (Low Latency)"
-            >
+            <button onClick={() => { setLiteMode(!liteMode); if(!liteMode) setDeepThinking(false); }} className={`transition-colors flex items-center gap-2 ${liteMode ? 'text-cyan-500' : 'text-stone-400 hover:text-stone-600'}`} title="Lite Protocol (Low Latency)">
               <Zap size={18} strokeWidth={1} />
             </button>
-
-            <button 
-              onClick={() => { setDeepThinking(!deepThinking); if(!deepThinking) setLiteMode(false); }} 
-              className={`transition-colors flex items-center gap-2 ${deepThinking ? 'text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]' : 'text-stone-400 hover:text-stone-600'}`}
-              title="Deep Mode (Enhanced Heuristics)"
-            >
+            <button onClick={() => { setDeepThinking(!deepThinking); if(!deepThinking) setLiteMode(false); }} className={`transition-colors flex items-center gap-2 ${deepThinking ? 'text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]' : 'text-stone-400 hover:text-stone-600'}`} title="Deep Mode (Enhanced Heuristics)">
               <BrainCircuit size={18} strokeWidth={1} className={deepThinking ? 'animate-pulse' : ''} />
             </button>
-
             <button onClick={() => setUseSearch(!useSearch)} className={`transition-colors ${useSearch ? 'text-emerald-500' : 'text-stone-400 hover:text-stone-600'}`} title="Search Grounding"><Globe size={18} strokeWidth={1} /></button>
-            
             <button onClick={() => setFreshState(!freshState)} className={`transition-colors flex items-center gap-2 ${freshState ? 'text-pink-500' : 'text-stone-400 hover:text-stone-600'}`} title="Bypass Logic (Fresh State)">
               <Eraser size={18} strokeWidth={1} />
             </button>
@@ -287,15 +310,45 @@ export const InputStudio: React.FC<{
           </div>
         </div>
 
-        {/* FOOTER STATUS */}
-        <div className="pt-4 border-t border-black/5 dark:border-white/5 w-full flex flex-col items-center gap-3">
-            <button onClick={() => setShowColophon(true)} className="flex items-center gap-3 px-6 pt-1 text-pink-400 hover:text-pink-500 transition-all group">
-               <Martini size={14} className="group-hover:scale-110 transition-transform duration-500" />
-               <span className="font-sans text-[7px] uppercase tracking-[0.4em] font-black">Colophon Protocol</span>
+        {/* FOOTER STATUS - UPGRADED CONTROL BAR */}
+        <div className="pt-6 border-t border-black/5 dark:border-white/5 w-full px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-6 md:gap-0">
+            {/* Left: Social & Identity */}
+            <div className="flex items-center gap-6">
+                <button onClick={() => window.open('https://x.com/themimizine', '_blank')} className="text-stone-400 hover:text-stone-900 dark:hover:text-white transition-colors">
+                    <Twitter size={14} />
+                </button>
+                <button onClick={() => window.open('https://www.instagram.com/themimizine/', '_blank')} className="text-stone-400 hover:text-stone-900 dark:hover:text-white transition-colors">
+                    <Instagram size={14} />
+                </button>
+                <div className="w-px h-3 bg-stone-200 dark:bg-stone-800" />
+                <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile', detail_data: { section: 'patronage' } }))} className="flex items-center gap-2 text-stone-400 hover:text-emerald-500 transition-colors group">
+                    <Users size={14} />
+                    <span className="font-sans text-[7px] uppercase tracking-widest font-black">Members</span>
+                </button>
+            </div>
+
+            {/* Center: The Envelope Trigger (MINIMAL TEXT LINK) */}
+            <button 
+                onClick={() => setShowColophon(true)} 
+                className="group flex items-center gap-2 text-red-500 hover:text-red-600 transition-colors"
+            >
+               <Mail size={14} strokeWidth={1} />
+               <span className="font-serif italic text-sm underline decoration-1 decoration-red-200 underline-offset-4 group-hover:decoration-red-500 transition-all">
+                  open me
+               </span>
             </button>
-            <div className="flex items-center gap-2 opacity-30 pb-2">
-                <div className={`w-1 h-1 rounded-full ${systemStatus.oracle === 'ready' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                <span className="font-sans text-[6px] uppercase tracking-widest">Protocol Nominal</span>
+
+            {/* Right: Legal & Status */}
+            <div className="flex items-center gap-6">
+                <button onClick={() => setLegalType('terms')} className="flex items-center gap-2 text-stone-400 hover:text-stone-900 dark:hover:text-white transition-colors">
+                    <Shield size={12} />
+                    <span className="font-sans text-[7px] uppercase tracking-widest font-black">Legal</span>
+                </button>
+                <div className="w-px h-3 bg-stone-200 dark:bg-stone-800" />
+                <div className="flex items-center gap-2 opacity-40">
+                    <div className={`w-1 h-1 rounded-full ${systemStatus.oracle === 'ready' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                    <span className="font-sans text-[6px] uppercase tracking-widest">v4.4</span>
+                </div>
             </div>
         </div>
       </div>

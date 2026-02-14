@@ -4,9 +4,11 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useUser } from '../contexts/UserContext';
 import { UserProfile, TypographicArchetype, Persona } from '../types';
 import { isHandleAvailable, uploadBlob, saveUserProfile } from '../services/firebaseUtils';
-import { Loader2, Camera, Check, Type, PenTool, Layers, Moon, Orbit, ShieldCheck, Fingerprint, Palette, Scissors, Anchor, Heart, Info, ArrowRight, MapPin, Clock, Calendar, Cloud, Save, MousePointer2, Radio, Upload, Settings, Plus, X, Trash2, Key, ExternalLink, ToggleLeft, ToggleRight, Box, CheckCircle2, Zap, Wallet, User, ChevronRight, ChevronLeft, Sparkles, Eraser } from 'lucide-react';
+import { Loader2, Camera, Check, Type, PenTool, Layers, Moon, Orbit, ShieldCheck, Fingerprint, Palette, Scissors, Anchor, Heart, Info, ArrowRight, MapPin, Clock, Calendar, Cloud, Save, MousePointer2, Radio, Upload, Settings, Plus, X, Trash2, Key, ExternalLink, ToggleLeft, ToggleRight, Box, CheckCircle2, Zap, Wallet, User, ChevronRight, ChevronLeft, Sparkles, Eraser, Shield, Cpu, Link, Database, Crown } from 'lucide-react';
 import { useTheme, PALETTES } from '../contexts/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { DeveloperSettings } from './DeveloperSettings';
+import { ImperialPatronageModal } from './ImperialPatronageModal';
 
 const DNAButton: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; label: string }> = ({ active, onClick, icon, label }) => (
   <button 
@@ -73,7 +75,7 @@ const MaskCard: React.FC<{ persona: Persona; isActive: boolean; onSelect: () => 
 );
 
 export const UserProfileView: React.FC = () => {
-  const { user, profile, updateProfile, logout, personas, activePersonaId, switchPersona, createPersona, deletePersona } = useUser();
+  const { user, profile, updateProfile, logout, personas, activePersonaId, switchPersona, createPersona, deletePersona, linkAccount, featureFlags, toggleFeature } = useUser();
   const { currentPalette } = useTheme();
   
   const [handle, setHandle] = useState('');
@@ -88,9 +90,41 @@ export const UserProfileView: React.FC = () => {
   const [isAddingPersona, setIsAddingPersona] = useState(false);
   const [newPersonaName, setNewPersonaName] = useState('');
   const [newPersonaKey, setNewPersonaKey] = useState('');
+  const [showDevSettings, setShowDevSettings] = useState(false);
+  const [showPatronageModal, setShowPatronageModal] = useState(false);
+  const [patronagePrefill, setPatronagePrefill] = useState('');
+  const [isPatronActive, setIsPatronActive] = useState(false);
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const maskSliderRef = useRef<HTMLDivElement>(null);
+
+  // Check patronage status on mount and when modal closes
+  useEffect(() => {
+      const checkPatron = () => {
+          const status = localStorage.getItem('mimi_patron_status');
+          setIsPatronActive(status === 'active' || featureFlags.proposal);
+      };
+      checkPatron();
+      // Listen for local storage changes or modal closes
+      const interval = setInterval(checkPatron, 1000);
+      return () => clearInterval(interval);
+  }, [featureFlags]);
+
+  useEffect(() => {
+    // If opened via Members link in footer or Redirect Flow
+    const handleViewChange = (e) => {
+        if(e.detail?.section === 'patronage') {
+            if(e.detail.prefill) {
+                setPatronagePrefill(e.detail.prefill);
+                // Auto-confirm visually if we have a key (it will be validated in modal)
+                // We'll let the modal validation handle the actual persistent state
+            }
+            setShowPatronageModal(true);
+        }
+    };
+    window.addEventListener('mimi:change_view', handleViewChange);
+    return () => window.removeEventListener('mimi:change_view', handleViewChange);
+  }, []);
 
   useEffect(() => {
     if (profile) {
@@ -144,6 +178,17 @@ export const UserProfileView: React.FC = () => {
       setTimeout(() => setMessage(null), 3000);
   };
 
+  const handleGoogleLink = async () => {
+      if (user?.isAnonymous) {
+          try {
+              await linkAccount();
+              setMessage({ text: "Identity Anchored to Google.", type: 'success' });
+          } catch(e) {
+              setMessage({ text: e.message || "Link Failed.", type: 'error' });
+          }
+      }
+  };
+
   return (
     <div className="w-full h-full overflow-y-auto no-scrollbar flex flex-col items-center transition-colors duration-1000 bg-nous-base dark:bg-stone-950 pb-64 px-4 md:px-8 relative">
       <AnimatePresence>
@@ -152,12 +197,14 @@ export const UserProfileView: React.FC = () => {
             {message.text}
           </motion.div>
         )}
+        {showDevSettings && <DeveloperSettings onClose={() => setShowDevSettings(false)} />}
+        {showPatronageModal && <ImperialPatronageModal isOpen={showPatronageModal} onClose={() => setShowPatronageModal(false)} prefillKey={patronagePrefill} />}
       </AnimatePresence>
 
       <div className="w-full max-w-5xl pt-16 md:pt-32 space-y-24 md:space-y-40">
         
         {/* IDENTITY OVERVIEW */}
-        <section className="flex flex-col items-center gap-10 text-center">
+        <section className="flex flex-col items-center gap-10 text-center relative">
             <div className="relative group">
                 <div onClick={() => avatarInputRef.current?.click()} className="w-32 h-32 md:w-48 md:h-48 rounded-full overflow-hidden border border-black/5 dark:border-white/5 cursor-pointer shadow-2xl bg-stone-50 dark:bg-stone-900 relative">
                     <img src={profile?.photoURL || `https://ui-avatars.com/api/?name=${handle || 'G'}&background=1c1917&color=fff`} className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0" alt="" />
@@ -166,13 +213,61 @@ export const UserProfileView: React.FC = () => {
                 <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={(e) => {}} />
             </div>
 
-            <div className="space-y-4 w-full">
+            <div className="space-y-6 w-full">
                 <div className="flex flex-col items-center">
                     <span className="font-sans text-[7px] uppercase tracking-[0.6em] text-stone-400 font-black mb-2 italic">Global Registry Handle</span>
                     <div className="relative inline-flex items-center gap-4">
                         <span className="font-header text-3xl md:text-5xl text-stone-200">@</span>
                         <input type="text" value={handle} onChange={(e) => setHandle(e.target.value.toLowerCase())} className={`bg-transparent border-none p-0 font-header text-4xl md:text-7xl italic tracking-tighter focus:outline-none leading-none text-center ${handleAvailable === false ? 'text-red-500' : 'text-nous-text dark:text-white'}`} />
                     </div>
+                </div>
+                
+                {/* DISCRETE GOOGLE ANCHOR / AGENT PROTOCOLS / SOVEREIGN KEY */}
+                <div className="flex items-center gap-6 justify-center">
+                    {user?.isAnonymous ? (
+                        <button 
+                          onClick={handleGoogleLink} 
+                          className="inline-flex items-center gap-2 font-sans text-[8px] uppercase tracking-widest font-black text-stone-300 hover:text-emerald-500 transition-colors"
+                        >
+                           <Link size={10} /> Anchor Identity (Google)
+                        </button>
+                    ) : (
+                        <div className="flex items-center gap-4">
+                            <span className="inline-flex items-center gap-2 font-sans text-[8px] uppercase tracking-widest font-black text-emerald-600 dark:text-emerald-400 cursor-default bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                               <Shield size={10} /> Identity Anchored
+                            </span>
+                            {user?.email && (
+                                <span className="font-serif italic text-xs text-stone-400 hidden md:inline">{user.email}</span>
+                            )}
+                        </div>
+                    )}
+                    
+                    <div className="w-px h-4 bg-stone-200 dark:bg-stone-800" />
+
+                    <button 
+                      onClick={() => setShowDevSettings(true)}
+                      className="inline-flex items-center gap-2 font-sans text-[8px] uppercase tracking-widest font-black text-stone-300 hover:text-indigo-400 transition-colors"
+                    >
+                       <Cpu size={10} /> Agent Protocols
+                    </button>
+
+                    <div className="w-px h-4 bg-stone-200 dark:bg-stone-800" />
+
+                    {isPatronActive ? (
+                        <button 
+                          onClick={() => setShowPatronageModal(true)}
+                          className="inline-flex items-center gap-2 font-sans text-[8px] uppercase tracking-widest font-black text-white bg-amber-500 px-4 py-1.5 rounded-full shadow-lg hover:bg-amber-400 transition-all cursor-pointer"
+                        >
+                           <Crown size={10} className="fill-current" /> Imperial Patron
+                        </button>
+                    ) : (
+                        <button 
+                          onClick={() => setShowPatronageModal(true)}
+                          className="inline-flex items-center gap-2 font-sans text-[8px] uppercase tracking-widest font-black text-stone-300 hover:text-amber-500 transition-colors"
+                        >
+                           <Key size={10} /> Sovereign Key
+                        </button>
+                    )}
                 </div>
             </div>
         </section>

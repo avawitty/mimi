@@ -7,7 +7,7 @@ import { App } from './App';
 const rootElement = document.getElementById('root');
 
 // ENTRY VERIFICATION
-console.log("MIMI ROOT v4.4 DETECTED");
+console.log("MIMI ROOT v4.5 DETECTED");
 
 interface Props {
   children?: ReactNode;

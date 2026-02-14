@@ -1,7 +1,7 @@
 
 import { FirebaseApp, initializeApp, getApps } from "firebase/app";
 import { Auth, getAuth } from "firebase/auth";
-import { Firestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
+import { Firestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore } from "firebase/firestore";
 import { FirebaseStorage, getStorage } from "firebase/storage";
 import { getAnalytics, Analytics, isSupported } from "firebase/analytics";
 
@@ -22,22 +22,38 @@ const app: FirebaseApp = apps.length > 0 ? apps[0] : initializeApp(firebaseConfi
 
 // MIMI // REGISTRY AUDIT: Initializing with Persistent Local Cache for resilience.
 if (typeof window !== 'undefined') {
-  console.info(`%c MIMI // Registry Active: ${firebaseConfig.projectId}`, "color: #10B981; font-weight: bold; font-family: serif; font-style: italic;");
+  console.info(`%c MIMI // Registry Active: ${firebaseConfig.projectId} [BUCKET: mimizinemongo]`, "color: #10B981; font-weight: bold; font-family: serif; font-style: italic;");
 }
 
 export const auth: Auth = getAuth(app);
 
-// Modern Firestore Initialization with Multi-Tab Persistence
-// TARGETING NAMED DATABASE: 'mimizine' (Based on project configuration)
-export const db: Firestore = initializeFirestore(app, {
-  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
-  databaseId: "mimizine" 
-});
+// Modern Firestore Initialization
+// TARGETING SPECIFIC BUCKET: mimizinemongo
+let dbInstance: Firestore;
 
+try {
+  dbInstance = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+  }, "mimizinemongo"); // Explicitly passing databaseId
+} catch (e: any) {
+  if (e.code === 'failed-precondition') {
+     // Already initialized, just get the instance associated with the app (might default if init failed)
+     // Note: getFirestore(app) returns default. If named db failed, we might be in a weird state, 
+     // but usually this catch is for "already initialized".
+     try {
+        dbInstance = getFirestore(app, "mimizinemongo");
+     } catch (err) {
+        dbInstance = getFirestore(app);
+     }
+  } else {
+     dbInstance = getFirestore(app); 
+  }
+}
+
+export const db = dbInstance;
 export const storage: FirebaseStorage = getStorage(app);
 
 // Sovereign Analytics Implementation
-// We utilize isSupported() to prevent pedestrian noise in restricted environments.
 export let analytics: Analytics | null = null;
 if (typeof window !== 'undefined') {
   isSupported().then(supported => {

@@ -343,12 +343,22 @@ export interface Treatment {
   userId?: string;
 }
 
+// STRATEGIC IMPERATIVES
+export interface Task {
+  id: string;
+  text: string;
+  completed: boolean;
+  dueDate?: string; // ISO String YYYY-MM-DD
+  createdAt: number;
+}
+
 export interface DossierFolder {
   id: string;
   userId: string;
   name: string;
   createdAt: number;
   notes?: string;
+  tasks?: Task[]; // Added Task Array
 }
 
 export interface DossierElement {

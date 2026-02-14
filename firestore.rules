@@ -1,0 +1,59 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // PUBLIC PROFILES (Read: Everyone, Write: Owner)
+    match /profiles/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // PRIVATE PREFERENCES (Read/Write: Owner only)
+    match /userPreferences/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // LEGACY / FALLBACK (Read/Write: Owner only)
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // ZINES (Read: Public, Write: Authenticated)
+    match /zines/{zineId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+    
+    // POCKET ITEMS (Owner only)
+    match /pocket/{itemId} {
+      allow read, write: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
+    }
+    
+    // DOSSIER FOLDERS (Owner only)
+    match /dossier_folders/{folderId} {
+      allow read, write: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
+    }
+    
+    // DOSSIER ARTIFACTS (Owner only)
+    match /dossier_artifacts/{artifactId} {
+      allow read, write: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
+    }
+    
+    // PROPOSALS (Owner only)
+    match /proposals/{proposalId} {
+      allow read, write: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
+    }
+    
+    // CONTEXT (Owner only)
+    match /context/{contextId} {
+      allow read, write: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
+    }
+    
+    // SHADOW MEMORY (Owner only)
+    match /users/{userId}/memory/{memoryId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

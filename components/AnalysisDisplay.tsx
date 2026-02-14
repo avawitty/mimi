@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { ZineMetadata, PocketItem } from '../types';
 import { generateAudio, animateShardWithVeo, transcribeAudio } from '../services/geminiService';
 import { addToPocket } from '../services/firebase';
-import { Loader2, X, Volume2, Orbit, Eye, Target, Layers, Moon, Sparkles, Terminal, Quote, ArrowDown, Grid3X3, Printer, Bookmark, Check, Play, Pause, ExternalLink, Download, Share2, Star, FileText, Map, Compass, Zap, RefreshCw, PenTool, Save, Mic, Square, AlertCircle, StickyNote, History, MessageSquareQuote, Radar, Maximize2, Activity, Archive, FolderPlus, Compass as RoadmapIcon, Stars as CelestialIcon, ArrowRight, CornerDownRight, Image as ImageIcon, Film, MousePointer2, Briefcase, ChevronDown, Hash, Search } from 'lucide-react';
+import { Loader2, X, Volume2, Orbit, Eye, Target, Layers, Moon, Sparkles, Terminal, Quote, ArrowDown, Grid3X3, Printer, Bookmark, Check, Play, Pause, ExternalLink, Download, Share2, Star, FileText, Map, Compass, Zap, RefreshCw, PenTool, Save, Mic, Square, AlertCircle, StickyNote, History, MessageSquareQuote, Radar, Maximize2, Activity, Archive, FolderPlus, Compass as RoadmapIcon, Stars as CelestialIcon, ArrowRight, CornerDownRight, Image as ImageIcon, Film, MousePointer2, Briefcase, ChevronDown, Hash, Search, Menu, Plus } from 'lucide-react';
 import { Visualizer } from './Visualizer';
 import { ExportChamber } from './ExportChamber';
 import { SocialShareModal } from './SocialShareModal';
@@ -32,9 +32,11 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
   const [isSaved, setIsSaved] = useState(false);
   const [isAnimatingManifest, setIsAnimatingManifest] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [dialOpen, setDialOpen] = useState(false);
   
-  // Field Notes State
-  const [noteContent, setNoteContent] = useState(metadata.originalInput || metadata.content.meta?.intent || '');
+  // Field Notes State - Fallback logic for Debris
+  const originalDebris = metadata.originalInput || metadata.content.meta?.intent || '';
+  const [noteContent, setNoteContent] = useState(originalDebris);
   
   const audioCtxRef = useRef<AudioContext | null>(null);
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
@@ -115,7 +117,8 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
           }, 
           timestamp: Date.now(),
           notes: noteContent, // Save the edited/voice-appended notes
-          imageUrl: metadata.coverImageUrl
+          imageUrl: metadata.coverImageUrl,
+          originalInput: originalDebris // Explicitly save original debris again
       });
       setIsSaved(true);
       window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Manifest Anchored with Field Notes.", icon: <Bookmark size={14} /> } }));
@@ -123,16 +126,22 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
   };
 
   const handleContinuum = () => {
-      const continuumData = {
-          type: 'continuum',
-          previousZineId: metadata.id,
-          previousTitle: metadata.title,
-          context: `Continuing thread from "${metadata.title}". Hypothesis: ${metadata.content.strategic_hypothesis}. Provocation: ${metadata.content.poetic_provocation}`
-      };
-      
+      // Pass provocation as context to input
+      const provocation = metadata.content.poetic_provocation;
       window.dispatchEvent(new CustomEvent('mimi:change_view', { 
           detail: 'studio', 
-          detail_data: continuumData 
+          detail_data: { 
+              context: `Continuing thread from "${metadata.title}".\n\nPROVOCATION: "${provocation}"\n\nRESPONSE:`,
+              provocation: provocation 
+          }
+      }));
+  };
+
+  const handleScrySignal = (motif: string) => {
+      // Direct pass to Scry View
+      window.dispatchEvent(new CustomEvent('mimi:change_view', { 
+          detail: 'scry',
+          detail_data: { signal: motif }
       }));
   };
 
@@ -156,12 +165,12 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
       <AnimatePresence>
         {showNotes && (
             <motion.div 
-                initial={{ opacity: 0, y: 20 }} 
-                animate={{ opacity: 1, y: 0 }} 
-                exit={{ opacity: 0, y: 20 }} 
-                className="fixed bottom-32 left-1/2 -translate-x-1/2 w-full max-w-lg z-[6000] px-6"
+                initial={{ opacity: 0, x: 50 }} 
+                animate={{ opacity: 1, x: 0 }} 
+                exit={{ opacity: 0, x: 50 }} 
+                className="fixed bottom-32 right-8 w-full max-w-sm z-[6000]"
             >
-                <div className="bg-white/95 dark:bg-stone-900/95 backdrop-blur-2xl border border-stone-200 dark:border-stone-800 shadow-2xl rounded-sm p-6 space-y-4">
+                <div className="bg-white/95 dark:bg-stone-900/95 backdrop-blur-2xl border border-stone-200 dark:border-stone-800 shadow-2xl rounded-sm p-6 space-y-4 relative">
                     <div className="flex justify-between items-center border-b border-black/5 dark:border-white/5 pb-3">
                         <div className="flex items-center gap-2 text-emerald-500">
                             <StickyNote size={14} />
@@ -180,7 +189,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                             {isTranscribing && (
                                 <div className="flex items-center gap-2 bg-white dark:bg-stone-800 px-3 py-1 rounded-full shadow-sm">
                                     <Loader2 size={10} className="animate-spin text-emerald-500" />
-                                    <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Parsing Shard...</span>
+                                    <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Parsing...</span>
                                 </div>
                             )}
                             <button 
@@ -191,41 +200,97 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                             </button>
                         </div>
                     </div>
-                    <div className="flex justify-between items-center pt-2">
-                        <span className="font-mono text-[8px] text-stone-300 uppercase tracking-widest">Auto-attaches to Archive</span>
-                        <button onClick={() => setShowNotes(false)} className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 hover:text-emerald-500">Minimize</button>
-                    </div>
                 </div>
             </motion.div>
         )}
       </AnimatePresence>
 
-      {/* FLOATING TOOLBAR - THE DOCK */}
-      <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="fixed bottom-8 left-0 right-0 z-[5000] px-4 md:px-0 flex justify-center print:hidden">
-        <div className="bg-white/90 dark:bg-stone-900/90 backdrop-blur-2xl border border-stone-200 dark:border-stone-800 p-2 rounded-full shadow-2xl flex items-center gap-2 overflow-x-auto no-scrollbar max-w-full md:max-w-none snap-x">
-           
-           {/* VOICE CONTROL - RESTORED */}
-           <button onClick={handleVoiceToggle} className={`p-4 rounded-full transition-all shrink-0 snap-start flex items-center gap-2 ${isPlaying ? 'bg-emerald-500 text-white' : 'text-stone-500 hover:text-emerald-500 hover:bg-stone-100 dark:hover:bg-stone-800'}`}>
-              {isVoiceLoading ? <Loader2 size={18} className="animate-spin" /> : isPlaying ? <Pause size={18} /> : <Play size={18} />}
-           </button>
+      {/* THE CONTROL DIAL */}
+      <div className="fixed bottom-8 right-8 z-[5000] print:hidden">
+         <AnimatePresence>
+            {dialOpen && (
+               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute bottom-20 right-0 flex flex-col gap-3 items-end">
+                  
+                  {/* Actions Stack */}
+                  <motion.button 
+                    initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.05 }}
+                    onClick={() => setShowExport(true)} 
+                    className="flex items-center gap-4 group"
+                  >
+                     <span className="bg-black/80 text-white px-2 py-1 rounded text-[9px] uppercase font-black tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Export</span>
+                     <div className="w-12 h-12 bg-white dark:bg-stone-800 rounded-full shadow-lg border border-stone-200 dark:border-stone-700 flex items-center justify-center text-stone-500 hover:text-nous-text dark:hover:text-white transition-colors">
+                        <Download size={18} />
+                     </div>
+                  </motion.button>
 
-           <div className="w-px h-6 bg-stone-200 dark:bg-stone-800 mx-1" />
+                  <motion.button 
+                    initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.1 }}
+                    onClick={() => setShowShare(true)} 
+                    className="flex items-center gap-4 group"
+                  >
+                     <span className="bg-black/80 text-white px-2 py-1 rounded text-[9px] uppercase font-black tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Share</span>
+                     <div className="w-12 h-12 bg-white dark:bg-stone-800 rounded-full shadow-lg border border-stone-200 dark:border-stone-700 flex items-center justify-center text-stone-500 hover:text-emerald-500 transition-colors">
+                        <Share2 size={18} />
+                     </div>
+                  </motion.button>
 
-           {/* FIELD NOTES TOGGLE - NEW */}
-           <button onClick={() => setShowNotes(!showNotes)} className={`p-4 rounded-full transition-all shrink-0 snap-start ${showNotes || noteContent ? 'text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800'}`}>
-              <StickyNote size={18} />
-           </button>
+                  <motion.button 
+                    initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.15 }}
+                    onClick={() => toggleZineStar(metadata.id)} 
+                    className="flex items-center gap-4 group"
+                  >
+                     <span className="bg-black/80 text-white px-2 py-1 rounded text-[9px] uppercase font-black tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Favorite</span>
+                     <div className={`w-12 h-12 bg-white dark:bg-stone-800 rounded-full shadow-lg border border-stone-200 dark:border-stone-700 flex items-center justify-center transition-colors ${profile?.starredZineIds?.includes(metadata.id) ? 'text-amber-500' : 'text-stone-500 hover:text-amber-500'}`}>
+                        <Star size={18} fill={profile?.starredZineIds?.includes(metadata.id) ? "currentColor" : "none"} />
+                     </div>
+                  </motion.button>
 
-           <button onClick={handleSaveToPocket} className={`p-4 rounded-full transition-all shrink-0 snap-start ${isSaved ? 'text-emerald-500' : 'text-stone-500 hover:bg-stone-100'}`}>
-              {isSaved ? <Check size={18} /> : <Bookmark size={18} />}
-           </button>
-           <button onClick={() => toggleZineStar(metadata.id)} className={`p-4 rounded-full transition-all shrink-0 snap-start ${profile?.starredZineIds?.includes(metadata.id) ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/20' : 'text-stone-500'}`}>
-              <Star size={18} fill={profile?.starredZineIds?.includes(metadata.id) ? "currentColor" : "none"} />
-           </button>
-           <button onClick={() => setShowShare(true)} className="p-4 rounded-full transition-all shrink-0 snap-start text-stone-500 hover:text-nous-text dark:hover:text-white"><Share2 size={18} /></button>
-           <button onClick={() => setShowExport(true)} className="p-4 bg-nous-text dark:bg-white text-white dark:text-black rounded-full shadow-lg active:scale-95 transition-all shrink-0 snap-start"><Download size={18} /></button>
-        </div>
-      </motion.div>
+                  <motion.button 
+                    initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.2 }}
+                    onClick={handleSaveToPocket} 
+                    className="flex items-center gap-4 group"
+                  >
+                     <span className="bg-black/80 text-white px-2 py-1 rounded text-[9px] uppercase font-black tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Archive</span>
+                     <div className={`w-12 h-12 bg-white dark:bg-stone-800 rounded-full shadow-lg border border-stone-200 dark:border-stone-700 flex items-center justify-center transition-colors ${isSaved ? 'text-emerald-500' : 'text-stone-500 hover:text-emerald-500'}`}>
+                        {isSaved ? <Check size={18} /> : <Bookmark size={18} />}
+                     </div>
+                  </motion.button>
+
+                  <motion.button 
+                    initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.25 }}
+                    onClick={() => setShowNotes(!showNotes)} 
+                    className="flex items-center gap-4 group"
+                  >
+                     <span className="bg-black/80 text-white px-2 py-1 rounded text-[9px] uppercase font-black tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Field Notes</span>
+                     <div className={`w-12 h-12 bg-white dark:bg-stone-800 rounded-full shadow-lg border border-stone-200 dark:border-stone-700 flex items-center justify-center transition-colors ${showNotes ? 'text-indigo-500' : 'text-stone-500 hover:text-indigo-500'}`}>
+                        <StickyNote size={18} />
+                     </div>
+                  </motion.button>
+
+                  <motion.button 
+                    initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.3 }}
+                    onClick={handleVoiceToggle} 
+                    className="flex items-center gap-4 group"
+                  >
+                     <span className="bg-black/80 text-white px-2 py-1 rounded text-[9px] uppercase font-black tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Play Audio</span>
+                     <div className={`w-12 h-12 bg-white dark:bg-stone-800 rounded-full shadow-lg border border-stone-200 dark:border-stone-700 flex items-center justify-center transition-colors ${isPlaying ? 'text-emerald-500' : 'text-stone-500 hover:text-emerald-500'}`}>
+                        {isVoiceLoading ? <Loader2 size={18} className="animate-spin" /> : isPlaying ? <Pause size={18} /> : <Play size={18} />}
+                     </div>
+                  </motion.button>
+
+               </motion.div>
+            )}
+         </AnimatePresence>
+
+         <button 
+            onClick={() => setDialOpen(!dialOpen)}
+            className="w-16 h-16 bg-nous-text dark:bg-white text-white dark:text-black rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-50 relative"
+         >
+            <motion.div animate={{ rotate: dialOpen ? 45 : 0 }}>
+               <Plus size={24} />
+            </motion.div>
+         </button>
+      </div>
 
       <div className="flex-1 overflow-y-auto snap-y snap-mandatory no-scrollbar scroll-smooth print:overflow-visible print:snap-none">
           
@@ -317,42 +382,44 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
              </div>
           </section>
 
-          {/* 6. SEMIOTIC SIGNALS - REDESIGNED AS INDEX */}
+          {/* 6. SEMIOTIC SIGNALS - REDESIGNED GRID */}
           <section className="min-h-screen flex flex-col justify-center px-6 md:px-24 snap-start bg-[#FAFAFA] dark:bg-[#080808] print:min-h-0 print:py-12">
-             <div className="max-w-6xl w-full space-y-16">
+             <div className="max-w-7xl w-full space-y-16">
                 <SectionHeader label="Semiotics & Visual Directives" icon={Radar} />
-                <div className="grid grid-cols-1 divide-y divide-stone-200 dark:divide-stone-800 border-t border-b border-stone-200 dark:border-stone-800">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {metadata.content.aesthetic_touchpoints?.map((t, i) => (
-                       <div key={i} className="py-8 grid md:grid-cols-12 gap-6 items-baseline group hover:bg-stone-100 dark:hover:bg-stone-900/50 transition-colors px-4 -mx-4">
-                          <div className="md:col-span-1">
-                             <span className="font-mono text-[9px] text-stone-400">0{i+1}</span>
-                          </div>
-                          <div className="md:col-span-3">
-                             <h4 className="font-serif text-2xl italic tracking-tighter text-nous-text dark:text-white group-hover:text-emerald-500 transition-colors">{t.motif}</h4>
-                          </div>
-                          <div className="md:col-span-6 space-y-2">
-                             <p className="font-serif italic text-sm text-stone-500 dark:text-stone-400 leading-relaxed">{t.context}</p>
+                       <div key={i} className="group relative p-8 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-sm hover:shadow-2xl hover:border-emerald-500/20 transition-all flex flex-col justify-between min-h-[300px]">
+                          <div className="absolute top-4 right-4 opacity-30 font-mono text-[9px]">SIG_0{i+1}</div>
+                          
+                          <div className="space-y-4">
+                             <h4 className="font-serif text-3xl italic tracking-tighter text-nous-text dark:text-white group-hover:text-emerald-500 transition-colors">
+                                {t.motif}
+                             </h4>
+                             <p className="font-serif italic text-sm text-stone-500 dark:text-stone-400 leading-relaxed border-l-2 border-stone-100 dark:border-stone-800 pl-4">
+                                {t.context}
+                             </p>
                              {t.visual_directive && (
-                                <div className="mt-2 pl-3 border-l border-stone-300 dark:border-stone-700">
-                                   <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 block mb-1">Visual Directive</span>
-                                   <p className="font-serif text-xs text-stone-600 dark:text-stone-300">{t.visual_directive}</p>
+                                <div className="mt-4 pt-4 border-t border-stone-100 dark:border-stone-800">
+                                   <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 block mb-2">Directive</span>
+                                   <p className="font-mono text-[9px] text-stone-500">{t.visual_directive}</p>
                                 </div>
                              )}
                           </div>
-                          <div className="md:col-span-2 text-right flex flex-col items-end gap-2">
-                             <a 
-                                href={`https://www.google.com/search?q=${encodeURIComponent(t.motif + " semiotics aesthetic")}`} 
-                                target="_blank"
-                                className="inline-flex items-center gap-2 font-sans text-[7px] uppercase tracking-widest font-black text-stone-300 group-hover:text-emerald-500 transition-colors"
-                             >
-                                Source <ExternalLink size={10} />
-                             </a>
+
+                          <div className="pt-8 flex justify-between items-end">
                              <button
-                                onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'scry' }))} 
-                                className="inline-flex items-center gap-2 font-sans text-[7px] uppercase tracking-widest font-black text-indigo-300 group-hover:text-indigo-500 transition-colors"
+                                onClick={() => handleScrySignal(t.motif + (t.visual_directive ? " " + t.visual_directive : ""))} 
+                                className="flex items-center gap-2 font-sans text-[8px] uppercase tracking-widest font-black text-indigo-400 hover:text-indigo-600 transition-colors border-b border-transparent hover:border-indigo-600 pb-0.5"
                              >
-                                Scry Signal <Search size={10} />
+                                <Search size={10} /> Scry Signal
                              </button>
+                             <a 
+                                href={`https://www.google.com/search?q=${encodeURIComponent(t.motif + " aesthetic meaning")}`} 
+                                target="_blank"
+                                className="text-stone-300 hover:text-emerald-500 transition-colors"
+                             >
+                                <ExternalLink size={14} />
+                             </a>
                           </div>
                        </div>
                     ))}
@@ -437,20 +504,34 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
              })}
           </div>
 
-          {/* 9. THE ROADMAP (BLUEPRINT) */}
-          <section className="min-h-screen flex flex-col justify-center px-6 md:px-24 snap-start bg-[#F9F9F9] dark:bg-[#0C0C0C] print:min-h-0 print:py-12">
-             <div className="max-w-5xl w-full space-y-12">
-                <SectionHeader label="The Blueprint" icon={RoadmapIcon} color="text-emerald-500" />
-                <div className="grid md:grid-cols-2 gap-12">
-                   {metadata.content.blueprint && Object.entries(metadata.content.blueprint).map(([key, val], i) => (
-                      <div key={i} className="p-10 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 rounded-sm space-y-6 hover:shadow-xl transition-shadow duration-500">
-                         <div className="flex items-center gap-3">
-                            <span className="font-mono text-[9px] text-stone-300">0{i+1}</span>
-                            <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">{key.replace('_', ' ')}</span>
+          {/* 9. THE ROADMAP (BLUEPRINT) - ARCHITECTURAL REDESIGN */}
+          <section className="min-h-screen flex flex-col justify-center px-6 md:px-24 snap-start bg-[#050505] text-white print:min-h-0 print:py-12 relative overflow-hidden">
+             {/* TECHNICAL GRID BACKGROUND */}
+             <div className="absolute inset-0 opacity-10 pointer-events-none" 
+                  style={{ backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize: '40px 40px' }} 
+             />
+             
+             <div className="max-w-6xl w-full space-y-16 relative z-10">
+                <SectionHeader label="Architectural Blueprint" icon={RoadmapIcon} color="text-white" />
+                
+                <div className="border border-stone-800 bg-[#0A0A0A]/90 p-12 relative">
+                   {/* CAD MARKERS */}
+                   <div className="absolute top-0 left-0 p-2 border-r border-b border-stone-800"><span className="font-mono text-[8px] text-stone-500">TL_REF_01</span></div>
+                   <div className="absolute bottom-0 right-0 p-2 border-l border-t border-stone-800"><span className="font-mono text-[8px] text-stone-500">BR_REF_04</span></div>
+                   
+                   <div className="grid md:grid-cols-2 gap-16">
+                      {metadata.content.blueprint && Object.entries(metadata.content.blueprint).map(([key, val], i) => (
+                         <div key={i} className="space-y-4 group">
+                            <div className="flex items-center gap-4 border-b border-stone-800 pb-2">
+                               <span className="font-mono text-emerald-500 text-xs">0{i+1}</span>
+                               <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400 group-hover:text-white transition-colors">{key.replace('_', ' ')}</span>
+                            </div>
+                            <p className="font-mono text-sm text-stone-300 leading-relaxed pl-8 border-l border-emerald-900/30 group-hover:border-emerald-500/50 transition-colors">
+                               {String(val)}
+                            </p>
                          </div>
-                         <p className="font-serif italic text-xl md:text-2xl text-nous-text dark:text-white leading-snug">{String(val)}</p>
-                      </div>
-                   ))}
+                      ))}
+                   </div>
                 </div>
              </div>
           </section>
@@ -459,14 +540,20 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
           <section className="min-h-screen flex flex-col justify-center px-6 md:px-24 snap-start bg-stone-100 dark:bg-black text-nous-text dark:text-white print:min-h-0 print:py-12">
              <div className="max-w-4xl space-y-16">
                 <SectionHeader label="Original Debris" icon={Zap} color="text-amber-500" />
-                <div className="space-y-8 pl-8 md:pl-12 border-l-4 border-stone-300 dark:border-stone-800">
-                   <div className="font-mono text-[10px] text-stone-400 mb-4 uppercase tracking-widest">
-                      // RAW_INPUT_LOG_{metadata.id.slice(-4)}
-                   </div>
-                   <p className="font-mono text-lg md:text-2xl text-stone-600 dark:text-stone-400 leading-relaxed whitespace-pre-wrap tracking-tight">
-                      "{metadata.originalInput || metadata.content.meta?.intent}"
-                   </p>
-                </div>
+                {originalDebris ? (
+                    <div className="space-y-8 pl-8 md:pl-12 border-l-4 border-stone-300 dark:border-stone-800">
+                       <div className="font-mono text-[10px] text-stone-400 mb-4 uppercase tracking-widest">
+                          // RAW_INPUT_LOG_{metadata.id.slice(-4)}
+                       </div>
+                       <p className="font-mono text-lg md:text-2xl text-stone-600 dark:text-stone-400 leading-relaxed whitespace-pre-wrap tracking-tight">
+                          "{originalDebris}"
+                       </p>
+                    </div>
+                ) : (
+                    <div className="opacity-30 text-center py-12 border-2 border-dashed border-stone-300 dark:border-stone-800 rounded-sm">
+                        <p className="font-serif italic text-xl">Debris data lost in transit.</p>
+                    </div>
+                )}
                 <div className="pt-12 border-t border-stone-200 dark:border-white/5 opacity-40">
                    <p className="font-serif italic text-xs">"The debris is the foundation of the manifest."</p>
                 </div>

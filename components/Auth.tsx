@@ -28,6 +28,7 @@ export const Auth: React.FC = () => {
   const isUriMismatch = displayError?.includes('invalid-continue-uri') || 
                         displayError?.includes('unauthorized-domain') || 
                         displayError?.includes('unauthorized-continue-uri');
+  const isInternalError = displayError?.includes('internal-error');
 
   useEffect(() => {
     if (user && (isAccessing === 'google' || isAccessing === 'email' || isAccessing === 'speed')) {
@@ -152,17 +153,19 @@ export const Auth: React.FC = () => {
                   )}
                 </AnimatePresence>
 
-                {isUriMismatch ? (
+                {isUriMismatch || isInternalError ? (
                   <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="p-8 bg-amber-50 dark:bg-stone-900 border border-amber-200 dark:border-amber-900/40 rounded-3xl text-left space-y-6 shadow-xl">
-                    <div className="flex items-center gap-3 text-amber-600"><ZapOff size={20} /><span className="font-sans text-[10px] uppercase tracking-widest font-black">Dissonance: Redirect Error</span></div>
+                    <div className="flex items-center gap-3 text-amber-600"><ZapOff size={20} /><span className="font-sans text-[10px] uppercase tracking-widest font-black">Dissonance: {isInternalError ? 'Registry Error' : 'Redirect Error'}</span></div>
                     <div className="space-y-4 font-serif italic text-sm text-stone-600 dark:text-stone-400 leading-relaxed text-balance">
-                      <p>Mimi detected an "Unauthorized Origin." This domain must be manually whitelisted in your Firebase registry.</p>
-                      <div className="p-5 bg-white/50 dark:bg-black/20 rounded-xl space-y-3 border border-amber-200 dark:border-amber-900/20">
-                        <code className="text-[9px] p-2 bg-white dark:bg-stone-800 rounded border block truncate text-emerald-600 font-bold">{domainOnly}</code>
-                      </div>
+                      <p>{isInternalError ? "The authentication service is experiencing internal turbulence. Proceed via the offline Ghost pathway." : "Mimi detected an 'Unauthorized Origin.' This domain must be manually whitelisted in your Firebase registry."}</p>
+                      {!isInternalError && (
+                        <div className="p-5 bg-white/50 dark:bg-black/20 rounded-xl space-y-3 border border-amber-200 dark:border-amber-900/20">
+                          <code className="text-[9px] p-2 bg-white dark:bg-stone-800 rounded border block truncate text-emerald-600 font-bold">{domainOnly}</code>
+                        </div>
+                      )}
                     </div>
                     <div className="space-y-3 pt-2">
-                      <button onClick={handleSpeedEntrance} className="w-full py-4 bg-nous-text text-white rounded-full font-sans text-[9px] uppercase tracking-[0.4em] font-black">Speed Entrance (Ghost)</button>
+                      <button onClick={handleSpeedEntrance} className="w-full py-4 bg-nous-text text-white rounded-full font-sans text-[9px] uppercase tracking-[0.4em] font-black">Force Speed Entrance (Ghost)</button>
                     </div>
                   </motion.div>
                 ) : (
@@ -221,7 +224,7 @@ export const Auth: React.FC = () => {
                     <button onClick={handleGhostLogin} className="px-8 py-4 border border-stone-100 dark:border-stone-800 text-stone-400 hover:text-nous-text dark:hover:text-white font-sans text-[9px] uppercase tracking-widest font-black transition-all rounded-full flex items-center justify-center gap-2"><Ghost size={12} /> Calibration Path (Ghost)</button>
                 </div>
 
-                {displayError && !isApiBlocked && !isPopupBlocked && !isUriMismatch && (
+                {displayError && !isApiBlocked && !isPopupBlocked && !isUriMismatch && !isInternalError && (
                   <p className="font-serif italic text-xs text-red-500 animate-fade-in">{displayError}</p>
                 )}
             </motion.div>

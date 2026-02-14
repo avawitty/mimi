@@ -3,7 +3,12 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { UserProfile, UserPreferences, Persona, TailorLogicDraft } from '../types';
 import { getLocalProfile, saveProfileLocally } from '../services/localArchive';
-import { bootstrapAuth, ensureAuth, getUserProfile, saveUserProfile, anchorIdentity, handleAuthRedirect, startGhostSession, initializeAuthPersistence, getUserPreferences, saveUserPreferences } from '../services/firebase';
+import { 
+  bootstrapAuth, ensureAuth, getUserProfile, saveUserProfile, 
+  anchorIdentity, linkIdentity, handleAuthRedirect, startGhostSession, 
+  initializeAuthPersistence, getUserPreferences, saveUserPreferences, 
+  subscribeToUserProfile, subscribeToUserPreferences, migrateLocalToCloud, db 
+} from '../services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { Star } from 'lucide-react';
 import { setGlobalKeyRing } from '../services/geminiService';
@@ -34,7 +39,7 @@ interface UserContextType {
   speedGhostEntrance: () => Promise<void>;
   linkAccount: (forceRedirect?: boolean) => Promise<void>;
   isEnvironmentRestricted: boolean;
-  isDatabaseMissing: boolean; // NEW: Detects if Firestore is not enabled
+  isDatabaseMissing: boolean; 
   authError: string | null;
   hasApiKey: boolean;
   openKeySelector: () => Promise<void>;
@@ -47,7 +52,6 @@ interface UserContextType {
   removeKeyFromRing: (key: string) => void;
   featureFlags: FeatureFlags;
   toggleFeature: (key: keyof FeatureFlags) => void;
-  // Persona Management
   personas: Persona[];
   activePersonaId: string | undefined;
   activePersona: Persona | undefined;
@@ -93,7 +97,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isEnvironmentRestricted, setIsEnvironmentRestricted] = useState(false);
-  const [isDatabaseMissing, setIsDatabaseMissing] = useState(false); // NEW
+  const [isDatabaseMissing, setIsDatabaseMissing] = useState(false);
   const [hasApiKey, setHasApiKey] = useState(true);
   const [systemStatus, setSystemStatus] = useState<SystemStatus>({
     auth: 'syncing',
@@ -111,13 +115,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   });
 
+  // Listeners Ref
+  const unsubscribeProfile = useRef<(() => void) | null>(null);
+  const unsubscribePrefs = useRef<(() => void) | null>(null);
+
   useEffect(() => {
     try {
       const stored = localStorage.getItem('mimi_key_ring');
       if (stored) {
           const keys = JSON.parse(stored);
           setKeyRing(keys);
-          setGlobalKeyRing(keys); // Sync with service layer
+          setGlobalKeyRing(keys);
       }
     } catch(e) {}
   }, []);
@@ -135,7 +143,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!trimmed || keyRing.includes(trimmed)) return;
     const updated = [...keyRing, trimmed];
     setKeyRing(updated);
-    setGlobalKeyRing(updated); // Sync
+    setGlobalKeyRing(updated);
     localStorage.setItem('mimi_key_ring', JSON.stringify(updated));
     setOracleStatus('ready');
   };
@@ -143,7 +151,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const removeKeyFromRing = (key: string) => {
     const updated = keyRing.filter(k => k !== key);
     setKeyRing(updated);
-    setGlobalKeyRing(updated); // Sync
+    setGlobalKeyRing(updated);
     localStorage.setItem('mimi_key_ring', JSON.stringify(updated));
   };
 
@@ -201,83 +209,119 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!fbUser) {
       setUser(null); setProfile(null); setLoading(false);
       setSystemStatus(prev => ({ ...prev, auth: 'offline' }));
+      // Cleanup listeners
+      if (unsubscribeProfile.current) unsubscribeProfile.current();
+      if (unsubscribePrefs.current) unsubscribePrefs.current();
       return;
     }
+    
     if (reconciliationInProgress.current === fbUser.uid) return;
     reconciliationInProgress.current = fbUser.uid;
     setSystemStatus(prev => ({ ...prev, auth: 'syncing' }));
 
+    // Clear existing listeners to prevent duplication
+    if (unsubscribeProfile.current) unsubscribeProfile.current();
+    if (unsubscribePrefs.current) unsubscribePrefs.current();
+
     try {
       const currentLocal = await getLocalProfile();
-      if (currentLocal && currentLocal.uid === fbUser.uid) {
-        setProfile(ensurePersonas(currentLocal));
-        setUser({ uid: fbUser.uid, isAnonymous: !!fbUser.isAnonymous, email: fbUser.email });
-        setLoading(false); 
-      }
+      let initialProfile = currentLocal;
 
-      let cloudProfile = null;
-      let cloudPreferences = null;
-
-      if (navigator.onLine) {
-        try {
-          const profilePromise = getUserProfile(fbUser.uid);
-          const prefsPromise = getUserPreferences(fbUser.uid);
-          const [cp, cPrefs] = await Promise.all([profilePromise, prefsPromise]);
-          cloudProfile = cp;
-          cloudPreferences = cPrefs;
-        } catch (cloudErr: any) {
-          // Detect Database Not Found Error
-          if (cloudErr.message && (cloudErr.message.includes('not found') || cloudErr.message.includes('NOT_FOUND'))) {
-             console.error("MIMI // CRITICAL: Firestore Database not initialized.");
-             setIsDatabaseMissing(true);
+      if (!fbUser.isAnonymous) {
+          // SWAN PATH (Authenticated)
+          
+          // 1. Initial Cloud Check & potential Migration
+          const [cloudProfileSnap, cloudPrefsSnap] = await Promise.all([
+              getUserProfile(fbUser.uid),
+              getUserPreferences(fbUser.uid)
+          ]);
+          
+          // If no cloud data exists, but we have local data (fresh sign-up or first sync)
+          if (!cloudProfileSnap && !cloudPrefsSnap && currentLocal) {
+              await migrateLocalToCloud(fbUser.uid, currentLocal);
           }
-        }
-      }
-      
-      let finalProfile: UserProfile;
-      if (cloudProfile || cloudPreferences) {
-        const mergedCloud = { ...(cloudProfile || {}), ...(cloudPreferences || {}) };
-        const localIsNewer = currentLocal && (currentLocal.lastActive || 0) > (mergedCloud.lastActive || 0);
-        finalProfile = { 
-          ...mergedCloud, 
-          ...(localIsNewer ? {
-             handle: currentLocal.handle,
-             photoURL: currentLocal.photoURL,
-             tasteProfile: currentLocal.tasteProfile,
-             tailorDraft: currentLocal.tailorDraft,
-             starredZineIds: currentLocal.starredZineIds,
-             lastActive: currentLocal.lastActive,
-             personas: currentLocal.personas,
-             activePersonaId: currentLocal.activePersonaId
-          } : {}),
-          uid: fbUser.uid, 
-          isSwan: !fbUser.isAnonymous, 
-          email: fbUser.email,
-          onboardingComplete: mergedCloud.onboardingComplete || (localIsNewer && currentLocal?.onboardingComplete) || false
-        };
+          
+          // 2. Setup Real-time Listeners
+          unsubscribeProfile.current = subscribeToUserProfile(fbUser.uid, (pData) => {
+             setProfile(prev => {
+                 const merged = { ...(prev || {}), ...pData, uid: fbUser.uid } as UserProfile;
+                 return ensurePersonas(merged);
+             });
+          });
+
+          unsubscribePrefs.current = subscribeToUserPreferences(fbUser.uid, (prefsData) => {
+             setProfile(prev => {
+                 const merged = { ...(prev || {}), ...prefsData } as UserProfile;
+                 return ensurePersonas(merged);
+             });
+          });
+          
+          // Construct initial state from one-time fetch to unblock UI immediately
+          // (Listeners will follow up with updates)
+          const mergedCloud = { 
+              ...(cloudProfileSnap || {}), 
+              ...(cloudPrefsSnap || {}),
+              uid: fbUser.uid,
+              isSwan: true,
+              email: fbUser.email
+          } as UserProfile;
+
+          // If migration happened, local is the best source until listeners fire
+          // If cloud data existed, use that.
+          if (cloudProfileSnap || cloudPrefsSnap) {
+              initialProfile = mergedCloud;
+          } else if (currentLocal) {
+              initialProfile = { ...currentLocal, uid: fbUser.uid, isSwan: true, email: fbUser.email };
+          } else {
+              // Brand new user, no local data either
+              initialProfile = {
+                  uid: fbUser.uid,
+                  handle: 'Swan_' + fbUser.uid.slice(-4),
+                  isSwan: true,
+                  email: fbUser.email,
+                  createdAt: Date.now(),
+                  lastActive: Date.now(),
+                  onboardingComplete: false,
+                  tasteProfile: { archetype_weights: {}, color_frequency: {} },
+                  starredZineIds: []
+              };
+          }
+
       } else {
-        finalProfile = currentLocal && currentLocal.uid === fbUser.uid ? currentLocal : {
-          uid: fbUser.uid,
-          handle: fbUser.displayName?.split(' ')[0] || 'Subject_' + fbUser.uid.slice(-4),
-          photoURL: fbUser.photoURL || null,
-          isSwan: !fbUser.isAnonymous,
-          currentSeason: 'blooming',
-          createdAt: Date.now(),
-          email: fbUser.email,
-          lastActive: Date.now(),
-          starredZineIds: [],
-          onboardingComplete: false
-        };
+          // GHOST PATH (Local Only)
+          if (currentLocal && currentLocal.uid === fbUser.uid) {
+             initialProfile = currentLocal;
+          } else {
+             initialProfile = {
+                uid: fbUser.uid,
+                handle: 'Ghost_' + fbUser.uid.slice(-4),
+                isSwan: false,
+                createdAt: Date.now(),
+                lastActive: Date.now(),
+                onboardingComplete: false,
+                tasteProfile: { archetype_weights: {}, color_frequency: {} },
+                starredZineIds: []
+             };
+          }
       }
 
-      const safeProfile = ensurePersonas(finalProfile);
-      await saveProfileLocally(safeProfile);
+      const safeProfile = ensurePersonas(initialProfile);
       setProfile(safeProfile);
       setUser({ uid: fbUser.uid, isAnonymous: !!fbUser.isAnonymous, email: fbUser.email });
       setAuthError(null);
       setSystemStatus(prev => ({ ...prev, auth: 'anchored' }));
+      
+      // Save local backup for offline resilience
+      await saveProfileLocally(safeProfile);
+
     } catch (e: any) {
+      console.error("Reconciliation Failed", e);
       setSystemStatus(prev => ({ ...prev, auth: 'offline' }));
+      // Fallback to local
+      if (!profile) {
+          const local = await getLocalProfile();
+          if (local) setProfile(ensurePersonas(local));
+      }
     } finally {
       setLoading(false);
       reconciliationInProgress.current = null;
@@ -358,7 +402,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const authInstance = await ensureAuth();
         onAuthStateChanged(authInstance, (fbUser) => {
           if (fbUser) reconcileProfile(fbUser);
-          else setLoading(false);
+          else {
+             setUser(null); 
+             // Cleanup listeners on auth state change to null
+             if (unsubscribeProfile.current) unsubscribeProfile.current();
+             if (unsubscribePrefs.current) unsubscribePrefs.current();
+             setLoading(false);
+          }
         });
       } catch (e) {
         setLoading(false);
@@ -373,25 +423,27 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const currentUid = user?.uid || newProfile.uid;
       const updated = { ...newProfile, uid: currentUid, lastActive: Date.now() };
+      
+      // Optimistic Update
       setProfile(updated);
       await saveProfileLocally(updated);
+      
       if (navigator.onLine && user && !user.isAnonymous && !currentUid.startsWith('local_')) {
+        // Split data into Identity (Public) and Preferences (Private)
+        const { tailorDraft, personas, activePersonaId, tasteProfile, starredZineIds, lastAuditReport, ...identity } = updated;
         const preferences: UserPreferences = {
-            tailorDraft: updated.tailorDraft,
-            tasteProfile: updated.tasteProfile,
-            starredZineIds: updated.starredZineIds,
-            lastAuditReport: updated.lastAuditReport,
-            personas: updated.personas,
-            activePersonaId: updated.activePersonaId
+            tailorDraft,
+            tasteProfile,
+            starredZineIds,
+            lastAuditReport,
+            personas,
+            activePersonaId
         };
-        const identity: Partial<UserProfile> = { ...updated };
-        delete identity.tailorDraft;
-        delete identity.tasteProfile;
-        delete identity.starredZineIds;
-        delete identity.lastAuditReport;
-        delete identity.personas;
-        delete identity.activePersonaId;
-        await Promise.all([saveUserProfile(identity as UserProfile), saveUserPreferences(currentUid, preferences)]);
+        
+        await Promise.all([
+            saveUserProfile(identity as UserProfile), // Writes to 'profiles'
+            saveUserPreferences(currentUid, preferences) // Writes to 'userPreferences'
+        ]);
       }
     } catch (e) { throw e; }
   };
@@ -446,6 +498,21 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try { await anchorIdentity(forceRedirect); } catch (e: any) { setAuthError(e.code || e.message); throw e; }
   };
 
+  const linkAccount = async (forceRedirect = false) => {
+    setAuthError(null);
+    try { 
+        if (user?.isAnonymous) {
+            await linkIdentity();
+        } else {
+            // Already anchored, or switching
+            await anchorIdentity(forceRedirect); 
+        }
+    } catch (e: any) { 
+        setAuthError(e.code || e.message); 
+        throw e; 
+    }
+  };
+
   const openKeySelector = async () => {
     try {
       const aistudio = (window as any).aistudio;
@@ -459,6 +526,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     setLoading(true);
+    // Unsubscribe listeners
+    if (unsubscribeProfile.current) unsubscribeProfile.current();
+    if (unsubscribePrefs.current) unsubscribePrefs.current();
+    
     try {
       const authInstance = await ensureAuth();
       await authInstance.signOut();
@@ -472,7 +543,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <UserContext.Provider value={{ 
       user, profile, loading, updateProfile, toggleZineStar, isOnboardingComplete: !!profile?.onboardingComplete, 
-      login, ghostLogin, speedGhostEntrance, linkAccount: login, isEnvironmentRestricted, isDatabaseMissing, authError,
+      login, ghostLogin, speedGhostEntrance, linkAccount, isEnvironmentRestricted, isDatabaseMissing, authError,
       hasApiKey, openKeySelector, logout, refreshHasApiKey, systemStatus, setOracleStatus,
       keyRing, addKeyToRing, removeKeyFromRing,
       featureFlags, toggleFeature,

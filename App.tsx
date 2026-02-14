@@ -9,7 +9,7 @@ import { AnalysisDisplay } from '../components/AnalysisDisplay';
 import { ElevatorLoader } from '../components/ElevatorLoader';
 import { UserProvider, useUser } from '../contexts/UserContext';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
-import { AgentProvider } from '../contexts/AgentContext'; // NEW
+import { AgentProvider, useAgents } from '../contexts/AgentContext';
 import { ArchiveCloudNebula } from '../components/ArchiveCloudNebula';
 import { ArchivalView } from '../components/ArchivalView';
 import { UserProfileView } from '../components/UserProfileView';
@@ -22,18 +22,31 @@ import { DarkroomView } from '../components/DarkroomView';
 import { ApiKeyShield } from '../components/ApiKeyShield';
 import { ProposalView } from '../components/AboutView'; 
 import { CaptiveSentinel } from '../components/CaptiveSentinel';
+import { TheWard } from '../components/TheWard'; 
+import { PatronMintView } from '../components/PatronMintView'; // Imported
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, LayoutGrid, User, Menu, X, Newspaper, LogOut, ShieldAlert, Zap, Camera, Key, Radio, Activity as ActivityIcon, Archive, Moon, Sun, Scissors, FlaskConical, Eye, Radar, Compass, Info, Database, ExternalLink, RefreshCw } from 'lucide-react';
+import { Sparkles, LayoutGrid, User, Menu, X, Newspaper, LogOut, ShieldAlert, Zap, Camera, Key, Radio, Activity as ActivityIcon, Archive, Moon, Sun, Scissors, FlaskConical, Eye, Radar, Compass, Info, Cpu, ShieldCheck } from 'lucide-react';
+
+// ... (Rest of existing subcomponents: BinderRing, SidebarBtn, MobileMenu, DatabaseVoid) ...
+// BINDER RING COMPONENT
+const BinderRing = ({ className }: { className?: string }) => (
+  <div className={`absolute right-[-10px] w-5 h-5 rounded-full bg-[#151412] shadow-[inset_2px_2px_4px_rgba(0,0,0,0.9),1px_1px_1px_rgba(255,255,255,0.1)] z-50 flex items-center justify-center ${className}`}>
+    <div className="w-8 h-2.5 bg-gradient-to-r from-stone-600 via-stone-300 to-stone-600 rounded-sm shadow-lg transform translate-x-1" />
+  </div>
+);
 
 const SidebarBtn: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; label: string }> = ({ active, onClick, icon, label }) => (
   <button 
     onClick={onClick}
-    className={`w-full flex items-center gap-4 px-4 py-1.5 transition-all duration-500 group/btn border-l-2 ${active ? 'border-nous-text dark:border-white text-nous-text dark:text-white bg-stone-100 dark:bg-stone-800/50' : 'border-transparent text-stone-400 hover:text-stone-600 dark:hover:text-stone-300'}`}
+    className={`w-full flex items-center gap-5 px-6 py-3 transition-all duration-300 group/btn relative overflow-hidden ${active ? 'text-white' : 'text-stone-500 hover:text-stone-300'}`}
   >
-    <div className={`shrink-0 transition-transform duration-500 ${active ? 'scale-110' : 'group-hover/btn:scale-110'}`}>
-      {React.cloneElement(icon as React.ReactElement, { strokeWidth: 1, size: 14 })}
+    <div className={`absolute left-0 top-0 bottom-0 w-0.5 bg-white transition-all duration-300 ${active ? 'opacity-100 h-full' : 'opacity-0 h-0 group-hover/btn:h-full group-hover/btn:opacity-50'}`} />
+    
+    <div className={`shrink-0 transition-transform duration-300 ${active ? 'scale-110 text-white' : 'group-hover/btn:scale-110'}`}>
+      {React.cloneElement(icon as React.ReactElement, { strokeWidth: 1.5, size: 18 })}
     </div>
-    <span className={`font-sans text-[8px] uppercase tracking-[0.3em] font-black opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-700 whitespace-nowrap ${active ? 'text-nous-text dark:text-white' : ''}`}>
+    
+    <span className={`font-sans text-[9px] uppercase tracking-[0.25em] font-bold opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 whitespace-nowrap delay-75 ${active ? 'text-white' : ''}`}>
       {label}
     </span>
   </button>
@@ -52,35 +65,39 @@ const MobileMenu: React.FC<{
       {isOpen && (
         <motion.div 
           initial={{ opacity: 0, x: '-100%' }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: '-100%' }}
-          className="fixed inset-0 z-[10000] bg-nous-base dark:bg-stone-950 flex flex-col p-6 overflow-y-auto no-scrollbar"
+          className="fixed inset-0 z-[10000] bg-stone-950 flex flex-col p-8 overflow-y-auto no-scrollbar text-white"
         >
-          <div className="flex justify-between items-center mb-6">
-             <h2 className="font-header italic text-3xl text-nous-text dark:text-white">Menu</h2>
-             <button onClick={onClose} className="p-2 text-stone-400"><X size={20}/></button>
+          <div className="flex justify-between items-center mb-12">
+             <div className="flex items-center gap-3">
+                <div className="w-1 h-8 bg-white" />
+                <h2 className="font-header italic text-4xl">Mimi.</h2>
+             </div>
+             <button onClick={onClose} className="p-2 text-stone-400"><X size={24}/></button>
           </div>
-          <div className="space-y-4 flex-1">
-             <div className="space-y-1">
-                <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 block border-b border-stone-100 dark:border-stone-800 pb-1">Creation</span>
-                <button onClick={() => handleNav('studio')} className="w-full text-left font-serif italic text-2xl py-1">Studio</button>
-                <button onClick={() => handleNav('nebula')} className="w-full text-left font-serif italic text-2xl py-1">The Stand</button>
-                <button onClick={() => handleNav('scry')} className="w-full text-left font-serif italic text-2xl py-1">Scry</button>
+          <div className="space-y-8 flex-1">
+             <div className="space-y-4">
+                <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 block border-b border-stone-800 pb-2">Creation</span>
+                <button onClick={() => handleNav('studio')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Studio</button>
+                <button onClick={() => handleNav('nebula')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">The Stand</button>
+                <button onClick={() => handleNav('scry')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Scry</button>
              </div>
-             <div className="space-y-1">
-                <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 block border-b border-stone-100 dark:border-stone-800 pb-1">Alchemy</span>
-                <button onClick={() => handleNav('tailor')} className="w-full text-left font-serif italic text-2xl py-1">Tailor</button>
-                <button onClick={() => handleNav('archival')} className="w-full text-left font-serif italic text-2xl py-1">Deep Archive</button>
-                <button onClick={() => handleNav('mesopic')} className="w-full text-left font-serif italic text-2xl py-1">Mesopic</button>
-                <button onClick={() => handleNav('darkroom')} className="w-full text-left font-serif italic text-2xl py-1">Darkroom</button>
+             <div className="space-y-4">
+                <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 block border-b border-stone-800 pb-2">Alchemy</span>
+                <button onClick={() => handleNav('tailor')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">Tailor</button>
+                <button onClick={() => handleNav('ward')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">The Ward</button>
+                <button onClick={() => handleNav('archival')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">Archive</button>
+                <button onClick={() => handleNav('mesopic')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">Mesopic</button>
+                <button onClick={() => handleNav('darkroom')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">Darkroom</button>
              </div>
-             <div className="space-y-1">
-                <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 block border-b border-stone-100 dark:border-stone-800 pb-1">Discover</span>
-                <button onClick={() => handleNav('about')} className="w-full text-left font-serif italic text-2xl py-1">Proposal</button>
-                <button onClick={() => handleNav('press')} className="w-full text-left font-serif italic text-2xl py-1">Press</button>
-                <button onClick={() => handleNav('profile')} className="w-full text-left font-serif italic text-2xl py-1">Profile</button>
+             <div className="space-y-4">
+                <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 block border-b border-stone-800 pb-2">Discover</span>
+                <button onClick={() => handleNav('about')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-amber-400 transition-colors">Proposal</button>
+                <button onClick={() => handleNav('press')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-amber-400 transition-colors">Press</button>
+                <button onClick={() => handleNav('profile')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-amber-400 transition-colors">Profile</button>
              </div>
           </div>
-          <div className="pt-6 border-t border-stone-200 dark:border-stone-800">
-             <button onClick={() => { logout(); onClose(); }} className="w-full text-center py-2 text-red-400 font-sans text-[8px] uppercase tracking-widest font-black">De-Anchor Protocol</button>
+          <div className="pt-8 border-t border-stone-800">
+             <button onClick={() => { logout(); onClose(); }} className="w-full text-center py-4 text-red-400 font-sans text-[9px] uppercase tracking-[0.3em] font-black border border-red-900/30 rounded-sm">De-Anchor Protocol</button>
           </div>
         </motion.div>
       )}
@@ -94,7 +111,7 @@ const DatabaseVoid: React.FC = () => (
       <div className="relative mx-auto w-24 h-24">
          <div className="absolute inset-0 border-t-2 border-red-500 rounded-full animate-[spin_4s_linear_infinite]" />
          <div className="absolute inset-0 flex items-center justify-center">
-            <Database size={32} className="text-red-500 animate-pulse" />
+            <Radio size={32} className="text-red-500 animate-pulse" />
          </div>
       </div>
       <div className="space-y-3">
@@ -107,7 +124,7 @@ const DatabaseVoid: React.FC = () => (
     </div>
 
     <button onClick={() => window.location.reload()} className="px-12 py-5 bg-red-600 text-white rounded-full font-sans text-[10px] uppercase tracking-[0.4em] font-black shadow-[0_0_30px_rgba(220,38,38,0.5)] hover:bg-red-500 hover:shadow-[0_0_50px_rgba(239,68,68,0.6)] transition-all flex items-center gap-4 animate-pulse">
-       <RefreshCw size={16} /> Force Re-Initialization
+       <ActivityIcon size={16} /> Force Re-Initialization
     </button>
   </div>
 );
@@ -115,6 +132,8 @@ const DatabaseVoid: React.FC = () => (
 const AppContent: React.FC = () => {
   const { user, profile, updateProfile, loading: authLoading, logout, setOracleStatus, systemStatus, activePersona, isDatabaseMissing } = useUser();
   const { currentPalette, toggleMode } = useTheme();
+  const { activeAgents } = useAgents();
+  
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [viewMode, setViewMode] = useState<string>('studio');
   const [zineMetadata, setZineMetadata] = useState<ZineMetadata | null>(null);
@@ -124,9 +143,19 @@ const AppContent: React.FC = () => {
   const [isHeaderTranslucent, setIsHeaderTranslucent] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [tailorOverrides, setTailorOverrides] = useState<any>(null);
+  const [isPatronMint, setIsPatronMint] = useState(false);
 
   useEffect(() => {
     if (isCaptiveInWebview()) setShowCaptiveSentinel(true);
+    
+    // CHECK FOR PATRON MINT URL
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('view') === 'patron_mint') {
+        setIsPatronMint(true);
+        // Clear query param to keep URL clean
+        window.history.replaceState({}, document.title, "/");
+    }
+
     const handleChangeView = async (e: any) => {
       if (e.detail === 'reveal_artifact' && e.detail_id) {
          try {
@@ -148,7 +177,6 @@ const AppContent: React.FC = () => {
     setIsDeepRefraction(!!opts.deepThinking);
     setAppState(AppState.THINKING);
     
-    // Determine specific key if persona has one
     const personaKey = activePersona?.apiKey ? activePersona.apiKey : undefined;
 
     try {
@@ -159,7 +187,6 @@ const AppContent: React.FC = () => {
       setAppState(AppState.REVEALED);
     } catch (e) { 
         console.error("Zine Creation Failed:", e);
-        // Dispatch error to UI so user isn't stuck
         window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
             detail: { message: "Oracle Disconnected. " + (e.message || "Unknown Error"), type: 'error' } 
         }));
@@ -170,35 +197,96 @@ const AppContent: React.FC = () => {
   if (isDatabaseMissing) return <DatabaseVoid />;
   if (authLoading) return <ElevatorLoader />;
 
-  return (
-    <div className="h-full w-full bg-transparent dark:bg-stone-950 transition-colors duration-500">
-      
-      {/* ARCHIVAL GRID SYSTEM - INTERESTING LINES */}
-      {/* Updated: Dashed lines with specific border color to be subtle yet architectural */}
-      <div className="absolute inset-0 grid grid-cols-12 pointer-events-none z-0 h-full w-full max-w-[1920px] mx-auto opacity-60">
-        <div className="border-r border-dashed border-stone-200 dark:border-stone-800 h-full col-span-1 hidden md:block"></div>
-        <div className="border-r border-dashed border-stone-200 dark:border-stone-800 h-full col-span-1 hidden lg:block"></div>
-        <div className="border-r border-dashed border-stone-200 dark:border-stone-800 h-full col-span-8 md:col-span-10 lg:col-span-8"></div>
-        <div className="border-r border-dashed border-stone-200 dark:border-stone-800 h-full col-span-1 hidden lg:block"></div>
-      </div>
+  if (isPatronMint) {
+      return <PatronMintView onExit={() => setIsPatronMint(false)} />;
+  }
 
+  return (
+    <div className="h-full w-full bg-transparent dark:bg-stone-950 transition-colors duration-500 flex">
       <AnimatePresence>{showCaptiveSentinel && <CaptiveSentinel onClose={() => setShowCaptiveSentinel(false)} />}</AnimatePresence>
-      <div className="pericardium-seal flex flex-col md:flex-row pb-safe pt-safe overflow-hidden relative z-10 bg-transparent">
+      
+      {!zineMetadata && (
+        <aside className="hidden md:flex flex-col h-full shrink-0 z-[2000] relative group/sidebar w-[88px] hover:w-72 transition-all duration-500 bg-[#1c1917] shadow-2xl">
+            <BinderRing className="top-[15%]" />
+            <BinderRing className="top-[50%]" />
+            <BinderRing className="top-[85%]" />
+
+            <div className="flex-1 flex flex-col pt-12 overflow-hidden">
+                <div className="absolute left-0 top-0 bottom-0 w-[88px] flex items-center justify-center pointer-events-none group-hover/sidebar:opacity-0 transition-opacity duration-300">
+                    <h1 className="text-stone-600 font-serif italic text-4xl tracking-widest whitespace-nowrap transform -rotate-90 origin-center">
+                        Mimi Zine
+                    </h1>
+                </div>
+
+                <div className="flex-1 flex flex-col opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-500 delay-100 w-72 px-4 pb-8 overflow-y-auto no-scrollbar">
+                    <div className="mb-10 pl-6 pt-2">
+                        <h1 className="text-white font-serif italic text-4xl tracking-tighter">Mimi.</h1>
+                        <p className="text-stone-500 font-sans text-[9px] uppercase tracking-widest font-black mt-1">Sovereign Registry</p>
+                    </div>
+
+                    <div className="space-y-8">
+                        <div className="space-y-1">
+                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-600">Creation</span></div>
+                            <SidebarBtn active={viewMode === 'studio'} onClick={() => setViewMode('studio')} icon={<Sparkles />} label="Studio" />
+                            <SidebarBtn active={viewMode === 'nebula'} onClick={() => setViewMode('nebula')} icon={<LayoutGrid />} label="Stand" />
+                            <SidebarBtn active={viewMode === 'scry'} onClick={() => setViewMode('scry')} icon={<Compass />} label="Scry" />
+                        </div>
+
+                        <div className="space-y-1">
+                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-600">Archive</span></div>
+                            <SidebarBtn active={viewMode === 'archival'} onClick={() => setViewMode('archival')} icon={<Archive />} label="Archive" />
+                            <SidebarBtn active={viewMode === 'mesopic'} onClick={() => setViewMode('mesopic')} icon={<Camera />} label="Mesopic" />
+                            <SidebarBtn active={viewMode === 'darkroom'} onClick={() => setViewMode('darkroom')} icon={<FlaskConical />} label="Darkroom" />
+                        </div>
+
+                        <div className="space-y-1">
+                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-600">Alchemy</span></div>
+                            <SidebarBtn active={viewMode === 'tailor'} onClick={() => setViewMode('tailor')} icon={<Scissors />} label="Tailor" />
+                            <SidebarBtn active={viewMode === 'ward'} onClick={() => setViewMode('ward')} icon={<ShieldCheck />} label="The Ward" />
+                            <SidebarBtn active={viewMode === 'profile'} onClick={() => setViewMode('profile')} icon={<User />} label="Profile" />
+                        </div>
+
+                        <div className="space-y-1">
+                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-600">Discover</span></div>
+                            <SidebarBtn active={viewMode === 'about'} onClick={() => setViewMode('about')} icon={<Info />} label="Proposal" />
+                            <SidebarBtn active={viewMode === 'press'} onClick={() => setViewMode('press')} icon={<Newspaper />} label="Press" />
+                        </div>
+                    </div>
+
+                    <div className="mt-auto pt-8">
+                        <SidebarBtn active={false} onClick={logout} icon={<LogOut className="text-red-900" />} label="De-Anchor" />
+                    </div>
+                </div>
+                
+                <div className="absolute bottom-12 left-0 w-[88px] flex flex-col items-center gap-4 group-hover/sidebar:opacity-0 transition-opacity">
+                    <div className={`w-1.5 h-1.5 rounded-full ${systemStatus.oracle === 'ready' ? 'bg-emerald-600' : 'bg-red-900'}`} />
+                    {activeAgents.length > 0 && <Cpu size={12} className="text-indigo-900 animate-pulse" />}
+                </div>
+            </div>
+        </aside>
+      )}
+
+      <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-nous-base dark:bg-stone-950 transition-colors duration-500">
+        <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-black/10 to-transparent pointer-events-none z-20 mix-blend-multiply dark:mix-blend-overlay" />
+
         <ApiKeyShield />
-        <button onClick={toggleMode} className="fixed top-6 right-6 md:right-12 z-[5000] p-3 rounded-full bg-stone-100/50 dark:bg-stone-900/50 text-stone-400 hover:text-nous-text dark:hover:text-white transition-all backdrop-blur-sm border border-stone-200/20 shadow-sm">
+        <button onClick={toggleMode} className="fixed top-6 right-6 md:right-12 z-[5000] p-3 rounded-full bg-stone-100/50 dark:bg-stone-900/50 text-stone-400 hover:text-nous-text dark:hover:text-white transition-all backdrop-blur-sm border border-stone-200/20">
            {currentPalette?.isDark ? <Sun size={20} /> : <Moon size={20} />}
         </button>
+        
         {!zineMetadata && <button onClick={() => setMobileMenuOpen(true)} className="md:hidden fixed top-6 left-6 z-[5001] p-3 bg-white/50 dark:bg-black/50 backdrop-blur-md rounded-full text-nous-text dark:text-white border border-stone-200 shadow-lg"><Menu size={20} /></button>}
+        
         <MobileMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} viewMode={viewMode} setViewMode={setViewMode} logout={logout} />
+        
         {!zineMetadata && appState !== AppState.REVEALED && (
-          // HEADER HARMONIZATION: Matches the body background color exactly (nous-base / #FDFBF7)
-          <header className={`fixed top-0 right-0 left-0 md:left-20 h-20 md:h-24 z-[50] flex items-center justify-center px-8 transition-all duration-1000 pt-safe overflow-hidden ${isHeaderTranslucent ? 'bg-nous-base/95 dark:bg-stone-950/95 backdrop-blur-xl' : 'bg-nous-base/80 dark:bg-stone-950/80 backdrop-blur-xl'}`}>
+          <header className={`fixed top-0 right-0 left-0 md:left-[88px] h-20 md:h-24 z-[50] flex items-center justify-center px-8 transition-all duration-1000 pt-safe overflow-hidden ${isHeaderTranslucent ? 'bg-nous-base/95 dark:bg-stone-950/95 backdrop-blur-xl' : 'bg-nous-base/80 dark:bg-stone-950/80 backdrop-blur-xl'}`}>
               <div onClick={() => { setViewMode('studio'); setZineMetadata(null); setAppState(AppState.IDLE); }} className="cursor-pointer">
                 <h1 className="text-3xl md:text-6xl tracking-[-0.08em] font-serif italic text-stone-950 dark:text-white opacity-95 transition-all luminescent-text">Mimi</h1>
               </div>
           </header>
         )}
-        <main className={`relative flex-1 flex flex-col overflow-y-auto no-scrollbar transition-all duration-1000 ${zineMetadata ? 'md:pl-0 pt-0' : 'md:pl-20 pt-20 md:pt-24'}`}>
+
+        <main className={`relative flex-1 flex flex-col overflow-y-auto no-scrollbar transition-all duration-1000 ${zineMetadata ? 'md:pl-0 pt-0' : 'pt-20 md:pt-24'}`}>
           <AnimatePresence mode="wait">
             {appState === AppState.THINKING ? (
               <ElevatorLoader key="thinking" isDeep={isDeepRefraction} onBypass={(r) => { setAppState(AppState.IDLE); setThreadValue(r || ''); }} />
@@ -217,48 +305,16 @@ const AppContent: React.FC = () => {
                 {viewMode === 'about' && <ProposalView />}
                 {viewMode === 'darkroom' && <DarkroomView />}
                 {viewMode === 'sanctuary' && <SanctuaryView />}
+                {viewMode === 'ward' && <TheWard />}
               </motion.div>
             )}
           </AnimatePresence>
         </main>
-        {!zineMetadata && (
-          <aside className="hidden md:flex fixed left-0 top-0 h-full z-[2000] flex-col group/sidebar">
-            {/* SIDEBAR CLEANUP: Removed texture-heavy-paper class, using harmonious background */}
-            <div className="h-full bg-white/60 dark:bg-stone-900/80 backdrop-blur-3xl border-r border-black/5 dark:border-white/5 flex flex-col pt-16 w-[80px] group-hover/sidebar:w-56 transition-all duration-700 overflow-hidden shadow-2xl">
-              <div className="flex-1 space-y-0.5 overflow-y-auto no-scrollbar pb-6">
-                <div className="px-6 py-2 opacity-0 group-hover/sidebar:opacity-100 transition-opacity"><span className="font-sans text-[6px] uppercase tracking-widest font-black text-stone-400">Creation</span></div>
-                <SidebarBtn active={viewMode === 'studio'} onClick={() => setViewMode('studio')} icon={<Sparkles />} label="Studio" />
-                <SidebarBtn active={viewMode === 'nebula'} onClick={() => setViewMode('nebula')} icon={<LayoutGrid />} label="Stand" />
-                <SidebarBtn active={viewMode === 'scry'} onClick={() => setViewMode('scry')} icon={<Compass />} label="Scry" />
-                <div className="px-6 py-2 opacity-0 group-hover/sidebar:opacity-100 transition-opacity"><span className="font-sans text-[6px] uppercase tracking-widest font-black text-stone-400">Archive</span></div>
-                <SidebarBtn active={viewMode === 'archival'} onClick={() => setViewMode('archival')} icon={<Archive />} label="Archival" />
-                <SidebarBtn active={viewMode === 'mesopic'} onClick={() => setViewMode('mesopic')} icon={<Camera />} label="Mesopic" />
-                <SidebarBtn active={viewMode === 'darkroom'} onClick={() => setViewMode('darkroom')} icon={<FlaskConical />} label="Darkroom" />
-                <div className="px-6 py-2 opacity-0 group-hover/sidebar:opacity-100 transition-opacity"><span className="font-sans text-[6px] uppercase tracking-widest font-black text-stone-400">Alchemy</span></div>
-                <SidebarBtn active={viewMode === 'tailor'} onClick={() => setViewMode('tailor')} icon={<Scissors />} label="Tailor" />
-                <SidebarBtn active={viewMode === 'profile'} onClick={() => setViewMode('profile')} icon={<User />} label="Profile" />
-                <div className="px-6 py-2 opacity-0 group-hover/sidebar:opacity-100 transition-opacity"><span className="font-sans text-[6px] uppercase tracking-widest font-black text-stone-400">Discover</span></div>
-                <SidebarBtn active={viewMode === 'about'} onClick={() => setViewMode('about')} icon={<Info />} label="Proposal" />
-                <SidebarBtn active={viewMode === 'press'} onClick={() => setViewMode('press')} icon={<Newspaper />} label="Press" />
-              </div>
-              <div className="px-4 py-3 border-t border-black/5 dark:border-white/5 space-y-1 group-hover/sidebar:opacity-100 opacity-0 transition-opacity duration-700">
-                <div className="flex justify-between items-center"><span className="font-sans text-[5px] uppercase text-stone-500 tracking-widest">Oracle</span><div className={`w-1 h-1 rounded-full ${systemStatus.oracle === 'ready' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-red-500'}`} /></div>
-              </div>
-              <div className="mt-auto mb-6"><SidebarBtn active={false} onClick={logout} icon={<LogOut className="text-red-300" />} label="De-Anchor" /></div>
-            </div>
-          </aside>
-        )}
       </div>
     </div>
   );
 };
 
 export const App: React.FC = () => (
-  <ThemeProvider>
-    <UserProvider>
-      <AgentProvider>
-        <AppContent />
-      </AgentProvider>
-    </UserProvider>
-  </ThemeProvider>
+  <ThemeProvider><UserProvider><AgentProvider><AppContent /></AgentProvider></UserProvider></ThemeProvider>
 );
