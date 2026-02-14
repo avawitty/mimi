@@ -1,0 +1,131 @@
+
+// @ts-nocheck
+import { auth, db } from "./firebaseInit";
+import { signInAnonymously } from "firebase/auth";
+import { collection, doc, setDoc, getDocs, deleteDoc, getDoc, query, where } from "firebase/firestore";
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+const ensureAnonymousAuth = async () => {
+  if (auth.currentUser) return auth.currentUser.uid;
+  const res = await signInAnonymously(auth);
+  return res.user.uid;
+};
+
+function cosineSimilarity(vecA: number[], vecB: number[]): number {
+  let dotProduct = 0, magA = 0, magB = 0;
+  for (let i = 0; i < vecA.length; i++) {
+    dotProduct += vecA[i] * vecB[i];
+    magA += vecA[i] * vecA[i];
+    magB += vecB[i] * vecB[i];
+  }
+  magA = Math.sqrt(magA); magB = Math.sqrt(magB);
+  if (magA === 0 || magB === 0) return 0;
+  return dotProduct / (magA * magB);
+}
+
+export const syncToShadowMemory = async (item: any) => {
+  try {
+    const uid = await ensureAnonymousAuth();
+    let textToEmbed = "";
+    
+    if (item.content?.pages) {
+        // It's a Zine
+        textToEmbed = `${item.title} ${item.content?.oracular_mirror || ""} ${item.content?.poetic_interpretation || ""} ${item.tone || ""}`;
+    } else {
+        // It's a Shard
+        textToEmbed = `${item.content?.prompt || ""} ${item.notes || ""} ${item.type || ""}`;
+    }
+
+    if (!textToEmbed.trim()) return;
+
+    // OPTIMIZATION: Truncate text to avoid token bloat in embedding model (Performance Fix)
+    if (textToEmbed.length > 8000) textToEmbed = textToEmbed.slice(0, 8000);
+
+    const response = await ai.models.embedContent({
+      model: "text-embedding-004",
+      contents: [{ parts: [{ text: textToEmbed }] }]
+    });
+
+    const embedding = response.embeddings?.[0]?.values;
+    if (embedding) {
+      await setDoc(doc(db, `users/${uid}/memory`, item.id), {
+        originalId: item.id,
+        type: item.content?.pages ? 'zine' : 'shard',
+        content_preview: textToEmbed.slice(0, 300),
+        display_image: item.coverImageUrl || item.content?.imageUrl || null,
+        synced_at: Date.now(),
+        embedding_field: embedding,
+        tone: item.tone || null
+      }, { merge: true });
+    }
+  } catch (e) {
+    console.warn("MIMI // Shadow Sync Failed:", e.message);
+  }
+};
+
+export const deleteFromShadowMemory = async (itemId: string) => {
+  try {
+    const uid = await ensureAnonymousAuth();
+    await deleteDoc(doc(db, `users/${uid}/memory`, itemId));
+  } catch (e) {
+    console.warn("MIMI // Shadow De-anchor Failed:", e.message);
+  }
+};
+
+export const scryShadowMemory = async (userQuery: string, options: { filterType?: string, timeRange?: string } = {}) => {
+  try {
+    const uid = await ensureAnonymousAuth();
+    
+    // Generate embedding for the query
+    const response = await ai.models.embedContent({
+      model: "text-embedding-004",
+      contents: [{ parts: [{ text: userQuery }] }]
+    });
+    const queryVector = response.embeddings?.[0]?.values;
+    if (!queryVector) return [];
+
+    // Fetch memory collection
+    const memoryCollection = collection(db, `users/${uid}/memory`);
+    const snapshot = await getDocs(memoryCollection);
+    
+    const now = Date.now();
+    const oneWeek = 7 * 24 * 60 * 60 * 1000;
+    const oneMonth = 30 * 24 * 60 * 60 * 1000;
+
+    const results = snapshot.docs.map(d => {
+        const data = d.data();
+        return { 
+          ...data, 
+          id: d.id, 
+          similarity: cosineSimilarity(queryVector, data.embedding_field) 
+        };
+    })
+    .filter(r => {
+        // 1. Minimum relevance threshold
+        if (r.similarity < 0.35) return false;
+
+        // 2. Type filtering
+        if (options.filterType && options.filterType !== 'all') {
+            if (r.type !== options.filterType) return false;
+        }
+
+        // 3. Time filtering
+        if (options.timeRange && options.timeRange !== 'all') {
+            const age = now - (r.synced_at || 0);
+            if (options.timeRange === 'week' && age > oneWeek) return false;
+            if (options.timeRange === 'month' && age > oneMonth) return false;
+        }
+
+        return true;
+    })
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, 15);
+
+    return results;
+  } catch (error) {
+    console.error("MIMI // Shadow Scry Error:", error);
+    return [];
+  }
+};

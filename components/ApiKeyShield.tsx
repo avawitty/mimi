@@ -1,11 +1,21 @@
 
+// @ts-nocheck
 import React from 'react';
 import { useUser } from '../contexts/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Key, AlertTriangle, Sparkles, RefreshCw, Info, ExternalLink } from 'lucide-react';
+import { Key, AlertTriangle, Sparkles, RefreshCw, Info, ExternalLink, Zap } from 'lucide-react';
 
 export const ApiKeyShield: React.FC = () => {
-  const { openKeySelector, hasApiKey } = useUser();
+  const { openKeySelector, hasApiKey, refreshHasApiKey } = useUser();
+
+  const handleManualRecheck = async () => {
+    await refreshHasApiKey();
+    if (!hasApiKey) {
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+            detail: { message: "Registry still obscured. Check AI Studio.", type: 'error' } 
+        }));
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -23,18 +33,21 @@ export const ApiKeyShield: React.FC = () => {
                 <Key size={32} className="text-amber-500 animate-pulse" />
               </div>
               <div className="space-y-3">
-                <h1 className="font-serif text-4xl md:text-5xl italic tracking-tighter text-nous-text dark:text-white">Key Void Detected.</h1>
-                <p className="font-sans text-[9px] uppercase tracking-[0.6em] text-stone-400 font-black">Environmental Calibration Failure</p>
+                <h1 className="font-serif text-4xl md:text-5xl italic tracking-tighter text-nous-text dark:text-white">Quota Thermal Lock.</h1>
+                <p className="font-sans text-[9px] uppercase tracking-[0.6em] text-stone-400 font-black">Imperial Registry Exhausted</p>
               </div>
             </div>
 
             <div className="space-y-8 font-serif italic text-lg text-stone-500 dark:text-stone-400 leading-relaxed text-balance">
               <p>
-                The Sovereign Handshake has drifted. Your API key has "magically disappeared" from the session manifest.
+                The Oracle has reached its maximum frequency for this period. To continue manifesting Zen, anchor a fresh Sovereign Key from your AI Studio registry.
               </p>
-              <p className="text-sm">
-                To continue manifesting artifacts, you must re-anchor your Sovereign Key in the AI Studio registry.
-              </p>
+              <div className="p-6 bg-amber-50/50 dark:bg-stone-900/40 rounded-2xl border border-amber-200 dark:border-amber-900/20 text-sm">
+                <p className="text-amber-600 dark:text-amber-400 font-bold mb-2 flex items-center justify-center gap-2">
+                    <Zap size={14} /> Quota Debt Detected
+                </p>
+                A new key reset will clear the thermal noise and allow for immediate ascension.
+              </div>
             </div>
 
             <div className="flex flex-col gap-4">
@@ -42,7 +55,14 @@ export const ApiKeyShield: React.FC = () => {
                 onClick={openKeySelector}
                 className="w-full py-6 bg-amber-500 text-white font-sans text-xs tracking-[0.5em] uppercase font-black shadow-2xl flex items-center justify-center gap-4 active:scale-95 transition-all"
               >
-                <Sparkles size={16} /> Re-Sync Sovereign Key
+                <Sparkles size={16} /> Anchor New Sovereign Key
+              </button>
+
+              <button 
+                onClick={handleManualRecheck}
+                className="w-full py-4 border border-stone-100 dark:border-stone-800 rounded-full font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 hover:text-nous-text dark:hover:text-white transition-all flex items-center justify-center gap-3"
+              >
+                <RefreshCw size={12} /> Verify Handshake
               </button>
               
               <a 
@@ -56,7 +76,7 @@ export const ApiKeyShield: React.FC = () => {
             </div>
 
             <div className="pt-8 border-t border-stone-100 dark:border-stone-900 opacity-20">
-               <p className="font-serif italic text-xs">"The Oracle requires a structural link to breathe."</p>
+               <p className="font-serif italic text-xs">"The Oracle requires a fresh link to breathe."</p>
             </div>
           </div>
         </motion.div>

@@ -1,8 +1,9 @@
 
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../contexts/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Ghost, Loader2, Beer as Martini, AlertTriangle, RefreshCw, Check, Scale, EyeOff, Anchor, ExternalLink, Mail, Key, ArrowRight, Cpu, X, Globe, Settings, Copy, ShieldAlert, Sparkles, LogIn, Compass, ShieldCheck, ZapOff, Fingerprint, Zap, FastForward } from 'lucide-react';
+import { Ghost, Loader2, Martini, AlertTriangle, RefreshCw, Check, Scale, EyeOff, Anchor, ExternalLink, Mail, Key, ArrowRight, Cpu, X, Globe, Settings, Copy, ShieldAlert, Sparkles, LogIn, Compass, ShieldCheck, ZapOff, Fingerprint, Zap, FastForward } from 'lucide-react';
 import { LegalOverlay } from './LegalOverlay';
 import { ensureAuth, auth } from '../services/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
@@ -229,11 +230,11 @@ export const Auth: React.FC = () => {
               <div className="space-y-4">
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300" size={14} />
-                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Registry Email" className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-2xl py-5 pl-12 pr-4 font-mono text-xs focus:outline-none focus:border-nous-text transition-all" required />
+                  <input type="email" id="email" name="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Registry Email" className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-2xl py-5 pl-12 pr-4 font-mono text-xs focus:outline-none focus:border-nous-text transition-all" required />
                 </div>
                 <div className="relative">
                   <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300" size={14} />
-                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Passphrase" className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-2xl py-5 pl-12 pr-4 font-mono text-xs focus:outline-none focus:border-nous-text transition-all" required />
+                  <input type="password" id="password" name="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Passphrase" className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-2xl py-5 pl-12 pr-4 font-mono text-xs focus:outline-none focus:border-nous-text transition-all" required />
                 </div>
               </div>
               <div className="flex flex-col gap-4">

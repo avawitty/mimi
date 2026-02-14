@@ -1,12 +1,13 @@
+
+// @ts-nocheck
 import React, { useEffect, useState, useCallback } from 'react';
 import { fetchCommunityZines, fetchUserZines } from '../services/firebase';
 import { generateSeasonReport } from '../services/geminiService';
 import { getLocalZines } from '../services/localArchive';
 import { ZineMetadata, SeasonReport } from '../types';
 import { useUser } from '../contexts/UserContext';
-import { Ghost, Loader2, RefreshCcw, Zap, Archive } from 'lucide-react';
+import { Ghost, Loader2, RefreshCw, Zap, Archive, Plus } from 'lucide-react';
 import { ZineCard } from './ZineCard'; 
-import { SeasonReportTicker } from './SeasonReportTicker';
 
 interface ShelfProps {
   variant: 'community' | 'personal' | 'clique';
@@ -16,7 +17,6 @@ interface ShelfProps {
 export const Shelf: React.FC<ShelfProps> = ({ variant, onSelectZine }) => {
   const { user } = useUser();
   const [zines, setZines] = useState<ZineMetadata[]>([]);
-  const [report, setReport] = useState<SeasonReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<boolean>(false);
 
@@ -51,15 +51,6 @@ export const Shelf: React.FC<ShelfProps> = ({ variant, onSelectZine }) => {
       }
       
       setZines(finalZines);
-
-      if (finalZines.length > 0 && (variant === 'community' || variant === 'clique')) {
-          try {
-              const r = await generateSeasonReport(finalZines.slice(0, 5));
-              setReport(r);
-          } catch (re) {
-              console.warn("MIMI // Stand: Seasonal analysis deferred.");
-          }
-      }
     } catch (e) {
       console.error("MIMI // Stand Collapse:", e);
       setError(true);
@@ -93,36 +84,39 @@ export const Shelf: React.FC<ShelfProps> = ({ variant, onSelectZine }) => {
 
   return (
     <div className="w-full pb-32 animate-fade-in">
-      {(variant === 'community' || variant === 'clique') && <SeasonReportTicker report={report} />}
-
       <div className="px-6 md:px-12 pt-8">
-        <div className="flex items-center justify-between mb-16 border-b border-stone-100 dark:border-stone-800 pb-10">
-           <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between mb-24 border-b border-stone-100 dark:border-stone-800 pb-10">
+           <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3">
                 {variant === 'personal' ? <Archive size={18} className="text-stone-400" /> : <Zap size={18} className="text-amber-400" />}
-                <h3 className="font-serif text-4xl italic text-nous-text dark:text-white luminescent-text tracking-tighter">
+                <h3 className="font-serif text-5xl italic text-nous-text dark:text-white luminescent-text tracking-tighter">
                   {variant === 'personal' ? 'Deep Archive' : variant === 'clique' ? 'Clique Radar' : 'Transmissions'}
                 </h3>
               </div>
               <span className="font-sans text-[8px] uppercase tracking-[0.5em] text-stone-400 font-black">
-                {variant === 'personal' ? 'PERMANENT_RECORD' : 'BROADCAST_FEED'}: {zines.length} Artifacts
+                {variant === 'personal' ? 'PERMANENT_RECORD' : 'BROADCAST_FEED'}
               </span>
            </div>
-           <button onClick={() => loadShelf()} className="p-3 bg-stone-50 dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-full text-stone-400 hover:text-nous-text dark:hover:text-white transition-all active:rotate-180" title="Refresh">
-               <RefreshCcw size={16} className={loading ? 'animate-spin' : ''} />
+           <button onClick={() => loadShelf()} className="p-4 bg-transparent hover:bg-stone-50 dark:hover:bg-stone-900 rounded-full text-stone-300 hover:text-nous-text dark:hover:text-white transition-all active:rotate-180" title="Refresh">
+               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
            </button>
         </div>
 
         {zines.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-48 opacity-30 text-center">
-             <Ghost size={64} className="mb-8 text-stone-200" />
-             <p className="font-serif italic text-3xl mb-4">“Nothing here yet.”</p>
-             <p className="font-sans text-[9px] uppercase tracking-[0.5em] font-black leading-relaxed max-w-sm">
-                The archive is currently a void waiting for manifest.
-             </p>
+          <div className="flex flex-col items-center justify-center py-48 text-center space-y-8">
+             <div className="p-8 bg-stone-50 dark:bg-stone-900 rounded-full mb-4">
+               <Ghost size={48} className="text-stone-300" />
+             </div>
+             <p className="font-serif italic text-3xl">“The archive is currently a void.”</p>
+             <button 
+               onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'studio' }))}
+               className="px-10 py-4 bg-nous-text dark:bg-white text-white dark:text-black rounded-full font-sans text-[9px] uppercase tracking-[0.4em] font-black shadow-xl active:scale-95 transition-all flex items-center gap-3"
+             >
+                <Plus size={14} /> Initialize Registry
+             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-12 gap-y-20">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-16 gap-y-32">
             {zines.map((zine) => (
               <ZineCard key={zine.id} zine={zine} onClick={() => onSelectZine(zine)} currentUserId={user?.uid} />
             ))}

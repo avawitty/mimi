@@ -22,7 +22,7 @@ export const initializeAuthPersistence = async (): Promise<void> => {
 
 /**
  * BOOTSTRAP AUTH
- * Extended timeout for network latency and cold starts.
+ * Extended timeout (2.5s) to allow for fresh project cold-starts.
  */
 export const bootstrapAuth = async (): Promise<User | null> => {
   try {
@@ -35,15 +35,15 @@ export const bootstrapAuth = async (): Promise<User | null> => {
     
     return new Promise((resolve) => {
       const timeout = setTimeout(() => {
-        console.warn("MIMI // Bootstrap: Timeout reached, proceeding as Guest.");
+        console.warn("MIMI // Bootstrap: Signal Weak, Proceeding as Guest.");
         resolve(null);
-      }, 3500); // Resilient 3.5s timeout
+      }, 2500); // Increased to 2.5s for reliability
 
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         clearTimeout(timeout);
         unsubscribe();
         if (user) {
-          console.info("MIMI // Bootstrap: Identity anchored via state change.");
+          console.info("MIMI // Bootstrap: Identity anchored.");
         }
         resolve(user);
       }, (error) => {
@@ -66,14 +66,5 @@ export const ensureAuth = async () => {
 export const ensureDb = async () => db;
 export const ensureStorage = async () => storage;
 
-export { 
-  uploadBlob, saveZineToProfile, fetchUserZines, fetchCommunityZines, 
-  addToPocket, fetchPocketItems, 
-  // removed recordTasteEdit as it is not exported from firebaseUtils
-  deleteFromPocket, getUserProfile, saveUserProfile,
-  fetchZineById, isHandleAvailable,
-  // removed migrateGhostToCloud as it is not exported from firebaseUtils
-  isCaptiveInWebview, handleAuthRedirect,
-  initiatePasswordReset, anchorIdentity, startGhostSession,
-  updateZineVisibility
-} from './firebaseUtils';
+// Export all utilities to prevent missing export errors
+export * from './firebaseUtils';

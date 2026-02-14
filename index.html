@@ -4,28 +4,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://esm.sh https://cdn.tailwindcss.com https://fonts.googleapis.com https://fonts.gstatic.com https://*.firebaseapp.com https://apis.google.com https://www.transparenttextures.com https://*.googleusercontent.com https://ui-avatars.com https://api.qrserver.com https://cdn.jsdelivr.net https://ai.studio data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://esm.sh https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://ai.studio data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; connect-src 'self' https: wss:; manifest-src 'self' https://ai.studio;">
     <title>Mimi Zine</title>
-    <meta name="description" content="A Sovereign Editorial Machine for the Aesthetic Superintelligence." />
+    <meta name="description" content="A Sovereign Editorial Machine for the aesthetic superintelligence." />
     
-    <!-- CACHE SUPPRESSION PROTOCOL -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
 
-    <link rel="manifest" href="./metadata.json">
+    <link rel="manifest" href="metadata.json">
     <meta name="theme-color" content="#FDFBF7" />
     
-    <!-- iOS Sovereign Manifestation -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Mimi Zine">
-    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/Aris-A-C/mimi-assets/main/mimi_logo_new.png">
-    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Aris-A-C/mimi-assets/main/mimi_logo_new.png">
+    
+    <!-- SOVEREIGN ICON REGISTRY -->
+    <link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/Aris-A-C/mimi-assets/main/mimi_logo_new.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="https://raw.githubusercontent.com/Aris-A-C/mimi-assets/main/mimi_logo_new.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="https://raw.githubusercontent.com/Aris-A-C/mimi-assets/main/mimi_logo_new.png">
+    <link rel="shortcut icon" href="https://raw.githubusercontent.com/Aris-A-C/mimi-assets/main/mimi_logo_new.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     
     <script>
       if (typeof window.process === 'undefined') {
@@ -37,7 +40,7 @@
           extend: {
             fontFamily: {
               serif: ['"Cormorant Garamond"', 'serif'],
-              sans: ['"Space Grotesk"', 'sans-serif'],
+              sans: ['"Inter"', 'system-ui', 'sans-serif'],
               mono: ['"Space Mono"', 'monospace'],
               header: ['"Cormorant Garamond"', 'serif'],
             },
@@ -47,6 +50,7 @@
                 text: 'var(--nous-text)',
                 subtle: 'var(--nous-subtle)',
                 accent: 'var(--nous-accent)',
+                border: 'var(--nous-border)',
               }
             }
           },
@@ -55,84 +59,128 @@
     </script>
     <style>
       :root {
+        /* Archival Grid Palette - Clean Cream Base */
         --nous-base: #FDFBF7;
-        --nous-text: #1C1917;
-        --nous-subtle: #A8A29E;
-        --nous-accent: #44403C;
+        --nous-text: #1A1A1A;
+        --nous-subtle: #555555;
+        --nous-accent: #111111;
+        --nous-border: #E5E5E5;
       }
       
       html, body {
-        height: 100%;
+        height: 100dvh;
         width: 100%;
         margin: 0;
         padding: 0;
         overflow: hidden;
         background-color: var(--nous-base);
+        /* TEXTURE: Removed heavy paper image for clean look */
         color: var(--nous-text);
         -webkit-font-smoothing: antialiased;
         font-family: "Cormorant Garamond", serif;
+        font-weight: 300;
+        overscroll-behavior-y: none;
       }
 
-      /* THE PERICARDIUM: Re-enforced Structural Sac */
-      .pericardium-seal {
-        position: fixed;
-        inset: 0.5rem;
-        border: 1px solid rgba(0,0,0,0.05);
-        border-radius: 1rem;
-        background-color: var(--nous-base);
-        box-shadow: inset 0 0 100px rgba(0,0,0,0.02);
+      /* Dark mode */
+      .dark body {
+        background-color: #050505;
+      }
+
+      @media print {
+        html, body {
+          height: auto !important;
+          overflow: visible !important;
+          background: white !important;
+        }
+      }
+
+      /* SAFE AREA UTILITIES */
+      .pt-safe { padding-top: env(safe-area-inset-top) !important; }
+      .pb-safe { padding-bottom: env(safe-area-inset-bottom) !important; }
+      .pl-safe { padding-left: env(safe-area-inset-left) !important; }
+      .pr-safe { padding-right: env(safe-area-inset-right) !important; }
+      .mt-safe { margin-top: env(safe-area-inset-top) !important; }
+      .mb-safe { margin-bottom: env(safe-area-inset-bottom) !important; }
+
+      #root {
+        height: 100dvh;
+        width: 100%;
         display: flex;
         flex-direction: column;
-        overflow: hidden;
-        transition: inset 0.8s cubic-bezier(0.23, 1, 0.32, 1);
-        z-index: 10;
-      }
-      .dark .pericardium-seal {
-        border-color: rgba(255,255,255,0.05);
-        box-shadow: inset 0 0 100px rgba(0,0,0,0.4);
-      }
-
-      /* MOBILE GEOMETRY OVERRIDE */
-      .geometry-mobile .pericardium-seal {
-        inset: 1.5rem auto 1.5rem 50%;
-        width: 375px;
-        transform: translateX(-50%);
-        border: 8px solid rgba(0,0,0,0.1);
       }
 
       .grain-overlay {
         position: fixed;
         inset: 0;
         background-image: url("https://www.transparenttextures.com/patterns/noise.png");
-        opacity: 0.12;
+        /* TEXTURE: Increased Grain Intensity to compensate for lack of paper texture */
+        opacity: 0.14; 
         pointer-events: none;
         z-index: 9999;
         mix-blend-mode: multiply;
       }
       
+      .dark .grain-overlay {
+        mix-blend-mode: overlay;
+        opacity: 0.5;
+        background-image: url("https://www.transparenttextures.com/patterns/noise.png");
+      }
+
+      .luminescent-text {
+        transition: text-shadow 0.8s ease, color 0.8s ease;
+      }
+      .dark .luminescent-text {
+        text-shadow: 
+          0 0 12px rgba(255, 255, 255, 0.8), 
+          0 0 22px rgba(255, 255, 255, 0.6), 
+          0 0 40px rgba(16, 185, 129, 0.2),
+          0 0 60px rgba(16, 185, 129, 0.1);
+        color: #ffffff;
+      }
+
+      .pericardium-seal {
+        position: fixed;
+        inset: 0;
+        height: 100dvh;
+        width: 100vw;
+        background-color: transparent;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        z-index: 10;
+      }
+      
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-      .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-      .pt-safe { padding-top: env(safe-area-inset-top); }
+      
+      .rounded-sm { border-radius: 1px !important; }
     </style>
   <script type="importmap">
 {
   "imports": {
     "react": "https://esm.sh/react@^19.2.3",
+    "react-dom": "https://esm.sh/react-dom@^19.2.3",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react/": "https://esm.sh/react@^19.2.3/",
     "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
     "framer-motion": "https://esm.sh/framer-motion@^12.29.2",
+    "firebase/app": "https://esm.sh/firebase@^12.8.0/app",
+    "firebase/auth": "https://esm.sh/firebase@^12.8.0/auth",
+    "firebase/firestore": "https://esm.sh/firebase@^12.8.0/firestore",
+    "firebase/storage": "https://esm.sh/firebase@^12.8.0/storage",
+    "firebase/analytics": "https://esm.sh/firebase@^12.8.0/analytics",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
     "firebase/": "https://esm.sh/firebase@^12.8.0/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.563.0"
+    "html2canvas": "https://esm.sh/html2canvas@1.4.1",
+    "jspdf": "https://esm.sh/jspdf@2.5.1"
   }
 }
 </script>
 </head>
   <body>
     <div class="grain-overlay"></div>
-    <div id="root" class="h-full w-full"></div>
-    <script type="module" src="./index.tsx"></script>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>

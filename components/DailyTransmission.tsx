@@ -2,17 +2,20 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Volume2, Loader2, Sparkles, X, WifiOff, Radio, Moon, Terminal, Info, Cat, Waves } from 'lucide-react';
+import { Volume2, Loader2, Sparkles, X, WifiOff, Radio, Moon, Terminal, Info, Cat, Waves, Heart, ShieldAlert } from 'lucide-react';
 import { generateAudio } from '../services/geminiService';
 import { useTheme } from '../contexts/ThemeContext';
 
 const FALLBACK_EDICTS = [
-  "Art is a structural requirement for survival.",
-  "Your current boredom is a strategic failure.",
-  "Economic restriction is the architect of aesthetic genius.",
-  "The Broke Girl manifest requires a 4K mind.",
-  "Clinical clarity is the only sustainable vibe.",
-  "The void is listening. Speak clearly."
+  "The universe isn’t ghosting you; it’s just waiting for a higher resolution version of the request.",
+  "Treat your self-doubt like last season’s footwear: acknowledged, then archived indefinitely.",
+  "Intelligence is the ultimate accessory. Wear it with a slight pout and a heavy heart.",
+  "Your vibes are currently in post-production. Trust the edit.",
+  "The void is actually just an empty gallery waiting for your solo show. Hang the first piece.",
+  "The simulation is glitching because your intent is too sharp. Soften the edges and proceed.",
+  "Every delay is just a chance for better lighting. Wait for the glow-up.",
+  "The architect of your reality is currently on a lunch break. Be patient with the construction.",
+  "Beauty is a form of intelligence that the pedestrian mind simply cannot parse. Keep them guessing."
 ];
 
 export const DailyTransmission: React.FC = () => {
@@ -22,18 +25,14 @@ export const DailyTransmission: React.FC = () => {
   const [isTired, setIsTired] = useState(false);
   const [activeEdict, setActiveEdict] = useState<{message: string, isWarning: boolean, timestamp: number} | null>(null);
   const [lastTrace, setLastTrace] = useState<{ code: string, message: string } | null>(null);
-  const [showTrace, setShowTrace] = useState(false);
   
   const audioCtxRef = useRef<AudioContext | null>(null);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
 
   useEffect(() => {
     const handleSystemEdict = (e: any) => {
       setActiveEdict(e.detail);
       setIsTired(false);
-      // Optional: Auto-play system edicts if not already playing
-      // playTransmission(e.detail.message);
     };
     window.addEventListener('mimi:system_edict', handleSystemEdict);
     return () => {
@@ -46,9 +45,7 @@ export const DailyTransmission: React.FC = () => {
     const dataInt16 = new Int16Array(data.buffer, data.byteOffset, data.byteLength / 2);
     const audioBuffer = ctx.createBuffer(1, dataInt16.length, 24000);
     const channelData = audioBuffer.getChannelData(0);
-    for (let i = 0; i < dataInt16.length; i++) { 
-      channelData[i] = dataInt16[i] / 32768.0; 
-    }
+    for (let i = 0; i < dataInt16.length; i++) { channelData[i] = dataInt16[i] / 32768.0; }
     return audioBuffer;
   };
 
@@ -63,16 +60,10 @@ export const DailyTransmission: React.FC = () => {
     setIsTired(false);
     setLastTrace(null);
     
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("ORACLE_EXHAUSTED")), 12000)
-    );
-
     try {
       const AudioContextClass = (window.AudioContext || (window as any).webkitAudioContext);
       if (!audioCtxRef.current) {
         audioCtxRef.current = new AudioContextClass({ sampleRate: 24000 });
-        gainNodeRef.current = audioCtxRef.current.createGain();
-        gainNodeRef.current.connect(audioCtxRef.current.destination);
       }
       
       if (audioCtxRef.current.state === 'suspended') {
@@ -80,26 +71,29 @@ export const DailyTransmission: React.FC = () => {
       }
       
       const baseText = overrideText || activeEdict?.message || FALLBACK_EDICTS[Math.floor(Math.random() * FALLBACK_EDICTS.length)];
-      
-      const bytes = await Promise.race([
-        generateAudio(baseText),
-        timeoutPromise
-      ]) as Uint8Array;
+      const bytes = await generateAudio(baseText);
 
       const buffer = decodePCM(audioCtxRef.current, bytes);
-      
       const source = audioCtxRef.current.createBufferSource();
       source.buffer = buffer;
-      source.connect(gainNodeRef.current!);
+      source.connect(audioCtxRef.current.destination);
       source.onended = () => setIsPlaying(false);
       source.start(0);
       sourceNodeRef.current = source;
       setIsPlaying(true);
     } catch (err: any) { 
-      console.error("MIMI // Transmission Interrupted:", err);
+      console.error("MIMI // Signal Drift:", err);
       setIsTired(true);
-      setLastTrace({ code: err.code || 'SIGNAL_VOID', message: err.message });
-      setTimeout(() => setIsTired(false), 5000);
+      setLastTrace({ code: err.code || 'SIGNAL_DRIFT', message: err.message });
+      
+      // Emit specific registry alert for 500s
+      if (err.message?.includes('500') || err.message?.includes('internal')) {
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+            detail: { message: "Oracle Drift detected. Retrying handshake...", icon: <ShieldAlert size={14} className="text-amber-500" /> } 
+        }));
+      }
+      
+      setTimeout(() => setIsTired(false), 8000);
     } finally { 
       setIsLoading(false); 
     }
@@ -113,12 +107,12 @@ export const DailyTransmission: React.FC = () => {
             <motion.div 
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ 
-                scale: isPlaying ? [1.1, 1.3, 1.1] : 1.1, 
+                scale: isPlaying ? [1.1, 1.4, 1.1] : 1.1, 
                 opacity: 1 
               }}
               transition={isPlaying ? { repeat: Infinity, duration: 1.5, ease: "easeInOut" } : {}}
               exit={{ scale: 1.5, opacity: 0 }}
-              className={`absolute inset-0 rounded-full blur-2xl pointer-events-none transition-colors duration-1000 ${isPlaying ? 'bg-emerald-400/30' : isTired ? 'bg-red-400/20' : 'bg-amber-400/10'}`}
+              className={`absolute inset-0 rounded-full blur-2xl pointer-events-none transition-colors duration-1000 ${isPlaying ? 'bg-emerald-400/30' : isTired ? 'bg-red-400/20' : 'bg-emerald-400/10'}`}
             />
           )}
         </AnimatePresence>
@@ -127,7 +121,6 @@ export const DailyTransmission: React.FC = () => {
             <motion.button 
               whileTap={{ scale: 0.95 }}
               onClick={() => playTransmission()}
-              onContextMenu={(e) => { e.preventDefault(); setShowTrace(!showTrace); }}
               className={`relative z-10 flex items-center gap-3 px-8 py-3 bg-white/70 dark:bg-stone-900/70 backdrop-blur-3xl border border-black/5 rounded-full shadow-2xl group transition-all ${isPlaying ? 'ring-2 ring-emerald-500/40' : isTired ? 'ring-2 ring-red-500/20' : ''}`}
             >
               {isLoading ? (
@@ -135,17 +128,17 @@ export const DailyTransmission: React.FC = () => {
               ) : isTired ? (
                 <Moon size={12} className="text-red-400 animate-pulse" />
               ) : (
-                <div className={`w-2 h-2 rounded-full transition-all duration-500 ${isPlaying ? 'bg-emerald-500 animate-pulse scale-150' : activeEdict ? 'bg-amber-400' : 'bg-stone-300'}`} />
+                <div className={`w-2 h-2 rounded-full transition-all duration-500 ${isPlaying ? 'bg-emerald-500 animate-pulse scale-150' : activeEdict ? 'bg-emerald-400' : 'bg-stone-300'}`} />
               )}
               <span className="font-sans text-[8px] md:text-[10px] uppercase tracking-[0.4em] font-black text-stone-600 dark:text-stone-300">
-                {isLoading ? 'Calibrating' : isPlaying ? 'Transmitting' : isTired ? 'Oracle Tired' : 'Royal Edict'}
+                {isLoading ? 'Calibrating' : isPlaying ? 'Transmitting' : isTired ? 'Model Dissonance' : 'Manifestation'}
               </span>
               {isPlaying ? (
                 <X size={12} className="text-stone-400 hover:text-red-500 transition-colors" />
               ) : (
                 <div className="flex items-center gap-2">
-                   <Cat size={10} className="text-stone-200 opacity-20 group-hover:opacity-100 transition-opacity" />
-                   <Sparkles size={12} className={`text-stone-300 group-hover:text-amber-400 transition-colors ${activeEdict && !isTired ? 'animate-pulse text-amber-500' : ''}`} />
+                   <Heart size={10} className="text-emerald-200 opacity-20 group-hover:opacity-100 transition-opacity" />
+                   <Sparkles size={12} className={`text-stone-300 group-hover:text-emerald-400 transition-colors ${activeEdict && !isTired ? 'animate-pulse text-emerald-500' : ''}`} />
                 </div>
               )}
             </motion.button>
@@ -153,7 +146,7 @@ export const DailyTransmission: React.FC = () => {
       </div>
 
       <AnimatePresence>
-        {(isPlaying || isTired) && !showTrace && (
+        {(isPlaying || isTired) && (
           <motion.div 
             initial={{ opacity: 0, y: 5 }} 
             animate={{ opacity: 1, y: 0 }} 
@@ -161,7 +154,7 @@ export const DailyTransmission: React.FC = () => {
             className="flex flex-col items-center gap-2"
           >
             <p className="font-serif italic text-xs md:text-sm text-stone-400 text-center max-w-xs md:max-w-md px-6 leading-tight">
-              {isTired ? "The Oracle is exhausted. Return when the frequency has stabilized." : `“${activeEdict?.message || "Mimi is breathing."}”`}
+              {isTired ? "The scotopic signal suffered a structural internal error. Distill the request and retry." : `“${activeEdict?.message || "Mimi is co-authoring with you."}”`}
             </p>
           </motion.div>
         )}

@@ -1,4 +1,5 @@
 
+// @ts-nocheck
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Shield, Scale, EyeOff } from 'lucide-react';

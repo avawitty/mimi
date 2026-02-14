@@ -1,17 +1,20 @@
+
 import { FirebaseApp, initializeApp, getApps } from "firebase/app";
 import { Auth, getAuth } from "firebase/auth";
 import { Firestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 import { FirebaseStorage, getStorage } from "firebase/storage";
-import { getAnalytics, Analytics } from "firebase/analytics";
+import { getAnalytics, Analytics, isSupported } from "firebase/analytics";
 
+// [MIMI SOVEREIGN CONFIGURATION]
+// Connected to Project: mimi-zine-sovereign
 const firebaseConfig = {
-  apiKey: "AIzaSyA5ugvWqsO63IKlXDDeADLBr_aNRDMG5O8",
-  authDomain: "gen-lang-client-0210674664.firebaseapp.com",
-  projectId: "gen-lang-client-0210674664",
-  storageBucket: "gen-lang-client-0210674664.firebasestorage.app",
-  messagingSenderId: "98167672430",
-  appId: "1:98167672430:web:aaa1d1c48f9ed88d8fe07f",
-  measurementId: "G-00DMNMKHX4"
+  apiKey: process.env.FIREBASE_API_KEY || "AIzaSyCr8uziqd8eg7QwrW0GK3utVoI4oUHMU0U",
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN || "mimi-zine-sovereign.firebaseapp.com",
+  projectId: process.env.FIREBASE_PROJECT_ID || "mimi-zine-sovereign",
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "mimi-zine-sovereign.firebasestorage.app",
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || "268506207063",
+  appId: process.env.FIREBASE_APP_ID || "1:268506207063:web:0c1e3939b7990891e1a412",
+  measurementId: process.env.FIREBASE_MEASUREMENT_ID || "G-85K7M6QCSY"
 };
 
 const apps = getApps();
@@ -25,14 +28,25 @@ if (typeof window !== 'undefined') {
 export const auth: Auth = getAuth(app);
 
 // Modern Firestore Initialization with Multi-Tab Persistence
+// TARGETING NAMED DATABASE: 'mimizine' (Based on project configuration)
 export const db: Firestore = initializeFirestore(app, {
-  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+  databaseId: "mimizine" 
 });
 
 export const storage: FirebaseStorage = getStorage(app);
 
 // Sovereign Analytics Implementation
+// We utilize isSupported() to prevent pedestrian noise in restricted environments.
 export let analytics: Analytics | null = null;
 if (typeof window !== 'undefined') {
-  analytics = getAnalytics(app);
+  isSupported().then(supported => {
+    if (supported) {
+      try {
+        analytics = getAnalytics(app);
+      } catch (e) {
+        // Silently maintain structural integrity if the feed is blocked
+      }
+    }
+  });
 }

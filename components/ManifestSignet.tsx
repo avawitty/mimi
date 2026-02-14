@@ -1,4 +1,5 @@
 
+// @ts-nocheck
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Smartphone, QrCode } from 'lucide-react';
@@ -15,7 +16,7 @@ export const ManifestSignet: React.FC<{ isOpen: boolean; onClose: () => void }> 
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="relative w-full max-w-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-[0_50px_100px_rgba(0,0,0,0.3)] rounded-sm p-10 md:p-14 text-center space-y-10"
+        className="relative w-full max-md bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-[0_50px_100px_rgba(0,0,0,0.3)] rounded-sm p-10 md:p-14 text-center space-y-10"
       >
         <button onClick={onClose} className="absolute top-6 right-6 p-2 text-stone-300 hover:text-stone-900 dark:hover:text-white transition-colors">
           <X size={24} />

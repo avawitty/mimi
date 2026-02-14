@@ -1,8 +1,13 @@
-import React, { Component, ReactNode, StrictMode } from 'react';
+
+// @ts-nocheck
+import React, { Component, ReactNode, StrictMode, useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App';
 
 const rootElement = document.getElementById('root');
+
+// ENTRY VERIFICATION
+console.log("MIMI ROOT v4.4 DETECTED");
 
 interface Props {
   children?: ReactNode;
@@ -44,22 +49,26 @@ class RootErrorBoundary extends Component<Props, State> {
           justifyContent: 'center',
           padding: '2rem',
           textAlign: 'center',
+          color: '#1C1917',
           fontFamily: 'serif'
         }}>
-          <h1 style={{ fontStyle: 'italic', fontSize: '2.5rem', marginBottom: '1rem' }}>Mimi crashed.</h1>
-          <p style={{ opacity: 0.6, fontSize: '0.9rem', maxWidth: '300px' }}>The aesthetic frequency was too dense for this browser.</p>
+          <h1 style={{ fontStyle: 'italic', fontSize: '2.5rem', marginBottom: '1rem', fontWeight: 'normal', color: '#1C1917' }}>Mimi crashed.</h1>
+          <p style={{ opacity: 0.6, fontSize: '0.9rem', maxWidth: '300px', lineHeight: '1.4', color: '#1C1917' }}>The aesthetic frequency was too dense for this browser resolution.</p>
           <button 
             onClick={() => window.location.reload()} 
             style={{ 
-              marginTop: '2rem', 
-              padding: '1rem 2rem', 
+              marginTop: '3rem', 
+              padding: '1.2rem 3rem', 
               border: '1px solid #1C1917', 
-              background: 'none', 
+              background: '#1C1917', 
+              color: '#FDFBF7',
               cursor: 'pointer',
               textTransform: 'uppercase',
               fontSize: '10px',
-              letterSpacing: '0.3em',
-              fontWeight: 'bold'
+              letterSpacing: '0.4em',
+              fontWeight: '900',
+              borderRadius: '2rem',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
             }}
           >
             Attempt Restoration
@@ -72,12 +81,60 @@ class RootErrorBoundary extends Component<Props, State> {
   }
 }
 
+const MimiSplash: React.FC = () => {
+  const [fading, setFading] = useState(false);
+  const [removed, setRemoved] = useState(false);
+
+  useEffect(() => {
+    const check = setInterval(() => {
+      if (document.body.classList.contains('hydrated')) {
+        setFading(true);
+        clearInterval(check);
+        setTimeout(() => setRemoved(true), 800);
+      }
+    }, 100);
+    return () => clearInterval(check);
+  }, []);
+
+  if (removed) return null;
+
+  return (
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#FDFBF7',
+      zIndex: 100000,
+      opacity: fading ? 0 : 1,
+      transition: 'opacity 0.8s ease',
+      pointerEvents: 'none'
+    }}>
+      <h1 style={{
+        fontSize: '3rem',
+        fontStyle: 'italic',
+        letterSpacing: '-0.05em',
+        color: '#1C1917',
+        animation: 'pulse 2s infinite ease-in-out'
+      }}>Mimi.</h1>
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 0.3; transform: scale(0.98); }
+          50% { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
 const startApp = () => {
   if (!rootElement) return;
   
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
+      <MimiSplash />
       <RootErrorBoundary>
         <App />
       </RootErrorBoundary>

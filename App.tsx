@@ -1,231 +1,250 @@
 
 // @ts-nocheck
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { AppState, ToneTag, ZineMetadata } from './types';
-import { createZine, MediaFile } from './services/geminiService';
-import { saveZineToProfile, fetchZineById, auth } from './services/firebase';
-import { getArchiveCounts } from './services/localArchive';
-import { InputStudio } from './components/InputStudio';
-import { AnalysisDisplay } from './components/AnalysisDisplay';
-import { ElevatorLoader } from './components/ElevatorLoader';
-import { UserProvider, useUser } from './contexts/UserContext';
-import { ThemeProvider, useTheme } from './contexts/ThemeContext';
-import { ArchiveCloudNebula } from './components/ArchiveCloudNebula';
-import { Pocket } from './components/Pocket';
-import { UserProfileView } from './components/UserProfileView';
-import { MesopicLens } from './components/MesopicLens';
-import { ProsceniumView } from './components/CliqueView'; 
-import { ThePress } from './components/ThePress';
-import { SanctuaryView } from './components/SanctuaryView';
-import { ApiKeyShield } from './components/ApiKeyShield';
-import { OnboardingModal } from './components/OnboardingModal';
-import { AboutView } from './components/AboutView';
+import { AppState, ToneTag, ZineMetadata, DriftEvent } from './types';
+import { createZine } from './services/geminiService';
+import { saveZineToProfile, fetchZineById, auth, isCaptiveInWebview } from './services/firebase';
+import { InputStudio } from '../components/InputStudio';
+import { AnalysisDisplay } from '../components/AnalysisDisplay';
+import { ElevatorLoader } from '../components/ElevatorLoader';
+import { UserProvider, useUser } from '../contexts/UserContext';
+import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
+import { AgentProvider } from '../contexts/AgentContext'; // NEW
+import { ArchiveCloudNebula } from '../components/ArchiveCloudNebula';
+import { ArchivalView } from '../components/ArchivalView';
+import { UserProfileView } from '../components/UserProfileView';
+import { MesopicLens } from '../components/MesopicLens'; 
+import { ThePress } from '../components/ThePress';
+import { SanctuaryView } from '../components/SanctuaryView';
+import { TailorView } from '../components/TailorView';
+import { ScryView } from '../components/ScryView';
+import { DarkroomView } from '../components/DarkroomView';
+import { ApiKeyShield } from '../components/ApiKeyShield';
+import { ProposalView } from '../components/AboutView'; 
+import { CaptiveSentinel } from '../components/CaptiveSentinel';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, LayoutGrid, User, Inbox, Eye, Menu, X, Users, Newspaper, LogOut, ShieldAlert, Info, Zap, Heart, ChevronDown } from 'lucide-react';
+import { Sparkles, LayoutGrid, User, Menu, X, Newspaper, LogOut, ShieldAlert, Zap, Camera, Key, Radio, Activity as ActivityIcon, Archive, Moon, Sun, Scissors, FlaskConical, Eye, Radar, Compass, Info, Database, ExternalLink, RefreshCw } from 'lucide-react';
 
-export const App: React.FC = () => {
+const SidebarBtn: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; label: string }> = ({ active, onClick, icon, label }) => (
+  <button 
+    onClick={onClick}
+    className={`w-full flex items-center gap-4 px-4 py-1.5 transition-all duration-500 group/btn border-l-2 ${active ? 'border-nous-text dark:border-white text-nous-text dark:text-white bg-stone-100 dark:bg-stone-800/50' : 'border-transparent text-stone-400 hover:text-stone-600 dark:hover:text-stone-300'}`}
+  >
+    <div className={`shrink-0 transition-transform duration-500 ${active ? 'scale-110' : 'group-hover/btn:scale-110'}`}>
+      {React.cloneElement(icon as React.ReactElement, { strokeWidth: 1, size: 14 })}
+    </div>
+    <span className={`font-sans text-[8px] uppercase tracking-[0.3em] font-black opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-700 whitespace-nowrap ${active ? 'text-nous-text dark:text-white' : ''}`}>
+      {label}
+    </span>
+  </button>
+);
+
+const MobileMenu: React.FC<{ 
+  isOpen: boolean; 
+  onClose: () => void; 
+  viewMode: string; 
+  setViewMode: (mode: string) => void;
+  logout: () => void;
+}> = ({ isOpen, onClose, viewMode, setViewMode, logout }) => {
+  const handleNav = (mode: string) => { setViewMode(mode); onClose(); };
   return (
-    <ThemeProvider>
-      <UserProvider>
-        <AppContent />
-      </UserProvider>
-    </ThemeProvider>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div 
+          initial={{ opacity: 0, x: '-100%' }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: '-100%' }}
+          className="fixed inset-0 z-[10000] bg-nous-base dark:bg-stone-950 flex flex-col p-6 overflow-y-auto no-scrollbar"
+        >
+          <div className="flex justify-between items-center mb-6">
+             <h2 className="font-header italic text-3xl text-nous-text dark:text-white">Menu</h2>
+             <button onClick={onClose} className="p-2 text-stone-400"><X size={20}/></button>
+          </div>
+          <div className="space-y-4 flex-1">
+             <div className="space-y-1">
+                <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 block border-b border-stone-100 dark:border-stone-800 pb-1">Creation</span>
+                <button onClick={() => handleNav('studio')} className="w-full text-left font-serif italic text-2xl py-1">Studio</button>
+                <button onClick={() => handleNav('nebula')} className="w-full text-left font-serif italic text-2xl py-1">The Stand</button>
+                <button onClick={() => handleNav('scry')} className="w-full text-left font-serif italic text-2xl py-1">Scry</button>
+             </div>
+             <div className="space-y-1">
+                <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 block border-b border-stone-100 dark:border-stone-800 pb-1">Alchemy</span>
+                <button onClick={() => handleNav('tailor')} className="w-full text-left font-serif italic text-2xl py-1">Tailor</button>
+                <button onClick={() => handleNav('archival')} className="w-full text-left font-serif italic text-2xl py-1">Deep Archive</button>
+                <button onClick={() => handleNav('mesopic')} className="w-full text-left font-serif italic text-2xl py-1">Mesopic</button>
+                <button onClick={() => handleNav('darkroom')} className="w-full text-left font-serif italic text-2xl py-1">Darkroom</button>
+             </div>
+             <div className="space-y-1">
+                <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 block border-b border-stone-100 dark:border-stone-800 pb-1">Discover</span>
+                <button onClick={() => handleNav('about')} className="w-full text-left font-serif italic text-2xl py-1">Proposal</button>
+                <button onClick={() => handleNav('press')} className="w-full text-left font-serif italic text-2xl py-1">Press</button>
+                <button onClick={() => handleNav('profile')} className="w-full text-left font-serif italic text-2xl py-1">Profile</button>
+             </div>
+          </div>
+          <div className="pt-6 border-t border-stone-200 dark:border-stone-800">
+             <button onClick={() => { logout(); onClose(); }} className="w-full text-center py-2 text-red-400 font-sans text-[8px] uppercase tracking-widest font-black">De-Anchor Protocol</button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
-const RegistryCount: React.FC = () => {
-  const [counts, setCounts] = useState({ zines: 0, pocket: 0 });
-  useEffect(() => {
-    const update = async () => setCounts(await getArchiveCounts());
-    update();
-    const interval = setInterval(update, 15000);
-    window.addEventListener('mimi:artifact_finalized', update);
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('mimi:artifact_finalized', update);
-    };
-  }, []);
-
-  const total = counts.zines + counts.pocket;
-
-  return (
-    <div className="px-4 py-8 border-t border-red-500/10 dark:border-emerald-500/10 space-y-4 opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-700 bg-stone-50/50 dark:bg-stone-900/40">
-      <div className="flex items-center gap-2 text-red-500 dark:text-emerald-400">
-        <Zap size={10} className="animate-pulse" />
-        <span className="font-sans text-[7px] uppercase tracking-[0.3em] font-black italic">Structural Density</span>
+const DatabaseVoid: React.FC = () => (
+  <div className="fixed inset-0 z-[50000] bg-stone-950 flex flex-col items-center justify-center p-8 text-center space-y-12">
+    <div className="space-y-6 max-w-lg">
+      <div className="relative mx-auto w-24 h-24">
+         <div className="absolute inset-0 border-t-2 border-red-500 rounded-full animate-[spin_4s_linear_infinite]" />
+         <div className="absolute inset-0 flex items-center justify-center">
+            <Database size={32} className="text-red-500 animate-pulse" />
+         </div>
       </div>
       <div className="space-y-3">
-        <div className="flex justify-between items-end">
-          <div className="flex flex-col">
-            <span className="font-mono text-xs text-nous-text dark:text-white font-black">{counts.zines}</span>
-            <span className="font-sans text-[5px] uppercase text-stone-400">Authored</span>
-          </div>
-          <div className="flex flex-col items-end">
-            <span className="font-mono text-xs text-nous-text dark:text-white font-black">{counts.pocket}</span>
-            <span className="font-sans text-[5px] uppercase text-stone-400">Curated</span>
-          </div>
-        </div>
-        <div className="h-0.5 w-full bg-stone-200 dark:bg-stone-800 overflow-hidden">
-           <motion.div animate={{ width: `${Math.min((total/20)*100, 100)}%` }} className="h-full bg-red-500 dark:bg-emerald-500" />
-        </div>
+         <h1 className="font-serif text-5xl italic tracking-tighter text-white">Registry Void.</h1>
+         <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-red-500 font-black">Connection Failure</p>
       </div>
+      <p className="font-serif italic text-xl text-stone-400 leading-relaxed text-balance">
+         The app cannot locate the database. I have updated the configuration to look for 'mimizine'.
+      </p>
     </div>
-  );
-};
+
+    <button onClick={() => window.location.reload()} className="px-12 py-5 bg-red-600 text-white rounded-full font-sans text-[10px] uppercase tracking-[0.4em] font-black shadow-[0_0_30px_rgba(220,38,38,0.5)] hover:bg-red-500 hover:shadow-[0_0_50px_rgba(239,68,68,0.6)] transition-all flex items-center gap-4 animate-pulse">
+       <RefreshCw size={16} /> Force Re-Initialization
+    </button>
+  </div>
+);
 
 const AppContent: React.FC = () => {
-  const { user, profile, loading: authLoading, logout, speedGhostEntrance } = useUser();
+  const { user, profile, updateProfile, loading: authLoading, logout, setOracleStatus, systemStatus, activePersona, isDatabaseMissing } = useUser();
+  const { currentPalette, toggleMode } = useTheme();
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [viewMode, setViewMode] = useState<string>('studio');
   const [zineMetadata, setZineMetadata] = useState<ZineMetadata | null>(null);
-  const [isNavOpen, setIsNavOpen] = useState(false);
+  const [isDeepRefraction, setIsDeepRefraction] = useState(false);
+  const [threadValue, setThreadValue] = useState<string>('');
+  const [showCaptiveSentinel, setShowCaptiveSentinel] = useState(false);
+  const [isHeaderTranslucent, setIsHeaderTranslucent] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [tailorOverrides, setTailorOverrides] = useState<any>(null);
 
   useEffect(() => {
-    const handleChangeView = (e: any) => {
-      if (e.detail) { setViewMode(e.detail); setZineMetadata(null); setAppState(AppState.IDLE); }
+    if (isCaptiveInWebview()) setShowCaptiveSentinel(true);
+    const handleChangeView = async (e: any) => {
+      if (e.detail === 'reveal_artifact' && e.detail_id) {
+         try {
+           const zine = await fetchZineById(e.detail_id);
+           if (zine) { setZineMetadata(zine); setAppState(AppState.REVEALED); }
+         } catch(err) { setAppState(AppState.IDLE); }
+         return;
+      }
+      if (e.detail) { 
+        setViewMode(e.detail); setZineMetadata(null); setAppState(AppState.IDLE);
+        if (e.detail === 'studio' && e.detail_data) setThreadValue(e.detail_data);
+      }
     };
-    const handleEmergencyReset = () => { setAppState(AppState.IDLE); setZineMetadata(null); };
-    
     window.addEventListener('mimi:change_view', handleChangeView);
-    window.addEventListener('mimi:emergency_reset', handleEmergencyReset);
-    return () => {
-      window.removeEventListener('mimi:change_view', handleChangeView);
-      window.removeEventListener('mimi:emergency_reset', handleEmergencyReset);
-    };
+    return () => window.removeEventListener('mimi:change_view', handleChangeView);
   }, []);
 
-  const resetToIdle = () => { setViewMode('studio'); setAppState(AppState.IDLE); setZineMetadata(null); };
-
   const handleRefine = useCallback(async (text, media, tone, opts) => {
+    setIsDeepRefraction(!!opts.deepThinking);
     setAppState(AppState.THINKING);
+    
+    // Determine specific key if persona has one
+    const personaKey = activePersona?.apiKey ? activePersona.apiKey : undefined;
+
     try {
-      const result = await createZine(text, media, tone, profile, opts);
+      const result = await createZine(text, media, tone, profile, opts, personaKey);
       const targetUid = profile?.uid || user?.uid || 'ghost';
       const id = await saveZineToProfile(targetUid, profile?.handle || 'Ghost', profile?.photoURL, result.content, tone, undefined, opts.deepThinking, opts.isPublic);
-      
-      const finalMetadata: ZineMetadata = {
-        id,
-        userId: targetUid,
-        userHandle: profile?.handle || 'Ghost',
-        userAvatar: profile?.photoURL || null,
-        title: result.content.title,
-        tone,
-        timestamp: Date.now(),
-        likes: 0,
-        content: result.content,
-        isDeepThinking: !!opts.deepThinking,
-        isPublic: !!opts.isPublic
-      };
-
-      setZineMetadata(finalMetadata);
+      setZineMetadata({ id, userId: targetUid, userHandle: profile?.handle || 'Ghost', title: result.content.title, tone, timestamp: Date.now(), likes: 0, content: result.content });
       setAppState(AppState.REVEALED);
-    } catch (e: any) {
-      setAppState(AppState.IDLE);
-      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
-        detail: { message: `Ascension Failed: ${e.message || "Signal obscured."}`, icon: <ShieldAlert size={16} className="text-red-500" /> } 
-      }));
+    } catch (e) { 
+        console.error("Zine Creation Failed:", e);
+        // Dispatch error to UI so user isn't stuck
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+            detail: { message: "Oracle Disconnected. " + (e.message || "Unknown Error"), type: 'error' } 
+        }));
+        setAppState(AppState.IDLE); 
     }
-  }, [user, profile]);
+  }, [user, profile, activePersona]);
 
+  if (isDatabaseMissing) return <DatabaseVoid />;
   if (authLoading) return <ElevatorLoader />;
-  if (user && !profile) return <OnboardingModal />;
 
   return (
-    <div className="h-full w-full bg-nous-base dark:bg-stone-950">
-      <div className="pericardium-seal flex flex-col md:flex-row pb-safe pt-safe">
+    <div className="h-full w-full bg-transparent dark:bg-stone-950 transition-colors duration-500">
+      
+      {/* ARCHIVAL GRID SYSTEM - INTERESTING LINES */}
+      {/* Updated: Dashed lines with specific border color to be subtle yet architectural */}
+      <div className="absolute inset-0 grid grid-cols-12 pointer-events-none z-0 h-full w-full max-w-[1920px] mx-auto opacity-60">
+        <div className="border-r border-dashed border-stone-200 dark:border-stone-800 h-full col-span-1 hidden md:block"></div>
+        <div className="border-r border-dashed border-stone-200 dark:border-stone-800 h-full col-span-1 hidden lg:block"></div>
+        <div className="border-r border-dashed border-stone-200 dark:border-stone-800 h-full col-span-8 md:col-span-10 lg:col-span-8"></div>
+        <div className="border-r border-dashed border-stone-200 dark:border-stone-800 h-full col-span-1 hidden lg:block"></div>
+      </div>
+
+      <AnimatePresence>{showCaptiveSentinel && <CaptiveSentinel onClose={() => setShowCaptiveSentinel(false)} />}</AnimatePresence>
+      <div className="pericardium-seal flex flex-col md:flex-row pb-safe pt-safe overflow-hidden relative z-10 bg-transparent">
         <ApiKeyShield />
-        
-        {!zineMetadata && !isNavOpen && (
-          <div className="md:hidden fixed top-3 left-6 z-[9000] pt-safe">
-            <button onClick={() => setIsNavOpen(true)} className="text-stone-400 p-2 bg-white/20 dark:bg-stone-900/20 rounded-full backdrop-blur-md border border-black/5 hover:bg-white/40 transition-all">
-              <Menu size={18} />
-            </button>
-          </div>
-        )}
-        
+        <button onClick={toggleMode} className="fixed top-6 right-6 md:right-12 z-[5000] p-3 rounded-full bg-stone-100/50 dark:bg-stone-900/50 text-stone-400 hover:text-nous-text dark:hover:text-white transition-all backdrop-blur-sm border border-stone-200/20 shadow-sm">
+           {currentPalette?.isDark ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
+        {!zineMetadata && <button onClick={() => setMobileMenuOpen(true)} className="md:hidden fixed top-6 left-6 z-[5001] p-3 bg-white/50 dark:bg-black/50 backdrop-blur-md rounded-full text-nous-text dark:text-white border border-stone-200 shadow-lg"><Menu size={20} /></button>}
+        <MobileMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} viewMode={viewMode} setViewMode={setViewMode} logout={logout} />
         {!zineMetadata && appState !== AppState.REVEALED && (
-          <header className="fixed top-0 right-0 left-0 md:left-20 h-20 md:h-28 z-[50] flex items-center px-8 backdrop-blur-xl bg-nous-base/40 dark:bg-stone-950/40 border-b border-black/5 justify-center overflow-hidden pt-safe transition-all duration-700">
-              <div className="cursor-pointer pt-2 md:pt-4" onClick={resetToIdle}>
-                <h1 className="text-5xl md:text-8xl tracking-[-0.08em] font-header italic text-stone-900 dark:text-white opacity-80 hover:opacity-100 transition-all duration-1000 leading-none select-none">Mimi</h1>
+          // HEADER HARMONIZATION: Matches the body background color exactly (nous-base / #FDFBF7)
+          <header className={`fixed top-0 right-0 left-0 md:left-20 h-20 md:h-24 z-[50] flex items-center justify-center px-8 transition-all duration-1000 pt-safe overflow-hidden ${isHeaderTranslucent ? 'bg-nous-base/95 dark:bg-stone-950/95 backdrop-blur-xl' : 'bg-nous-base/80 dark:bg-stone-950/80 backdrop-blur-xl'}`}>
+              <div onClick={() => { setViewMode('studio'); setZineMetadata(null); setAppState(AppState.IDLE); }} className="cursor-pointer">
+                <h1 className="text-3xl md:text-6xl tracking-[-0.08em] font-serif italic text-stone-950 dark:text-white opacity-95 transition-all luminescent-text">Mimi</h1>
               </div>
           </header>
         )}
-
-        <AnimatePresence>
-          {isNavOpen && (
-            <motion.div 
-              initial={{ x: -100, opacity: 0 }} 
-              animate={{ x: 0, opacity: 1 }} 
-              exit={{ x: -100, opacity: 0 }} 
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="md:hidden fixed inset-0 z-[8500] bg-white dark:bg-stone-950 p-1 flex flex-col pt-safe overflow-hidden"
-            >
-              <div className="flex-1 m-2 border-[0.5px] border-stone-200 dark:border-stone-800 rounded-sm bg-stone-50/10 dark:bg-stone-900/5 p-8 flex flex-col overflow-y-auto no-scrollbar relative">
-                <div className="absolute top-4 left-1/2 -translate-x-1/2 w-10 h-1 bg-stone-200 dark:bg-stone-800 rounded-full opacity-30" />
-                
-                <div className="flex justify-between items-center mb-12 pt-10">
-                  <h2 className="font-header italic text-3xl opacity-10">Mimi Registry</h2>
-                  <button onClick={() => setIsNavOpen(false)} className="p-2 text-stone-300 hover:text-red-500 transition-colors">
-                    <X size={20} />
-                  </button>
-                </div>
-
-                <div className="flex flex-col gap-8 pb-20">
-                  <DrawerItem onClick={() => { setViewMode('studio'); setIsNavOpen(false); }} label="The Studio" icon={<Sparkles size={16} />} />
-                  <DrawerItem onClick={() => { setViewMode('nebula'); setIsNavOpen(false); }} label="The Stand" icon={<LayoutGrid size={16} />} />
-                  <DrawerItem onClick={() => { setViewMode('mesopic'); setIsNavOpen(false); }} label="The Mesopic" icon={<Eye size={16} />} />
-                  <DrawerItem onClick={() => { setViewMode('pocket'); setIsNavOpen(false); }} label="The Pocket" icon={<Inbox size={16} />} />
-                  <div className="h-px w-8 bg-black/5 dark:bg-white/5 my-2" />
-                  <DrawerItem onClick={() => { setViewMode('proscenium'); setIsNavOpen(false); }} label="The Proscenium" icon={<Users size={16} />} />
-                  <DrawerItem onClick={() => { setViewMode('press'); setIsNavOpen(false); }} label="The Press" icon={<Newspaper size={16} />} />
-                  <DrawerItem onClick={() => { setViewMode('profile'); setIsNavOpen(false); }} label="The Profile" icon={<User size={16} />} />
-                  <DrawerItem onClick={() => { setViewMode('about'); setIsNavOpen(false); }} label="The Colophon" icon={<Info size={16} />} isSubtle />
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <main className={`relative flex-1 flex flex-col overflow-y-auto no-scrollbar transition-all duration-1000 ${zineMetadata ? 'md:pl-0 pt-0' : 'md:pl-20 pt-20 md:pt-28'}`}>
+        <main className={`relative flex-1 flex flex-col overflow-y-auto no-scrollbar transition-all duration-1000 ${zineMetadata ? 'md:pl-0 pt-0' : 'md:pl-20 pt-20 md:pt-24'}`}>
           <AnimatePresence mode="wait">
             {appState === AppState.THINKING ? (
-              <ElevatorLoader key="thinking" isDeep={true} />
+              <ElevatorLoader key="thinking" isDeep={isDeepRefraction} onBypass={(r) => { setAppState(AppState.IDLE); setThreadValue(r || ''); }} />
             ) : zineMetadata ? (
-              <AnalysisDisplay key="reveal" metadata={zineMetadata} onReset={resetToIdle} onSanctuary={() => setViewMode('sanctuary')} />
+              <AnalysisDisplay key="reveal" metadata={zineMetadata} onReset={() => { setZineMetadata(null); setAppState(AppState.IDLE); }} />
             ) : (
               <motion.div key={viewMode} className="flex-1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
-                {viewMode === 'studio' && <InputStudio onRefine={handleRefine} isThinking={false} />}
-                {viewMode === 'sanctuary' && <SanctuaryView />}
+                {viewMode === 'studio' && <InputStudio onRefine={handleRefine} isThinking={appState === AppState.THINKING} initialValue={threadValue} />}
                 {viewMode === 'nebula' && <ArchiveCloudNebula onSelectZine={(z) => { setZineMetadata(z); setAppState(AppState.REVEALED); }} />}
                 {viewMode === 'mesopic' && <MesopicLens />}
-                {viewMode === 'pocket' && <Pocket onSelectZine={(z) => { setZineMetadata(z); setAppState(AppState.REVEALED); }} />}
+                {viewMode === 'archival' && <ArchivalView onSelectZine={(z) => { setZineMetadata(z); setAppState(AppState.REVEALED); }} />}
                 {viewMode === 'profile' && <UserProfileView />}
-                {viewMode === 'proscenium' && <ProsceniumView onSelectZine={(z) => { setZineMetadata(z); setAppState(AppState.REVEALED); }} onCapture={(t) => setViewMode('studio')} />}
+                {viewMode === 'tailor' && <TailorView initialOverrides={tailorOverrides} />}
+                {viewMode === 'scry' && <ScryView />}
                 {viewMode === 'press' && <ThePress />}
-                {viewMode === 'about' && <AboutView />}
+                {viewMode === 'about' && <ProposalView />}
+                {viewMode === 'darkroom' && <DarkroomView />}
+                {viewMode === 'sanctuary' && <SanctuaryView />}
               </motion.div>
             )}
           </AnimatePresence>
         </main>
-
         {!zineMetadata && (
           <aside className="hidden md:flex fixed left-0 top-0 h-full z-[2000] flex-col group/sidebar">
-            <div className="h-full bg-white/60 dark:bg-stone-900/60 backdrop-blur-3xl border-r border-black/5 flex flex-col pt-24 px-4 w-[80px] group-hover/sidebar:w-72 transition-all duration-700">
-              <div className="flex-1 space-y-1">
-                <SidebarBtn active={viewMode === 'studio'} onClick={() => setViewMode('studio')} icon={<Sparkles size={16} />} label="The Studio" />
-                <SidebarBtn active={viewMode === 'nebula'} onClick={() => setViewMode('nebula')} icon={<LayoutGrid size={16} />} label="The Stand" />
-                <SidebarBtn active={viewMode === 'mesopic'} onClick={() => setViewMode('mesopic')} icon={<Eye size={16} />} label="The Mesopic" />
-                <SidebarBtn active={viewMode === 'pocket'} onClick={() => setViewMode('pocket')} icon={<Inbox size={16} />} label="The Pocket" />
-                <SidebarBtn active={viewMode === 'profile'} onClick={() => setViewMode('profile')} icon={<User size={16} />} label="The Profile" />
-                <div className="my-8 h-px bg-black/5" />
-                <SidebarBtn active={viewMode === 'proscenium'} onClick={() => setViewMode('proscenium')} icon={<Users size={16} />} label="The Proscenium" />
-                <SidebarBtn active={viewMode === 'press'} onClick={() => setViewMode('press')} icon={<Newspaper size={16} />} label="The Press" />
-                <SidebarBtn active={viewMode === 'about'} onClick={() => setViewMode('about')} icon={<Info size={16} className="text-stone-400" />} label="The Colophon" />
+            {/* SIDEBAR CLEANUP: Removed texture-heavy-paper class, using harmonious background */}
+            <div className="h-full bg-white/60 dark:bg-stone-900/80 backdrop-blur-3xl border-r border-black/5 dark:border-white/5 flex flex-col pt-16 w-[80px] group-hover/sidebar:w-56 transition-all duration-700 overflow-hidden shadow-2xl">
+              <div className="flex-1 space-y-0.5 overflow-y-auto no-scrollbar pb-6">
+                <div className="px-6 py-2 opacity-0 group-hover/sidebar:opacity-100 transition-opacity"><span className="font-sans text-[6px] uppercase tracking-widest font-black text-stone-400">Creation</span></div>
+                <SidebarBtn active={viewMode === 'studio'} onClick={() => setViewMode('studio')} icon={<Sparkles />} label="Studio" />
+                <SidebarBtn active={viewMode === 'nebula'} onClick={() => setViewMode('nebula')} icon={<LayoutGrid />} label="Stand" />
+                <SidebarBtn active={viewMode === 'scry'} onClick={() => setViewMode('scry')} icon={<Compass />} label="Scry" />
+                <div className="px-6 py-2 opacity-0 group-hover/sidebar:opacity-100 transition-opacity"><span className="font-sans text-[6px] uppercase tracking-widest font-black text-stone-400">Archive</span></div>
+                <SidebarBtn active={viewMode === 'archival'} onClick={() => setViewMode('archival')} icon={<Archive />} label="Archival" />
+                <SidebarBtn active={viewMode === 'mesopic'} onClick={() => setViewMode('mesopic')} icon={<Camera />} label="Mesopic" />
+                <SidebarBtn active={viewMode === 'darkroom'} onClick={() => setViewMode('darkroom')} icon={<FlaskConical />} label="Darkroom" />
+                <div className="px-6 py-2 opacity-0 group-hover/sidebar:opacity-100 transition-opacity"><span className="font-sans text-[6px] uppercase tracking-widest font-black text-stone-400">Alchemy</span></div>
+                <SidebarBtn active={viewMode === 'tailor'} onClick={() => setViewMode('tailor')} icon={<Scissors />} label="Tailor" />
+                <SidebarBtn active={viewMode === 'profile'} onClick={() => setViewMode('profile')} icon={<User />} label="Profile" />
+                <div className="px-6 py-2 opacity-0 group-hover/sidebar:opacity-100 transition-opacity"><span className="font-sans text-[6px] uppercase tracking-widest font-black text-stone-400">Discover</span></div>
+                <SidebarBtn active={viewMode === 'about'} onClick={() => setViewMode('about')} icon={<Info />} label="Proposal" />
+                <SidebarBtn active={viewMode === 'press'} onClick={() => setViewMode('press')} icon={<Newspaper />} label="Press" />
               </div>
-              <RegistryCount />
-              <div className="mt-auto mb-8">
-                <SidebarBtn active={false} onClick={logout} icon={<LogOut size={16} className="text-red-300" />} label="De-Anchor" />
+              <div className="px-4 py-3 border-t border-black/5 dark:border-white/5 space-y-1 group-hover/sidebar:opacity-100 opacity-0 transition-opacity duration-700">
+                <div className="flex justify-between items-center"><span className="font-sans text-[5px] uppercase text-stone-500 tracking-widest">Oracle</span><div className={`w-1 h-1 rounded-full ${systemStatus.oracle === 'ready' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-red-500'}`} /></div>
               </div>
+              <div className="mt-auto mb-6"><SidebarBtn active={false} onClick={logout} icon={<LogOut className="text-red-300" />} label="De-Anchor" /></div>
             </div>
           </aside>
         )}
@@ -234,18 +253,12 @@ const AppContent: React.FC = () => {
   );
 };
 
-const DrawerItem = ({ onClick, label, icon, isSubtle }) => (
-  <button onClick={onClick} className={`flex items-center gap-6 group/item transition-all ${isSubtle ? 'text-stone-400' : 'text-nous-text dark:text-white'}`}>
-    <div className="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center opacity-40 group-hover/item:opacity-100 transition-opacity">
-       {icon}
-    </div>
-    <span className="font-serif italic text-2xl tracking-tighter group-hover/item:pl-1 transition-all">{label}</span>
-  </button>
-);
-
-const SidebarBtn = ({ active, onClick, icon, label }) => (
-  <button onClick={onClick} className={`flex items-center w-full py-4 px-4 gap-6 transition-all ${active ? 'text-nous-text dark:text-white bg-black/5 dark:bg-white/5 rounded-sm' : 'text-stone-300 hover:text-stone-500'}`}>
-    <div className="w-6 shrink-0 flex justify-center">{icon}</div>
-    <span className="font-serif italic text-xl opacity-0 group-hover/sidebar:opacity-100 transition-all">{label}</span>
-  </button>
+export const App: React.FC = () => (
+  <ThemeProvider>
+    <UserProvider>
+      <AgentProvider>
+        <AppContent />
+      </AgentProvider>
+    </UserProvider>
+  </ThemeProvider>
 );

@@ -5,9 +5,8 @@ import { Crown, Sparkles, Anchor } from 'lucide-react';
 
 export const TitleLegend: React.FC = () => {
   return (
-    <motion.div 
-      className="title-legend absolute -bottom-32 left-0 w-full max-w-[320px] z-[5000]"
-      initial={{ opacity: 0, y: 10, filter: 'blur(10px)' }}
+    <div 
+      className="title-legend absolute -bottom-36 left-0 w-full max-w-[320px] z-[5000] opacity-0 translate-y-2 blur-sm group-hover:opacity-100 group-hover:translate-y-0 group-hover:blur-0 group-focus-within:opacity-100 group-focus-within:translate-y-0 group-focus-within:blur-0 transition-all duration-700 pointer-events-none"
     >
       <div className="bg-white/95 dark:bg-stone-900/95 backdrop-blur-2xl border border-black/5 dark:border-white/10 p-5 rounded-2xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.3)] flex flex-col gap-4 overflow-hidden relative group/legend">
         <div className="absolute top-0 right-0 p-4 opacity-5 rotate-12 group-hover/legend:rotate-0 transition-transform duration-700">
@@ -44,6 +43,6 @@ export const TitleLegend: React.FC = () => {
           <p className="font-serif italic text-[9px] text-stone-400">“Naming is a structural necessity.”</p>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };

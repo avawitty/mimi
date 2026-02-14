@@ -1,3 +1,5 @@
+
+// @ts-nocheck
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Anchor, Sparkles, UserPlus, Fingerprint, Loader2, Check, Radio, Mail, Key } from 'lucide-react';
@@ -59,7 +61,7 @@ export const CliqueProtocol: React.FC<{ isOpen: boolean; onClose: () => void }> 
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="relative w-full max-w-lg bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-[0_50px_100px_rgba(0,0,0,0.3)] rounded-sm overflow-hidden"
+        className="relative w-full max-lg bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-[0_50px_100px_rgba(0,0,0,0.3)] rounded-sm overflow-hidden"
       >
         <div className="p-10 md:p-14 space-y-12">
           <div className="flex justify-between items-start">
@@ -89,8 +91,10 @@ export const CliqueProtocol: React.FC<{ isOpen: boolean; onClose: () => void }> 
             </div>
 
             <div className="space-y-4">
-              <label className="font-sans text-[9px] uppercase tracking-[0.5em] text-stone-500 font-black block">Enter Muse Frequency</label>
+              <label htmlFor="frequencyKey" className="font-sans text-[9px] uppercase tracking-[0.5em] text-stone-500 font-black block">Enter Muse Frequency</label>
               <input 
+                id="frequencyKey"
+                name="frequencyKey"
                 type="text" 
                 value={frequencyKey}
                 onChange={(e) => setFrequencyKey(e.target.value.toUpperCase())}
@@ -111,7 +115,7 @@ export const CliqueProtocol: React.FC<{ isOpen: boolean; onClose: () => void }> 
             <button 
               onClick={handleAnchorMuse}
               disabled={!frequencyKey.trim() || isBinding || success}
-              className={`w-full py-6 flex items-center justify-center gap-4 font-sans text-xs tracking-[0.6em] uppercase font-black shadow-2xl transition-all active:scale-95 rounded-full ${success ? 'bg-emerald-500 text-white' : 'bg-nous-text dark:bg-white text-white dark:text-black'}`}
+              className={`w-full py-6 flex items-center justify-center gap-4 font-sans text-xs tracking-[0.6em] uppercase font-black shadow-2xl transition-all active:scale-95 rounded-full ${success ? 'bg-emerald-50 text-white' : 'bg-nous-text dark:bg-white text-white dark:text-black'}`}
             >
               {isBinding ? <Loader2 size={16} className="animate-spin" /> : success ? <Check size={16} /> : <Anchor size={16} />}
               <span>{isBinding ? 'Calibrating Sync' : success ? 'Frequency Locked' : 'Anchor Muse'}</span>

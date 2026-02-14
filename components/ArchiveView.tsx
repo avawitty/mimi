@@ -1,4 +1,5 @@
 
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { Shelf } from './Shelf';
 import { Pocket } from './Pocket';

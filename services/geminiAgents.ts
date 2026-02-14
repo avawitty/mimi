@@ -1,0 +1,130 @@
+
+// @ts-nocheck
+import { GoogleGenAI, Type } from "@google/genai";
+import { PocketItem, UserProfile, AgentEnrichment } from "../types";
+import { updatePocketItem } from "./firebaseUtils";
+
+const getClient = (apiKeyOverride?: string) => {
+    const key = apiKeyOverride || process.env.API_KEY;
+    if (!key) throw new Error("Agent Registry Key Missing.");
+    return new GoogleGenAI({ apiKey: key });
+};
+
+/**
+ * THE CURATOR
+ * Systemic Mandate: Analyze incoming debris (images/text) and enrich it with 
+ * high-fidelity metadata, connecting it to broader cultural canons.
+ */
+export const runCuratorAgent = async (item: PocketItem, profile: UserProfile | null) => {
+    console.info("MIMI // AGENT: The Curator is observing...");
+    
+    try {
+        const ai = getClient();
+        const model = "gemini-3-pro-preview"; // Thinking model required for deep semiotic analysis
+
+        let promptParts = [];
+        if (item.type === 'image' && item.content.imageUrl) {
+            const base64 = item.content.imageUrl.split(',')[1];
+            promptParts.push({ inlineData: { mimeType: 'image/jpeg', data: base64 } });
+            promptParts.push({ text: "Analyze this shard." });
+        } else if (item.type === 'text' || item.type === 'voicenote') {
+            promptParts.push({ text: `Analyze this shard: "${item.content.prompt || item.content.transcript || item.content.text}"` });
+        } else {
+            return; // Curator only handles raw debris
+        }
+
+        const response = await ai.models.generateContent({
+            model,
+            contents: { parts: promptParts },
+            config: {
+                systemInstruction: `
+                    IDENTITY: You are "The Curator", a background agent for Mimi Zine.
+                    MANDATE: Analyze the input shard (image or text). Determine its specific aesthetic era, cultural provenance, and semiotic weight.
+                    THINKING PROCESS:
+                    1. Observe the visual/textual data.
+                    2. Cross-reference with high-fashion, art history, and internet subculture canons.
+                    3. Determine if it aligns with the user's known taste (if provided).
+                    4. Output structured enrichment data.
+                    CONTEXT: User Identity: ${profile?.handle || "Anonymous"}. Known Era: ${profile?.tasteProfile?.inspirations || "Undefined"}.
+                `,
+                tools: [{ googleSearch: {} }], // Anchor to reality
+                responseMimeType: "application/json",
+                thinkingConfig: { thinkingBudget: 1024 }, // Allocating budget for cultural cross-referencing
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        autoTags: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        detectedEra: { type: Type.STRING },
+                        culturalReference: { type: Type.STRING, description: "Specific designer, movie, or movement this references." },
+                        visualSemiotics: { type: Type.STRING, description: "A concise, pretentious analysis of the visual language." }
+                    }
+                }
+            }
+        });
+
+        const enrichment: AgentEnrichment = JSON.parse(response.text || "{}");
+        enrichment.lastAgentUpdate = Date.now();
+
+        // Silent Database Update
+        await updatePocketItem(item.id, { agentEnrichment: enrichment });
+        
+        console.info("MIMI // AGENT: The Curator has filed the shard.", enrichment);
+        return enrichment;
+
+    } catch (e) {
+        console.warn("MIMI // AGENT: The Curator was obstructed.", e);
+        return null;
+    }
+};
+
+/**
+ * THE SENTINEL
+ * Systemic Mandate: Monitor the user's accumulation of debris against their 
+ * stated 'Tailor' profile. Detect drift or dissonance.
+ */
+export const runSentinelAgent = async (recentItems: PocketItem[], profile: UserProfile) => {
+    if (!profile.tailorDraft || recentItems.length < 3) return null;
+    
+    console.info("MIMI // AGENT: The Sentinel is auditing...");
+
+    try {
+        const ai = getClient();
+        const model = "gemini-3-pro-preview";
+
+        const shardSummaries = recentItems.map(i => i.content.prompt || i.content.name || i.agentEnrichment?.visualSemiotics || "Visual Shard").join("; ");
+        const manifesto = JSON.stringify(profile.tailorDraft);
+
+        const response = await ai.models.generateContent({
+            model,
+            contents: { 
+                parts: [{ text: `Recent Debris: ${shardSummaries}\n\nStated Manifesto: ${manifesto}` }] 
+            },
+            config: {
+                systemInstruction: `
+                    IDENTITY: You are "The Sentinel", a background auditor for Mimi Zine.
+                    MANDATE: Compare the user's recent behavior (Debris) against their stated intent (Manifesto).
+                    GOAL: Detect "Drift". Are they accumulating debris that contradicts their aesthetic core?
+                    OUTPUT: A silent report. If drift is high, provide a warning.
+                `,
+                thinkingConfig: { thinkingBudget: 1024 },
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        driftScore: { type: Type.NUMBER, description: "0-100. 100 is total misalignment." },
+                        observation: { type: Type.STRING, description: "Clinical observation of the divergence." },
+                        isUrgent: { type: Type.BOOLEAN }
+                    }
+                }
+            }
+        });
+
+        const audit = JSON.parse(response.text || "{}");
+        console.info("MIMI // AGENT: The Sentinel Report.", audit);
+        return audit;
+
+    } catch (e) {
+        console.warn("MIMI // AGENT: The Sentinel sleeps.", e);
+        return null;
+    }
+};

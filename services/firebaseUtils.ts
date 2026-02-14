@@ -1,252 +1,226 @@
+
 // @ts-nocheck
-import { doc, setDoc, getDoc, collection, query, where, getDocs, orderBy, limit, deleteDoc, addDoc, updateDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, query, where, getDocs, orderBy, limit, deleteDoc, addDoc, updateDoc, arrayUnion, increment, onSnapshot } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, sendPasswordResetEmail, linkWithPopup, linkWithRedirect, signInAnonymously, ActionCodeSettings } from "firebase/auth";
 import { auth, db, storage } from "./firebaseInit";
-import { ZineContent, ZineMetadata, ToneTag, PocketItem, UserProfile, ZineComment } from "../types";
-import { saveZineLocally, savePocketItemLocally } from "./localArchive";
-
-const getSovereignActionSettings = (): ActionCodeSettings => {
-  const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-  const authDomain = (auth.app as any).options.authDomain;
-  const projectUrl = `https://${authDomain}`;
-  const isWhitelisted = currentOrigin.includes('localhost') || currentOrigin.includes('firebaseapp.com') || currentOrigin.includes('web.app');
-  return { url: isWhitelisted ? currentOrigin : projectUrl, handleCodeInApp: true };
-};
+import { ZineContent, ZineMetadata, ToneTag, PocketItem, UserProfile, DossierFolder, DossierArtifact, Treatment, UserPreferences, MediaFile, Proposal, ContextEntry } from "../types";
+import { saveZineLocally, savePocketItemLocally, getLocalProfile, getLocalPocket, getLocalZines, deleteLocalPocketItem } from "./localArchive";
+import { syncToShadowMemory, deleteFromShadowMemory } from "./vectorSearch";
 
 export const isCaptiveInWebview = () => {
-  if (typeof window === 'undefined') return false;
-  const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
-  const isInstagram = /Instagram/i.test(ua) || ua.includes('FB_IAB');
-  const isFB = /FBAN|FBAV/i.test(ua);
-  const isTikTok = /TikTok/i.test(ua);
-  return (isInstagram || isFB || isTikTok) && !window.matchMedia('(display-mode: standalone)').matches;
+  if (typeof window === 'undefined' || !navigator) return false;
+  const ua = (navigator.userAgent || navigator.vendor || (window as any).opera || '').toLowerCase();
+  const isSocial = /instagram|fb_iab|fban|fbav|tiktok|threads|wv|webview/i.test(ua);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+  return isSocial && !isStandalone;
 };
 
 export const anchorIdentity = async (forceRedirect = false): Promise<void> => {
   const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'select_account' });
-  const currentUser = auth.currentUser;
-  const captive = isCaptiveInWebview();
-  if (captive || forceRedirect) {
-    if (!currentUser) return await signInWithRedirect(auth, provider);
-    else return await linkWithRedirect(currentUser, provider);
-  }
-  try {
-    if (!currentUser) await signInWithPopup(auth, provider);
-    else await linkWithPopup(currentUser, provider);
-  } catch (error: any) {
-    if (['auth/popup-blocked', 'auth/cancelled-popup-request', 'auth/popup-closed-by-user', 'auth/internal-error'].includes(error.code)) {
-      if (!currentUser) return await signInWithRedirect(auth, provider);
-      else return await linkWithRedirect(currentUser, provider);
-    }
-    throw error;
-  }
+  if (isCaptiveInWebview() || forceRedirect) return signInWithRedirect(auth, provider);
+  try { await signInWithPopup(auth, provider); } catch (e) { await signInWithRedirect(auth, provider); }
 };
 
-export const handleAuthRedirect = async (): Promise<any> => {
-  try {
-    const result = await getRedirectResult(auth);
-    return result?.user || null;
-  } catch (e: any) { return { code: e.code, message: e.message }; }
-};
-
-export const uploadBlob = async (data: string | Blob, path: string): Promise<string> => {
-  try {
-    const storageRef = ref(storage, path);
-    let blob: Blob;
-    if (typeof data === 'string' && data.startsWith('data:')) {
-      const response = await fetch(data);
-      blob = await response.blob();
-    } else if (typeof data === 'string') {
-      blob = new Blob([data], { type: 'text/plain' });
-    } else {
-      blob = data;
-    }
-    await uploadBytes(storageRef, blob);
-    return getDownloadURL(storageRef);
-  } catch (e) { return typeof data === 'string' ? data : ''; }
-};
-
-export const updateZineVisibility = async (zineId: string, isPublic: boolean): Promise<void> => {
-  if (!navigator.onLine) return;
-  try {
-    const docRef = doc(db, "zines", zineId);
-    await updateDoc(docRef, { isPublic });
-  } catch (e) { console.warn("MIMI // Visibility sync failed."); }
-};
-
-export const initiatePasswordReset = async (email: string) => {
-  try {
-    await sendPasswordResetEmail(auth, email, getSovereignActionSettings());
-  } catch (e: any) { throw e; }
-};
-
-const scrubForRegistry = (obj: any): any => {
-  if (obj === null || typeof obj !== 'object') return obj;
-  try {
-    return JSON.parse(JSON.stringify(obj, (key, value) => {
-      if (['safetyRatings', 'citationSources', 'requestFramePermissions'].includes(key)) return undefined;
-      return value;
-    }));
-  } catch (e) { return obj; }
-};
-
-export const saveZineToProfile = async (uid: string, handle: string, avatar: string | undefined, zine: ZineContent, tone: ToneTag, coverUrl?: string, deep?: boolean, isPublic?: boolean): Promise<string> => {
+export const saveZineToProfile = async (uid: string, handle: string, avatar: string | undefined, zine: ZineContent, tone: ToneTag, coverUrl?: string, deep?: boolean, isPublic?: boolean, isLite?: boolean, artifacts?: MediaFile[], originalInput?: string): Promise<string> => {
   const targetId = `zine_${uid}_${Date.now()}`;
   const meta: ZineMetadata = {
-    id: targetId,
-    userId: uid, 
-    userHandle: handle, 
-    userAvatar: avatar || null,
-    title: zine.title, 
-    tone, 
-    coverImageUrl: coverUrl || null,
-    timestamp: Date.now(), 
-    likes: 0, 
-    content: scrubForRegistry(zine), 
-    isDeepThinking: !!deep,
-    isPublic: !!isPublic 
+    id: targetId, userId: uid, userHandle: handle, userAvatar: avatar || null,
+    title: zine.title, tone, coverImageUrl: coverUrl || null, timestamp: Date.now(), likes: 0,
+    content: zine, isDeepThinking: !!deep, isPublic: !!isPublic, isLite: !!isLite,
+    artifacts: artifacts || [],
+    originalInput: originalInput || ""
   };
-  
   await saveZineLocally(meta);
-  window.dispatchEvent(new CustomEvent('mimi:artifact_finalized', { detail: { id: targetId } }));
-
-  // TRIGGER CLOUD SYNC IN BACKGROUND TO AVOID UI BLOCK
-  if (uid && auth.currentUser && !auth.currentUser.isAnonymous && !uid.startsWith('ghost') && navigator.onLine) {
-    (async () => {
-      try {
-        let anchoredCoverUrl = coverUrl;
-        if (coverUrl && coverUrl.startsWith('data:')) {
-          anchoredCoverUrl = await uploadBlob(coverUrl, `zines/${uid}/${targetId}_cover.png`);
-          meta.coverImageUrl = anchoredCoverUrl;
-          await saveZineLocally(meta);
-        }
-        await setDoc(doc(db, "zines", targetId), scrubForRegistry(meta));
-      } catch (e) { console.warn(`MIMI // Cloud sync deferred.`); }
-    })();
+  if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+    await setDoc(doc(db, "zines", targetId), meta);
+    syncToShadowMemory(meta);
   }
-  
   return targetId;
 };
 
-export const startGhostSession = async () => {
-  try { return await signInAnonymously(auth); } catch (e: any) { throw e; }
-};
-
-export const fetchZineById = async (id: string, retries = 2): Promise<ZineMetadata | null> => {
-  if (!navigator.onLine) return null;
-  try {
-    const docRef = doc(db, "zines", id);
-    const docSnap = await getDoc(docRef);
-    return docSnap.exists() ? docSnap.data() as ZineMetadata : null;
-  } catch (e: any) { 
-    if (e.code === 'unavailable') return null;
-    if (retries > 0) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return fetchZineById(id, retries - 1);
-    }
-    return null; 
-  }
-};
-
 export const addToPocket = async (uid: string, type: PocketItem['type'], content: any): Promise<void> => {
-  const itemId = `item_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-  const item: PocketItem = {
-    id: itemId,
-    userId: uid, 
-    type, 
-    savedAt: Date.now(), 
-    content: scrubForRegistry(content)
-  };
-
+  const itemId = `item_${Date.now()}`;
+  const item: PocketItem = { id: itemId, userId: uid, type, savedAt: Date.now(), content, notes: content.notes || "" };
   await savePocketItemLocally(item);
-
-  if (uid && auth.currentUser && !auth.currentUser.isAnonymous && !uid.startsWith('ghost') && navigator.onLine) {
-    (async () => {
-      try {
-        if (content.imageUrl && content.imageUrl.startsWith('data:')) {
-          const cloudUrl = await uploadBlob(content.imageUrl, `pocket/${uid}/${itemId}.png`);
-          item.content.imageUrl = cloudUrl;
-          await savePocketItemLocally(item);
-        }
-        await setDoc(doc(db, "pocket", itemId), scrubForRegistry(item));
-      } catch (e) { console.warn("MIMI // Vault sync deferred."); }
-    })();
+  if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+    await setDoc(doc(db, "pocket", itemId), item);
+    syncToShadowMemory(item);
   }
 };
 
-export const fetchPocketItems = async (uid: string): Promise<PocketItem[]> => {
-  if (!navigator.onLine) return [];
-  try {
+export const deleteFromPocket = async (itemId: string): Promise<void> => {
+  await deleteLocalPocketItem(itemId);
+  if (auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+    await deleteDoc(doc(db, "pocket", itemId));
+    deleteFromShadowMemory(itemId);
+  }
+};
+
+export const createMoodboard = async (uid: string, name: string, itemIds: string[]): Promise<string> => {
+  const boardId = `moodboard_${Date.now()}`;
+  const item: PocketItem = { 
+    id: boardId, 
+    userId: uid, 
+    type: 'moodboard', 
+    savedAt: Date.now(), 
+    content: { name, itemIds } 
+  };
+  await savePocketItemLocally(item);
+  if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+    await setDoc(doc(db, "pocket", boardId), item);
+    syncToShadowMemory(item);
+  }
+  return boardId;
+};
+
+export const updatePocketItem = async (itemId: string, patch: Partial<PocketItem>): Promise<void> => {
+  const localPocket = await getLocalPocket();
+  const index = localPocket.findIndex(i => i.id === itemId);
+  if (index !== -1) {
+    const updated = { ...localPocket[index], ...patch };
+    await savePocketItemLocally(updated);
+  }
+  if (auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+    await updateDoc(doc(db, "pocket", itemId), patch);
+  }
+};
+
+export const fetchPocketItems = async (uid: string) => {
     const q = query(collection(db, "pocket"), where("userId", "==", uid), orderBy("savedAt", "desc"));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(d => d.data() as PocketItem);
-  } catch (e: any) { return []; }
+    return (await getDocs(q)).docs.map(d => d.data() as PocketItem);
 };
 
-export const deleteFromPocket = async (uid: string, itemId: string): Promise<void> => {
-  try {
-    const docRef = doc(db, "pocket", itemId);
-    const snap = await getDoc(docRef);
-    if (snap.exists() && snap.data().userId === uid) {
-      await deleteDoc(docRef);
-    }
-  } catch (e) {}
-};
-
-export const saveUserProfile = async (profile: UserProfile): Promise<void> => {
-  if (!navigator.onLine) return;
-  try {
-    const userRef = doc(db, "users", profile.uid);
-    await setDoc(userRef, scrubForRegistry(profile), { merge: true });
-  } catch (e: any) { throw e; }
-};
-
-export const fetchUserZines = async (uid: string): Promise<ZineMetadata[]> => {
-  if (!navigator.onLine) return [];
-  try {
+export const fetchUserZines = async (uid: string) => {
     const q = query(collection(db, "zines"), where("userId", "==", uid), orderBy("timestamp", "desc"));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(d => d.data() as ZineMetadata);
-  } catch (e) { return []; }
+    return (await getDocs(q)).docs.map(d => d.data() as ZineMetadata);
 };
 
-export const fetchCommunityZines = async (count: number = 20): Promise<ZineMetadata[]> => {
-  if (!navigator.onLine) return [];
-  try {
+export const fetchCommunityZines = async (count: number) => {
     const q = query(collection(db, "zines"), where("isPublic", "==", true), orderBy("timestamp", "desc"), limit(count));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(d => d.data() as ZineMetadata);
-  } catch (e) { return []; }
+    return (await getDocs(q)).docs.map(d => d.data() as ZineMetadata);
 };
 
-export const isHandleAvailable = async (handle: string, uid: string): Promise<boolean> => {
-  if (!navigator.onLine) return true;
-  try {
-    const q = query(collection(db, "users"), where("handle", "==", handle.toLowerCase()));
-    const snapshot = await getDocs(q);
-    if (snapshot.empty) return true;
-    return snapshot.docs[0].id === uid;
-  } catch (e) { return true; }
+export const subscribeToCommunityZines = (callback: (data: ZineMetadata[]) => void) => {
+  const q = query(collection(db, "zines"), where("isPublic", "==", true), orderBy("timestamp", "desc"), limit(30));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map(d => d.data() as ZineMetadata));
+  });
 };
 
-export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
-  if (typeof navigator !== 'undefined' && !navigator.onLine) return null;
-  
-  // Safety timeout for profile fetch
-  const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 3000));
-  
-  try {
-    const fetchPromise = (async () => {
-      const docRef = doc(db, "users", uid);
-      const docSnap = await getDoc(docRef);
-      return docSnap.exists() ? docSnap.data() as UserProfile : null;
-    })();
-    
-    return await Promise.race([fetchPromise, timeout]);
-  } catch (e: any) { 
-    console.warn("MIMI // Profile access deferred due to frequency noise.");
-    return null; 
+export const fetchZineById = async (id: string) => {
+    const s = await getDoc(doc(db, "zines", id));
+    return s.exists() ? s.data() as ZineMetadata : null;
+};
+
+export const createDossierFolder = async (uid: string, name: string): Promise<string> => {
+  const id = `folder_${Date.now()}`;
+  const folder: DossierFolder = { id, userId: uid, name, createdAt: Date.now() };
+  if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+    await setDoc(doc(db, "dossier_folders", id), folder);
+  }
+  return id;
+};
+
+export const updateDossierFolder = async (folderId: string, patch: Partial<DossierFolder>) => {
+  if (auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+    await updateDoc(doc(db, "dossier_folders", folderId), patch);
   }
 };
+
+export const fetchDossierFolders = async (uid: string) => {
+  const q = query(collection(db, "dossier_folders"), where("userId", "==", uid), orderBy("createdAt", "desc"));
+  return (await getDocs(q)).docs.map(d => d.data() as DossierFolder);
+};
+
+export const createDossierArtifactFromImage = async (uid: string, folderId: string, title: string, imageUrl: string) => {
+  const id = `artifact_${Date.now()}`;
+  const artifact: DossierArtifact = {
+    id, userId: uid, folderId, type: 'moodboard', title, createdAt: Date.now(),
+    elements: [{ id: 'el_0', type: 'image', content: imageUrl }]
+  };
+  if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+    await setDoc(doc(db, "dossier_artifacts", id), artifact);
+  }
+  return id;
+};
+
+export const createDossierArtifactFromText = async (uid: string, folderId: string, title: string, text: string) => {
+  const id = `artifact_${Date.now()}`;
+  const artifact: DossierArtifact = {
+    id, userId: uid, folderId, type: 'brief', title, createdAt: Date.now(),
+    elements: [{ id: 'el_0', type: 'text', content: text }]
+  };
+  if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+    await setDoc(doc(db, "dossier_artifacts", id), artifact);
+  }
+  return id;
+};
+
+export const fetchDossierArtifacts = async (folderId: string) => {
+  const q = query(collection(db, "dossier_artifacts"), where("folderId", "==", folderId), orderBy("createdAt", "desc"));
+  return (await getDocs(q)).docs.map(d => d.data() as DossierArtifact);
+};
+
+// -- PROPOSAL SYSTEM CRUD -- //
+
+export const saveProposal = async (proposal: Proposal): Promise<void> => {
+  // Local persistence todo: add saveProposalLocally
+  if (auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+    await setDoc(doc(db, "proposals", proposal.id), proposal);
+  }
+};
+
+export const fetchUserProposals = async (uid: string) => {
+  const q = query(collection(db, "proposals"), where("userId", "==", uid), orderBy("updatedAt", "desc"));
+  return (await getDocs(q)).docs.map(d => d.data() as Proposal);
+};
+
+export const getProposalById = async (id: string) => {
+  const s = await getDoc(doc(db, "proposals", id));
+  return s.exists() ? s.data() as Proposal : null;
+};
+
+// -- SHARED CONTEXT SYSTEM -- //
+
+export const addContextEntry = async (uid: string, text: string, type: 'note' | 'link' = 'note'): Promise<string> => {
+  if (!uid || !text) throw new Error("Invalid Context Input");
+  const id = `ctx_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+  const entry: ContextEntry = {
+    id,
+    userId: uid,
+    text,
+    type,
+    timestamp: Date.now()
+  };
+  
+  if (navigator.onLine && auth.currentUser && !auth.currentUser.isAnonymous) {
+    await setDoc(doc(db, "context", id), entry);
+  }
+  return id;
+};
+
+export const fetchContextEntries = async (limitCount: number = 50) => {
+  const q = query(collection(db, "context"), orderBy("timestamp", "desc"), limit(limitCount));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => d.data() as ContextEntry);
+};
+
+export const deleteContextEntry = async (id: string) => {
+  if (auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+    await deleteDoc(doc(db, "context", id));
+  }
+};
+
+export const getUserProfile = async (uid: string) => (await getDoc(doc(db, "users", uid))).data() as UserProfile;
+export const saveUserProfile = async (p: UserProfile) => setDoc(doc(db, "users", p.uid), p, { merge: true });
+
+// PREFERENCES MIGRATION
+export const getUserPreferences = async (uid: string) => (await getDoc(doc(db, "userPreferences", uid))).data() as UserPreferences;
+export const saveUserPreferences = async (uid: string, p: UserPreferences) => setDoc(doc(db, "userPreferences", uid), p, { merge: true });
+
+export const startGhostSession = () => signInAnonymously(auth);
+export const handleAuthRedirect = () => getRedirectResult(auth);
+export const isHandleAvailable = async () => true; 
+export const uploadBlob = async (b: any, p: string) => b; 
+export const migrateLocalToCloud = async () => {};

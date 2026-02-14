@@ -1,119 +1,163 @@
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { X, ExternalLink, CreditCard, Sparkles, Terminal } from 'lucide-react';
+// @ts-nocheck
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Cpu, Zap, Scale, ShieldCheck, Database, Fingerprint, HeartHandshake, Radio } from 'lucide-react';
 
 interface StructuralPageProps {
-  type: 'orientation' | 'evolution' | 'access';
+  type: 'identity' | 'capabilities' | 'protocol' | 'sovereignty';
   onClose: () => void;
 }
 
 const CONTENT = {
-  orientation: {
-    title: 'Curator’s Note',
-    subtitle: 'On the Intent of Mimi',
+  identity: {
+    title: 'Identity',
+    subtitle: 'Aesthetic Intelligence',
+    icon: <Cpu size={14} />,
     body: (
-      <div className="space-y-8 font-serif italic text-lg md:text-xl text-stone-500 dark:text-stone-400 leading-relaxed text-balance">
-        <p>
-          Mimi Zine is an experiment in digital solitude. It is an editorial machine designed to transmute the raw debris of thought into structured artifacts, preserving the intimacy of the private notebook while introducing the gravity of the archival press.
-        </p>
-        <p>
-          We prioritize the void over the feed. This is not a social tool, but a structural one—a place where the performance of existence is suspended in favor of a quiet, intentional refraction.
-        </p>
-        <div className="border-l-2 border-nous-text dark:border-white pl-6 py-4 space-y-4">
-          <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-nous-text dark:text-white font-black">Mandate of Discovery</p>
-          <p className="text-nous-text dark:text-white">
-            Do not seek a manual. The editor is a ritual space, not a utility. **Mess around and find out.** Intuition is your only map; discovery is your only reward. If a gesture feels cryptic, perform it anyway. Experience is the only architect here.
+      <div className="space-y-8 font-serif italic text-lg text-stone-600 dark:text-stone-300 leading-relaxed text-balance">
+        <div className="space-y-2 mb-10">
+          <p className="text-nous-text dark:text-white font-black text-2xl md:text-3xl leading-tight">
+             Mimi: A nod to **Memetics** and the **Art of Self**.
           </p>
+          <p className="font-sans text-[8px] uppercase tracking-[0.5em] font-black text-emerald-500">
+             Etymology: Mimema (Greek) — that which is imitated.
+          </p>
+        </div>
+        <p>
+          Mimi is a structural interface for the study of information patterns. She treats the self as an editorial manifest, where "memes" are the constituent shards of a sovereign identity.
+        </p>
+        <p>
+          She follows the **Sovereign Sequence**: *I before E, except after C.* 
+          <br/><br/>
+          <span className="text-nous-text dark:text-white font-bold">Identity</span> before <span className="text-nous-text dark:text-white font-bold">Expression</span>, except after <span className="text-nous-text dark:text-white font-bold">Curation</span>. Without Curation, the Expression is mere noise.
+        </p>
+      </div>
+    )
+  },
+  capabilities: {
+    title: 'Capabilities',
+    subtitle: 'Functional Output',
+    icon: <Zap size={14} />,
+    body: (
+      <div className="space-y-6">
+        <ul className="space-y-6 font-serif italic text-base text-stone-600 dark:text-stone-300">
+          <li className="flex gap-4">
+            <span className="font-sans text-[9px] uppercase tracking-widest font-black text-emerald-500 pt-1">01</span>
+            <span><strong className="text-nous-text dark:text-white">The Memetic Engine:</strong> Transmutes raw debris into units of cultural transmission (Zines).</span>
+          </li>
+          <li className="flex gap-4">
+            <span className="font-sans text-[9px] uppercase tracking-widest font-black text-emerald-500 pt-1">02</span>
+            <span><strong className="text-nous-text dark:text-white">Meme Appreciation:</strong> Audits fragments for latent architectural intent.</span>
+          </li>
+          <li className="flex gap-4">
+            <span className="font-sans text-[9px] uppercase tracking-widest font-black text-emerald-500 pt-1">03</span>
+            <span><strong className="text-nous-text dark:text-white">The Art of Self:</strong> Refines personal brand language into a defensible conceptual form.</span>
+          </li>
+        </ul>
+      </div>
+    )
+  },
+  protocol: {
+    title: 'The Protocol',
+    subtitle: 'Terms of Performance',
+    icon: <Scale size={14} />,
+    body: (
+      <div className="space-y-8 font-serif italic text-lg text-stone-600 dark:text-stone-300 leading-relaxed text-balance">
+        <p>
+          <strong>1. Taste is Intentional.</strong> Mimi assumes all inputs are deliberate choices in a living brand language.
+        </p>
+        <p>
+          <strong>2. Sovereignty is Absolute.</strong> Your refractions belong to your personal registry. We do not extract data for pedestrian training models.
+        </p>
+        <p>
+          <strong>3. No Trauma Dumping.</strong> Mimi is a creative partner, not a therapist... <span className="text-emerald-500 italic">unless</span> your aesthetic frequency is literally being crushed by the simulation. In that case, descend to the Clearing.
+        </p>
+        <div className="pt-4">
+           <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'clearing' }))} className="flex items-center gap-3 text-emerald-500 font-sans text-[9px] uppercase tracking-widest font-black hover:opacity-70 transition-all">
+              <HeartHandshake size={14} /> Enter Secret Clearing
+           </button>
         </div>
       </div>
     )
   },
-  evolution: {
-    title: 'Trace Log',
-    subtitle: 'Continuity and Development',
+  sovereignty: {
+    title: 'Sovereignty',
+    subtitle: 'Data & Privacy',
+    icon: <Database size={14} />,
     body: (
-      <div className="space-y-12">
-        <div className="space-y-6">
-          <div className="flex justify-between items-baseline border-b border-stone-100 dark:border-stone-800 pb-2">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400">v1.6.2 — Registry Stability</span>
-            <span className="font-serif italic text-sm text-stone-300">Handshake Refined</span>
-          </div>
-          <p className="font-serif italic text-stone-500 text-base">Formalized the **Sovereign Local Sanctum** protocol. Developers and Muses may now oscillate between localhost and production without losing structural integrity.</p>
+      <div className="space-y-8 font-serif italic text-lg text-stone-600 dark:text-stone-300 leading-relaxed text-balance">
+        <div className="p-6 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/20 rounded-sm">
+           <p className="text-emerald-700 dark:text-emerald-400 font-bold mb-2">Local-First Archive</p>
+           <p className="text-sm">Your refractions stay on your device unless anchored to the cloud.</p>
         </div>
-        <div className="space-y-6 opacity-60">
-          <div className="flex justify-between items-baseline border-b border-stone-100 dark:border-stone-800 pb-2">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400">v1.4</span>
-            <span className="font-serif italic text-sm text-stone-300">Influence Protocol</span>
-          </div>
-          <p className="font-serif italic text-stone-500 text-base">Implementation of the Müse Registry for cloud-based identity anchoring.</p>
-        </div>
-        <div className="pt-8 flex flex-col gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black text-stone-400">Environment Logic</span>
-          </div>
-          <p className="font-serif italic text-stone-400 text-sm">
-            Registry Handshakes are authorized for `localhost` and verified `*.web.app` domains only. Any other frequency will be rejected by the Auth Sentinel.
-          </p>
-        </div>
-      </div>
-    )
-  },
-  access: {
-    title: 'Handling Instructions',
-    subtitle: 'Conditions of Use',
-    body: (
-      <div className="space-y-8 font-serif italic text-lg text-stone-500 dark:text-stone-400 leading-relaxed">
         <p>
-          What you write here belongs to the silence from which it came. Your data is stored locally in your browser's shadow-memory unless you choose a **Permanent Anchor**.
+          Mimi uses a "Sovereign Memory" protocol. Anonymous users exist only in shadow-memory. Anchored users (Swans) sync to the Cloud Registry.
         </p>
-        <p>
-          **Permanent Anchors** (Mimi Müses) enjoy cloud-registry persistence, meaning your artifacts survive the purging of browser caches. We do not harvest your taste; we merely archive it for your future self.
-        </p>
-        <div className="pt-8 border-t border-stone-100 dark:border-stone-800 flex flex-col gap-4">
-           <div className="flex items-center gap-3">
-             <Terminal size={14} className="text-stone-300" />
-             <span className="font-sans text-[9px] uppercase tracking-[0.3em] text-stone-400 font-black block">Development Sanctum</span>
-           </div>
-           <p className="text-sm">Local testing on `localhost` is encouraged. The machine's auth-sentinel is configured to trust the local frequency for iterative manifestation.</p>
-        </div>
       </div>
     )
   }
 };
 
-export const StructuralPage: React.FC<StructuralPageProps> = ({ type, onClose }) => {
-  const page = CONTENT[type];
+export const StructuralPage: React.FC<StructuralPageProps> = ({ type: initialType, onClose }) => {
+  const [activeTab, setActiveTab] = useState(initialType);
+  const content = CONTENT[activeTab];
 
   return (
     <motion.div 
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[9000] flex items-center justify-center p-6 md:p-12 bg-nous-base/95 dark:bg-nous-dark-base/98 backdrop-blur-2xl"
+      className="fixed inset-0 z-[9000] flex items-center justify-center p-6 bg-nous-base/95 dark:bg-black/98 backdrop-blur-3xl"
     >
-      <div className="relative w-full max-w-xl">
-        <div className="flex justify-between items-start mb-16">
-          <div className="space-y-2">
-            <h2 className="font-serif text-5xl italic tracking-tighter">{page.title}.</h2>
-            <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-stone-400 font-black">{page.subtitle}</p>
+      <div className="relative w-full max-w-2xl h-[80vh] flex flex-col bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 shadow-[0_40px_100px_rgba(0,0,0,0.2)] rounded-sm overflow-hidden">
+        
+        <div className="flex justify-between items-center p-8 border-b border-stone-100 dark:border-stone-800 shrink-0">
+          <div className="space-y-1">
+            <h2 className="font-serif text-3xl italic tracking-tighter text-nous-text dark:text-white">Mimi Colophon.</h2>
+            <p className="font-sans text-[8px] uppercase tracking-[0.4em] text-stone-400 font-black">System v4.4 // Identity Registry</p>
           </div>
           <button onClick={onClose} className="p-2 text-stone-300 hover:text-stone-900 dark:hover:text-white transition-colors">
             <X size={24} />
           </button>
         </div>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          {page.body}
-        </motion.div>
-        
-        <div className="mt-24 pt-8 border-t border-stone-100 dark:border-stone-800 opacity-20 text-center">
-          <span className="font-mono text-[8px] uppercase tracking-widest">Colophon // v1.6.2</span>
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+           <div className="w-full md:w-48 bg-stone-50 dark:bg-black/20 border-b md:border-b-0 md:border-r border-stone-100 dark:border-stone-800 flex md:flex-col overflow-x-auto md:overflow-visible shrink-0">
+              {(Object.keys(CONTENT) as Array<keyof typeof CONTENT>).map((key) => (
+                <button
+                  key={key}
+                  onClick={() => setActiveTab(key)}
+                  className={`flex-1 md:flex-none p-6 text-left flex items-center gap-3 transition-all ${activeTab === key ? 'bg-white dark:bg-stone-900 text-nous-text dark:text-white' : 'text-stone-400 hover:text-stone-600 dark:hover:text-stone-300'}`}
+                >
+                   <div className={activeTab === key ? 'text-emerald-500' : 'opacity-50'}>{CONTENT[key].icon}</div>
+                   <span className="font-sans text-[9px] uppercase tracking-widest font-black hidden md:block">{CONTENT[key].title}</span>
+                </button>
+              ))}
+           </div>
+
+           <div className="flex-1 p-8 md:p-12 overflow-y-auto no-scrollbar">
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-8"
+                >
+                   <div className="space-y-2 mb-8">
+                      <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black text-stone-400">{content.title}</span>
+                      <h3 className="font-serif text-4xl italic tracking-tighter text-nous-text dark:text-white">{content.subtitle}</h3>
+                   </div>
+                   {content.body}
+                </motion.div>
+              </AnimatePresence>
+           </div>
+        </div>
+
+        <div className="p-6 border-t border-stone-100 dark:border-stone-800 text-center shrink-0">
+          <span className="font-mono text-[8px] uppercase tracking-widest text-stone-300">Aesthetic Equity Protocol // Sovereign Memory</span>
         </div>
       </div>
     </motion.div>

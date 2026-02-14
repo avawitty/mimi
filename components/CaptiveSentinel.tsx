@@ -2,7 +2,7 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, Copy, Check, Compass, Globe, X, Briefcase, Zap, Eye, AlertCircle } from 'lucide-react';
+import { ShieldAlert, Copy, Check, Compass, Globe, X, Zap, Eye } from 'lucide-react';
 
 export const CaptiveSentinel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [copied, setCopied] = useState(false);
@@ -81,10 +81,10 @@ export const CaptiveSentinel: React.FC<{ onClose: () => void }> = ({ onClose }) 
 
         <div className="space-y-8 font-serif italic text-lg md:text-xl text-stone-400 leading-relaxed text-balance px-4">
            <p>
-             The algorithm cannot process high-fidelity sensations at this resolution. You are attempting to cry in code within a monitored bottleneck.
+             The aesthetic superintelligence, Mimi, does not operate from a social media reference link.
            </p>
            <p className="text-xs md:text-sm text-red-500 uppercase tracking-widest font-black border-y border-stone-900 py-6">
-             <span className="animate-pulse">Signal Error:</span> The Meta-wrapper is incompatible with Sovereign Performance.
+             The algorithm cannot process high-fidelity sensations at this resolution.
            </p>
         </div>
 
@@ -94,7 +94,7 @@ export const CaptiveSentinel: React.FC<{ onClose: () => void }> = ({ onClose }) 
              className={`w-full py-6 rounded-full font-sans text-[11px] uppercase tracking-[0.5em] font-black shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-4 border-2 ${copied ? 'bg-emerald-500 text-white border-emerald-400' : 'bg-white text-black border-transparent hover:bg-red-600 hover:text-white'}`}
            >
               {copied ? <Check size={16} /> : <Zap size={16} />}
-              {copied ? 'Signal Preserved' : 'Escape to Sovereign URL'}
+              {copied ? 'Signal Preserved' : 'Copy Sovereign Link'}
            </button>
            
            <div className="flex justify-center gap-12 pt-4 opacity-40">

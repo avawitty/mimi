@@ -1,7 +1,7 @@
 {
   "name": "Mimi Zine",
-  "short_name": "Mimi Zine",
-  "description": "The Tyranny of Taste: A pretentiously minimalist AI editor for the aesthetic superintelligence.",
+  "short_name": "Mimi",
+  "description": "The Architecture of Perception: A pretentiously minimalist AI editor for the aesthetic superintelligence.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FDFBF7",
@@ -9,19 +9,39 @@
   "orientation": "portrait",
   "requestFramePermissions": [
     "camera",
-    "microphone"
+    "microphone",
+    "geolocation"
   ],
   "icons": [
     {
       "src": "https://raw.githubusercontent.com/Aris-A-C/mimi-assets/main/mimi_logo_new.png",
-      "sizes": "512x512",
+      "sizes": "144x144",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/Aris-A-C/mimi-assets/main/mimi_logo_new.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "https://raw.githubusercontent.com/Aris-A-C/mimi-assets/main/mimi_logo_new.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/Aris-A-C/mimi-assets/main/mimi_logo_new.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/Aris-A-C/mimi-assets/main/mimi_logo_new.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

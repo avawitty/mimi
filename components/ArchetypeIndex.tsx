@@ -37,7 +37,7 @@ export const ArchetypeIndex: React.FC<ArchetypeIndexProps> = ({ onSelectZine }) 
 
   const filtered = zines.filter(z => {
     const term = search.toLowerCase();
-    const archetype = z.content.archetype_identity?.toLowerCase() || '';
+    const archetype = z.content.taste_context?.active_archetype?.toLowerCase() || '';
     const title = z.title.toLowerCase();
     const matchesSearch = archetype.includes(term) || title.includes(term);
 
@@ -169,7 +169,7 @@ export const ArchetypeIndex: React.FC<ArchetypeIndexProps> = ({ onSelectZine }) 
                       </span>
                       <div className="flex flex-col gap-1">
                          <span className="font-serif text-xl text-nous-text group-hover:italic transition-all">
-                           {zine.content.archetype_identity || "Unknown State"}
+                           {zine.content.taste_context?.active_archetype || "Unknown State"}
                          </span>
                          <span className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle/50">
                            {zine.title}

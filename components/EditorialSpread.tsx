@@ -2,7 +2,7 @@
 // @ts-nocheck
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowLeft, Heart, Share2, Sparkles, Newspaper, Quote, Copy, Check, Bookmark, Radio, Instagram, Loader2, Lock, ShieldCheck, Zap } from 'lucide-react';
+import { X, ArrowLeft, Check, Copy, Bookmark, Loader2, Lock, Zap, Instagram, Quote, Newspaper } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { addToPocket } from '../services/firebase';
 
@@ -58,7 +58,7 @@ export const EditorialSpread: React.FC<EditorialSpreadProps> = ({ article, onClo
       <div className="h-20 border-b border-stone-100 dark:border-stone-900 px-6 md:px-12 flex justify-between items-center sticky top-0 bg-white/90 dark:bg-stone-950/90 backdrop-blur-xl z-[100]">
           <button onClick={onClose} className="flex items-center gap-4 group transition-all">
              <ArrowLeft size={20} className="text-stone-400 group-hover:text-nous-text dark:group-hover:text-white" />
-             <span className="font-sans text-[8px] md:text-[10px] uppercase tracking-[0.4em] font-black text-stone-400 group-hover:text-nous-text">Back to Wire</span>
+             <span className="font-sans text-[8px] md:text-[10px] uppercase tracking-[0.4em] font-black text-stone-400 group-hover:text-nous-text">Back to wire</span>
           </button>
           <div className="flex items-center gap-6">
              <div className="hidden sm:flex items-center gap-3">
@@ -68,7 +68,7 @@ export const EditorialSpread: React.FC<EditorialSpreadProps> = ({ article, onClo
              {!isArticleGated && (
                <button 
                  onClick={handleArchiveArticle}
-                 className={`flex items-center gap-2 px-5 py-2 rounded-full border transition-all ${isArchived ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-stone-50 dark:bg-stone-900 border-stone-100 dark:border-stone-800 text-stone-500'}`}
+                 className={`flex items-center gap-2 px-5 py-2 rounded-full border transition-all ${isArchived ? 'bg-emerald-50 text-emerald-600 border-emerald-100 shadow-inner' : 'bg-stone-50 dark:bg-stone-900 border-stone-100 dark:border-stone-800 text-stone-500'}`}
                >
                   {isArchiving ? <Loader2 size={12} className="animate-spin" /> : isArchived ? <Check size={12} /> : <Bookmark size={12} />}
                   <span className="font-sans text-[7px] uppercase tracking-widest font-black">{isArchived ? 'Archived' : 'Anchor Article'}</span>
@@ -77,7 +77,7 @@ export const EditorialSpread: React.FC<EditorialSpreadProps> = ({ article, onClo
           </div>
       </div>
 
-      <main className="flex-1 w-full max-w-5xl mx-auto px-6 md:px-12 py-16 md:py-32 space-y-16 md:space-y-32">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-6 md:px-12 py-16 md:py-32 space-y-16 md:space-y-24">
           
           {isArticleGated ? (
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-12 py-12">
@@ -94,7 +94,7 @@ export const EditorialSpread: React.FC<EditorialSpreadProps> = ({ article, onClo
                   <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-stone-400 font-black">Temporal Vault Active</p>
                   <div className="h-px w-24 bg-stone-100 mx-auto mt-8" />
                   <p className="font-serif italic text-lg text-stone-500 leading-relaxed pt-4">
-                    The **Victim as Architect** manifesto is currently vaulted. This frequency requires a **Swan Anchor** or **Imperial Patronage** to manifest.
+                    This frequency requires a Swan Anchor or Imperial Patronage to manifest.
                   </p>
                </div>
 
@@ -114,21 +114,20 @@ export const EditorialSpread: React.FC<EditorialSpreadProps> = ({ article, onClo
                     {isAttemptingUnlock ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} className="text-amber-500" />}
                     Prove Structural Identity
                   </button>
-                  <a href="https://ko-fi.com/mimizine" target="_blank" className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 hover:text-stone-900 transition-colors">Enter Covenant of Patronage</a>
                </div>
             </motion.div>
           ) : (
             <>
-              {/* Masthead */}
-              <header className="space-y-8 md:space-y-12">
+              {/* Masthead - Pure Typography */}
+              <header className="space-y-12 border-b border-stone-100 dark:border-stone-900 pb-16">
                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-px bg-stone-200 dark:bg-stone-800" />
                     <span className="font-sans text-[10px] uppercase tracking-[0.6em] text-stone-400 font-black">{article.tag}</span>
+                    <div className="h-px flex-1 bg-stone-200 dark:bg-stone-800" />
                  </div>
-                 <h1 className="font-serif text-6xl md:text-9xl italic tracking-tighter leading-[0.8] text-nous-text dark:text-white" style={{ color: article.color || 'inherit' }}>
+                 <h1 className="font-serif text-6xl md:text-[10rem] italic tracking-tighter leading-[0.8] text-nous-text dark:text-white" style={{ color: article.color || 'inherit' }}>
                     {article.brand}
                  </h1>
-                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-12">
+                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 md:gap-12 pt-8">
                     <p className="font-sans text-[12px] md:text-[14px] uppercase tracking-[0.3em] font-black text-stone-500 max-w-sm">
                        {article.headline}
                     </p>
@@ -139,47 +138,29 @@ export const EditorialSpread: React.FC<EditorialSpreadProps> = ({ article, onClo
                  </div>
               </header>
 
-              {/* Featured Visual Fragment */}
-              <div className="aspect-[16/9] md:aspect-[21/9] bg-stone-50 dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-sm relative overflow-hidden group shadow-2xl">
-                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-10 pointer-events-none z-10" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                     <Sparkles size={80} className="text-stone-200 dark:text-stone-800 animate-pulse" />
-                  </div>
-                  <div className="absolute bottom-6 left-6 z-20">
-                     <div className="bg-white/20 dark:bg-black/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                        <span className="font-mono text-[8px] uppercase tracking-widest text-white/60 font-bold">FRAGMENT_REFRACTION_NOMINAL</span>
-                     </div>
-                  </div>
-              </div>
-
               {/* Body Content - Magazine Layout */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 md:gap-24">
-                 <div className="lg:col-span-7 space-y-12">
-                    <h3 className="font-serif text-3xl md:text-5xl italic tracking-tighter text-nous-text dark:text-white leading-none border-b border-stone-100 dark:border-stone-900 pb-8">
+                 <div className="lg:col-span-8 space-y-12">
+                    <h3 className="font-serif text-3xl md:text-5xl italic tracking-tighter text-nous-text dark:text-white leading-none">
                        {article.content.subtitle}
                     </h3>
                     <div className="space-y-10 md:space-y-16">
                        {article.content.body.map((para, i) => (
-                         <p key={i} className="font-serif italic text-xl md:text-2xl lg:text-3xl text-stone-600 dark:text-stone-300 leading-snug text-balance">
+                         <p key={i} className="font-serif italic text-xl md:text-2xl lg:text-3xl text-stone-600 dark:text-stone-300 leading-snug text-balance first-letter:text-5xl first-letter:font-bold first-letter:mr-2">
                             {para}
                          </p>
                        ))}
                     </div>
                  </div>
 
-                 <aside className="lg:col-span-5 space-y-12">
-                    <div className="p-8 md:p-12 bg-stone-50 dark:bg-stone-900 rounded-sm space-y-8 border border-stone-100 dark:border-stone-800 shadow-inner">
-                       <Quote size={24} className="text-stone-300" />
-                       <p className="font-serif italic text-2xl text-stone-500 leading-tight text-balance">
+                 <aside className="lg:col-span-4 space-y-12 sticky top-32 h-fit">
+                    <div className="p-8 bg-stone-50 dark:bg-stone-900 rounded-sm space-y-6 border border-stone-100 dark:border-stone-800">
+                       <Quote size={20} className="text-stone-300" />
+                       <p className="font-serif italic text-xl text-stone-500 leading-tight">
                           "Professionalism is the death of the Muse. High-fidelity sensations aren't meant to be birthed in a filtered cage."
                        </p>
-                       <div className="pt-8 border-t border-stone-200 dark:border-stone-800">
-                          <span className="font-sans text-[8px] uppercase tracking-[0.3em] font-black text-stone-400">The Royal Edict</span>
-                       </div>
                     </div>
 
-                    {/* SOCIAL CAPTION MANIFEST */}
                     <div className="space-y-6">
                        <div className="flex items-center gap-3 text-stone-400">
                           <Instagram size={14} />
@@ -211,7 +192,6 @@ export const EditorialSpread: React.FC<EditorialSpreadProps> = ({ article, onClo
              <div className="opacity-10 pointer-events-none select-none">
                 <h1 className="font-header italic text-9xl">Mimi.</h1>
              </div>
-             <p className="font-serif italic text-stone-400">"Art is a structural requirement for survival."</p>
              <button 
               onClick={onClose}
               className="px-12 py-5 bg-nous-text dark:bg-white text-white dark:text-black font-sans text-[10px] uppercase tracking-[0.5em] font-black rounded-full shadow-2xl active:scale-95 transition-all"

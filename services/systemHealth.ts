@@ -44,6 +44,33 @@ export const checkSystemHealth = async () => {
   console.groupEnd();
 };
 
+export const diagnoseZines = async () => {
+    console.group("MIMI // Zine Diagnostic");
+    console.log("Network Status:", navigator.onLine ? "Online" : "Offline");
+    
+    // Check Local
+    try {
+        const { getLocalZines } = await import("./localArchive");
+        const local = await getLocalZines();
+        console.log("Local Archive Count:", local.length);
+        if (local.length > 0) console.table(local.slice(0, 3).map(z => ({ id: z.id, title: z.title })));
+    } catch (e) {
+        console.error("Local Archive Error:", e);
+    }
+
+    // Check Cloud
+    try {
+        const { fetchCommunityZines } = await import("./firebaseUtils");
+        const cloud = await fetchCommunityZines(5);
+        console.log("Cloud Community Fetch (Limit 5):", cloud.length);
+        if (cloud.length > 0) console.table(cloud.slice(0, 3).map(z => ({ id: z.id, title: z.title })));
+    } catch (e) {
+        console.error("Cloud Fetch Error:", e);
+    }
+    console.groupEnd();
+}
+
 if (typeof window !== 'undefined') {
   (window as any).mimiCheck = checkSystemHealth;
+  (window as any).mimiDiagnose = diagnoseZines;
 }
