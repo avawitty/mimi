@@ -1,4 +1,5 @@
 
+
 import { FirebaseApp, initializeApp, getApps } from "firebase/app";
 import { Auth, getAuth } from "firebase/auth";
 import { Firestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore } from "firebase/firestore";
@@ -20,33 +21,50 @@ const firebaseConfig = {
 const apps = getApps();
 const app: FirebaseApp = apps.length > 0 ? apps[0] : initializeApp(firebaseConfig);
 
-// MIMI // REGISTRY AUDIT: Initializing with Persistent Local Cache for resilience.
+// TARGET DATABASE: mimizinemongo
+const TARGET_DB_ID = "mimizinemongo";
+
+// MIMI // REGISTRY AUDIT
 if (typeof window !== 'undefined') {
-  console.info(`%c MIMI // Registry Active: ${firebaseConfig.projectId} [BUCKET: mimizinemongo]`, "color: #10B981; font-weight: bold; font-family: serif; font-style: italic;");
+  console.info(`%c MIMI // Registry Active: ${firebaseConfig.projectId} [TARGET DB: ${TARGET_DB_ID}]`, "color: #10B981; font-weight: bold; font-family: serif; font-style: italic;");
 }
 
 export const auth: Auth = getAuth(app);
 
 // Modern Firestore Initialization
-// TARGETING SPECIFIC BUCKET: mimizinemongo
 let dbInstance: Firestore;
 
 try {
+  // Attempt to initialize with specific settings and specific Database ID
   dbInstance = initializeFirestore(app, {
     localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
-  }, "mimizinemongo"); // Explicitly passing databaseId
+  }, TARGET_DB_ID);
+  
 } catch (e: any) {
+  // If we get "failed-precondition", it means Firestore was already initialized.
+  // We must retrieve the existing instance specifically for our named DB.
   if (e.code === 'failed-precondition') {
-     // Already initialized, just get the instance associated with the app (might default if init failed)
-     // Note: getFirestore(app) returns default. If named db failed, we might be in a weird state, 
-     // but usually this catch is for "already initialized".
+     console.warn(`MIMI // Firestore pre-initialized. Attaching to '${TARGET_DB_ID}'...`);
+     // CRITICAL: Must pass TARGET_DB_ID here too, or it defaults to '(default)'
      try {
-        dbInstance = getFirestore(app, "mimizinemongo");
-     } catch (err) {
+        dbInstance = getFirestore(app, TARGET_DB_ID);
+     } catch (innerE) {
+        console.error("MIMI // Critical Registry Failure (Recovery):", innerE);
+        // Fallback to default DB if named DB fails completely, to prevent crash
         dbInstance = getFirestore(app);
      }
   } else {
-     dbInstance = getFirestore(app); 
+     // If it fails for another reason, log it but DO NOT fallback to default (it doesn't exist)
+     console.error("MIMI // Critical Registry Failure:", e);
+     // Fallback to default to prevent app crash, even if data is missing
+     try {
+        dbInstance = getFirestore(app);
+     } catch (finalE) {
+        console.error("MIMI // Fatal DB Error:", finalE);
+        // Mock DB to prevent crash? No, Firestore object is needed.
+        // We let it throw if even default fails, but usually default works.
+        throw e;
+     }
   }
 }
 

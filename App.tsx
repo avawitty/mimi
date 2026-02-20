@@ -1,31 +1,32 @@
 
 // @ts-nocheck
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { AppState, ToneTag, ZineMetadata, DriftEvent } from './types';
+import { AppState, ToneTag, ZineMetadata, DriftEvent, MediaFile } from './types';
 import { createZine } from './services/geminiService';
 import { saveZineToProfile, fetchZineById, auth, isCaptiveInWebview } from './services/firebase';
-import { InputStudio } from '../components/InputStudio';
-import { AnalysisDisplay } from '../components/AnalysisDisplay';
-import { ElevatorLoader } from '../components/ElevatorLoader';
-import { UserProvider, useUser } from '../contexts/UserContext';
-import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
-import { AgentProvider, useAgents } from '../contexts/AgentContext';
-import { ArchiveCloudNebula } from '../components/ArchiveCloudNebula';
-import { ArchivalView } from '../components/ArchivalView';
-import { UserProfileView } from '../components/UserProfileView';
-import { MesopicLens } from '../components/MesopicLens'; 
-import { ThePress } from '../components/ThePress';
-import { SanctuaryView } from '../components/SanctuaryView';
-import { TailorView } from '../components/TailorView';
-import { ScryView } from '../components/ScryView';
-import { DarkroomView } from '../components/DarkroomView';
-import { ApiKeyShield } from '../components/ApiKeyShield';
-import { ProposalView } from '../components/AboutView'; 
-import { CaptiveSentinel } from '../components/CaptiveSentinel';
-import { TheWard } from '../components/TheWard'; 
-import { PatronMintView } from '../components/PatronMintView'; // Imported
+import { InputStudio } from './components/InputStudio';
+import { AnalysisDisplay } from './components/AnalysisDisplay';
+import { ElevatorLoader } from './components/ElevatorLoader';
+import { UserProvider, useUser } from './contexts/UserContext';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { AgentProvider, useAgents } from './contexts/AgentContext';
+import { ArchiveCloudNebula } from './components/ArchiveCloudNebula';
+import { ArchivalView } from './components/ArchivalView';
+import { UserProfileView } from './components/UserProfileView';
+import { MesopicLens } from './components/MesopicLens'; 
+import { ThePress } from './components/ThePress';
+import { SanctuaryView } from './components/SanctuaryView';
+import { TailorView } from './components/TailorView';
+import { ScryView } from './components/ScryView';
+import { DarkroomView } from './components/DarkroomView';
+import { ApiKeyShield } from './components/ApiKeyShield';
+import { ProposalView } from './components/AboutView'; 
+import { CaptiveSentinel } from './components/CaptiveSentinel';
+import { TheWard } from './components/TheWard'; 
+import { PatronMintView } from './components/PatronMintView';
+import { DossierView } from './components/DossierView';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, LayoutGrid, User, Menu, X, Newspaper, LogOut, ShieldAlert, Zap, Camera, Key, Radio, Activity as ActivityIcon, Archive, Moon, Sun, Scissors, FlaskConical, Eye, Radar, Compass, Info, Cpu, ShieldCheck } from 'lucide-react';
+import { Sparkles, LayoutGrid, User, Menu, X, Newspaper, LogOut, ShieldAlert, Zap, Camera, Key, Radio, Activity as ActivityIcon, Archive, Moon, Sun, Scissors, FlaskConical, Eye, Radar, Compass, Info, Cpu, ShieldCheck, Briefcase } from 'lucide-react';
 
 // ... (Rest of existing subcomponents: BinderRing, SidebarBtn, MobileMenu, DatabaseVoid) ...
 // BINDER RING COMPONENT
@@ -78,13 +79,14 @@ const MobileMenu: React.FC<{
              <div className="space-y-4">
                 <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 block border-b border-stone-800 pb-2">Creation</span>
                 <button onClick={() => handleNav('studio')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Studio</button>
+                <button onClick={() => handleNav('dossier')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Projects</button>
                 <button onClick={() => handleNav('nebula')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">The Stand</button>
                 <button onClick={() => handleNav('scry')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Scry</button>
              </div>
              <div className="space-y-4">
                 <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 block border-b border-stone-800 pb-2">Alchemy</span>
                 <button onClick={() => handleNav('tailor')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">Tailor</button>
-                <button onClick={() => handleNav('ward')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">The Ward</button>
+                {/* <button onClick={() => handleNav('ward')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">The Ward</button> */}
                 <button onClick={() => handleNav('archival')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">Archive</button>
                 <button onClick={() => handleNav('mesopic')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">Mesopic</button>
                 <button onClick={() => handleNav('darkroom')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">Darkroom</button>
@@ -139,11 +141,13 @@ const AppContent: React.FC = () => {
   const [zineMetadata, setZineMetadata] = useState<ZineMetadata | null>(null);
   const [isDeepRefraction, setIsDeepRefraction] = useState(false);
   const [threadValue, setThreadValue] = useState<string>('');
+  const [threadMedia, setThreadMedia] = useState<MediaFile[]>([]); 
   const [showCaptiveSentinel, setShowCaptiveSentinel] = useState(false);
   const [isHeaderTranslucent, setIsHeaderTranslucent] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [tailorOverrides, setTailorOverrides] = useState<any>(null);
   const [isPatronMint, setIsPatronMint] = useState(false);
+  const [proposalContext, setProposalContext] = useState<any>(null);
 
   useEffect(() => {
     if (isCaptiveInWebview()) setShowCaptiveSentinel(true);
@@ -166,7 +170,15 @@ const AppContent: React.FC = () => {
       }
       if (e.detail) { 
         setViewMode(e.detail); setZineMetadata(null); setAppState(AppState.IDLE);
-        if (e.detail === 'studio' && e.detail_data) setThreadValue(e.detail_data);
+        if (e.detail === 'studio' && e.detail_data) {
+            setThreadValue(e.detail_data.context || e.detail_data);
+            if (e.detail_data.initialMedia) {
+                setThreadMedia(e.detail_data.initialMedia);
+            }
+        }
+        if (e.detail === 'about' && e.detail_data?.folder) {
+            setProposalContext(e.detail_data.folder);
+        }
       }
     };
     window.addEventListener('mimi:change_view', handleChangeView);
@@ -182,8 +194,12 @@ const AppContent: React.FC = () => {
     try {
       const result = await createZine(text, media, tone, profile, opts, personaKey);
       const targetUid = profile?.uid || user?.uid || 'ghost';
-      const id = await saveZineToProfile(targetUid, profile?.handle || 'Ghost', profile?.photoURL, result.content, tone, undefined, opts.deepThinking, opts.isPublic);
-      setZineMetadata({ id, userId: targetUid, userHandle: profile?.handle || 'Ghost', title: result.content.title, tone, timestamp: Date.now(), likes: 0, content: result.content });
+      const id = await saveZineToProfile(targetUid, profile?.handle || 'Ghost', profile?.photoURL, result.content, tone, undefined, opts.deepThinking, opts.isPublic, opts.isLite, media, text);
+      setZineMetadata({ 
+          id, userId: targetUid, userHandle: profile?.handle || 'Ghost', title: result.content.title, tone, timestamp: Date.now(), likes: 0, content: result.content,
+          artifacts: media, 
+          originalInput: text 
+      });
       setAppState(AppState.REVEALED);
     } catch (e) { 
         console.error("Zine Creation Failed:", e);
@@ -213,14 +229,14 @@ const AppContent: React.FC = () => {
 
             <div className="flex-1 flex flex-col pt-12 overflow-hidden">
                 <div className="absolute left-0 top-0 bottom-0 w-[88px] flex items-center justify-center pointer-events-none group-hover/sidebar:opacity-0 transition-opacity duration-300">
-                    <h1 className="text-stone-600 font-serif italic text-4xl tracking-widest whitespace-nowrap transform -rotate-90 origin-center">
+                    <h1 className="text-stone-600 font-[Cormorant] font-light italic text-4xl tracking-widest whitespace-nowrap transform -rotate-90 origin-center">
                         Mimi Zine
                     </h1>
                 </div>
 
                 <div className="flex-1 flex flex-col opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-500 delay-100 w-72 px-4 pb-8 overflow-y-auto no-scrollbar">
                     <div className="mb-10 pl-6 pt-2">
-                        <h1 className="text-white font-serif italic text-4xl tracking-tighter">Mimi.</h1>
+                        <h1 className="text-white font-[Cormorant] font-light italic text-4xl tracking-tighter">Mimi.</h1>
                         <p className="text-stone-500 font-sans text-[9px] uppercase tracking-widest font-black mt-1">Sovereign Registry</p>
                     </div>
 
@@ -228,6 +244,7 @@ const AppContent: React.FC = () => {
                         <div className="space-y-1">
                             <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-600">Creation</span></div>
                             <SidebarBtn active={viewMode === 'studio'} onClick={() => setViewMode('studio')} icon={<Sparkles />} label="Studio" />
+                            <SidebarBtn active={viewMode === 'dossier'} onClick={() => setViewMode('dossier')} icon={<Briefcase />} label="Projects" />
                             <SidebarBtn active={viewMode === 'nebula'} onClick={() => setViewMode('nebula')} icon={<LayoutGrid />} label="Stand" />
                             <SidebarBtn active={viewMode === 'scry'} onClick={() => setViewMode('scry')} icon={<Compass />} label="Scry" />
                         </div>
@@ -242,7 +259,7 @@ const AppContent: React.FC = () => {
                         <div className="space-y-1">
                             <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-600">Alchemy</span></div>
                             <SidebarBtn active={viewMode === 'tailor'} onClick={() => setViewMode('tailor')} icon={<Scissors />} label="Tailor" />
-                            <SidebarBtn active={viewMode === 'ward'} onClick={() => setViewMode('ward')} icon={<ShieldCheck />} label="The Ward" />
+                            {/* <SidebarBtn active={viewMode === 'ward'} onClick={() => setViewMode('ward')} icon={<ShieldCheck />} label="The Ward" /> */}
                             <SidebarBtn active={viewMode === 'profile'} onClick={() => setViewMode('profile')} icon={<User />} label="Profile" />
                         </div>
 
@@ -278,13 +295,23 @@ const AppContent: React.FC = () => {
         
         <MobileMenu isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} viewMode={viewMode} setViewMode={setViewMode} logout={logout} />
         
-        {!zineMetadata && appState !== AppState.REVEALED && (
-          <header className={`fixed top-0 right-0 left-0 md:left-[88px] h-20 md:h-24 z-[50] flex items-center justify-center px-8 transition-all duration-1000 pt-safe overflow-hidden ${isHeaderTranslucent ? 'bg-nous-base/95 dark:bg-stone-950/95 backdrop-blur-xl' : 'bg-nous-base/80 dark:bg-stone-950/80 backdrop-blur-xl'}`}>
-              <div onClick={() => { setViewMode('studio'); setZineMetadata(null); setAppState(AppState.IDLE); }} className="cursor-pointer">
-                <h1 className="text-3xl md:text-6xl tracking-[-0.08em] font-serif italic text-stone-950 dark:text-white opacity-95 transition-all luminescent-text">Mimi</h1>
-              </div>
-          </header>
-        )}
+        <AnimatePresence>
+          {!zineMetadata && appState !== AppState.REVEALED && (
+            <motion.header 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8, ease: "easeInOut" }}
+              className={`fixed top-0 right-0 left-0 md:left-[88px] h-20 md:h-24 z-[50] flex items-center justify-center px-8 transition-all duration-1000 pt-safe overflow-hidden border-b border-black/5 dark:border-white/10 bg-nous-base dark:bg-[#1C1C1C] backdrop-blur-xl`}
+            >
+                <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-multiply dark:mix-blend-overlay" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/noise.png')" }} />
+                <div onClick={() => { setViewMode('studio'); setZineMetadata(null); setAppState(AppState.IDLE); }} className="cursor-pointer flex flex-col items-center group relative z-10">
+                  <h1 className="text-3xl md:text-6xl tracking-[-0.08em] font-[Cormorant] font-light italic text-nous-text dark:text-white opacity-95 transition-all luminescent-text">Mimi</h1>
+                  <div className="w-12 h-px bg-nous-text dark:bg-white opacity-20 mt-1 group-hover:w-24 transition-all duration-700" />
+                </div>
+            </motion.header>
+          )}
+        </AnimatePresence>
 
         <main className={`relative flex-1 flex flex-col overflow-y-auto no-scrollbar transition-all duration-1000 ${zineMetadata ? 'md:pl-0 pt-0' : 'pt-20 md:pt-24'}`}>
           <AnimatePresence mode="wait">
@@ -293,8 +320,14 @@ const AppContent: React.FC = () => {
             ) : zineMetadata ? (
               <AnalysisDisplay key="reveal" metadata={zineMetadata} onReset={() => { setZineMetadata(null); setAppState(AppState.IDLE); }} />
             ) : (
-              <motion.div key={viewMode} className="flex-1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
-                {viewMode === 'studio' && <InputStudio onRefine={handleRefine} isThinking={appState === AppState.THINKING} initialValue={threadValue} />}
+              <motion.div 
+                key={viewMode} 
+                className="flex-1" 
+                initial={{ opacity: 0, y: 5, filter: 'blur(2px)' }} 
+                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} 
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              >
+                {viewMode === 'studio' && <InputStudio onRefine={handleRefine} isThinking={appState === AppState.THINKING} initialValue={threadValue} initialMedia={threadMedia} />}
                 {viewMode === 'nebula' && <ArchiveCloudNebula onSelectZine={(z) => { setZineMetadata(z); setAppState(AppState.REVEALED); }} />}
                 {viewMode === 'mesopic' && <MesopicLens />}
                 {viewMode === 'archival' && <ArchivalView onSelectZine={(z) => { setZineMetadata(z); setAppState(AppState.REVEALED); }} />}
@@ -302,10 +335,11 @@ const AppContent: React.FC = () => {
                 {viewMode === 'tailor' && <TailorView initialOverrides={tailorOverrides} />}
                 {viewMode === 'scry' && <ScryView />}
                 {viewMode === 'press' && <ThePress />}
-                {viewMode === 'about' && <ProposalView />}
+                {viewMode === 'about' && <ProposalView folderData={proposalContext} />}
                 {viewMode === 'darkroom' && <DarkroomView />}
                 {viewMode === 'sanctuary' && <SanctuaryView />}
                 {viewMode === 'ward' && <TheWard />}
+                {viewMode === 'dossier' && <DossierView />}
               </motion.div>
             )}
           </AnimatePresence>

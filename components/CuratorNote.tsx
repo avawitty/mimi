@@ -109,12 +109,12 @@ export const CuratorNote: React.FC<{ isOpen: boolean; onClose: () => void }> = (
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[11000] flex items-end justify-center p-4 pb-0 md:items-center md:pb-0 bg-black/60 backdrop-blur-sm overflow-hidden">
+    <div className="fixed inset-0 z-[11000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
       
       {/* CLICK OUTSIDE TO CLOSE */}
-      <div className="absolute inset-0 z-0" onClick={onClose} />
+      <div className="fixed inset-0 z-0" onClick={onClose} />
 
-      <div className="relative w-full max-w-[600px] h-[600px] flex items-end justify-center perspective-1000 pointer-events-none md:pointer-events-auto">
+      <div className="relative w-full max-w-[600px] h-[500px] flex items-center justify-center perspective-1000 pointer-events-none md:pointer-events-auto mt-12 md:mt-0">
         
         {/* THE ENVELOPE CONTAINER */}
         <motion.div 
@@ -132,21 +132,21 @@ export const CuratorNote: React.FC<{ isOpen: boolean; onClose: () => void }> = (
           <motion.div 
             initial={{ y: 0, scale: 0.95 }}
             animate={{ 
-                y: envelopeState === 'open' ? -420 : 0, // Moves high enough to clear envelope
-                scale: envelopeState === 'open' ? 1.05 : 0.95, // Scales up slightly for presence
+                y: envelopeState === 'open' ? -200 : 0, // Adjusted Y translation for better centering
+                scale: envelopeState === 'open' ? 1.0 : 0.95, 
                 zIndex: envelopeState === 'open' ? 50 : 10 
             }}
             transition={{ duration: 1.2, ease: [0.19, 1, 0.22, 1], delay: 0.1 }}
-            className="absolute left-6 right-6 top-8 h-[550px] bg-[#F2F0E9] dark:bg-[#1a1918] rounded-sm shadow-2xl border border-stone-200 dark:border-stone-800 z-10 flex flex-col overflow-hidden origin-bottom"
+            className="absolute left-4 right-4 md:left-6 md:right-6 top-4 md:top-8 h-[500px] md:h-[550px] bg-[#F2F0E9] dark:bg-[#1a1918] rounded-sm shadow-2xl border border-stone-200 dark:border-stone-800 z-10 flex flex-col overflow-hidden origin-bottom"
             style={{
                 backgroundImage: "url('https://www.transparenttextures.com/patterns/linen.png')",
                 backgroundBlendMode: 'multiply'
             }}
           >
             {/* CARD CONTENT */}
-            <div className="flex-1 flex flex-col relative bg-white/50 dark:bg-black/20">
+            <div className="flex-1 flex flex-col relative bg-white/50 dark:bg-black/20 overflow-hidden">
                 {/* Header / Tabs */}
-                <div className="h-16 border-b border-stone-200/50 dark:border-stone-800/50 flex items-center justify-between px-6 bg-[#FDFBF7]/80 dark:bg-[#201e1c]/80 backdrop-blur-sm">
+                <div className="h-14 border-b border-stone-200/50 dark:border-stone-800/50 flex items-center justify-between px-6 bg-[#FDFBF7]/80 dark:bg-[#201e1c]/80 backdrop-blur-sm shrink-0">
                     <div className="flex gap-4">
                         {['proposal', 'capabilities', 'protocol'].map((tab) => (
                             <button 
@@ -182,7 +182,7 @@ export const CuratorNote: React.FC<{ isOpen: boolean; onClose: () => void }> = (
                 </div>
                 
                 {/* Card Footer (Actions) */}
-                <div className="p-4 border-t border-stone-200/50 dark:border-stone-800/50 bg-[#FDFBF7]/80 dark:bg-[#201e1c]/80 flex justify-between items-center backdrop-blur-sm">
+                <div className="p-4 border-t border-stone-200/50 dark:border-stone-800/50 bg-[#FDFBF7]/80 dark:bg-[#201e1c]/80 flex justify-between items-center backdrop-blur-sm shrink-0">
                     <span className="font-serif italic text-xs text-stone-400">"Sovereignty requires structure."</span>
                     <button onClick={onClose} className="p-2 hover:bg-stone-200 dark:hover:bg-stone-700 rounded-full transition-colors text-stone-500">
                         <ArrowDown size={16} />
@@ -227,7 +227,7 @@ export const CuratorNote: React.FC<{ isOpen: boolean; onClose: () => void }> = (
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute top-8 right-8 z-50 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-all"
+            className="absolute top-4 right-4 md:top-8 md:right-8 z-50 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-all"
         >
             <X size={20} />
         </motion.button>

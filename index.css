@@ -1,0 +1,124 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Archival Grid Palette - Deepened Ink Tone */
+    --nous-base: #FDFBF7;
+    --nous-text: #0C0C0C; 
+    --nous-subtle: #404040;
+    --nous-accent: #000000;
+    --nous-border: #E5E5E5;
+  }
+  
+  html, body {
+    height: 100dvh;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: var(--nous-base);
+    color: var(--nous-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-family: "Cormorant Garamond", serif;
+    font-weight: 300;
+    overscroll-behavior-y: none;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-serif, * {
+    font-weight: 300 !important;
+  }
+
+  /* Dark mode */
+  .dark body {
+    background-color: #050505;
+  }
+}
+
+@media print {
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+}
+
+/* SAFE AREA UTILITIES */
+.pt-safe { padding-top: env(safe-area-inset-top) !important; }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom) !important; }
+.pl-safe { padding-left: env(safe-area-inset-left) !important; }
+.pr-safe { padding-right: env(safe-area-inset-right) !important; }
+.mt-safe { margin-top: env(safe-area-inset-top) !important; }
+.mb-safe { margin-bottom: env(safe-area-inset-bottom) !important; }
+
+#root {
+  height: 100dvh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* TEXTURE SYSTEM */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  /* Using a subtle noise pattern */
+  background-image: url("https://www.transparenttextures.com/patterns/noise.png");
+  opacity: 0.08; /* Increased parchment grain */
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: multiply;
+}
+
+.dark .grain-overlay {
+  mix-blend-mode: overlay;
+  opacity: 0.25; /* Increased scope gram/grain on dark mode */
+  background-image: url("https://www.transparenttextures.com/patterns/stardust.png"); 
+}
+
+.canvas-texture {
+  background-image: url("https://www.transparenttextures.com/patterns/canvas-orange.png"); /* Canvas feel */
+  background-blend-mode: soft-light;
+}
+
+.luminescent-text {
+  transition: text-shadow 0.8s ease, color 0.8s ease;
+}
+.dark .luminescent-text {
+  text-shadow: 
+    0 0 12px rgba(255, 255, 255, 0.8), 
+    0 0 22px rgba(255, 255, 255, 0.6), 
+    0 0 40px rgba(16, 185, 129, 0.2),
+    0 0 60px rgba(16, 185, 129, 0.1);
+  color: #ffffff;
+}
+
+.pericardium-seal {
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  width: 100vw;
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.rounded-sm { border-radius: 1px !important; }
+
+/* TAPE EFFECT */
+.tape-top {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 40px;
+  height: 16px;
+  background-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  backdrop-filter: blur(2px);
+}

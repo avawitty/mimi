@@ -3,12 +3,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { PocketItem, UserProfile, AgentEnrichment } from "../types";
 import { updatePocketItem } from "./firebaseUtils";
-
-const getClient = (apiKeyOverride?: string) => {
-    const key = apiKeyOverride || process.env.API_KEY;
-    if (!key) throw new Error("Agent Registry Key Missing.");
-    return new GoogleGenAI({ apiKey: key });
-};
+import { withResilience } from "./geminiService";
 
 export interface AgentConfig {
   curatorEnabled: boolean;
@@ -25,9 +20,8 @@ export const runCuratorAgent = async (item: PocketItem, profile: UserProfile | n
     if (config && !config.curatorEnabled) return null;
     console.info("MIMI // AGENT: The Curator is observing...");
     
-    try {
-        const ai = getClient();
-        const model = "gemini-3-pro-preview"; // Thinking model required for deep semiotic analysis
+    return await withResilience(async (ai) => {
+        const model = "gemini-3.1-pro-preview"; // Thinking model required for deep semiotic analysis
         const budget = config?.thinkingBudget || 1024;
 
         let promptParts = [];
@@ -78,11 +72,7 @@ export const runCuratorAgent = async (item: PocketItem, profile: UserProfile | n
         
         console.info("MIMI // AGENT: The Curator has filed the shard.", enrichment);
         return enrichment;
-
-    } catch (e) {
-        console.warn("MIMI // AGENT: The Curator was obstructed.", e);
-        throw new Error("The Curator was obstructed: " + (e.message || "Unknown Error"));
-    }
+    });
 };
 
 /**
@@ -96,9 +86,8 @@ export const runSentinelAgent = async (recentItems: PocketItem[], profile: UserP
     
     console.info("MIMI // AGENT: The Sentinel is auditing...");
 
-    try {
-        const ai = getClient();
-        const model = "gemini-3-pro-preview";
+    return await withResilience(async (ai) => {
+        const model = "gemini-3.1-pro-preview";
         const budget = config?.thinkingBudget || 1024;
 
         const shardSummaries = recentItems.map(i => i.content.prompt || i.content.name || i.agentEnrichment?.visualSemiotics || "Visual Shard").join("; ");
@@ -132,9 +121,5 @@ export const runSentinelAgent = async (recentItems: PocketItem[], profile: UserP
         const audit = JSON.parse(response.text || "{}");
         console.info("MIMI // AGENT: The Sentinel Report.", audit);
         return audit;
-
-    } catch (e) {
-        console.warn("MIMI // AGENT: The Sentinel sleeps.", e);
-        throw new Error("The Sentinel was obstructed: " + (e.message || "Unknown Error"));
-    }
+    });
 };

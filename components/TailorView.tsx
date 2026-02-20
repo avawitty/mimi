@@ -6,10 +6,10 @@ import {
   Scissors, Ruler, Radio, Sparkles, Loader2, 
   ShieldCheck, Zap, Wind, Anchor, 
   Waves, BookOpen, PenTool, Check, ArrowRight, 
-  X, BrainCircuit, Save, Orbit, Feather, Activity, Target, Sliders, Layers, Info, Box, Palette, ImageIcon, Type, Plus, Trash2, Maximize2, MoveHorizontal, Mic, ArrowLeft, Heart, User, CheckCircle, Droplet, Hash, ListChecks, Radar, Globe, Instagram, Link, Stars, ExternalLink, ShieldAlert, Quote, FileText, Copy, Terminal, Gauge, Eraser, Binary, Wallet, Smartphone, ChevronRight, Moon, Compass, MapPin, Clock, Calendar, MessageSquare, Upload, Download, DollarSign, Settings, LayoutGrid, Edit3
+  X, BrainCircuit, Save, Orbit, Feather, Activity, Target, Sliders, Layers, Info, Box, Palette, ImageIcon, Type, Plus, Trash2, Maximize2, MoveHorizontal, Mic, ArrowLeft, Heart, User, CheckCircle, Droplet, Hash, ListChecks, Radar, Globe, Instagram, Link, Stars, ExternalLink, ShieldAlert, Quote, FileText, Copy, Terminal, Gauge, Eraser, Binary, Wallet, Smartphone, ChevronRight, Moon, Compass, MapPin, Clock, Calendar, MessageSquare, Upload, Download, DollarSign, Settings, LayoutGrid, Edit3, Key
 } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
-import { ColorShard, TailorAuditReport, ZodiacSign } from '../types';
+import { ColorShard, TailorAuditReport, ZodiacSign, TailorLogicDraft } from '../types';
 import { analyzeTailorDraft, compressImage } from '../services/geminiService';
 import { addToPocket } from '../services/firebase';
 import { useTasteLogging } from '../hooks/useTasteLogging';
@@ -53,6 +53,19 @@ const primaryAnchorsMap = [
   { key: 'favoriteThing', label: 'Favorite Object', placeholder: 'e.g. A silver cigarette case, a cracked mirror...' }
 ];
 
+const DEFAULT_DRAFT_FALLBACK: TailorLogicDraft = {
+  interests: { anime: '', designer: '', topic: '', book: '', favoriteThing: '' },
+  aestheticCore: { silhouettes: '', textures: '', eraFocus: '90s Minimal', manualEra: '', density: 50, developmentRoadmap: [], visualShards: [] },
+  celestialCalibration: { zodiac: 'gemini', astrologicalLineage: '', seasonalAlignment: '' },
+  chromaticRegistry: { primaryPalette: [], baseNeutral: '#F2F1ED', accentSignal: '#1C1917' },
+  typographyIntent: { styleDescription: '', weightPreference: '' },
+  narrativeVoice: { emotionalTemperature: 'CLINICAL', sentenceStructure: 'CONCISE', culturalRegister: ['EDITORIAL'] },
+  desireVectors: { moreOf: '', lessOf: '', experimentingWith: '', avoiding: '', materialityAudit: '' },
+  brandIdentity: { fonts: { serif: 'Cormorant Garamond', sans: 'Inter', mono: 'Space Mono' }, logo: '', palette: ['#000000', '#FFFFFF'] },
+  draftStatus: 'provisional',
+  lastTailored: Date.now()
+};
+
 // --- SUB-COMPONENTS ---
 
 const CustomInput: React.FC<{ placeholder: string, onAdd: (val: string) => void }> = ({ placeholder, onAdd }) => {
@@ -67,6 +80,8 @@ const CustomInput: React.FC<{ placeholder: string, onAdd: (val: string) => void 
     <div className="flex items-center gap-2 mt-3 opacity-60 hover:opacity-100 transition-opacity">
       <Plus size={12} className="text-stone-400" />
       <input 
+        id={`custom-${placeholder.replace(/\s+/g, '-').toLowerCase()}`}
+        name={`custom-${placeholder.replace(/\s+/g, '-').toLowerCase()}`}
         value={val}
         onChange={(e) => setVal(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -143,10 +158,10 @@ const BlueprintCard: React.FC<{ label: string; subLabel?: string; onClick: () =>
 export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverrides }) => {
   const { profile, updateProfile, personas, activePersonaId, switchPersona, updatePersona, user } = useUser();
   const activePersona = personas.find(p => p.id === activePersonaId);
-  const [draft, setDraft] = useState(activePersona?.tailorDraft || profile?.tailorDraft);
+  const [draft, setDraft] = useState<TailorLogicDraft | null>(null);
   
   const [viewMode, setViewMode] = useState<'blueprint' | 'edit'>('blueprint');
-  const [activeStep, setActiveStep] = useState<'anchors' | 'celestial' | 'aesthetic' | 'chromatic' | 'voice' | 'vectors' | 'shards' | 'settings'>('anchors');
+  const [activeStep, setActiveStep] = useState<'anchors' | 'celestial' | 'aesthetic' | 'chromatic' | 'voice' | 'vectors' | 'shards' | 'brand' | 'settings'>('anchors');
   
   const [isSaving, setIsSaving] = useState(false);
   const [isAuditing, setIsAuditing] = useState(false);
@@ -163,12 +178,33 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
   const [newColorName, setNewColorName] = useState('');
 
   // Persona Settings State
-  const [personaName, setPersonaName] = useState(activePersona?.name || '');
-  const [personaKey, setPersonaKey] = useState(activePersona?.apiKey || '');
+  const [personaName, setPersonaName] = useState('');
+  const [personaKey, setPersonaKey] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   // --- LOGIC ---
+
+  useEffect(() => {
+      // Defensive Initialization: Ensure draft structure is complete
+      const source = activePersona?.tailorDraft || profile?.tailorDraft || DEFAULT_DRAFT_FALLBACK;
+      const mergedDraft = {
+          ...DEFAULT_DRAFT_FALLBACK,
+          ...source,
+          interests: { ...DEFAULT_DRAFT_FALLBACK.interests, ...source.interests },
+          aestheticCore: { ...DEFAULT_DRAFT_FALLBACK.aestheticCore, ...source.aestheticCore },
+          celestialCalibration: { ...DEFAULT_DRAFT_FALLBACK.celestialCalibration, ...source.celestialCalibration },
+          chromaticRegistry: { ...DEFAULT_DRAFT_FALLBACK.chromaticRegistry, ...source.chromaticRegistry },
+          narrativeVoice: { ...DEFAULT_DRAFT_FALLBACK.narrativeVoice, ...source.narrativeVoice },
+          desireVectors: { ...DEFAULT_DRAFT_FALLBACK.desireVectors, ...source.desireVectors },
+          brandIdentity: { ...DEFAULT_DRAFT_FALLBACK.brandIdentity, ...source.brandIdentity }
+      };
+      setDraft(mergedDraft);
+      
+      setPersonaName(activePersona?.name || '');
+      setPersonaKey(activePersona?.apiKey || '');
+  }, [activePersonaId, profile?.tailorDraft, activePersona]);
 
   useEffect(() => {
     if (draft?.typographyIntent?.styleDescription) {
@@ -179,7 +215,7 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
             injectGoogleFont(currentFont);
         }
     }
-  }, []);
+  }, [draft?.typographyIntent?.styleDescription]);
 
   const injectGoogleFont = (fontName: string) => {
       const linkId = `font-${fontName.replace(/\s+/g, '-')}`;
@@ -208,32 +244,25 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
   };
 
   useEffect(() => {
-      if (activePersona) {
-          setDraft(activePersona.tailorDraft);
-          setPersonaName(activePersona.name);
-          setPersonaKey(activePersona.apiKey || '');
-      }
-  }, [activePersonaId]);
-
-  useEffect(() => {
     if (initialOverrides && draft && draft.desireVectors) {
-        setDraft(prev => ({
+        setDraft(prev => prev ? ({
             ...prev,
             desireVectors: {
                 ...prev.desireVectors,
                 experimentingWith: (initialOverrides.suggestedExperiments || []).join(', ') || prev.desireVectors.experimentingWith,
                 moreOf: initialOverrides.identifiedDrifts || prev.desireVectors.moreOf
             }
-        }));
+        }) : null);
     }
   }, [initialOverrides]);
 
-  const updateDraft = (patch: any) => { setDraft(prev => ({ ...prev, ...patch })); };
-  const updateInterest = (field: string, val: string) => { updateDraft({ interests: { ...draft.interests, [field]: val } }); };
-  const updateCelestial = (field: string, val: string) => { updateDraft({ celestialCalibration: { ...draft.celestialCalibration, [field]: val } }); };
-  const updateDesireVector = (field: string, val: string) => { updateDraft({ desireVectors: { ...draft.desireVectors, [field]: val } }); };
+  const updateDraft = (patch: any) => { if (draft) setDraft(prev => ({ ...prev!, ...patch })); };
+  const updateInterest = (field: string, val: string) => { if (draft) updateDraft({ interests: { ...draft.interests, [field]: val } }); };
+  const updateCelestial = (field: string, val: string) => { if (draft) updateDraft({ celestialCalibration: { ...draft.celestialCalibration, [field]: val } }); };
+  const updateDesireVector = (field: string, val: string) => { if (draft) updateDraft({ desireVectors: { ...draft.desireVectors, [field]: val } }); };
 
   const toggleOption = (field: string, val: string) => {
+    if (!draft) return;
     const current = draft.aestheticCore[field] || '';
     const parts = current.split(',').map(p => p.trim()).filter(p => p);
     if (parts.some(p => p.toLowerCase() === val.toLowerCase())) { 
@@ -243,7 +272,7 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
   };
 
   const addCustomOption = (field: string, val: string) => {
-      if (!val.trim()) return;
+      if (!val.trim() || !draft) return;
       const current = draft.aestheticCore[field] || '';
       const parts = current.split(',').map(p => p.trim()).filter(p => p);
       if (!parts.some(p => p.toLowerCase() === val.toLowerCase())) {
@@ -252,6 +281,7 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
   };
 
   const toggleRegister = (val: string) => {
+      if (!draft) return;
       const current = draft.narrativeVoice.culturalRegister || [];
       if (current.includes(val)) {
           updateDraft({ narrativeVoice: { ...draft.narrativeVoice, culturalRegister: current.filter(c => c !== val) } });
@@ -261,7 +291,7 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
   };
 
   const addColorToPalette = () => {
-      if (!newColorName.trim()) return;
+      if (!newColorName.trim() || !draft) return;
       const newColor: ColorShard = { name: newColorName, hex: newColorHex, descriptor: 'Custom' };
       const current = draft.chromaticRegistry?.primaryPalette || [];
       updateDraft({ chromaticRegistry: { ...draft.chromaticRegistry, primaryPalette: [...current, newColor] } });
@@ -269,11 +299,13 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
   };
 
   const removeColor = (hex: string) => {
+      if (!draft) return;
       const current = draft.chromaticRegistry?.primaryPalette || [];
       updateDraft({ chromaticRegistry: { ...draft.chromaticRegistry, primaryPalette: current.filter(c => c.hex !== hex) } });
   };
 
   const applyChromaticPreset = (preset: typeof CHROMATIC_PRESETS[0]) => {
+      if (!draft) return;
       updateDraft({
           chromaticRegistry: {
               ...draft.chromaticRegistry,
@@ -285,7 +317,7 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
   };
 
   const handleAlign = async () => {
-    if (!profile || !activePersona) return;
+    if (!profile || !activePersona || !draft) return;
     setIsSaving(true);
     try {
       const finalDraft = { ...draft, draftStatus: 'aligned', lastTailored: Date.now() };
@@ -308,6 +340,7 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
   };
 
   const handleScryDirectives = async () => {
+    if (!draft) return;
     setIsAuditing(true);
     try {
       const res = await analyzeTailorDraft(draft);
@@ -320,7 +353,7 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
 
   const handleShardUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || files.length === 0) return;
+    if (!files || files.length === 0 || !draft) return;
     const newShards: string[] = [];
     for (const file of Array.from(files)) {
         const reader = new FileReader();
@@ -337,10 +370,31 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
     updateDraft({ aestheticCore: { ...draft.aestheticCore, visualShards: [...(draft.aestheticCore.visualShards || []), ...newShards] } });
   };
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !draft) return;
+    const file = files[0];
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+        const raw = ev.target?.result as string;
+        const compressed = await compressImage(raw, 0.5, 400);
+        updateDraft({ brandIdentity: { ...draft.brandIdentity!, logo: compressed } });
+    };
+    reader.readAsDataURL(file);
+  };
+
   const openEditor = (step: typeof activeStep) => {
       setActiveStep(step);
       setViewMode('edit');
   };
+
+  if (!draft) {
+      return (
+          <div className="flex items-center justify-center h-full bg-nous-base dark:bg-[#050505]">
+              <Loader2 className="animate-spin text-stone-400" />
+          </div>
+      );
+  }
 
   return (
     <div className="flex-1 w-full h-full overflow-y-auto no-scrollbar pb-96 px-4 md:px-16 pt-12 md:pt-20 bg-nous-base dark:bg-[#050505] text-nous-text dark:text-white transition-all duration-1000 relative">
@@ -388,7 +442,7 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
 
         {/* --- VIEW MODE: BLUEPRINT DASHBOARD --- */}
         <AnimatePresence mode="wait">
-            {viewMode === 'blueprint' && draft && (
+            {viewMode === 'blueprint' && (
                 <motion.div 
                     key="blueprint"
                     initial={{ opacity: 0, y: 10 }}
@@ -459,414 +513,476 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                             </div>
                         </BlueprintCard>
 
+                        {/* BRAND KIT CARD */}
+                        <BlueprintCard label="Brand Identity" subLabel="REF: BR-01" onClick={() => openEditor('brand')} className="md:col-span-2">
+                            <div className="flex items-center gap-8">
+                                <div className="w-24 h-24 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-sm flex items-center justify-center overflow-hidden">
+                                    {draft.brandIdentity?.logo ? (
+                                        <img src={draft.brandIdentity.logo} className="w-full h-full object-contain" />
+                                    ) : (
+                                        <span className="font-sans text-[8px] uppercase tracking-widest text-stone-300 font-black">No Logo</span>
+                                    )}
+                                </div>
+                                <div className="space-y-4 flex-1">
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div>
+                                            <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400 block mb-1">Serif</span>
+                                            <span className="font-serif italic text-lg">{draft.brandIdentity?.fonts.serif}</span>
+                                        </div>
+                                        <div>
+                                            <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400 block mb-1">Sans</span>
+                                            <span className="font-sans text-lg">{draft.brandIdentity?.fonts.sans}</span>
+                                        </div>
+                                        <div>
+                                            <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400 block mb-1">Mono</span>
+                                            <span className="font-mono text-sm">{draft.brandIdentity?.fonts.mono}</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {draft.brandIdentity?.palette.map((hex, i) => (
+                                            <div key={i} className="w-6 h-6 rounded-full border border-black/10" style={{ backgroundColor: hex }} />
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </BlueprintCard>
+
                         {/* VOICE CARD */}
                         <BlueprintCard label="Narrative Voice" subLabel="REF: VC-22" onClick={() => openEditor('voice')}>
                             <div className="space-y-4">
                                 <div className="flex flex-wrap gap-2">
-                                    <span className="px-3 py-1 bg-stone-100 dark:bg-stone-800 rounded-full font-sans text-[8px] font-black uppercase">{draft.narrativeVoice.emotionalTemperature}</span>
-                                    <span className="px-3 py-1 bg-stone-100 dark:bg-stone-800 rounded-full font-sans text-[8px] font-black uppercase">{draft.narrativeVoice.sentenceStructure}</span>
+                                    <span className="px-3 py-1 bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-full font-sans text-[7px] uppercase font-black">{draft.narrativeVoice.emotionalTemperature}</span>
+                                    <span className="px-3 py-1 bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-full font-sans text-[7px] uppercase font-black">{draft.narrativeVoice.sentenceStructure}</span>
                                 </div>
-                                <div className="space-y-1">
-                                    <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Registers</span>
-                                    <p className="font-mono text-[9px] text-stone-500">
-                                        {(draft.narrativeVoice.culturalRegister || []).join(' // ')}
-                                    </p>
-                                </div>
+                                <p className="font-serif italic text-stone-500">
+                                    Register: {draft.narrativeVoice.culturalRegister.join(', ') || "Unspecified"}
+                                </p>
                             </div>
                         </BlueprintCard>
 
-                        {/* SHARDS PREVIEW */}
-                        <BlueprintCard label="Visual Shards" subLabel={`Count: ${(draft.aestheticCore.visualShards || []).length}`} onClick={() => openEditor('shards')}>
-                            <div className="grid grid-cols-3 gap-2">
-                                {(draft.aestheticCore.visualShards || []).slice(0, 3).map((s, i) => (
-                                    <div key={i} className="aspect-square bg-stone-100 dark:bg-stone-800 rounded-sm overflow-hidden">
-                                        <img src={s} className="w-full h-full object-cover grayscale" />
-                                    </div>
-                                ))}
-                                {(draft.aestheticCore.visualShards || []).length === 0 && (
-                                    <div className="col-span-3 aspect-[3/1] flex items-center justify-center border border-dashed border-stone-200 dark:border-stone-800 rounded-sm">
-                                        <span className="font-sans text-[8px] uppercase text-stone-400">No Debris</span>
-                                    </div>
-                                )}
+                        {/* SETTINGS CARD */}
+                        <BlueprintCard label="Mask Protocol" subLabel="SYS: ADMIN" onClick={() => openEditor('settings')}>
+                            <div className="flex items-center gap-3 text-stone-400">
+                                <Settings size={16} />
+                                <span className="font-sans text-[9px] uppercase tracking-widest font-black">Configure Identity</span>
                             </div>
                         </BlueprintCard>
-
                     </div>
 
-                    {/* RIGHT COL: ACTIONS & META */}
-                    <div className="md:col-span-4 space-y-8 sticky top-24 h-fit">
-                        
-                        {/* ALIGNMENT STATUS */}
-                        <div className="bg-white dark:bg-[#0A0A0A] border border-stone-200 dark:border-stone-800 p-8 rounded-sm shadow-xl space-y-6">
-                            <div className="flex items-center gap-3 text-emerald-500 border-b border-dashed border-stone-200 dark:border-stone-800 pb-4">
-                                <Activity size={18} className="animate-pulse" />
-                                <span className="font-sans text-[9px] uppercase tracking-[0.4em] font-black">System Status</span>
-                            </div>
-                            
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center">
-                                    <span className="font-serif italic text-stone-500">Logic State</span>
-                                    <span className="font-mono text-[10px] uppercase text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-sm">
-                                        {draft.draftStatus || 'Provisional'}
-                                    </span>
+                    {/* RIGHT COL: THE AUDIT */}
+                    <div className="md:col-span-4 flex flex-col gap-6">
+                        <div className="bg-stone-50 dark:bg-[#080808] border border-stone-200 dark:border-stone-800 p-8 h-full flex flex-col justify-between rounded-sm">
+                            <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-3 text-emerald-500">
+                                        <ShieldCheck size={24} />
+                                        <span className="font-sans text-[9px] uppercase tracking-[0.4em] font-black">Alignment Protocol</span>
+                                    </div>
+                                    <p className="font-serif italic text-sm text-stone-500 leading-relaxed">
+                                        Changes are local until aligned. Committing writes this logic to your active mask.
+                                    </p>
                                 </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="font-serif italic text-stone-500">Last Synced</span>
-                                    <span className="font-mono text-[10px] uppercase text-stone-400">
-                                        {new Date(draft.lastTailored || Date.now()).toLocaleTimeString()}
-                                    </span>
+                                <div className="space-y-3">
+                                    <button onClick={handleAlign} disabled={isSaving} className="w-full py-4 bg-gradient-to-b from-stone-200 to-stone-300 dark:from-stone-700 dark:to-stone-800 text-stone-500 dark:text-stone-300 rounded-full font-sans text-[10px] uppercase tracking-[0.4em] font-black shadow-lg hover:shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3 border-t border-white/50 dark:border-white/10">
+                                        {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                                        Align Logic
+                                    </button>
+                                    <button onClick={handleScryDirectives} disabled={isAuditing} className="w-full py-4 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-full font-sans text-[10px] uppercase tracking-[0.4em] font-black text-stone-400 hover:text-emerald-500 hover:border-emerald-500 transition-all flex items-center justify-center gap-3 shadow-sm">
+                                        {isAuditing ? <Loader2 size={12} className="animate-spin" /> : <Radar size={12} />}
+                                        Scry Directives
+                                    </button>
                                 </div>
                             </div>
-
-                            <button onClick={handleAlign} disabled={isSaving} className="w-full py-4 bg-nous-text dark:bg-white text-white dark:text-black rounded-sm font-sans text-[9px] uppercase tracking-[0.4em] font-black shadow-lg hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
-                                {isSaving ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-                                Align Logic
-                            </button>
-                        </div>
-
-                        {/* DIRECTOR'S AUDIT */}
-                        <button onClick={handleScryDirectives} disabled={isAuditing} className="w-full p-8 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-sm text-left group hover:border-emerald-500 transition-all shadow-sm">
-                            <div className="flex items-center justify-between mb-4">
-                                <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 group-hover:text-emerald-500 transition-colors">Scry Directives</span>
-                                <Radar size={16} className={isAuditing ? 'animate-spin text-emerald-500' : 'text-stone-300'} />
+                            <div className="pt-8 border-t border-black/5 dark:border-white/5 opacity-40">
+                                <p className="font-mono text-[8px] uppercase tracking-widest text-center">Last Aligned: {new Date(draft.lastTailored).toLocaleDateString()}</p>
                             </div>
-                            <h3 className="font-serif text-2xl italic text-stone-700 dark:text-stone-200 group-hover:text-nous-text dark:group-hover:text-white transition-colors">
-                                Generate Strategic Audit.
-                            </h3>
-                            <p className="font-mono text-[9px] text-stone-400 mt-4 uppercase">
-                                The Oracle will review your logic for structural integrity.
-                            </p>
-                        </button>
-
-                        <div className="text-center pt-8 opacity-30">
-                            <p className="font-serif italic text-xs">"Define the physics. The output follows."</p>
                         </div>
-
                     </div>
                 </motion.div>
             )}
 
-            {/* --- VIEW MODE: EDIT TABS --- */}
-            {viewMode === 'edit' && draft && (
+            {/* --- VIEW MODE: EDITING FORMS --- */}
+            {viewMode === 'edit' && (
                 <motion.div 
-                    key="edit"
+                    key="editor"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-12"
+                    className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-sm shadow-xl flex flex-col md:flex-row overflow-hidden min-h-[70vh]"
                 >
-                    {/* EDIT NAVIGATION */}
-                    <div className="sticky top-0 z-20 bg-nous-base/95 dark:bg-[#050505]/95 backdrop-blur-xl border-b border-black/5 dark:border-white/5 py-4">
-                        <div className="flex items-center justify-between mb-6">
-                            <button onClick={() => setViewMode('blueprint')} className="flex items-center gap-2 text-stone-400 hover:text-emerald-500 transition-colors">
-                                <ArrowLeft size={16} /> <span className="font-sans text-[9px] uppercase tracking-widest font-black">Back to Blueprint</span>
+                    {/* SIDEBAR NAV */}
+                    <nav className="w-full md:w-64 bg-stone-50 dark:bg-black/20 border-b md:border-b-0 md:border-r border-stone-200 dark:border-stone-800 p-6 flex flex-row md:flex-col gap-2 overflow-x-auto no-scrollbar md:overflow-visible shrink-0">
+                        {['anchors', 'celestial', 'aesthetic', 'chromatic', 'voice', 'vectors', 'shards', 'brand', 'settings'].map(step => (
+                            <button
+                                key={step}
+                                onClick={() => setActiveStep(step as any)}
+                                className={`text-left px-4 py-3 rounded-sm font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center justify-between whitespace-nowrap ${activeStep === step ? 'bg-white dark:bg-stone-800 text-nous-text dark:text-white shadow-sm border border-black/5 dark:border-white/5' : 'text-stone-400 hover:text-stone-600'}`}
+                            >
+                                {step} {activeStep === step && <ChevronRight size={12} />}
                             </button>
-                            <span className="font-mono text-[9px] uppercase text-stone-500">Editing: {activeStep}</span>
-                        </div>
-                        <div className="flex gap-8 overflow-x-auto no-scrollbar pb-2">
-                           {[
-                             { id: 'anchors', label: 'ANCHORS', icon: <Anchor size={12} /> },
-                             { id: 'celestial', label: 'CELESTIAL', icon: <Moon size={12} /> },
-                             { id: 'aesthetic', label: 'AESTHETIC', icon: <Layers size={12} /> },
-                             { id: 'chromatic', label: 'CHROMATIC', icon: <Palette size={12} /> },
-                             { id: 'voice', label: 'VOICE', icon: <Mic size={12} /> },
-                             { id: 'vectors', label: 'VECTORS', icon: <Target size={12} /> },
-                             { id: 'shards', label: 'VISUALS', icon: <ImageIcon size={12} /> },
-                             { id: 'settings', label: 'SETTINGS', icon: <Settings size={12} /> }
-                           ].map(step => (
-                              <button key={step.id} onClick={() => setActiveStep(step.id as any)} className={`flex items-center gap-2 font-sans text-[8px] uppercase tracking-widest font-black transition-all shrink-0 pb-2 border-b-2 ${activeStep === step.id ? 'text-nous-text dark:text-white border-current' : 'text-stone-400 border-transparent hover:text-stone-600'}`}>
-                                {step.icon} {step.label}
-                              </button>
-                           ))}
-                        </div>
+                        ))}
+                    </nav>
+
+                    {/* FORM CONTENT */}
+                    <div className="flex-1 p-8 md:p-16 overflow-y-auto no-scrollbar bg-[#FDFBF7] dark:bg-[#080808]">
+                        <AnimatePresence mode="wait">
+                            <motion.div 
+                                key={activeStep}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="space-y-12 max-w-2xl mx-auto"
+                            >
+                                {/* HEADER */}
+                                <div className="space-y-2 border-b border-black/5 dark:border-white/5 pb-8">
+                                    <h3 className="font-serif text-4xl italic tracking-tighter text-nous-text dark:text-white capitalize">{activeStep.replace(/([A-Z])/g, ' $1').trim()}.</h3>
+                                    <p className="font-sans text-[9px] uppercase tracking-widest text-stone-400 font-black">Define the parameters of your world.</p>
+                                </div>
+
+                                {/* DYNAMIC FORM FIELDS */}
+                                {activeStep === 'anchors' && (
+                                    <>
+                                        <p className="font-serif italic text-stone-500 mb-8">Ground your mask's logic in the physical world.</p>
+                                        {primaryAnchorsMap.map(field => (
+                                            <FieldGroup key={field.key} label={field.label}>
+                                                <input 
+                                                    value={draft.interests[field.key] || ''}
+                                                    onChange={e => updateInterest(field.key, e.target.value)}
+                                                    placeholder={field.placeholder}
+                                                    className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-4 font-serif italic text-2xl focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-stone-300"
+                                                />
+                                            </FieldGroup>
+                                        ))}
+                                    </>
+                                )}
+
+                                {activeStep === 'celestial' && (
+                                    <>
+                                        <p className="font-serif italic text-stone-500 mb-8">Align your output to cosmic vectors.</p>
+                                        <FieldGroup label="Zodiac Sign">
+                                            <PresetStrip 
+                                                options={ZODIAC_SIGNS} 
+                                                current={draft.celestialCalibration.zodiac || ''} 
+                                                onSelect={(v) => updateCelestial('zodiac', v)} 
+                                            />
+                                        </FieldGroup>
+                                        <FieldGroup label="Birth Data (Optional)" description="For deep chart calculation. Data is not stored externally.">
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <input type="date" value={draft.celestialCalibration.birthDate || ''} onChange={e => updateCelestial('birthDate', e.target.value)} className="bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-mono text-sm" />
+                                                <input type="time" value={draft.celestialCalibration.birthTime || ''} onChange={e => updateCelestial('birthTime', e.target.value)} className="bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-mono text-sm" />
+                                            </div>
+                                            <input placeholder="Birth City" value={draft.celestialCalibration.birthLocation || ''} onChange={e => updateCelestial('birthLocation', e.target.value)} className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 mt-4 font-serif italic text-lg" />
+                                        </FieldGroup>
+                                        <FieldGroup label="Astrological Lineage" description="Describe your chart's dominant placements (e.g. Scorpio Moon, Leo Rising).">
+                                            <textarea value={draft.celestialCalibration.astrologicalLineage || ''} onChange={e => updateCelestial('astrologicalLineage', e.target.value)} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-4 font-serif italic text-lg h-32 resize-none focus:outline-none focus:border-emerald-500" placeholder="Sun in... Moon in... Rising in..." />
+                                        </FieldGroup>
+                                    </>
+                                )}
+
+                                {activeStep === 'aesthetic' && (
+                                    <>
+                                        <p className="font-serif italic text-stone-500 mb-8">Define the physics of your visual world.</p>
+                                        
+                                        <FieldGroup label="Typographic DNA" description="Import from Google Fonts. Type specific font name to fetch and preview.">
+                                            <div className="grid grid-cols-2 gap-4 mb-4">
+                                                {availableFonts.map(f => (
+                                                    <button key={f.name} onClick={() => updateDraft({ typographyIntent: { ...draft.typographyIntent, styleDescription: f.name } })} className={`text-left p-4 border rounded-sm transition-all ${draft.typographyIntent.styleDescription === f.name ? 'border-emerald-500 bg-emerald-50/10' : 'border-stone-200 dark:border-stone-800'}`}>
+                                                        <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400 block mb-1">{f.type}</span>
+                                                        <span className="text-xl" style={{ fontFamily: f.name }}>{f.name}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <input value={customFontInput} onChange={e => setCustomFontInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddFont()} placeholder="e.g. 'Cinzel' or 'Oswald'" className="flex-1 bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-lg" />
+                                                <button onClick={handleAddFont} disabled={isFontLoading} className="font-sans text-[9px] uppercase tracking-widest font-black flex items-center gap-2 hover:text-emerald-500">{isFontLoading ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />} Fetch Font</button>
+                                            </div>
+                                            {draft.typographyIntent.styleDescription && <p className="mt-4 text-sm text-stone-400 font-serif italic">Mimi will inject the Google Font stylesheet immediately.</p>}
+                                        </FieldGroup>
+
+                                        <FieldGroup label="Silhouettes">
+                                            <PresetStrip options={SILHOUETTE_OPTIONS} current={draft.aestheticCore.silhouettes} onSelect={(v) => toggleOption('silhouettes', v)} onAddCustom={(v) => addCustomOption('silhouettes', v)} customPlaceholder="Add custom silhouette..." />
+                                        </FieldGroup>
+                                        <FieldGroup label="Textures">
+                                            <PresetStrip options={TEXTURE_OPTIONS} current={draft.aestheticCore.textures} onSelect={(v) => toggleOption('textures', v)} onAddCustom={(v) => addCustomOption('textures', v)} customPlaceholder="Add custom texture..." />
+                                        </FieldGroup>
+                                        <FieldGroup label="Era Focus">
+                                            <PresetStrip options={ERA_OPTIONS} current={draft.aestheticCore.eraFocus} onSelect={(v) => toggleOption('eraFocus', v)} onAddCustom={(v) => addCustomOption('eraFocus', v)} customPlaceholder="Add specific era..." />
+                                        </FieldGroup>
+                                        <FieldGroup label="Density / Entropy">
+                                            <div className="flex items-center gap-4">
+                                                <span className="font-mono text-xs">MINIMAL</span>
+                                                <input type="range" min="0" max="100" value={draft.aestheticCore.density} onChange={e => updateDraft({ aestheticCore: { ...draft.aestheticCore, density: parseInt(e.target.value) } })} className="flex-1 h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-emerald-500" />
+                                                <span className="font-mono text-xs">MAXIMAL</span>
+                                            </div>
+                                        </FieldGroup>
+                                    </>
+                                )}
+
+                                {activeStep === 'chromatic' && (
+                                    <>
+                                        <p className="font-serif italic text-stone-500 mb-8">The color logic of your universe.</p>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                                            {CHROMATIC_PRESETS.map(p => (
+                                                <button key={p.name} onClick={() => applyChromaticPreset(p)} className="p-4 border border-stone-200 dark:border-stone-800 rounded-sm hover:border-emerald-500 transition-all group flex flex-col items-center gap-3">
+                                                    <div className="flex gap-1">
+                                                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: p.base }} />
+                                                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: p.accent }} />
+                                                    </div>
+                                                    <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 group-hover:text-emerald-500">{p.name}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <FieldGroup label="Base Neutral (Primary)" description="Your silence. Enter Hex.">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: draft.chromaticRegistry.baseNeutral }} />
+                                                <input value={draft.chromaticRegistry.baseNeutral} onChange={e => updateDraft({ chromaticRegistry: { ...draft.chromaticRegistry, baseNeutral: e.target.value } })} className="bg-transparent border-b border-stone-200 py-2 font-mono text-lg" />
+                                            </div>
+                                        </FieldGroup>
+                                        <FieldGroup label="Accent Signal" description="Your alert. Enter Hex.">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: draft.chromaticRegistry.accentSignal }} />
+                                                <input value={draft.chromaticRegistry.accentSignal} onChange={e => updateDraft({ chromaticRegistry: { ...draft.chromaticRegistry, accentSignal: e.target.value } })} className="bg-transparent border-b border-stone-200 py-2 font-mono text-lg" />
+                                            </div>
+                                        </FieldGroup>
+                                        
+                                        <FieldGroup label="Extended Palette" description="Define the core signals.">
+                                            <div className="flex flex-wrap gap-4 mb-4">
+                                                {draft.chromaticRegistry.primaryPalette.map((c, i) => (
+                                                    <div key={i} className="group relative">
+                                                        <div className="w-16 h-16 rounded-sm shadow-sm cursor-pointer border border-black/5" style={{ backgroundColor: c.hex }} title={c.name} />
+                                                        <button onClick={() => removeColor(c.hex)} className="absolute -top-2 -right-2 bg-white text-red-500 rounded-full p-1 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"><X size={10}/></button>
+                                                        <span className="block text-[8px] font-mono text-center mt-1 uppercase truncate w-16">{c.name}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="flex items-end gap-4 p-4 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-sm">
+                                                <div>
+                                                    <label className="text-[8px] font-sans font-black uppercase text-stone-400 block mb-1">Color Picker</label>
+                                                    <input type="color" value={newColorHex} onChange={e => setNewColorHex(e.target.value)} className="w-12 h-12 p-0 border-0 rounded cursor-pointer" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <label className="text-[8px] font-sans font-black uppercase text-stone-400 block mb-1">Name</label>
+                                                    <input value={newColorName} onChange={e => setNewColorName(e.target.value)} placeholder="e.g. Electric Moss" className="w-full bg-transparent border-b border-stone-300 dark:border-stone-700 py-2 font-serif italic" />
+                                                </div>
+                                                <button onClick={addColorToPalette} disabled={!newColorName} className="px-4 py-2 bg-stone-800 text-white rounded-sm font-sans text-[9px] font-black uppercase disabled:opacity-50">Add</button>
+                                            </div>
+                                        </FieldGroup>
+                                    </>
+                                )}
+
+                                {activeStep === 'voice' && (
+                                    <>
+                                        <p className="font-serif italic text-stone-500 mb-8">How does this mask speak?</p>
+                                        <FieldGroup label="Emotional Temperature">
+                                            <PresetStrip options={EMOTIONAL_TEMPERATURES} current={draft.narrativeVoice.emotionalTemperature} onSelect={(v) => updateDraft({ narrativeVoice: { ...draft.narrativeVoice, emotionalTemperature: v } })} />
+                                        </FieldGroup>
+                                        <FieldGroup label="Sentence Structure">
+                                            <PresetStrip options={SENTENCE_STRUCTURES} current={draft.narrativeVoice.sentenceStructure} onSelect={(v) => updateDraft({ narrativeVoice: { ...draft.narrativeVoice, sentenceStructure: v } })} />
+                                        </FieldGroup>
+                                        <FieldGroup label="Cultural Register">
+                                            <PresetStrip options={VOICE_REGISTERS} current={draft.narrativeVoice.culturalRegister} onSelect={toggleRegister} onAddCustom={(v) => updateDraft({ narrativeVoice: { ...draft.narrativeVoice, culturalRegister: [...draft.narrativeVoice.culturalRegister, v] } })} customPlaceholder="Add custom register..." />
+                                        </FieldGroup>
+                                    </>
+                                )}
+
+                                {activeStep === 'vectors' && (
+                                    <>
+                                        <p className="font-serif italic text-stone-500 mb-8">Where is this taste moving towards?</p>
+                                        <FieldGroup label="More Of">
+                                            <textarea value={draft.desireVectors.moreOf} onChange={e => updateDesireVector('moreOf', e.target.value)} className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-xl h-24 resize-none focus:outline-none focus:border-emerald-500" placeholder="e.g. Silence, negative space..." />
+                                        </FieldGroup>
+                                        <FieldGroup label="Less Of">
+                                            <textarea value={draft.desireVectors.lessOf} onChange={e => updateDesireVector('lessOf', e.target.value)} className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-xl h-24 resize-none focus:outline-none focus:border-red-500" placeholder="e.g. Noise, clutter..." />
+                                        </FieldGroup>
+                                        <FieldGroup label="Experimenting With">
+                                            <textarea value={draft.desireVectors.experimentingWith} onChange={e => updateDesireVector('experimentingWith', e.target.value)} className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-xl h-24 resize-none focus:outline-none focus:border-indigo-500" placeholder="e.g. 3D renders, video essays..." />
+                                        </FieldGroup>
+                                        <FieldGroup label="Fiscal Velocity / Budget">
+                                            <PresetStrip options={PRICE_POINTS} current={draft.desireVectors.fiscalVelocity} onSelect={(v) => updateDesireVector('fiscalVelocity', v)} />
+                                        </FieldGroup>
+                                    </>
+                                )}
+
+                                {activeStep === 'shards' && (
+                                    <>
+                                        <p className="font-serif italic text-stone-500 mb-8">Upload reference images to train the Oracle.</p>
+                                        <div 
+                                            className="border-2 border-dashed border-stone-200 dark:border-stone-800 rounded-sm p-12 text-center hover:border-emerald-500 transition-colors cursor-pointer group"
+                                            onClick={() => fileInputRef.current?.click()}
+                                        >
+                                            <div className="w-16 h-16 bg-stone-50 dark:bg-stone-900 rounded-full flex items-center justify-center mx-auto mb-4 text-stone-400 group-hover:text-emerald-500 transition-colors">
+                                                <Upload size={24} />
+                                            </div>
+                                            <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 group-hover:text-emerald-500">Upload Visual Shards</span>
+                                        </div>
+                                        <input type="file" ref={fileInputRef} onChange={handleShardUpload} className="hidden" multiple accept="image/*" />
+                                        
+                                        {draft.aestheticCore.visualShards && draft.aestheticCore.visualShards.length > 0 && (
+                                            <div className="grid grid-cols-3 gap-4 mt-8">
+                                                {draft.aestheticCore.visualShards.map((s, i) => (
+                                                    <div key={i} className="aspect-square bg-stone-100 relative group overflow-hidden rounded-sm">
+                                                        <img src={s} className="w-full h-full object-cover" />
+                                                        <button onClick={() => updateDraft({ aestheticCore: { ...draft.aestheticCore, visualShards: draft.aestheticCore.visualShards.filter((_, idx) => idx !== i) } })} className="absolute top-1 right-1 bg-white text-red-500 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
+                                                            <X size={12} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        <ShardAnalyzer shards={draft.aestheticCore.visualShards} draft={draft} />
+                                    </>
+                                )}
+
+                                {activeStep === 'brand' && (
+                                    <>
+                                        <p className="font-serif italic text-stone-500 mb-8">Define your visual assets and typographic hierarchy.</p>
+                                        
+                                        <FieldGroup label="Logo Mark">
+                                            <div 
+                                                className="border-2 border-dashed border-stone-200 dark:border-stone-800 rounded-sm p-8 text-center hover:border-emerald-500 transition-colors cursor-pointer group flex flex-col items-center gap-4"
+                                                onClick={() => logoInputRef.current?.click()}
+                                            >
+                                                {draft.brandIdentity?.logo ? (
+                                                    <img src={draft.brandIdentity.logo} className="h-32 object-contain" />
+                                                ) : (
+                                                    <div className="w-16 h-16 bg-stone-50 dark:bg-stone-900 rounded-full flex items-center justify-center text-stone-400 group-hover:text-emerald-500 transition-colors">
+                                                        <Upload size={24} />
+                                                    </div>
+                                                )}
+                                                <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 group-hover:text-emerald-500">
+                                                    {draft.brandIdentity?.logo ? 'Replace Logo' : 'Upload Logo'}
+                                                </span>
+                                            </div>
+                                            <input type="file" ref={logoInputRef} onChange={handleLogoUpload} className="hidden" accept="image/*" />
+                                        </FieldGroup>
+
+                                        <FieldGroup label="Typography System">
+                                            <div className="grid grid-cols-1 gap-6">
+                                                <div className="space-y-2">
+                                                    <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Primary Serif (Headlines)</label>
+                                                    <input 
+                                                        value={draft.brandIdentity?.fonts.serif || ''} 
+                                                        onChange={e => updateDraft({ brandIdentity: { ...draft.brandIdentity!, fonts: { ...draft.brandIdentity!.fonts, serif: e.target.value } } })}
+                                                        className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-xl focus:outline-none focus:border-emerald-500"
+                                                        placeholder="e.g. Cormorant Garamond"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Secondary Sans (Body)</label>
+                                                    <input 
+                                                        value={draft.brandIdentity?.fonts.sans || ''} 
+                                                        onChange={e => updateDraft({ brandIdentity: { ...draft.brandIdentity!, fonts: { ...draft.brandIdentity!.fonts, sans: e.target.value } } })}
+                                                        className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-sans text-lg focus:outline-none focus:border-emerald-500"
+                                                        placeholder="e.g. Inter"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Tertiary Mono (Data)</label>
+                                                    <input 
+                                                        value={draft.brandIdentity?.fonts.mono || ''} 
+                                                        onChange={e => updateDraft({ brandIdentity: { ...draft.brandIdentity!, fonts: { ...draft.brandIdentity!.fonts, mono: e.target.value } } })}
+                                                        className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-mono text-sm focus:outline-none focus:border-emerald-500"
+                                                        placeholder="e.g. Space Mono"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </FieldGroup>
+
+                                        <FieldGroup label="Brand Palette">
+                                            <div className="flex flex-wrap gap-4 mb-4">
+                                                {draft.brandIdentity?.palette.map((hex, i) => (
+                                                    <div key={i} className="group relative">
+                                                        <div className="w-12 h-12 rounded-full shadow-sm cursor-pointer border border-black/5" style={{ backgroundColor: hex }} />
+                                                        <button 
+                                                            onClick={() => updateDraft({ brandIdentity: { ...draft.brandIdentity!, palette: draft.brandIdentity!.palette.filter((_, idx) => idx !== i) } })}
+                                                            className="absolute -top-1 -right-1 bg-white text-red-500 rounded-full p-1 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        >
+                                                            <X size={10}/>
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <div className="relative flex items-center">
+                                                    <input 
+                                                        type="color" 
+                                                        onChange={e => updateDraft({ brandIdentity: { ...draft.brandIdentity!, palette: [...(draft.brandIdentity?.palette || []), e.target.value] } })}
+                                                        className="w-12 h-12 opacity-0 absolute inset-0 cursor-pointer"
+                                                    />
+                                                    <div className="w-12 h-12 rounded-full border-2 border-dashed border-stone-300 flex items-center justify-center text-stone-300 pointer-events-none">
+                                                        <Plus size={16} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </FieldGroup>
+                                    </>
+                                )}
+
+                                {activeStep === 'settings' && (
+                                    <>
+                                        <p className="font-serif italic text-stone-500 mb-8">Configure Identity & Billing.</p>
+                                        <FieldGroup label="Identity Namespace">
+                                            <input value={personaName} onChange={e => setPersonaName(e.target.value)} className="w-full bg-transparent border-b border-stone-200 py-4 font-serif text-3xl italic focus:outline-none" placeholder="Persona Name..." />
+                                        </FieldGroup>
+                                        <FieldGroup label="Sovereign API Key" description="Bind a specific billing account to this mask. Overrides global key.">
+                                            <div className="flex items-center gap-4">
+                                                <Key size={18} className="text-stone-400" />
+                                                <input type="password" value={personaKey} onChange={e => setPersonaKey(e.target.value)} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-4 font-mono text-sm focus:outline-none rounded-sm" placeholder="AIza..." />
+                                            </div>
+                                            <p className="text-[10px] text-stone-400 font-serif italic mt-2">Leave empty to inherit the global sovereign key. <a href="https://aistudio.google.com/app/apikey" target="_blank" className="underline decoration-stone-300">Get Key</a></p>
+                                        </FieldGroup>
+                                        <div className="pt-8">
+                                            <button onClick={handleUpdatePersonaSettings} disabled={isSaving} className="px-8 py-3 bg-nous-text dark:bg-white text-white dark:text-black rounded-full font-sans text-[9px] uppercase tracking-widest font-black shadow-xl active:scale-95 transition-all flex items-center gap-3">
+                                                {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Commit Settings
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </motion.div>
+                        </AnimatePresence>
                     </div>
 
-                    <div className="max-w-3xl mx-auto py-8">
-                      <AnimatePresence mode="wait">
-                          {/* ANCHORS */}
-                          {activeStep === 'anchors' && (
-                            <motion.div key="anchors" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-                                  <div className="space-y-2 border-b border-black/5 dark:border-white/5 pb-4">
-                                    <h3 className="font-serif text-3xl italic tracking-tighter leading-none">Canonical Anchors.</h3>
-                                    <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400">GROUND YOUR MASK'S LOGIC IN THE PHYSICAL WORLD.</p>
-                                  </div>
-                                  <div className="grid gap-8">
-                                     {primaryAnchorsMap.map(anchor => (
-                                       <div key={anchor.key} className="space-y-3">
-                                          <label htmlFor={anchor.key} className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-500">{anchor.label}</label>
-                                          <input id={anchor.key} name={anchor.key} value={draft.interests[anchor.key]} onChange={e => updateInterest(anchor.key, e.target.value)} placeholder={anchor.placeholder} className="w-full bg-transparent border-b border-black/5 dark:border-white/10 py-2 font-serif text-2xl italic focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-stone-600" />
-                                       </div>
-                                     ))}
-                                  </div>
-                            </motion.div>
-                          )}
-
-                          {/* CELESTIAL */}
-                          {activeStep === 'celestial' && (
-                            <motion.div key="celestial" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
-                               <div className="space-y-2 border-b border-black/5 dark:border-white/5 pb-4">
-                                  <h3 className="font-serif text-3xl italic tracking-tighter leading-none">Celestial Calibration.</h3>
-                                  <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400">ALIGN YOUR OUTPUT TO COSMIC VECTORS.</p>
-                               </div>
-                               
-                               <FieldGroup label="Zodiac Sign">
-                                  <div className="flex flex-wrap gap-2">
-                                     {ZODIAC_SIGNS.map(z => (
-                                       <button 
-                                         key={z} 
-                                         onClick={() => updateCelestial('zodiac', z)}
-                                         className={`px-4 py-2 border rounded-full font-sans text-[9px] uppercase tracking-widest font-black transition-all ${draft.celestialCalibration?.zodiac === z ? 'bg-nous-text dark:bg-white text-white dark:text-stone-900 border-transparent' : 'border-stone-200 dark:border-stone-800 text-stone-400'}`}
-                                       >
-                                         {z}
-                                       </button>
-                                     ))}
-                                  </div>
-                               </FieldGroup>
-
-                               <FieldGroup label="Birth Data (Optional)" description="For deep chart calculation. Data is not stored externally.">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                     <input type="date" value={draft.celestialCalibration?.birthDate || ''} onChange={e => updateCelestial('birthDate', e.target.value)} className="bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-mono text-sm" />
-                                     <input type="time" value={draft.celestialCalibration?.birthTime || ''} onChange={e => updateCelestial('birthTime', e.target.value)} className="bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-mono text-sm" />
-                                     <input type="text" placeholder="Birth City" value={draft.celestialCalibration?.birthLocation || ''} onChange={e => updateCelestial('birthLocation', e.target.value)} className="bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-lg" />
-                                  </div>
-                               </FieldGroup>
-
-                               <FieldGroup label="Astrological Lineage" description="Describe your chart's dominant placements (e.g. Scorpio Moon, Leo Rising).">
-                                  <textarea 
-                                     value={draft.celestialCalibration?.astrologicalLineage || ''}
-                                     onChange={e => updateCelestial('astrologicalLineage', e.target.value)}
-                                     placeholder="Sun in... Moon in... Rising in..."
-                                     className="w-full bg-stone-50 dark:bg-stone-900 p-4 font-serif italic text-lg border border-stone-200 dark:border-stone-800 rounded-sm focus:outline-none focus:border-emerald-500"
-                                  />
-                               </FieldGroup>
-                            </motion.div>
-                          )}
-
-                          {/* AESTHETIC */}
-                          {activeStep === 'aesthetic' && (
-                            <motion.div key="aesthetic" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
-                               <div className="space-y-2 border-b border-black/5 dark:border-white/5 pb-4">
-                                  <h3 className="font-serif text-3xl italic tracking-tighter leading-none">Visual Core.</h3>
-                                  <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400">DEFINE THE PHYSICS OF YOUR WORLD.</p>
-                               </div>
-
-                               <FieldGroup label="Typographic DNA" description="Import from Google Fonts. Type specific font name to fetch and preview.">
-                                  <div className="grid grid-cols-2 gap-3 mb-6">
-                                     {availableFonts.map(font => (
-                                       <button 
-                                         key={font.name}
-                                         onClick={() => updateDraft({ typographyIntent: { ...draft.typographyIntent, styleDescription: font.name } })}
-                                         className={`p-4 border text-left rounded-sm transition-all ${draft.typographyIntent?.styleDescription === font.name ? 'border-emerald-500 bg-emerald-50/5' : 'border-stone-200 dark:border-stone-800'}`}
-                                       >
-                                          <span className="block font-sans text-[7px] uppercase tracking-widest text-stone-400 mb-1">{font.type}</span>
-                                          <span className="text-xl" style={{ fontFamily: font.name }}>{font.name}</span>
-                                       </button>
-                                     ))}
-                                  </div>
-                                  
-                                  <div className="flex gap-2">
-                                     <input 
-                                       value={customFontInput} 
-                                       onChange={e => setCustomFontInput(e.target.value)} 
-                                       onKeyDown={e => e.key === 'Enter' && handleAddFont()}
-                                       placeholder="e.g. 'Cinzel' or 'Oswald'" 
-                                       className="flex-1 bg-transparent border-b border-stone-200 dark:border-stone-800 py-3 font-serif italic text-lg focus:outline-none placeholder:text-stone-300" 
-                                     />
-                                     <button onClick={handleAddFont} disabled={isFontLoading || !customFontInput.trim()} className="px-6 py-2 bg-stone-100 dark:bg-stone-800 rounded-full font-sans text-[9px] uppercase tracking-widest font-black hover:bg-stone-200 dark:hover:bg-stone-700 flex items-center gap-2">
-                                        {isFontLoading ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
-                                        Fetch Font
-                                     </button>
-                                  </div>
-                                  <p className="font-serif italic text-xs text-stone-400 mt-2">Mimi will inject the Google Font stylesheet immediately.</p>
-                               </FieldGroup>
-
-                               <FieldGroup label="Silhouettes">
-                                  <PresetStrip 
-                                    options={SILHOUETTE_OPTIONS} 
-                                    current={draft.aestheticCore.silhouettes} 
-                                    onSelect={(val) => toggleOption('silhouettes', val)} 
-                                    onAddCustom={(val) => addCustomOption('silhouettes', val)}
-                                    customPlaceholder="Add custom silhouette..."
-                                  />
-                               </FieldGroup>
-                               <FieldGroup label="Textures">
-                                  <PresetStrip 
-                                    options={TEXTURE_OPTIONS} 
-                                    current={draft.aestheticCore.textures} 
-                                    onSelect={(val) => toggleOption('textures', val)} 
-                                    onAddCustom={(val) => addCustomOption('textures', val)}
-                                    customPlaceholder="Add custom texture..."
-                                  />
-                               </FieldGroup>
-                               <FieldGroup label="Era Focus">
-                                  <PresetStrip 
-                                    options={ERA_OPTIONS} 
-                                    current={draft.aestheticCore.eraFocus} 
-                                    onSelect={(val) => toggleOption('eraFocus', val)} 
-                                    onAddCustom={(val) => addCustomOption('eraFocus', val)}
-                                    customPlaceholder="Add custom era..."
-                                  />
-                               </FieldGroup>
-                            </motion.div>
-                          )}
-
-                          {/* CHROMATIC */}
-                          {activeStep === 'chromatic' && (
-                            <motion.div key="chromatic" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
-                               <div className="space-y-2 border-b border-black/5 dark:border-white/5 pb-4">
-                                  <h3 className="font-serif text-3xl italic tracking-tighter leading-none">Chromatic Registry.</h3>
-                                  <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400">THE COLOR LOGIC OF YOUR UNIVERSE.</p>
-                               </div>
-
-                               {/* PRESETS */}
-                               <FieldGroup label="Chromatic Presets" description="Instant aesthetic baselines.">
-                                  <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4">
-                                     {CHROMATIC_PRESETS.map((preset) => (
-                                        <button 
-                                          key={preset.name}
-                                          onClick={() => applyChromaticPreset(preset)}
-                                          className="shrink-0 flex flex-col gap-2 p-3 border border-stone-100 dark:border-stone-800 rounded-sm hover:border-emerald-500 transition-colors group"
-                                        >
-                                           <div className="flex gap-1">
-                                              <div className="w-6 h-6 rounded-full border border-black/10" style={{ backgroundColor: preset.base }} />
-                                              <div className="w-6 h-6 rounded-full border border-black/10" style={{ backgroundColor: preset.accent }} />
-                                              {preset.palette.map((p, i) => (
-                                                 <div key={i} className="w-6 h-6 rounded-full border border-black/10" style={{ backgroundColor: p.hex }} />
-                                              ))}
-                                           </div>
-                                           <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 group-hover:text-emerald-500 text-center">{preset.name}</span>
-                                        </button>
-                                     ))}
-                                  </div>
-                               </FieldGroup>
-
-                               <div className="grid grid-cols-2 gap-8">
-                                  <FieldGroup label="Base Neutral (Primary)" description="Your silence. Enter Hex.">
-                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-full border border-stone-200" style={{ backgroundColor: draft.chromaticRegistry?.baseNeutral || '#FDFBF7' }} />
-                                        <input type="text" value={draft.chromaticRegistry?.baseNeutral || ''} onChange={e => updateDraft({ chromaticRegistry: { ...draft.chromaticRegistry, baseNeutral: e.target.value } })} className="flex-1 bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-mono text-sm" placeholder="#FDFBF7" />
-                                     </div>
-                                  </FieldGroup>
-                                  <FieldGroup label="Accent Signal" description="Your alert. Enter Hex.">
-                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-full border border-stone-200" style={{ backgroundColor: draft.chromaticRegistry?.accentSignal || '#1C1917' }} />
-                                        <input type="text" value={draft.chromaticRegistry?.accentSignal || ''} onChange={e => updateDraft({ chromaticRegistry: { ...draft.chromaticRegistry, accentSignal: e.target.value } })} className="flex-1 bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-mono text-sm" placeholder="#1C1917" />
-                                     </div>
-                                  </FieldGroup>
-                               </div>
-
-                               <FieldGroup label="Extended Palette" description="Define the core signals.">
-                                  <div className="flex flex-wrap gap-4 mb-6">
-                                     {draft.chromaticRegistry?.primaryPalette?.map((c, i) => (
-                                        <div key={i} className="group relative">
-                                           <div className="w-16 h-16 rounded-sm shadow-sm border border-stone-100 dark:border-stone-800" style={{ backgroundColor: c.hex }} />
-                                           <span className="block mt-2 font-mono text-[9px] text-center text-stone-500 uppercase">{c.name}</span>
-                                           <button onClick={() => removeColor(c.hex)} className="absolute -top-2 -right-2 bg-white text-red-500 rounded-full p-1 shadow-md opacity-0 group-hover:opacity-100 transition-opacity"><X size={10} /></button>
-                                        </div>
-                                     ))}
-                                  </div>
-                                  
-                                  <div className="flex gap-4 items-end bg-stone-50 dark:bg-stone-900 p-4 rounded-sm border border-stone-100 dark:border-stone-800">
-                                     <div className="space-y-2">
-                                        <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Color Picker</label>
-                                        <input type="color" value={newColorHex} onChange={e => setNewColorHex(e.target.value)} className="h-10 w-full cursor-pointer bg-transparent border-none p-0" />
-                                     </div>
-                                     <div className="flex-1 space-y-2">
-                                        <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Name</label>
-                                        <input type="text" value={newColorName} onChange={e => setNewColorName(e.target.value)} placeholder="e.g. Electric Moss" className="w-full bg-transparent border-b border-stone-200 dark:border-stone-700 py-2 font-serif italic focus:outline-none" />
-                                     </div>
-                                     <button onClick={addColorToPalette} disabled={!newColorName} className="px-4 py-2 bg-nous-text dark:bg-white text-white dark:text-black rounded-full font-sans text-[8px] uppercase tracking-widest font-black disabled:opacity-50">Add</button>
-                                  </div>
-                               </FieldGroup>
-                            </motion.div>
-                          )}
-
-                          {activeStep === 'voice' && (
-                            <motion.div key="voice" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
-                               <div className="space-y-2 border-b border-black/5 dark:border-white/5 pb-4">
-                                  <h3 className="font-serif text-3xl italic tracking-tighter leading-none">Narrative Voice.</h3>
-                                  <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400">HOW DOES THIS MASK SPEAK?</p>
-                               </div>
-                               <FieldGroup label="Emotional Temperature">
-                                  <div className="flex flex-wrap gap-2 mb-3">
-                                     {EMOTIONAL_TEMPERATURES.map(t => (
-                                       <button key={t} onClick={() => updateDraft({ narrativeVoice: { ...draft.narrativeVoice, emotionalTemperature: t } })} className={`px-4 py-2 border rounded-full font-sans text-[9px] uppercase tracking-widest font-black transition-all ${draft.narrativeVoice.emotionalTemperature === t ? 'bg-nous-text dark:bg-white text-white dark:text-stone-900 border-transparent' : 'border-stone-200 dark:border-stone-800 text-stone-400'}`}>{t}</button>
-                                     ))}
-                                  </div>
-                               </FieldGroup>
-                               <FieldGroup label="Sentence Structure">
-                                  <div className="flex flex-wrap gap-2 mb-3">
-                                     {SENTENCE_STRUCTURES.map(s => (
-                                       <button key={s} onClick={() => updateDraft({ narrativeVoice: { ...draft.narrativeVoice, sentenceStructure: s } })} className={`px-4 py-2 border rounded-full font-sans text-[9px] uppercase tracking-widest font-black transition-all ${draft.narrativeVoice.sentenceStructure === s ? 'bg-nous-text dark:bg-white text-white dark:text-stone-900 border-transparent' : 'border-stone-200 dark:border-stone-800 text-stone-400'}`}>{s}</button>
-                                     ))}
-                                  </div>
-                               </FieldGroup>
-                               <FieldGroup label="Cultural Register"><PresetStrip options={VOICE_REGISTERS} current={draft.narrativeVoice.culturalRegister} onSelect={(r) => toggleRegister(r)} onAddCustom={(val) => { const current = draft.narrativeVoice.culturalRegister || []; if (!current.includes(val)) updateDraft({ narrativeVoice: { ...draft.narrativeVoice, culturalRegister: [...current, val] } }); }} customPlaceholder="Add custom voice register..." /></FieldGroup>
-                            </motion.div>
-                          )}
-
-                          {activeStep === 'vectors' && (
-                            <motion.div key="vectors" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
-                               <div className="space-y-2 border-b border-black/5 dark:border-white/5 pb-4">
-                                  <h3 className="font-serif text-3xl italic tracking-tighter leading-none">Desire Vectors.</h3>
-                                  <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400">WHERE IS THIS TASTE MOVING TOWARDS?</p>
-                               </div>
-                               <FieldGroup label="More Of"><textarea value={draft.desireVectors?.moreOf || ''} onChange={e => updateDesireVector('moreOf', e.target.value)} className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-3 font-serif italic text-xl focus:outline-none focus:border-emerald-500" placeholder="e.g. Silence, negative space..." /></FieldGroup>
-                               <FieldGroup label="Less Of"><textarea value={draft.desireVectors?.lessOf || ''} onChange={e => updateDesireVector('lessOf', e.target.value)} className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-3 font-serif italic text-xl focus:outline-none focus:border-red-500" placeholder="e.g. Noise, clutter..." /></FieldGroup>
-                               <FieldGroup label="Experimenting With"><textarea value={draft.desireVectors?.experimentingWith || ''} onChange={e => updateDesireVector('experimentingWith', e.target.value)} className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-3 font-serif italic text-xl focus:outline-none focus:border-amber-500" placeholder="e.g. 3D renders, video essays..." /></FieldGroup>
-                               <FieldGroup label="Fiscal Velocity / Budget"><PresetStrip options={PRICE_POINTS} current={draft.desireVectors?.fiscalVelocity} onSelect={(val) => updateDesireVector('fiscalVelocity', val)} /><input value={draft.desireVectors?.fiscalVelocity || ''} onChange={e => updateDesireVector('fiscalVelocity', e.target.value)} className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-3 mt-4 font-serif italic text-lg focus:outline-none focus:border-emerald-500 placeholder:text-stone-500" placeholder="Or define custom budget constraint..." /></FieldGroup>
-                            </motion.div>
-                          )}
-
-                          {activeStep === 'shards' && (
-                            <motion.div key="shards" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
-                               <div className="space-y-2 border-b border-black/5 dark:border-white/5 pb-4">
-                                  <h3 className="font-serif text-3xl italic tracking-tighter leading-none">Visual Shards.</h3>
-                                  <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400">UPLOAD REFERENCE IMAGES TO TRAIN THE ORACLE.</p>
-                               </div>
-                               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                  {(draft.aestheticCore.visualShards || []).map((shard, idx) => (
-                                     <div key={idx} className="relative aspect-square bg-stone-50 dark:bg-stone-900 rounded-sm overflow-hidden group">
-                                        <img src={shard} className="w-full h-full object-cover" />
-                                        <button onClick={() => updateDraft({ aestheticCore: { ...draft.aestheticCore, visualShards: draft.aestheticCore.visualShards?.filter((_, i) => i !== idx) } })} className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><X size={12} /></button>
-                                     </div>
-                                  ))}
-                                  <button onClick={() => fileInputRef.current?.click()} className="aspect-square border-2 border-dashed border-stone-200 dark:border-stone-800 rounded-sm flex flex-col items-center justify-center gap-2 hover:border-emerald-500 transition-colors text-stone-400 hover:text-emerald-500"><Upload size={24} /><span className="font-sans text-[8px] uppercase tracking-widest font-black">Upload</span></button>
-                               </div>
-                               <ShardAnalyzer shards={draft.aestheticCore.visualShards || []} draft={draft} />
-                            </motion.div>
-                          )}
-
-                          {activeStep === 'settings' && (
-                            <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-12">
-                               <div className="space-y-2 border-b border-black/5 dark:border-white/5 pb-4">
-                                  <h3 className="font-serif text-3xl italic tracking-tighter leading-none">Mask Protocols.</h3>
-                                  <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400">CONFIGURE IDENTITY & BILLING.</p>
-                               </div>
-                               <FieldGroup label="Identity Namespace"><input value={personaName} onChange={e => setPersonaName(e.target.value)} className="w-full bg-transparent border-b border-black/5 dark:border-white/10 py-2 font-serif text-2xl italic focus:outline-none focus:border-emerald-500 transition-colors" placeholder="Persona Name" /></FieldGroup>
-                               <FieldGroup label="Sovereign API Key" description="Bind a specific billing account to this mask. Overrides global key."><div className="space-y-4"><div className="flex items-center gap-2 text-stone-500"><Wallet size={14} /><span className="font-sans text-[9px] uppercase tracking-widest font-black">Google AI Studio Key</span></div><input type="password" value={personaKey} onChange={e => setPersonaKey(e.target.value)} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-4 font-mono text-sm rounded-sm focus:outline-none focus:border-emerald-500" placeholder="AIza..." /><p className="font-serif italic text-xs text-stone-400">Leave empty to inherit the global sovereign key. <a href="https://aistudio.google.com/app/apikey" target="_blank" className="ml-2 underline decoration-stone-500/50 hover:text-emerald-500">Get Key</a></p></div></FieldGroup>
-                               <div className="pt-8"><button onClick={handleUpdatePersonaSettings} disabled={isSaving} className="px-8 py-4 bg-nous-text dark:bg-white text-white dark:text-black rounded-full font-sans text-[9px] uppercase tracking-widest font-black shadow-xl active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50">{isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Commit Settings</button></div>
-                            </motion.div>
-                          )}
-                      </AnimatePresence>
+                    {/* ALIGN FOOTER */}
+                    <div className="p-8 border-t md:border-t-0 md:border-l border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-black/20 flex flex-col justify-between shrink-0 md:w-64">
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3 text-emerald-500">
+                                <Target size={18} className="animate-pulse" />
+                                <span className="font-sans text-[9px] uppercase tracking-[0.4em] font-black italic">Alignment Protocol</span>
+                            </div>
+                            <p className="font-serif italic text-xs text-stone-500 leading-relaxed">
+                                Changes are local until aligned. Committing writes this logic to your active mask.
+                            </p>
+                        </div>
+                        <div className="space-y-4 mt-8 md:mt-0">
+                            <button onClick={handleAlign} disabled={isSaving} className="w-full py-4 bg-nous-text dark:bg-white text-white dark:text-black rounded-full font-sans text-[9px] uppercase tracking-[0.4em] font-black shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3">
+                                {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Align Logic
+                            </button>
+                            <button onClick={handleScryDirectives} disabled={isAuditing} className="w-full py-4 border border-stone-200 dark:border-stone-800 rounded-full font-sans text-[9px] uppercase tracking-[0.4em] font-black text-stone-500 hover:text-emerald-500 transition-all flex items-center justify-center gap-3">
+                                {isAuditing ? <Loader2 size={12} className="animate-spin" /> : <Radar size={12} />} Scry Directives
+                            </button>
+                        </div>
                     </div>
                 </motion.div>
             )}
         </AnimatePresence>
-      </div>
 
-      <input type="file" ref={fileInputRef} onChange={handleShardUpload} className="hidden" multiple accept="image/*" />
-      
-      {/* AUDIT OVERLAY */}
-      <AnimatePresence>
-         {showAuditOverlay && auditReport && (
-            <TailorAuditOverlay 
-               auditReport={auditReport} 
-               onClose={() => setShowAuditOverlay(false)} 
-               onApplyToGeneration={(text) => console.log("Manifesto Applied:", text)} 
-            />
-         )}
-      </AnimatePresence>
+        <AnimatePresence>
+            {showAuditOverlay && auditReport && (
+                <TailorAuditOverlay 
+                    auditReport={auditReport} 
+                    onClose={() => setShowAuditOverlay(false)} 
+                    onApplyToGeneration={(text) => {
+                        window.dispatchEvent(new CustomEvent('mimi:change_view', { 
+                            detail: 'studio', 
+                            detail_data: { context: `[AUDIT MANIFESTO APPLIED]\n\n${text}\n\nGenerate based on this logic.` } 
+                        }));
+                    }}
+                />
+            )}
+        </AnimatePresence>
+
+        <input type="file" ref={fileInputRef} onChange={handleShardUpload} className="hidden" multiple accept="image/*" />
+      </div>
     </div>
   );
 };

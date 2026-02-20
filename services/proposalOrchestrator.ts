@@ -1,6 +1,5 @@
 
-// @ts-nocheck
-import { Proposal, ProposalContent, ProposalSection, EditorElement, UserProfile, PocketItem } from "../types";
+import { Proposal, ProposalSection, EditorElement, UserProfile, PocketItem } from "../types";
 import { generateProposalStrategy, refineProposalText } from "./geminiService";
 import { saveProposal, fetchPocketItems } from "./firebaseUtils";
 
@@ -34,11 +33,16 @@ export const generateProposalFromFolder = async (
       // Manual Selection / Direct Folder Injection Path
       sourceItems = config.sourceItems;
   } else if (config.folderId) {
-      // Folder Registry Path (Legacy)
+      // Folder Registry Path
       const allItems = await fetchPocketItems(config.userId);
+      // We assume folders are stored as 'moodboard' items in the pocket for now, 
+      // or we resolve the folder logic if using a separate collection.
+      // Based on existing architecture, we look for the moodboard item.
       const folderItem = allItems.find(i => i.id === config.folderId && i.type === 'moodboard');
       
       if (!folderItem) {
+          // Fallback: If folderId passed isn't a moodboard item but just a filter ID, we might need other logic.
+          // For now, assume strict moodboard item ID.
           throw new Error("Source Folder Logic Corrupted.");
       }
 
@@ -51,6 +55,7 @@ export const generateProposalFromFolder = async (
   }
 
   // 2. PRE-PROCESS ITEMS TO EXTRACT ZINE CONTEXT
+  // If artifacts are Zines (zine_card), we extract their high-level strategy to inform the deck.
   let zineContext = "";
   
   sourceItems.forEach(item => {
@@ -78,6 +83,7 @@ export const generateProposalFromFolder = async (
   const proposalType = presetMap[config.selectedPreset] || "Strategic Proposal";
 
   // 3. GENERATE RAW STRATEGY FROM ORACLE
+  // This calls the Gemini Service to get a structured JSON of chapters/slides
   const strategyResponse = await generateProposalStrategy(
     folderName,
     sourceItems,
@@ -86,7 +92,7 @@ export const generateProposalFromFolder = async (
     proposalType
   );
 
-  // Fallback construction if chapters array is missing but summary exists
+  // Fallback construction if chapters array is missing but summary exists (resilience)
   if ((!strategyResponse || !strategyResponse.chapters) && strategyResponse?.manifesto_summary) {
       console.warn("MIMI // Proposal Partial Fail: Reconstructing from Summary");
       strategyResponse.chapters = [
@@ -112,8 +118,14 @@ export const generateProposalFromFolder = async (
       content: chap.title,
       style: { 
         top: 10, left: 8, width: 40, zIndex: 10, 
-        fontSize: 3.5, fontFamily: 'serif', fontWeight: '900', fontStyle: 'italic',
-        color: '#1C1917', lineHeight: 0.9
+        fontSize: 3.5, 
+        fontFamily: 'serif', 
+        fontWeight: '900', 
+        fontStyle: 'italic',
+        color: 'inherit', 
+        lineHeight: 0.9, 
+        textAlign: 'left',
+        opacity: 1
       }
     });
 
@@ -124,20 +136,26 @@ export const generateProposalFromFolder = async (
       content: chap.body,
       style: { 
         top: 35, left: 8, width: 40, zIndex: 9, 
-        fontSize: 1.1, fontFamily: 'serif', fontWeight: '400', 
-        color: '#44403C', lineHeight: 1.4
+        fontSize: 1.1, 
+        fontFamily: 'serif', 
+        fontWeight: '400', 
+        color: 'inherit', 
+        lineHeight: 1.4, 
+        textAlign: 'left',
+        opacity: 1
       }
     });
 
-    // Visual Directive (Latent Image Prompt)
+    // Visual Directive (Latent Image Prompt placeholder)
+    // In the UI, this can be swapped for a real generated image or an uploaded artifact.
     if (chap.visual_directive) {
       elements.push({
         id: `${slideId}_visual`,
         type: 'image',
-        content: chap.visual_directive, 
+        content: chap.visual_directive, // The visualizer will render this prompt if it's text
         style: {
           top: 10, left: 55, width: 40, zIndex: 5,
-          objectFit: 'cover'
+          objectFit: 'cover', opacity: 1
         }
       });
     }
@@ -155,6 +173,12 @@ export const generateProposalFromFolder = async (
   // 5. CONSTRUCT THE SOVEREIGN OBJECT
   const proposalId = `prop_${config.userId}_${Date.now()}`;
   
+  // Resolve Layout from Tailor
+  const tailor = config.profile?.tailorDraft;
+  const primaryFont = tailor?.typographyIntent?.styleDescription?.includes('Sans') ? 'Space Grotesk' : 'Cormorant Garamond';
+  const primaryColor = tailor?.chromaticRegistry?.baseNeutral || '#FDFBF7';
+  const textColor = tailor?.chromaticRegistry?.accentSignal || '#1C1917';
+
   const proposal: Proposal = {
     id: proposalId,
     userId: config.userId,
@@ -170,16 +194,17 @@ export const generateProposalFromFolder = async (
     
     layout: {
       template: 'editorial',
-      fontSet: ['Cormorant Garamond', 'Space Grotesk'],
-      colorSet: ['#1C1917', '#FDFBF7'],
+      fontSet: [primaryFont, 'Space Grotesk'],
+      colorSet: [textColor, '#A8A29E'],
       spacingScale: 1.0,
+      backgroundStyle: primaryColor,
       customStyles: {}
     },
     
     brandKitSnapshot: {
-      primaryFont: 'Cormorant Garamond',
+      primaryFont: primaryFont,
       secondaryFont: 'Space Grotesk',
-      colorPalette: []
+      colorPalette: tailor?.chromaticRegistry?.primaryPalette?.map(c => c.hex) || []
     },
 
     version: 1,
@@ -195,6 +220,7 @@ export const generateProposalFromFolder = async (
 };
 
 // PHASE 3: REFINEMENT ASSISTANT
+// Used when the user asks the assistant to "make this punchier" etc.
 export const refineSectionContent = async (
   currentText: string,
   instruction: string,

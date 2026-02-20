@@ -6,6 +6,7 @@ import { X, Download, Share2, FileText, LayoutGrid, Layers, Printer, Check, Copy
 import { ZineMetadata } from '../types';
 import { SocialShareModal } from './SocialShareModal';
 import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 interface ExportChamberProps {
   metadata: ZineMetadata;
@@ -22,9 +23,9 @@ const SECTION_DEFS = [
 ];
 
 const EXPORT_MODES = [
-  { id: 'scroll', label: 'Master Scroll', desc: 'Continuous vertical flow. Optimized for mobile witnessing and long screenshots.', icon: <Scroll size={16} /> },
-  { id: 'assets', label: 'Asset Stack', desc: 'Separated high-fidelity cards. Designed for individual saving or social carousel processing.', icon: <Image size={16} /> },
-  { id: 'print', label: 'Physical (A4)', desc: 'Standard architectural layout calibrated for physical ink manifestation and archival binding.', icon: <Printer size={16} /> }
+  { id: 'scroll', label: 'Master Scroll (PNG)', desc: 'Continuous vertical image. Optimized for mobile witnessing and long screenshots.', icon: <Scroll size={16} /> },
+  { id: 'pdf', label: 'Document (PDF)', desc: 'Standard architectural layout calibrated for physical ink manifestation and archival binding.', icon: <Printer size={16} /> },
+  { id: 'assets', label: 'Asset Stack (PDF)', desc: 'Separated high-fidelity cards. Designed for individual saving or social carousel processing.', icon: <Image size={16} /> }
 ];
 
 const SectionHeader: React.FC<{ label: string; icon: any }> = ({ label, icon: Icon }) => (
@@ -38,7 +39,7 @@ const SectionHeader: React.FC<{ label: string; icon: any }> = ({ label, icon: Ic
 );
 
 export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose }) => {
-  const [exportMode, setExportMode] = useState<'scroll' | 'assets' | 'print'>('scroll');
+  const [exportMode, setExportMode] = useState<'scroll' | 'assets' | 'pdf'>('scroll');
   const [selectedSections, setSelectedSections] = useState<Set<string>>(new Set(SECTION_DEFS.map(s => s.id)));
   const [isGenerating, setIsGenerating] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -65,6 +66,87 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
     });
   };
 
+  const convertImagesToBase64 = async (element: HTMLElement) => {
+    const images = Array.from(element.querySelectorAll('img'));
+    const promises = images.map(async (img) => {
+      if (img.src.startsWith('data:')) return;
+      try {
+        img.crossOrigin = "anonymous";
+        const response = await fetch(img.src, { mode: 'cors', cache: 'force-cache' });
+        const blob = await response.blob();
+        await new Promise<void>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            img.srcset = ""; 
+            img.src = reader.result as string;
+            resolve();
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch (e) {
+        console.warn("MIMI // Export: Image conversion failed, fallback to CORS", e);
+      }
+    });
+    await Promise.all(promises);
+  };
+
+  const waitForImages = async (element: HTMLElement) => {
+    const images = Array.from(element.querySelectorAll('img'));
+    const promises = images.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve;
+        });
+    });
+    await Promise.all(promises);
+  };
+
+  const generatePDF = async () => {
+    const doc = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a4'
+    });
+
+    const target = document.getElementById('export-target');
+    if (!target) throw new Error("Capture target missing");
+
+    // CRITICAL: Convert to Base64 to bypass CORS in html2canvas
+    await convertImagesToBase64(target);
+    await waitForImages(target);
+
+    const sections = target.querySelectorAll('.export-section');
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    for (let i = 0; i < sections.length; i++) {
+        const section = sections[i] as HTMLElement;
+        
+        // Ensure visibility for capture
+        const originalStyle = section.style.cssText;
+        section.style.width = '793px'; // A4 width at 96 DPI approx
+        section.style.height = '1122px'; // A4 height
+        
+        const canvas = await html2canvas(section, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff'
+        });
+        
+        // Restore style
+        section.style.cssText = originalStyle;
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        if (i > 0) doc.addPage();
+        doc.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight);
+    }
+    
+    doc.save(`Mimi_${metadata.title.replace(/[^a-z0-9]/gi, '_')}.pdf`);
+  };
+
   const handleExport = async () => {
     if (isGenerating) return;
     setIsGenerating(true);
@@ -74,31 +156,26 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
     await new Promise(r => setTimeout(r, 500));
 
     try {
-      if (exportMode === 'print') {
-        window.print();
-      } else {
-        // Digital Export (Scroll/Assets) - Render to PNG
-        const element = document.getElementById('export-target');
-        if (!element) throw new Error("Capture target not found");
+      const element = document.getElementById('export-target');
+      if (!element) throw new Error("Capture target not found");
 
+      // Robust Image Handling for both modes
+      await convertImagesToBase64(element);
+      await waitForImages(element);
+
+      if (exportMode === 'pdf' || exportMode === 'assets') {
+        await generatePDF();
+      } else {
+        // Scroll Mode (PNG)
         const canvas = await html2canvas(element, {
-          scale: 2, // High resolution for Retina displays
-          useCORS: true, // Crucial for external images
-          allowTaint: true,
+          scale: 2,
+          useCORS: true,
           backgroundColor: null, 
-          logging: false,
-          onclone: (doc) => {
-             // Ensure visible elements are rendered clearly
-             const el = doc.getElementById('export-target');
-             if (el) {
-                 el.style.transform = 'none';
-                 el.style.maxHeight = 'none';
-             }
-          }
+          logging: false
         });
 
         const link = document.createElement('a');
-        link.download = `Mimi_${metadata.title.replace(/[^a-z0-9]/gi, '_')}_${exportMode}.png`;
+        link.download = `Mimi_${metadata.title.replace(/[^a-z0-9]/gi, '_')}_scroll.png`;
         link.href = canvas.toDataURL('image/png');
         document.body.appendChild(link);
         link.click();
@@ -116,17 +193,17 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
   
   // Dynamic styles based on mode
   const containerStyle = useMemo(() => {
-      if (exportMode === 'print') return { width: '210mm', minHeight: '297mm' }; 
-      if (exportMode === 'assets') return { width: '100%', maxWidth: '420px', background: 'transparent', boxShadow: 'none' };
-      return { width: '100%', maxWidth: '420px' }; // Scroll mode
+      // For PDF/Assets generation, we rely on the specific styling in generatePDF logic and CSS classes
+      // But for preview, we keep it contained
+      return { width: '100%', maxWidth: '420px' };
   }, [exportMode]);
 
   const blockClass = useMemo(() => {
-      const base = "bg-white dark:bg-stone-950 flex flex-col justify-center overflow-hidden relative";
-      // Print Mode: Forced Page Breaks
-      if (exportMode === 'print') return `${base} h-[297mm] w-full p-16 print:break-after-page print:page-break-after-always border-b-0 print:border-0`;
-      // Asset Stack: Separated Cards
-      if (exportMode === 'assets') return `${base} aspect-[3/4] w-full p-12 mb-12 rounded-sm shadow-xl border border-stone-100 dark:border-stone-800 print:break-after-page`;
+      const base = "export-section bg-white dark:bg-stone-950 flex flex-col justify-center overflow-hidden relative";
+      // PDF/Print/Asset Mode: Forced Page Dimensions for reliable canvas capture
+      if (exportMode === 'pdf' || exportMode === 'assets') {
+          return `${base} w-full aspect-[210/297] p-16 mb-8 border border-stone-100 dark:border-stone-800 shadow-sm`;
+      }
       // Scroll Mode: Continuous Flow
       return `${base} py-16 px-10 border-b border-stone-100 dark:border-stone-900 last:border-0`;
   }, [exportMode]);
@@ -136,11 +213,11 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
       exit={{ opacity: 0 }} 
-      className="fixed inset-0 z-[20000] bg-stone-100 dark:bg-stone-950 flex flex-col md:flex-row overflow-hidden print:bg-white selection:bg-emerald-500 print:static print:overflow-visible print:h-auto print:block"
+      className="fixed inset-0 z-[20000] bg-stone-100 dark:bg-stone-950 flex flex-col md:flex-row overflow-hidden selection:bg-emerald-500"
     >
       
       {/* CONTROLS SIDEBAR */}
-      <aside className="w-full md:w-[400px] border-r border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 flex flex-col p-8 shrink-0 z-20 print:hidden overflow-y-auto no-scrollbar">
+      <aside className="w-full md:w-[400px] border-r border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 flex flex-col p-8 shrink-0 z-20 overflow-y-auto no-scrollbar">
         <div className="flex justify-between items-center mb-12">
             <div className="space-y-1">
                 <span className="font-sans text-[8px] uppercase tracking-[0.5em] font-black text-emerald-500">Output Lab</span>
@@ -184,17 +261,17 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
         <div className="mt-auto pt-12 space-y-4">
            {hasError && <p className="text-red-500 text-xs font-mono text-center">Export Handshake Failed. Try refreshing.</p>}
            <button onClick={handleExport} disabled={isGenerating} className="w-full py-5 bg-nous-text dark:bg-white text-white dark:text-black rounded-full font-sans text-[10px] tracking-[0.4em] uppercase font-black shadow-xl flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50">
-              {isGenerating ? <Loader2 size={16} className="animate-spin" /> : (exportMode === 'print' ? <Printer size={16} /> : <Download size={16} />)}
-              {isGenerating ? 'Rendering...' : (exportMode === 'print' ? 'Print Manifest' : 'Download Asset')}
+              {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+              {isGenerating ? 'Rendering...' : 'Download Asset'}
            </button>
         </div>
       </aside>
 
       {/* PREVIEW AREA */}
-      <main className="flex-1 bg-stone-200/50 dark:bg-[#050505] overflow-y-auto p-4 md:p-12 flex justify-center no-scrollbar print:p-0 print:m-0 print:bg-white print:block print:w-full print:h-auto print:overflow-visible">
-          <AnimatePresence>{isGenerating && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-white/80 dark:bg-black/80 backdrop-blur-md z-50 flex items-center justify-center print:hidden"><div className="bg-white dark:bg-stone-900 p-12 rounded-2xl shadow-2xl text-center space-y-6 border border-stone-100 dark:border-stone-800"><Loader2 size={40} className="animate-spin text-emerald-500 mx-auto" /><div className="space-y-2"><p className="font-serif italic text-2xl text-nous-text dark:text-white">“Compressing Reality...”</p><p className="font-sans text-[9px] uppercase tracking-widest text-stone-400">Preparing High-Fidelity Output</p></div></div></motion.div>}</AnimatePresence>
+      <main className="flex-1 bg-stone-200/50 dark:bg-[#050505] overflow-y-auto p-4 md:p-12 flex justify-center no-scrollbar">
+          <AnimatePresence>{isGenerating && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-white/80 dark:bg-black/80 backdrop-blur-md z-50 flex items-center justify-center"><div className="bg-white dark:bg-stone-900 p-12 rounded-2xl shadow-2xl text-center space-y-6 border border-stone-100 dark:border-stone-800"><Loader2 size={40} className="animate-spin text-emerald-500 mx-auto" /><div className="space-y-2"><p className="font-serif italic text-2xl text-nous-text dark:text-white">“Compressing Reality...”</p><p className="font-sans text-[9px] uppercase tracking-widest text-stone-400">Preparing High-Fidelity Output</p></div></div></motion.div>}</AnimatePresence>
           
-          <div id="export-target" className={`transition-all duration-500 print:shadow-none print:w-full print:max-w-none print:mx-0 print:text-black ${exportMode === 'scroll' ? 'bg-white dark:bg-stone-950 shadow-2xl' : ''} ${exportMode === 'print' ? 'bg-white text-black shadow-none' : ''}`} style={containerStyle}>
+          <div id="export-target" className={`transition-all duration-500 ${exportMode === 'scroll' ? 'bg-white dark:bg-stone-950 shadow-2xl' : ''}`} style={containerStyle}>
              
              {/* 1. COVER */}
              {selectedSections.has('cover') && (
@@ -202,17 +279,17 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
                     <div className="flex-1 flex flex-col justify-center space-y-10">
                         <div className="space-y-4">
                             <span className="font-sans text-[10px] uppercase tracking-[0.6em] font-black text-stone-400">Issue Manifest</span>
-                            <h1 className="font-serif text-6xl md:text-8xl italic tracking-tighter leading-[0.85] uppercase text-nous-text dark:text-white print:text-black">
+                            <h1 className="font-serif text-6xl md:text-8xl italic tracking-tighter leading-[0.85] uppercase text-nous-text dark:text-white">
                                 {metadata.title}
                             </h1>
                         </div>
-                        <div className="h-px w-24 bg-stone-200 dark:bg-stone-800 print:bg-black" />
+                        <div className="h-px w-24 bg-stone-200 dark:bg-stone-800" />
                         <div className="space-y-2">
-                            <p className="font-serif italic text-2xl text-stone-500 print:text-gray-600">@{metadata.userHandle}</p>
+                            <p className="font-serif italic text-2xl text-stone-500">@{metadata.userHandle}</p>
                             <p className="font-sans text-[9px] uppercase tracking-widest text-stone-400 font-black">{metadata.tone} // {new Date(metadata.timestamp).toLocaleDateString()}</p>
                         </div>
                     </div>
-                    {exportMode !== 'scroll' && <div className="absolute bottom-8 right-8"><Stamp size={64} className="text-stone-100 dark:text-stone-900 print:text-gray-100 -rotate-12" /></div>}
+                    {exportMode !== 'scroll' && <div className="absolute bottom-8 right-8"><Stamp size={64} className="text-stone-100 dark:text-stone-900 -rotate-12" /></div>}
                 </div>
              )}
 
@@ -221,7 +298,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
                 <div className={blockClass}>
                     <SectionHeader label="The Reading" icon={<FileText />} />
                     <div className="flex-1 flex flex-col justify-center">
-                        <p className="font-serif italic text-3xl md:text-4xl text-stone-800 dark:text-stone-200 leading-[1.2] print:text-black text-balance">
+                        <p className="font-serif italic text-3xl md:text-4xl text-stone-800 dark:text-stone-200 leading-[1.2] text-balance">
                             "{content.oracular_mirror}"
                         </p>
                     </div>
@@ -234,7 +311,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
 
              {/* 3. SIGNALS (ARCHETYPE) */}
              {selectedSections.has('signals') && metadata.content.aesthetic_touchpoints && (
-                <div className={`${blockClass} bg-stone-900 text-white print:bg-black print:text-white`}>
+                <div className={`${blockClass} bg-stone-900 text-white dark:bg-black`}>
                     <SectionHeader label="Archetype Index" icon={<Layers />} />
                     <div className="flex-1 flex flex-col justify-center space-y-8">
                         {metadata.content.aesthetic_touchpoints.slice(0, 4).map((t, i) => (
@@ -254,15 +331,15 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
                         <span className="font-mono text-[9px]">FIG_0{i+1}</span>
                         <span className="font-sans text-[7px] uppercase tracking-widest font-black">Visual Plate</span>
                     </div>
-                    <div className="aspect-[3/4] w-full overflow-hidden mb-8 bg-stone-100 print:bg-gray-100">
+                    <div className="aspect-[3/4] w-full overflow-hidden mb-8 bg-stone-100">
                         <img 
                             src={page.image_url} 
-                            className="w-full h-full object-cover grayscale print:grayscale-0" 
+                            className="w-full h-full object-cover grayscale" 
                             crossOrigin="anonymous" 
                         />
                     </div>
-                    <h2 className="font-serif text-3xl italic tracking-tight uppercase mb-4 text-nous-text dark:text-white print:text-black">{page.headline}</h2>
-                    <p className="font-serif italic text-base text-stone-500 leading-relaxed print:text-gray-600">{page.bodyCopy}</p>
+                    <h2 className="font-serif text-3xl italic tracking-tight uppercase mb-4 text-nous-text dark:text-white">{page.headline}</h2>
+                    <p className="font-serif italic text-base text-stone-500 leading-relaxed">{page.bodyCopy}</p>
                 </div>
              ))}
 
@@ -274,7 +351,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
                         {Object.entries(content.blueprint).map(([key, val], i) => (
                             <div key={i} className="space-y-2">
                                 <span className="font-sans text-[7px] uppercase tracking-[0.2em] font-black text-emerald-600 dark:text-emerald-400 block">{key.replace('_', ' ')}</span>
-                                <p className="font-serif italic text-lg text-nous-text dark:text-white print:text-black leading-snug border-b border-stone-100 dark:border-stone-900 pb-4">
+                                <p className="font-serif italic text-lg text-nous-text dark:text-white leading-snug border-b border-stone-100 dark:border-stone-900 pb-4">
                                     {String(val)}
                                 </p>
                             </div>
@@ -285,12 +362,12 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
 
              {/* 6. DEBRIS (NEW) */}
              {selectedSections.has('debris') && (metadata.originalInput || metadata.content.meta?.intent) && (
-                <div className={`${blockClass} bg-stone-50 dark:bg-stone-900 print:bg-gray-50`}>
+                <div className={`${blockClass} bg-stone-50 dark:bg-stone-900`}>
                     <SectionHeader label="Field Debris" icon={<Info />} />
                     <div className="flex-1 flex flex-col justify-center">
-                        <div className="p-8 border-l-4 border-stone-200 dark:border-stone-700 print:border-gray-300">
+                        <div className="p-8 border-l-4 border-stone-200 dark:border-stone-700">
                             <span className="font-mono text-[9px] text-stone-400 mb-4 block">// RAW_INPUT_LOG</span>
-                            <p className="font-mono text-xs md:text-sm text-stone-600 dark:text-stone-300 print:text-black leading-relaxed whitespace-pre-wrap">
+                            <p className="font-mono text-xs md:text-sm text-stone-600 dark:text-stone-300 leading-relaxed whitespace-pre-wrap">
                                 {metadata.originalInput || metadata.content.meta?.intent || "Debris data obscured."}
                             </p>
                         </div>
@@ -303,18 +380,6 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
 
           </div>
       </main>
-      <style>{`
-        @media print { 
-            @page { margin: 0; size: A4; } 
-            body { background: white !important; -webkit-print-color-adjust: exact; overflow: visible !important; } 
-            aside, .print\\:hidden { display: none !important; } 
-            main { padding: 0 !important; margin: 0 !important; background: white !important; display: block !important; overflow: visible !important; height: auto !important; } 
-            #export-target { width: 100% !important; max-width: none !important; box-shadow: none !important; background: white !important; color: black !important; transform: none !important; } 
-            img { filter: grayscale(0) !important; max-height: 100% !important; width: auto !important; margin: 0 auto; display: block; }
-            .print\\:break-after-page { break-after: page; page-break-after: always; }
-            .print\\:h-\\[297mm\\] { height: 297mm; min-height: 297mm; }
-        }
-      `}</style>
     </motion.div>
   );
 };

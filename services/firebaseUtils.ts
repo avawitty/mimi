@@ -128,6 +128,13 @@ export const fetchPocketItems = async (uid: string) => {
     }
 };
 
+export const subscribeToPocketItems = (uid: string, callback: (data: PocketItem[]) => void) => {
+  const q = query(collection(db, "pocket"), where("userId", "==", uid), orderBy("savedAt", "desc"));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map(d => d.data() as PocketItem));
+  }, (e) => console.warn("MIMI // Pocket Sub Error:", e.code));
+};
+
 export const fetchUserZines = async (uid: string) => {
     try {
       const q = query(collection(db, "zines"), where("userId", "==", uid), orderBy("timestamp", "desc"));
@@ -136,6 +143,13 @@ export const fetchUserZines = async (uid: string) => {
       console.warn("MIMI // Zine Fetch Error:", e.code);
       return []; 
     }
+};
+
+export const subscribeToUserZines = (uid: string, callback: (data: ZineMetadata[]) => void) => {
+  const q = query(collection(db, "zines"), where("userId", "==", uid), orderBy("timestamp", "desc"));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.docs.map(d => d.data() as ZineMetadata));
+  }, (e) => console.warn("MIMI // User Zine Sub Error:", e.code));
 };
 
 export const fetchCommunityZines = async (count: number) => {

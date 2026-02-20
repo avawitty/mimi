@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ZinePage, EditorElement, EditorElementStyle, ToneTag, Treatment } from '../types';
-import { Type, Box, X, Check, Trash2, Plus, Image as ImageIcon, RotateCw, AlignLeft, AlignCenter, AlignRight, Italic, ChevronsUp, ChevronsDown, Bold, SlidersHorizontal, History, Maximize, Move, Layers, Type as FontIcon, ChevronUp, ChevronDown, Palette, Sparkles, Wand2, Info, Volume2, Loader2, AlertCircle, EyeOff, Crown, Link as LinkIcon, Radar, Fingerprint, Droplet, Hash, ExternalLink, Download, FileImage, FileText } from 'lucide-react';
-import { getAspectRatioForTone, generateAudio, generateSemioticSignals } from '../services/geminiService';
+import { Type, Box, X, Check, Trash2, Plus, Image as ImageIcon, RotateCw, AlignLeft, AlignCenter, AlignRight, Italic, ChevronsUp, ChevronsDown, Bold, SlidersHorizontal, History, Maximize, Move, Layers, Type as FontIcon, ChevronUp, ChevronDown, Palette, Sparkles, Wand2, Info, Volume2, Loader2, AlertCircle, EyeOff, Crown, Link as LinkIcon, Radar, Fingerprint, Droplet, Hash, ExternalLink, Download, FileImage, FileText, Save, FolderOpen, Ratio, Crop, ScanLine } from 'lucide-react';
+import { getAspectRatioForTone, generateAudio, generateSemioticSignals, analyzeMiseEnScene } from '../services/geminiService';
 import { fetchPocketItems } from '../services/firebase';
 import { Tooltip } from './Tooltip';
 import { TitleLegend } from './TitleLegend';
@@ -74,6 +74,10 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
   const [isGeneratingSignals, setIsGeneratingSignals] = useState(false);
   const [sovereignTreatments, setSovereignTreatments] = useState<Treatment[]>([]);
   
+  // Analysis State
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
+  const [imageAnalysis, setImageAnalysis] = useState<{ directors_note: string, cultural_parallel: string } | null>(null);
+  
   // Export State
   const [isExporting, setIsExporting] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -101,6 +105,12 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
     return () => window.removeEventListener('resize', handleResize);
   }, [user]);
 
+  // Reset analysis when selection changes
+  useEffect(() => {
+      setImageAnalysis(null);
+      setIsAnalyzingImage(false);
+  }, [selectedId]);
+
   const addTrace = useCallback((note: string) => { setTrace(prev => [...prev, { timestamp: Date.now(), note }]); }, []);
   const handleCommit = () => { const imgEl = elements.find(el => el.type === 'image'); onSave(elements, trace, { negativePrompt: imgEl?.negativePrompt, title: zineTitle }); };
   
@@ -112,6 +122,77 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
         signals.forEach((sig, i) => addElement('signal', sig.text, sig.query, 60 + (i * 8), 10 + (i * 5))); 
         addTrace(`Manifested ${signals.length} high-fidelity semiotic markers.`); 
     } finally { setIsGeneratingSignals(false); } 
+  };
+
+  const handleAnalyzeImage = async () => {
+      const el = elements.find(e => e.id === selectedId);
+      if (!el || el.type !== 'image') return;
+      
+      setIsAnalyzingImage(true);
+      setImageAnalysis(null);
+      
+      try {
+          const src = el.content;
+          let base64 = '';
+          let mimeType = 'image/jpeg';
+          
+          if (src.startsWith('data:')) {
+              const parts = src.split(',');
+              base64 = parts[1];
+              mimeType = parts[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+          } else {
+              // Assume it's a URL or invalid for now, skipping real analysis for non-data URIs 
+              // (In production, would need to fetch blob and convert)
+              console.warn("MIMI // Image Analysis: Remote URLs not yet supported for direct analysis in editor.");
+              setIsAnalyzingImage(false);
+              return;
+          }
+
+          const result = await analyzeMiseEnScene(base64, mimeType, profile);
+          setImageAnalysis(result);
+          addTrace(`Analyzed visual shard: ${result?.directors_note?.slice(0, 30)}...`);
+      } catch (e) {
+          console.error("MIMI // Analysis Failed", e);
+      } finally {
+          setIsAnalyzingImage(false);
+      }
+  };
+
+  const handleSaveDraft = () => {
+    const draftState = {
+      elements,
+      title: zineTitle,
+      trace,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('mimi_layout_draft', JSON.stringify(draftState));
+    window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+        detail: { message: "Layout Draft Anchored.", icon: <Save size={14} /> } 
+    }));
+  };
+
+  const handleLoadDraft = () => {
+    const saved = localStorage.getItem('mimi_layout_draft');
+    if (!saved) {
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+            detail: { message: "No Draft Signal Found.", type: 'error' } 
+        }));
+        return;
+    }
+    try {
+        const parsed = JSON.parse(saved);
+        if (parsed.elements) setElements(parsed.elements);
+        if (parsed.title) setZineTitle(parsed.title);
+        if (parsed.trace) setTrace(parsed.trace);
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+            detail: { message: "Draft Restored.", icon: <FolderOpen size={14} /> } 
+        }));
+    } catch(e) {
+        console.error(e);
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+            detail: { message: "Draft Corrupted.", type: 'error' } 
+        }));
+    }
   };
 
   const handleExport = async (format: 'png' | 'jpg' | 'pdf') => {
@@ -196,12 +277,25 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
             style: { top: initialTop || 30, left: initialLeft || 30, width: 30, zIndex: elements.length + 20, fontSize: 0.7, fontFamily: 'mono', color: '#10B981', opacity: 1, rotation: 0, lineHeight: 1.2, fontWeight: '900', letterSpacing: '0.1em' } 
           };
       } else {
-          newEl = { id, type, content: content || (type === 'text' ? 'New Thought' : ''), style: { top: initialTop || 30, left: initialLeft || 30, width: type === 'text' ? 40 : 50, zIndex: elements.length + 10, fontSize: 1.4, fontFamily: 'serif', color: 'inherit', opacity: 1, rotation: 0, lineHeight: 1.2, objectFit: 'cover', filter: 'none' } };
+          newEl = { id, type, content: content || (type === 'text' ? 'New Thought' : ''), style: { top: initialTop || 30, left: initialLeft || 30, width: type === 'text' ? 40 : 50, zIndex: elements.length + 10, fontSize: 1.4, fontFamily: 'serif', color: 'inherit', opacity: 1, rotation: 0, lineHeight: 1.2, objectFit: 'cover', filter: 'none', borderStyle: 'none', borderWidth: 0, borderColor: 'transparent', padding: 8 } };
       }
       setElements(prev => [...prev, newEl]); setSelectedId(id); addTrace(`Added ${type}.`);
   };
 
   const updateStyle = (stylePatch: Partial<EditorElementStyle>) => { if (!selectedId) return; setElements(prev => prev.map(el => el.id === selectedId ? { ...el, style: { ...el.style, ...stylePatch } } : el)); };
+  const updateImageAspectRatio = (ratioStr: string) => {
+    if (!selectedId || !selectedElement || selectedElement.type !== 'image') return;
+    const [w, h] = ratioStr.split(':').map(Number);
+    const targetAR = w / h;
+    const containerAR = ratioW / ratioH;
+    
+    // H% = W% * (ContainerAR / TargetAR)
+    const currentW = selectedElement.style.width; // percent
+    const newH = currentW * (containerAR / targetAR);
+    
+    updateStyle({ height: newH });
+  };
+
   const selectedElement = elements.find(e => e.id === selectedId);
 
   return (
@@ -218,6 +312,16 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
             </div>
             
             <div className="flex items-center gap-3 md:gap-4">
+                {/* DRAFT CONTROLS */}
+                <div className="hidden md:flex items-center gap-1 border-r border-stone-200 dark:border-stone-800 pr-3 mr-1">
+                    <button onClick={handleSaveDraft} className="p-2 text-stone-400 hover:text-emerald-500 transition-colors" title="Save Draft">
+                        <Save size={16} />
+                    </button>
+                    <button onClick={handleLoadDraft} className="p-2 text-stone-400 hover:text-indigo-500 transition-colors" title="Load Draft">
+                        <FolderOpen size={16} />
+                    </button>
+                </div>
+
                 <div className="relative">
                     <button 
                         onClick={() => setShowExportMenu(!showExportMenu)} 
@@ -253,11 +357,27 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
         <div className={`flex-1 flex items-center justify-center p-3 md:p-20 overflow-hidden relative lg:pt-32 transition-all ${isMobile && drawerOpen ? 'pb-[45vh]' : 'pb-16'}`} onClick={() => setSelectedId(null)}>
              <div ref={containerRef} onClick={(e) => e.stopPropagation()} className="relative shadow-2xl bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 transition-all duration-700" style={{ aspectRatio: `${ratioW}/${ratioH}`, maxHeight: '75vh', maxWidth: '100%', width: 'auto', height: 'auto' }}>
                 {elements.sort((a,b) => (a.style.zIndex || 0) - (b.style.zIndex || 0)).map(el => (
-                    <motion.div key={el.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: el.style.opacity, scale: 1 }} onMouseDown={(e) => { e.stopPropagation(); setSelectedId(el.id); setDragStart({x: e.clientX, y: e.clientY}); setIsDragging(true); setInitialStyle({...el.style}); if(isMobile) setDrawerOpen(true); }} className={`absolute select-none group/el ${selectedId === el.id ? 'ring-2 ring-emerald-500 z-50' : ''} cursor-move`} style={{ top: `${el.style.top}%`, left: `${el.style.left}%`, width: `${el.style.width}%`, rotate: `${el.style.rotation}deg`, zIndex: el.style.zIndex }}>
+                    <motion.div key={el.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: el.style.opacity, scale: 1 }} onMouseDown={(e) => { e.stopPropagation(); setSelectedId(el.id); setDragStart({x: e.clientX, y: e.clientY}); setIsDragging(true); setInitialStyle({...el.style}); if(isMobile) setDrawerOpen(true); }} className={`absolute select-none group/el ${selectedId === el.id ? 'ring-2 ring-emerald-500 z-50' : ''} cursor-move`} style={{ top: `${el.style.top}%`, left: `${el.style.left}%`, width: `${el.style.width}%`, height: el.style.height ? `${el.style.height}%` : undefined, rotate: `${el.style.rotation}deg`, zIndex: el.style.zIndex }}>
                          {el.type === 'image' && <img src={el.content} className="w-full h-full object-cover pointer-events-none" style={{ filter: el.style.filter || 'none' }}/>}
                          {el.type === 'text' && (
                             <div className="relative group/text">
-                                <div className="p-1 md:p-4 leading-tight break-words" style={{ fontSize: `${el.style.fontSize || 1.2}rem`, fontFamily: el.style.fontFamily, color: el.style.color || 'inherit', textAlign: el.style.textAlign || 'left', fontStyle: el.style.fontStyle, fontWeight: el.style.fontWeight }}>
+                                <div 
+                                    className="leading-tight break-words transition-all" 
+                                    style={{ 
+                                        fontSize: `${el.style.fontSize || 1.2}rem`, 
+                                        fontFamily: el.style.fontFamily, 
+                                        color: el.style.color || 'inherit', 
+                                        textAlign: el.style.textAlign || 'left', 
+                                        fontStyle: el.style.fontStyle, 
+                                        fontWeight: el.style.fontWeight,
+                                        borderStyle: el.style.borderStyle || 'none',
+                                        borderWidth: `${el.style.borderWidth || 0}px`,
+                                        borderColor: el.style.borderColor || 'transparent',
+                                        borderRadius: `${el.style.borderRadius || 0}px`,
+                                        padding: `${el.style.padding !== undefined ? el.style.padding : 8}px`,
+                                        backgroundColor: el.style.backgroundColor || 'transparent'
+                                    }}
+                                >
                                     {el.content}
                                 </div>
                                 {el.link && (
@@ -298,14 +418,118 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
                         <div className="flex justify-between items-center border-b pb-4"><div className="flex flex-col"><span className="font-sans text-[6px] uppercase tracking-[0.3em] text-stone-400 font-black">Calibration</span><span className="font-serif italic text-xl lg:text-2xl uppercase">{selectedElement.type}</span></div><button onClick={() => { setElements(p => p.filter(e => e.id !== selectedId)); setSelectedId(null); if(isMobile) setDrawerOpen(false); }} className="p-2 text-red-500"><Trash2 size={16}/></button></div>
                         {selectedElement.type === 'text' && (
                             <section className="space-y-6 lg:space-y-8">
+                                <div className="space-y-3">
+                                    <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Content</span>
+                                    <textarea 
+                                        value={selectedElement.content} 
+                                        onChange={(e) => {
+                                            setElements(prev => prev.map(el => el.id === selectedId ? { ...el, content: e.target.value } : el));
+                                        }}
+                                        className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-3 font-serif italic text-sm focus:outline-none focus:border-emerald-500 rounded-sm resize-none h-24"
+                                    />
+                                </div>
                                 <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Font Identity</span><div className="grid gap-1.5">{FONT_FAMILIES.map(f => <button key={f.id} onClick={() => updateStyle({ fontFamily: f.css })} className={`text-left p-3 lg:p-4 border rounded-sm transition-all ${selectedElement.style.fontFamily === f.css ? 'bg-nous-text text-white dark:bg-white dark:text-black border-transparent' : 'border-stone-100 dark:border-stone-800 text-stone-400'}`} style={{ fontFamily: f.css }}>{f.label}</button>)}</div></div>
                                 <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Scale Protocol ({selectedElement.style.fontSize}rem)</span><input type="range" min="0.5" max="8" step="0.1" value={selectedElement.style.fontSize || 1.2} onChange={e => updateStyle({ fontSize: parseFloat(e.target.value) })} className="w-full h-1 bg-stone-100 dark:bg-stone-800 accent-nous-text dark:accent-white" /></div>
                                 <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Alignment Protocol</span><div className="flex gap-2"><button onClick={() => updateStyle({ textAlign: 'left' })} className={`flex-1 py-2.5 border rounded-sm transition-all ${selectedElement.style.textAlign === 'left' ? 'bg-nous-text text-white border-transparent' : 'border-stone-100 text-stone-400'}`}><AlignLeft size={16} className="mx-auto" /></button><button onClick={() => updateStyle({ textAlign: 'center' })} className={`flex-1 py-2.5 border rounded-sm transition-all ${selectedElement.style.textAlign === 'center' ? 'bg-nous-text text-white border-transparent' : 'border-stone-100 text-stone-400'}`}><AlignCenter size={16} className="mx-auto" /></button><button onClick={() => updateStyle({ textAlign: 'right' })} className={`flex-1 py-2.5 border rounded-sm transition-all ${selectedElement.style.textAlign === 'right' ? 'bg-nous-text text-white border-transparent' : 'border-stone-100 text-stone-400'}`}><AlignRight size={16} className="mx-auto" /></button></div></div>
                                 <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Chromatic Manifold</span><div className="grid grid-cols-6 gap-3">{COLORS.map(c => <button key={c.id} onClick={() => updateStyle({ color: c.hex })} className={`aspect-square rounded-full border-2 transition-all ${selectedElement.style.color === c.hex ? 'border-emerald-500 scale-110 shadow-sm' : 'border-transparent'}`} style={{ backgroundColor: c.hex }} />)}</div></div>
+                                
+                                <div className="pt-6 border-t border-stone-100 dark:border-stone-800 space-y-4">
+                                    <div className="flex items-center gap-2 text-stone-400">
+                                        <ScanLine size={12} />
+                                        <span className="font-sans text-[7px] uppercase tracking-widest font-black">Boundary Logic</span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {['none', 'solid', 'dashed', 'dotted'].map(s => (
+                                            <button 
+                                                key={s} 
+                                                onClick={() => updateStyle({ borderStyle: s as any })}
+                                                className={`flex-1 py-2 border rounded-sm font-sans text-[6px] uppercase font-black transition-all ${selectedElement.style.borderStyle === s ? 'bg-nous-text dark:bg-white text-white dark:text-black border-transparent' : 'border-stone-200 dark:border-stone-800 text-stone-400'}`}
+                                            >
+                                                {s}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[7px] font-sans uppercase text-stone-400 block mb-1">Weight</label>
+                                            <input type="range" min="0" max="20" value={selectedElement.style.borderWidth || 0} onChange={e => updateStyle({ borderWidth: parseInt(e.target.value) })} className="w-full h-1 bg-stone-100 dark:bg-stone-800 accent-nous-text" />
+                                        </div>
+                                        <div>
+                                            <label className="text-[7px] font-sans uppercase text-stone-400 block mb-1">Padding</label>
+                                            <input type="range" min="0" max="40" value={selectedElement.style.padding || 8} onChange={e => updateStyle({ padding: parseInt(e.target.value) })} className="w-full h-1 bg-stone-100 dark:bg-stone-800 accent-nous-text" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between items-center"><span className="text-[7px] font-sans uppercase text-stone-400">Border Color</span><span className="text-[7px] font-sans uppercase text-stone-400">Fill</span></div>
+                                        <div className="flex justify-between gap-4">
+                                            <div className="flex gap-1.5 flex-wrap">
+                                                <button onClick={() => updateStyle({ borderColor: 'transparent' })} className="w-5 h-5 rounded-full border border-stone-200 dark:border-stone-700 flex items-center justify-center text-[6px] text-stone-400">Ø</button>
+                                                {COLORS.map(c => (
+                                                    <button key={`b-${c.id}`} onClick={() => updateStyle({ borderColor: c.hex })} className="w-5 h-5 rounded-full border border-stone-200 dark:border-stone-700" style={{ backgroundColor: c.hex }} />
+                                                ))}
+                                            </div>
+                                            <div className="w-px bg-stone-200 dark:bg-stone-800" />
+                                            <div className="flex gap-1.5 flex-wrap justify-end">
+                                                <button onClick={() => updateStyle({ backgroundColor: 'transparent' })} className="w-5 h-5 rounded-full border border-stone-200 dark:border-stone-700 flex items-center justify-center text-[6px] text-stone-400">Ø</button>
+                                                {COLORS.map(c => (
+                                                    <button key={`bg-${c.id}`} onClick={() => updateStyle({ backgroundColor: c.hex })} className="w-5 h-5 rounded-full border border-stone-200 dark:border-stone-700" style={{ backgroundColor: c.hex }} />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </section>
                         )}
                         {selectedElement.type === 'image' && (
                             <section className="space-y-8 lg:space-y-10">
+                                <div className="space-y-3">
+                                    <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 flex items-center gap-2"><Ratio size={12} /> Aspect Ratio</span>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {['1:1', '3:4', '4:3', '16:9'].map(ratio => (
+                                            <button 
+                                                key={ratio} 
+                                                onClick={() => updateImageAspectRatio(ratio)} 
+                                                className="py-2 border border-stone-200 dark:border-stone-800 rounded-sm text-[8px] font-sans font-black hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
+                                            >
+                                                {ratio}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="space-y-3">
+                                    <span className="font-sans text-[7px] uppercase tracking-widest font-black text-emerald-500 flex items-center gap-2">
+                                        <Sparkles size={12} /> AI Insight
+                                    </span>
+                                    {!imageAnalysis ? (
+                                        <button 
+                                            onClick={handleAnalyzeImage} 
+                                            disabled={isAnalyzingImage}
+                                            className="w-full py-3 border border-emerald-500/30 bg-emerald-500/5 text-emerald-500 rounded-sm font-sans text-[8px] uppercase tracking-widest font-black hover:bg-emerald-500/10 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            {isAnalyzingImage ? <Loader2 size={12} className="animate-spin" /> : <Radar size={12} />}
+                                            {isAnalyzingImage ? "Consulting Oracle..." : "Analyze Semiotics"}
+                                        </button>
+                                    ) : (
+                                        <div className="p-4 bg-stone-50 dark:bg-stone-800 rounded-sm border border-stone-100 dark:border-stone-700 space-y-3">
+                                            <p className="font-serif italic text-sm text-stone-600 dark:text-stone-300 leading-snug">"{imageAnalysis.directors_note}"</p>
+                                            {imageAnalysis.cultural_parallel && (
+                                                <div className="flex items-center gap-2 text-[9px] font-mono text-stone-400 uppercase">
+                                                    <Info size={10} />
+                                                    <span>Ref: {imageAnalysis.cultural_parallel}</span>
+                                                </div>
+                                            )}
+                                            <button 
+                                                onClick={() => {
+                                                    const text = `${imageAnalysis.directors_note}\n\nRef: ${imageAnalysis.cultural_parallel || 'Unknown'}`;
+                                                    addElement('text', text, null, selectedElement.style.top + 5, selectedElement.style.left + 5);
+                                                }}
+                                                className="w-full py-2 bg-stone-200 dark:bg-stone-700 rounded-sm font-sans text-[7px] uppercase tracking-widest font-black hover:bg-stone-300 dark:hover:bg-stone-600 transition-colors"
+                                            >
+                                                Add as Note
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Optical Filters</span><div className="grid grid-cols-3 gap-2">{IMAGE_FILTERS.map(f => <button key={f.name} onClick={() => updateStyle({ filter: f.value })} className={`p-2.5 lg:p-3 border rounded-lg transition-all text-center ${selectedElement.style.filter === f.value ? 'bg-nous-text text-white dark:bg-white dark:text-black border-transparent' : 'border-stone-100 dark:border-stone-800 text-stone-400'}`}><span className="text-[6px] lg:text-[8px] uppercase font-black block">{f.name}</span></button>)}</div></div>
                                 {sovereignTreatments.length > 0 && <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-emerald-500">Darkroom Logic Presets</span><div className="grid gap-2">{sovereignTreatments.map(t => <button key={t.id} onClick={() => updateStyle({ filter: t.instruction })} className="text-left p-3 bg-stone-50 dark:bg-stone-800 border border-stone-100 dark:border-stone-700 rounded-sm hover:border-emerald-500 transition-all flex justify-between items-center group"><span className="font-serif italic text-xs text-stone-600 dark:text-stone-300">{t.name}</span><Droplet size={10} className="text-emerald-500 opacity-0 group-hover:opacity-100" /></button>)}</div></div>}
                             </section>

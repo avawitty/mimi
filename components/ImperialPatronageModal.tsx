@@ -110,6 +110,8 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
                 <div className="relative group w-full max-w-[200px] mx-auto">
                     <input 
                         type="text" 
+                        id="accessCode"
+                        name="accessCode"
                         value={keyInput}
                         onChange={(e) => setKeyInput(e.target.value)}
                         placeholder="ACCESS_CODE"

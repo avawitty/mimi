@@ -78,73 +78,121 @@ export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBy
 
   return (
     <motion.div 
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, filter: 'blur(20px)' }}
-      className="fixed inset-0 z-[20000] flex flex-col items-center justify-center bg-nous-base dark:bg-[#050505] text-nous-text transition-colors duration-1000 overflow-hidden"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[20000] flex flex-col items-center justify-center bg-[#FDFBF7] dark:bg-[#050505] text-nous-text dark:text-white overflow-hidden cursor-wait"
     >
-      <div className="absolute inset-0 pointer-events-none opacity-[0.05]">
-        <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.3, 0.1] }} transition={{ duration: 8, repeat: Infinity }} className="absolute inset-0 flex items-center justify-center">
-          <div className="w-[1000px] h-[1000px] border-[0.5px] border-stone-400 dark:border-white rounded-full" />
-        </motion.div>
+      {/* BACKGROUND GRID - SCHEMATIC TEXTURE */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.1]" 
+           style={{ backgroundImage: 'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)', backgroundSize: '40px 40px' }} 
+      />
+
+      {/* MAIN SCHEMATIC CONTAINER */}
+      <div className="relative w-full max-w-4xl h-[80vh] flex flex-col md:flex-row items-center justify-center gap-16 p-8">
+          
+          {/* LEFT: THE ELEVATOR SHAFT (VISUALIZER) */}
+          <div className="relative h-[500px] w-24 md:w-32 border-x border-dashed border-stone-300 dark:border-stone-800 flex flex-col justify-end overflow-hidden">
+             {/* Shaft Cables */}
+             <div className="absolute inset-x-0 top-0 bottom-0 flex justify-center gap-2 opacity-20">
+                <div className="w-px h-full bg-current" />
+                <div className="w-px h-full bg-current" />
+             </div>
+
+             {/* Floor Markers */}
+             <div className="absolute right-full mr-4 h-full flex flex-col justify-between py-4 text-[7px] font-mono text-stone-400 text-right">
+                <span>LVL_04</span>
+                <span>LVL_03</span>
+                <span>LVL_02</span>
+                <span>LVL_01</span>
+             </div>
+
+             {/* The Cab (Moving Element) */}
+             <motion.div 
+               className="relative z-10 w-full aspect-[2/3] border border-nous-text dark:border-white bg-white dark:bg-black shadow-xl flex items-center justify-center"
+               initial={{ y: "350%" }}
+               animate={{ y: `${350 - (progress * 3.5)}%` }}
+               transition={{ type: "tween", ease: "linear", duration: 0.1 }} // Smooth linear tracking of progress
+             >
+                {/* Cab Interior Detail */}
+                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                <div className="absolute top-0 inset-x-0 h-px bg-current opacity-20" />
+                <div className="absolute bottom-0 inset-x-0 h-px bg-current opacity-20" />
+             </motion.div>
+
+             {/* Depth Fader at Top */}
+             <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#FDFBF7] dark:from-[#050505] to-transparent z-20 pointer-events-none" />
+          </div>
+
+          {/* RIGHT: THE DATA READOUT (CONTENT) */}
+          <div className="w-full md:w-96 space-y-12">
+             
+             {/* Header */}
+             <div className="space-y-2 border-b border-stone-200 dark:border-stone-800 pb-6">
+                <div className="flex justify-between items-center">
+                    <span className={`font-sans text-[9px] uppercase tracking-[0.4em] font-black ${isDeep ? 'text-amber-500' : 'text-emerald-500'}`}>
+                        {isDeep ? 'DEEP_REFRACTION_PROTOCOL' : 'STANDARD_RENDER'}
+                    </span>
+                    <Activity size={12} className={isDeep ? 'text-amber-500 animate-pulse' : 'text-emerald-500'} />
+                </div>
+                <h1 className="font-serif text-4xl md:text-5xl italic tracking-tighter leading-none">
+                   Manifesting.
+                </h1>
+             </div>
+
+             {/* Phase Indicator */}
+             <div className="space-y-6 min-h-[120px]">
+                <AnimatePresence mode="wait">
+                   <motion.div 
+                     key={phaseIndex}
+                     initial={{ opacity: 0, x: -10 }}
+                     animate={{ opacity: 1, x: 0 }}
+                     exit={{ opacity: 0, x: 10 }}
+                     className="space-y-3"
+                   >
+                      <div className="flex items-center gap-3 text-stone-400">
+                         {phaseIndex === 0 && <Target size={16} />}
+                         {phaseIndex === 1 && <BrainCircuit size={16} />}
+                         {phaseIndex === 2 && <Layers size={16} />}
+                         {phaseIndex === 3 && <Sparkles size={16} />}
+                         <span className="font-mono text-[9px] uppercase tracking-widest">{activePhase.label}</span>
+                      </div>
+                      <p className="font-serif italic text-lg text-stone-600 dark:text-stone-300 leading-snug">
+                         "{activePhase.desc}"
+                      </p>
+                   </motion.div>
+                </AnimatePresence>
+             </div>
+
+             {/* Diagnostics Ticker */}
+             <div className="p-4 bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-sm font-mono text-[9px] text-stone-500 uppercase tracking-wide flex justify-between items-center">
+                <span>SYS_DIAG:</span>
+                <span className="text-nous-text dark:text-white animate-pulse">{NOUS_DIAGNOSTICS[diagIndex]}</span>
+             </div>
+
+             {/* Bypass Control */}
+             <AnimatePresence>
+                {showBypass && (
+                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-4 flex justify-center">
+                      <button 
+                        onClick={() => onBypass && onBypass()}
+                        className="text-stone-400 hover:text-red-500 font-sans text-[8px] uppercase tracking-widest font-black flex items-center gap-2 border-b border-transparent hover:border-red-500 transition-all pb-0.5"
+                      >
+                         <Wind size={10} /> Abort Refraction
+                      </button>
+                   </motion.div>
+                )}
+             </AnimatePresence>
+
+          </div>
       </div>
 
-      <div className="relative w-full max-w-xl text-center px-8 space-y-20 flex flex-col items-center z-10">
-          <div className="flex flex-col items-center gap-8">
-             <div className="relative">
-                <motion.div animate={{ rotate: 360 }} transition={{ duration: 12, repeat: Infinity, ease: 'linear' }} className={`w-24 h-24 border-[0.5px] rounded-full flex items-center justify-center ${isDeep ? 'border-amber-500/30' : 'border-emerald-500/30'}`} />
-                <div className="absolute inset-0 flex items-center justify-center">
-                   {isDeep ? <BrainCircuit size={32} className="text-amber-500 animate-pulse" /> : <Cpu size={32} className="text-emerald-500 animate-pulse" />}
-                </div>
-             </div>
-             <div className="space-y-2">
-                <span className={`font-sans text-[9px] uppercase tracking-[0.6em] font-black ${isDeep ? 'text-amber-500' : 'text-emerald-500'}`}>
-                    {isDeep ? 'NOUS IMPERIAL AUDITOR' : 'Mimi Development Agent'}
-                </span>
-                <div className="flex items-center gap-3 justify-center text-stone-400">
-                   <Radio size={8} />
-                   <span className="font-mono text-[8px] uppercase tracking-widest">{NOUS_DIAGNOSTICS[diagIndex]}</span>
-                </div>
-             </div>
-          </div>
-
-          <div className="h-48 flex flex-col items-center justify-center space-y-10">
-            <AnimatePresence mode="wait">
-              <motion.div key={phaseIndex} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} className="space-y-6">
-                <div className="flex flex-col items-center gap-3">
-                   <span className="font-sans text-[10px] uppercase tracking-[0.8em] font-black text-stone-400">{activePhase.label}</span>
-                   <h2 className="font-serif text-3xl md:text-5xl italic leading-none tracking-tighter text-nous-text dark:text-white max-w-lg mx-auto">
-                      {activePhase.desc}
-                   </h2>
-                </div>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-
-          <div className="w-full space-y-6">
-             <div className="w-full h-1.5 bg-stone-100 dark:bg-stone-900 overflow-hidden relative rounded-full shadow-inner">
-                <motion.div className={`absolute top-0 left-0 h-full ${isDeep ? 'bg-amber-500 shadow-[0_0_15px_#f59e0b]' : 'bg-emerald-500 shadow-[0_0_12px_#10b981]'}`} animate={{ width: `${progress}%` }} />
-             </div>
-             <div className="flex justify-between items-center px-2">
-                <span className="font-sans text-[8px] text-stone-400 uppercase tracking-widest font-black">Refraction_Depth</span>
-                <span className={`font-mono text-[10px] font-black ${isDeep ? 'text-amber-500' : 'text-emerald-500'}`}>{Math.floor(progress)}%</span>
-             </div>
-          </div>
-
-          <AnimatePresence>
-            {showBypass && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="pt-12 space-y-8 flex flex-col items-center">
-                <p className="font-serif italic text-xs text-stone-400 max-w-xs text-balance opacity-80">
-                    The model is architecting a high-density manifest. If the wait feels structurally unsound, you may manual purge.
-                </p>
-                <button
-                  onClick={() => onBypass && onBypass()}
-                  className="px-10 py-4 bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-stone-500 hover:text-red-500 rounded-full font-sans text-[9px] uppercase tracking-[0.5em] font-black transition-all group flex items-center gap-4 shadow-sm hover:shadow-xl"
-                >
-                  <Wind size={14} className="group-hover:animate-spin" /> Abort Refraction
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+      {/* FOOTER METADATA */}
+      <div className="absolute bottom-8 left-8 font-mono text-[8px] text-stone-300 uppercase tracking-widest hidden md:block">
+         Coordinates: {Math.random().toFixed(4)}N, {Math.random().toFixed(4)}W
       </div>
+      <div className="absolute bottom-8 right-8 font-mono text-[8px] text-stone-300 uppercase tracking-widest hidden md:block">
+         Load: {Math.floor(progress)}%
+      </div>
+
     </motion.div>
   );
 };

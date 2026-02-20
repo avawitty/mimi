@@ -6,8 +6,8 @@ import { useUser } from '../contexts/UserContext';
 import { fetchPocketItems, updatePocketItem, addToPocket, createMoodboard, deleteFromPocket } from '../services/firebase';
 import { getLocalPocket } from '../services/localArchive';
 import { PocketItem, Treatment, AspectRatio, DarkroomLayer } from '../types';
-import { FlaskConical, Image as ImageIcon, Zap, Sparkles, Loader2, X, Plus, Check, Wand2, Sliders, Layers, Trash2, Camera, Info, ShieldCheck, Maximize2, Download, Eye, ArrowRight, Save, Copy, Filter, Target, Briefcase, FolderPlus, Activity, Scissors, Eraser, PenTool, Upload, ChevronUp, ChevronDown, Monitor, GripVertical, EyeOff } from 'lucide-react';
-import { applyTreatment, compressImage, generateRawImage } from '../services/geminiService';
+import { FlaskConical, Image as ImageIcon, Zap, Sparkles, Loader2, X, Plus, Check, Wand2, Sliders, Layers, Trash2, Camera, Info, ShieldCheck, Maximize2, Download, Eye, ArrowRight, Save, Copy, Filter, Target, Briefcase, FolderPlus, Activity, Scissors, Eraser, PenTool, Upload, ChevronUp, ChevronDown, Monitor, GripVertical, EyeOff, Crop } from 'lucide-react';
+import { applyTreatment, compressImage, generateRawImage, cropImage } from '../services/geminiService';
 import { Visualizer } from './Visualizer';
 
 const PRESET_TREATMENTS: Treatment[] = [
@@ -95,6 +95,8 @@ const ControlsContent: React.FC<ControlsContentProps> = ({
                           </div>
                           <input 
                             type="range" 
+                            id={`layer-opacity-${l.layerId}`}
+                            name={`layer-opacity-${l.layerId}`}
                             min="0" 
                             max="100" 
                             value={l.opacity} 
@@ -120,6 +122,8 @@ const ControlsContent: React.FC<ControlsContentProps> = ({
             </span>
             <div className="space-y-3">
                <textarea 
+                  id="customInstruction"
+                  name="customInstruction"
                   value={customInstruction}
                   onChange={e => setCustomInstruction(e.target.value)}
                   placeholder="Global phantom logic applied atop stack (e.g. Add film grain)..."
@@ -167,6 +171,110 @@ const ControlsContent: React.FC<ControlsContentProps> = ({
     </div>
 );
 
+const CropEditor: React.FC<{ imageUrl: string; onCancel: () => void; onSave: (croppedBase64: string) => void }> = ({ imageUrl, onCancel, onSave }) => {
+  const imgRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [crop, setCrop] = useState({ x: 10, y: 10, width: 80, height: 80 }); // Percentages
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [dragAction, setDragAction] = useState<'move' | 'se' | null>(null);
+  const [startCrop, setStartCrop] = useState({ ...crop });
+
+  const handlePointerDown = (e: React.PointerEvent, action: 'move' | 'se') => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+    setDragAction(action);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setStartCrop({ ...crop });
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging || !containerRef.current) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const rect = containerRef.current.getBoundingClientRect();
+    const deltaX = ((e.clientX - dragStart.x) / rect.width) * 100;
+    const deltaY = ((e.clientY - dragStart.y) / rect.height) * 100;
+
+    let newCrop = { ...startCrop };
+
+    if (dragAction === 'move') {
+      newCrop.x = Math.max(0, Math.min(100 - newCrop.width, startCrop.x + deltaX));
+      newCrop.y = Math.max(0, Math.min(100 - newCrop.height, startCrop.y + deltaY));
+    } else if (dragAction === 'se') {
+      newCrop.width = Math.max(10, Math.min(100 - newCrop.x, startCrop.width + deltaX));
+      newCrop.height = Math.max(10, Math.min(100 - newCrop.y, startCrop.height + deltaY));
+    }
+
+    setCrop(newCrop);
+  };
+
+  const handlePointerUp = () => {
+    setIsDragging(false);
+    setDragAction(null);
+  };
+
+  const performCrop = async () => {
+    if (!imgRef.current) return;
+    const naturalWidth = imgRef.current.naturalWidth;
+    const naturalHeight = imgRef.current.naturalHeight;
+    
+    const pixelCrop = {
+        x: (crop.x / 100) * naturalWidth,
+        y: (crop.y / 100) * naturalHeight,
+        width: (crop.width / 100) * naturalWidth,
+        height: (crop.height / 100) * naturalHeight
+    };
+    
+    try {
+        const cropped = await cropImage(imageUrl, pixelCrop);
+        // Ensure we send back only the base64 part if it has a header, 
+        // though updatePocketItem usually handles full data URLs.
+        // Let's send full data URL for display consistency.
+        onSave(cropped);
+    } catch (e) {
+        console.error("Crop failed", e);
+    }
+  };
+
+  return (
+    <div className="relative w-full h-full flex flex-col items-center justify-center bg-black/90 z-50 p-4" onPointerUp={handlePointerUp} onPointerMove={handlePointerMove}>
+        <div className="relative" ref={containerRef}>
+            <img ref={imgRef} src={imageUrl} className="max-w-full max-h-[80vh] pointer-events-none select-none" />
+            <div 
+                className="absolute border-2 border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] cursor-move"
+                style={{ left: `${crop.x}%`, top: `${crop.y}%`, width: `${crop.width}%`, height: `${crop.height}%` }}
+                onPointerDown={(e) => handlePointerDown(e, 'move')}
+            >
+                {/* Grid lines */}
+                <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-50">
+                    <div className="border-r border-b border-white/30" /><div className="border-r border-b border-white/30" /><div className="border-b border-white/30" />
+                    <div className="border-r border-b border-white/30" /><div className="border-r border-b border-white/30" /><div className="border-b border-white/30" />
+                    <div className="border-r border-white/30" /><div className="border-r border-white/30" /><div />
+                </div>
+                
+                {/* Resize Handle (SE) */}
+                <div 
+                    className="absolute -bottom-3 -right-3 w-6 h-6 bg-emerald-500 rounded-full cursor-se-resize flex items-center justify-center shadow-lg border-2 border-white pointer-events-auto"
+                    onPointerDown={(e) => handlePointerDown(e, 'se')}
+                >
+                    <Maximize2 size={12} className="text-white" />
+                </div>
+            </div>
+        </div>
+        
+        <div className="flex gap-4 mt-6">
+            <button onClick={onCancel} className="px-6 py-2 rounded-full border border-stone-700 text-stone-300 hover:text-white font-sans text-[9px] uppercase tracking-widest font-black">Cancel</button>
+            <button onClick={performCrop} className="px-8 py-2 rounded-full bg-emerald-500 text-white font-sans text-[9px] uppercase tracking-widest font-black shadow-lg hover:bg-emerald-400 flex items-center gap-2">
+                <Check size={14} /> Apply Crop
+            </button>
+        </div>
+    </div>
+  );
+};
+
 export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialShard }) => {
   const { user, profile } = useUser();
   const [shards, setShards] = useState<PocketItem[]>([]);
@@ -183,6 +291,7 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
   const [manifestPrompt, setManifestPrompt] = useState('');
   const [manifestAr, setManifestAr] = useState<AspectRatio>('1:1');
   const [isManifesting, setIsManifesting] = useState(false);
+  const [isCropping, setIsCropping] = useState(false);
   
   const [showMobileControls, setShowMobileControls] = useState(false);
 
@@ -367,6 +476,28 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
     }
   };
 
+  const handleCropSave = async (newBase64: string) => {
+      if (!activeShard) return;
+      setIsProcessing(true);
+      setIsCropping(false);
+      try {
+          await updatePocketItem(activeShard.id, {
+              content: {
+                  ...activeShard.content,
+                  imageUrl: newBase64
+              }
+          });
+          // Optimistically update local active shard
+          setActiveShard(prev => prev ? ({ ...prev, content: { ...prev.content, imageUrl: newBase64 } }) : null);
+          await loadShards(true);
+          window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Crop Applied.", icon: <Crop size={14} /> } }));
+      } catch(e) {
+          console.error("Save failed", e);
+      } finally {
+          setIsProcessing(false);
+      }
+  };
+
   const downloadShard = (url: string, id: string) => {
     const link = document.createElement('a');
     link.href = url;
@@ -392,6 +523,10 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
 
   return (
     <div className="flex flex-col h-full bg-[#050505] text-white transition-all duration-1000 relative selection:bg-white selection:text-black overflow-hidden">
+      
+      {/* TEXTURE OVERLAY */}
+      <div className="grain-overlay" />
+      
       <div className="absolute inset-0 pointer-events-none opacity-[0.05] bg-[url('https://www.transparenttextures.com/patterns/noise.png')] z-0 mix-blend-screen" />
       
       <header className="flex flex-col md:flex-row md:items-end justify-between border-b border-white/5 pb-8 pt-12 md:pt-16 px-6 md:px-16 gap-8 shrink-0 z-10 bg-[#050505]">
@@ -403,7 +538,7 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
               <h2 className="font-serif text-5xl md:text-7xl italic tracking-tighter text-white leading-none">Darkroom.</h2>
            </div>
            <div className="flex gap-4 overflow-x-auto no-scrollbar w-full md:w-auto pb-2 md:pb-0 snap-x">
-              <input type="file" ref={fileInputRef} className="hidden" multiple accept="image/*" onChange={handleManualUpload} />
+              <input type="file" id="darkroomUpload" name="darkroomUpload" ref={fileInputRef} className="hidden" multiple accept="image/*" onChange={handleManualUpload} />
               
               <button onClick={() => { setIsSelectionMode(!isSelectionMode); setSelectedIds(new Set()); }} className={`shrink-0 px-6 py-3 border rounded-full font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-3 snap-start ${isSelectionMode ? 'bg-emerald-500 text-white border-emerald-400' : 'border-white/10 text-stone-400 hover:text-white'}`}>
                 <Filter size={14} />
@@ -484,10 +619,14 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
       <AnimatePresence>
         {activeShard && !isSelectionMode && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[7000] flex items-center justify-center p-4 md:p-12 bg-black/98 backdrop-blur-2xl">
-             <button onClick={() => setActiveShard(null)} className="absolute top-10 right-10 p-4 text-white/40 hover:text-red-500 transition-all z-[6001]"><X size={32} /></button>
+             <button onClick={() => { setActiveShard(null); setIsCropping(false); }} className="absolute top-10 right-10 p-4 text-white/40 hover:text-red-500 transition-all z-[6001]"><X size={32} /></button>
              <div className="w-full max-w-7xl h-full flex flex-col md:flex-row items-center gap-12 pt-12">
                 <div className="flex-1 w-full h-full flex items-center justify-center overflow-hidden">
-                   <Visualizer prompt={activeShard.content.prompt || "Lab Shard"} initialImage={activeShard.content.imageUrl} defaultAspectRatio={activeShard.content.aspectRatio || '3:4'} isArtifact />
+                   {isCropping ? (
+                       <CropEditor imageUrl={activeShard.content.imageUrl} onCancel={() => setIsCropping(false)} onSave={handleCropSave} />
+                   ) : (
+                       <Visualizer prompt={activeShard.content.prompt || "Lab Shard"} initialImage={activeShard.content.imageUrl} defaultAspectRatio={activeShard.content.aspectRatio || '3:4'} isArtifact />
+                   )}
                 </div>
                 <div className="hidden md:flex md:w-[320px] flex-col gap-10 shrink-0">
                    <div className="space-y-4">
@@ -498,6 +637,9 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
                    <div className="space-y-6 pt-12 border-t border-white/5">
                       <button onClick={() => downloadShard(activeShard.content.imageUrl, activeShard.id)} className="flex items-center justify-center gap-3 py-5 bg-white text-black rounded-full font-sans text-[10px] uppercase tracking-[0.4em] font-black transition-all active:scale-95 w-full">
                          <Download size={16} /> Export Artifact
+                      </button>
+                      <button onClick={() => setIsCropping(true)} className="flex items-center justify-center gap-3 py-5 border border-stone-700 text-stone-300 hover:text-white rounded-full font-sans text-[10px] uppercase tracking-[0.4em] font-black transition-all active:scale-95 w-full">
+                         <Crop size={16} /> Crop & Resize
                       </button>
                       <button onClick={handleBatchRefine} disabled={isProcessing || layerStack.filter(l => l.isVisible).length === 0} className="flex items-center justify-center gap-3 py-5 bg-emerald-600 text-white rounded-full font-sans text-[10px] uppercase tracking-[0.4em] font-black transition-all active:scale-95 w-full">
                          {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />} Apply Stack to Shard
@@ -526,6 +668,8 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
 
                     <div className="space-y-6">
                         <textarea 
+                            id="manifestPrompt"
+                            name="manifestPrompt"
                             value={manifestPrompt} 
                             onChange={e => setManifestPrompt(e.target.value)}
                             placeholder="Describe the hallucination..."

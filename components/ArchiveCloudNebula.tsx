@@ -2,7 +2,7 @@
 // @ts-nocheck
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchUserZines, subscribeToCommunityZines } from '../services/firebase';
+import { subscribeToUserZines, subscribeToCommunityZines } from '../services/firebase';
 import { getLocalZines } from '../services/localArchive';
 import { ZineMetadata, ToneTag } from '../types';
 import { useUser } from '../contexts/UserContext';
@@ -34,36 +34,37 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
 
   useEffect(() => {
     // 1. Subscribe to Real-time Community Feed
-    const unsubscribe = subscribeToCommunityZines((data) => {
-        setCommunityZines(data);
-    });
-
-    // 2. Load Personal Data
+    const unsubCommunity = subscribeToCommunityZines(setCommunityZines);
+    
+    let unsubUser = () => {};
+    
+    // 2. Load Personal Data with Real-time Sync
     const loadPersonal = async () => {
       setLoading(true);
       const local = await getLocalZines() || [];
       setLocalZines(local.filter(z => z && z.id && z.content));
+      
       if (user && !user.isAnonymous) {
-        try { 
-          const cloud = await fetchUserZines(user.uid) || []; 
-          setCloudZines(cloud.filter(z => z && z.id && z.content));
-        } catch(e) {}
+        unsubUser = subscribeToUserZines(user.uid, (data) => {
+            setCloudZines(data.filter(z => z && z.id && z.content));
+            setLoading(false);
+        });
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     };
     loadPersonal();
 
-    return () => unsubscribe();
+    return () => {
+        unsubCommunity();
+        unsubUser();
+    };
   }, [user]);
 
   const allZines = useMemo(() => {
     // Merge personal sources
     const mergedPersonal = [...localZines, ...cloudZines];
     const uniquePersonal = Array.from(new Map(mergedPersonal.map(item => [item.id, item])).values());
-    
-    // Add community zines for the global view (if we want them in search) or just keep personal for management
-    // For 'Strategist' view, we usually show personal history. 
-    // Let's mix in community only if searching or exploring.
     
     const baseSet = uniquePersonal;
 
@@ -201,16 +202,15 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
 };
 
 const ZineShelfItem: React.FC<{ zine: ZineMetadata, onSelect: () => void, isCloud?: boolean, isStarred?: boolean, onToggleStar: () => void }> = ({ zine, onSelect, isCloud, isStarred, onToggleStar }) => {
-  const colors = TONE_MAP[zine.tone] || TONE_MAP['Editorial Stillness'];
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className={`group relative ${colors.bg} border ${colors.accent} p-8 md:p-12 shadow-sm hover:shadow-2xl transition-all flex flex-col gap-10 rounded-none pt-14`}
+      className="group relative bg-white dark:bg-[#1C1C1C] border border-stone-200 dark:border-stone-800 p-8 md:p-12 shadow-sm hover:shadow-2xl hover:border-stone-300 dark:hover:border-stone-700 transition-all flex flex-col gap-10 rounded-sm pt-14"
     >
        <div className="absolute top-0 left-0 right-0 flex px-8 justify-between items-start pointer-events-none">
-          <div className="bg-stone-100/50 dark:bg-black/20 px-4 py-1.5 border-x border-b border-stone-100 dark:border-stone-800 flex items-center gap-2">
+          <div className="bg-stone-50 dark:bg-stone-900 px-4 py-1.5 border-x border-b border-stone-100 dark:border-stone-800 flex items-center gap-2">
               <Hash size={10} className="text-stone-400" />
               <span className="font-sans text-[7px] font-black uppercase tracking-widest text-stone-500">{zine.tone}</span>
           </div>
@@ -222,10 +222,10 @@ const ZineShelfItem: React.FC<{ zine: ZineMetadata, onSelect: () => void, isClou
           </button>
        </div>
        <div className="flex flex-col gap-10 flex-1 cursor-pointer" onClick={onSelect}>
-           <span className={`font-mono text-[8px] uppercase tracking-widest opacity-40 ${colors.text}`}>REF_{zine.id.slice(-4)}</span>
-           <h3 className={`font-serif text-3xl md:text-4xl italic tracking-tighter leading-[0.9] ${colors.text}`}>{zine.title}</h3>
+           <span className="font-mono text-[8px] uppercase tracking-widest opacity-40 text-stone-500 dark:text-stone-400">REF_{zine.id.slice(-4)}</span>
+           <h3 className="font-serif text-3xl md:text-4xl italic tracking-tighter leading-[0.9] text-nous-text dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{zine.title}</h3>
        </div>
-       <div className="flex justify-between items-center z-10 opacity-30 pt-4 border-t cursor-pointer" style={{ borderColor: 'rgba(0,0,0,0.05)' }} onClick={onSelect}>
+       <div className="flex justify-between items-center z-10 opacity-30 pt-4 border-t border-stone-100 dark:border-stone-800 cursor-pointer" onClick={onSelect}>
          <span className="font-mono text-[8px] uppercase tracking-widest text-stone-500">{new Date(zine.timestamp).toLocaleDateString()}</span>
          {isCloud && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
        </div>

@@ -2,7 +2,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, RefreshCw, Check, Loader2, Save, Zap, Info, ArrowRight, X, LayoutGrid, Sparkles, Orbit, ScanText, Video, StopCircle, Radio, Activity, Target, Stars, Compass, Layers, Upload, Aperture, AlertTriangle, Mic, Volume2, ShieldAlert, ImageIcon } from 'lucide-react';
+import { Camera, RefreshCw, Check, Loader2, Save, Zap, Info, ArrowRight, X, LayoutGrid, Sparkles, Orbit, ScanText, Video, StopCircle, Radio, Activity, Target, Stars, Compass, Layers, Upload, Aperture, AlertTriangle, Mic, Volume2, ShieldAlert, ImageIcon, Sun, Moon, Grid3X3, Maximize, Radar } from 'lucide-react';
 import { addToPocket } from '../services/firebase';
 import { analyzeMiseEnScene, identifyAestheticInstant, compressImage } from '../services/geminiService';
 import { useUser } from '../contexts/UserContext';
@@ -38,6 +38,10 @@ export const MesopicLens: React.FC = () => {
   const [isArchived, setIsArchived] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   
+  // HUD State
+  const [hudTheme, setHudTheme] = useState<'obsidian' | 'alabaster'>('obsidian'); // Light vs Dark overlay
+  const [showGrid, setShowGrid] = useState(false);
+
   // LIVE API INTEGRATION
   const { connect, disconnect, isConnected, isSpeaking, error: liveError, sendVideoFrame } = useLiveSession(LIVE_SYSTEM_INSTRUCTION);
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -93,13 +97,11 @@ export const MesopicLens: React.FC = () => {
   // 2. FRAME STREAMING LOOP (When Connected)
   useEffect(() => {
     if (isConnected && isCameraActive && videoRef.current) {
-        // Send a frame every 500ms (2 FPS)
         frameIntervalRef.current = setInterval(() => {
             const video = videoRef.current;
             const canvas = canvasRef.current;
             if (!video || !canvas) return;
             
-            // Resize for token efficiency
             const scale = 0.5; 
             canvas.width = video.videoWidth * scale;
             canvas.height = video.videoHeight * scale;
@@ -110,14 +112,14 @@ export const MesopicLens: React.FC = () => {
                 const base64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
                 sendVideoFrame(base64);
             }
-        }, 800); // Slower interval to prevent congestion
+        }, 800); 
     }
     return () => {
         if (frameIntervalRef.current) clearInterval(frameIntervalRef.current);
     };
   }, [isConnected, isCameraActive, sendVideoFrame]);
 
-  // 3. UI RENDERING LOOP (Scanlines)
+  // 3. UI RENDERING LOOP (Scanlines & Voice)
   useEffect(() => {
     if (!isCameraActive) return;
     const canvas = document.getElementById('overlay-canvas') as HTMLCanvasElement;
@@ -126,43 +128,45 @@ export const MesopicLens: React.FC = () => {
     if (!ctx) return;
 
     let frameId: number;
+    let scanLineY = 0;
+
     const render = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         // Dynamic Voice Visualization
         if (isSpeaking) {
-            ctx.fillStyle = 'rgba(16, 185, 129, 0.1)';
+            const color = hudTheme === 'obsidian' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)';
+            ctx.fillStyle = hudTheme === 'obsidian' ? 'rgba(16, 185, 129, 0.05)' : 'rgba(239, 68, 68, 0.05)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             ctx.beginPath();
-            ctx.strokeStyle = '#10B981';
+            ctx.strokeStyle = hudTheme === 'obsidian' ? '#10B981' : '#EF4444';
             ctx.lineWidth = 2;
             const time = Date.now() / 200;
             const cy = canvas.height / 2;
-            for (let i = 0; i < canvas.width; i+= 10) {
-                const y = cy + Math.sin(i * 0.05 + time) * 30;
+            for (let i = 0; i < canvas.width; i+= 20) {
+                const y = cy + Math.sin(i * 0.05 + time) * 40;
                 if (i===0) ctx.moveTo(i, y);
                 else ctx.lineTo(i, y);
             }
             ctx.stroke();
         }
 
-        // Reticle
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        // Scan Line
+        scanLineY += 2;
+        if (scanLineY > canvas.height) scanLineY = 0;
+        ctx.beginPath();
+        ctx.strokeStyle = hudTheme === 'obsidian' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
         ctx.lineWidth = 1;
-        const cx = canvas.width / 2;
-        const cy = canvas.height / 2;
-        ctx.strokeRect(cx - 40, cy - 40, 80, 80);
-        
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.font = '10px monospace';
-        ctx.fillText(isConnected ? "LINK: ESTABLISHED" : "LINK: OFFLINE", 20, 20);
+        ctx.moveTo(0, scanLineY);
+        ctx.lineTo(canvas.width, scanLineY);
+        ctx.stroke();
 
         frameId = requestAnimationFrame(render);
     };
     render();
     return () => cancelAnimationFrame(frameId);
-  }, [isCameraActive, isConnected, isSpeaking]);
+  }, [isCameraActive, isConnected, isSpeaking, hudTheme]);
 
   const handleEstablishLink = async () => {
       setCameraError(null);
@@ -181,7 +185,6 @@ export const MesopicLens: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    // Clear previous states
     setIsArchived(false);
     setAnalysis(null);
     setInstantId(null);
@@ -192,7 +195,6 @@ export const MesopicLens: React.FC = () => {
         const base64 = event.target?.result as string;
         setPreviewUrl(base64);
         
-        // Trigger Analysis Sequence
         setLoading(true);
         const stepInterval = setInterval(() => setRitualStep(prev => (prev + 1) % RITUAL_TEXTS.length), 1500);
         
@@ -231,14 +233,11 @@ export const MesopicLens: React.FC = () => {
     setPreviewUrl(canvas.toDataURL('image/jpeg', 0.9));
     setIsArchived(false);
     
-    // Stop live session temporarily for static audit
     if (isConnected) disconnect();
     
-    // Clear previous analysis immediately
     setAnalysis(null);
     setInstantId(null);
     
-    // Trigger Audit
     try {
         const compressed = await compressImage(canvas.toDataURL('image/jpeg'), 0.6);
         const base64 = compressed.split(',')[1];
@@ -271,26 +270,34 @@ export const MesopicLens: React.FC = () => {
         timestamp: Date.now()
       });
       setIsArchived(true);
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+          detail: { message: "Blueprint Anchored.", icon: <Save size={14} /> } 
+      }));
     } catch (e) { console.error(e); }
   };
 
+  // Dynamic Styles based on HUD Theme
+  const hudColor = hudTheme === 'obsidian' ? 'text-white border-white/20' : 'text-black border-black/20';
+  const hudBg = hudTheme === 'obsidian' ? 'bg-black/40' : 'bg-white/40';
+  const accentColor = hudTheme === 'obsidian' ? 'text-emerald-400' : 'text-emerald-600';
+
   return (
-    <div className="fixed inset-0 z-[200] bg-black text-white flex flex-col font-sans overflow-hidden">
+    <div className="fixed inset-0 z-[200] bg-black flex flex-col font-sans overflow-hidden">
         
         {/* VIEWPORT LAYER */}
-        <div className="absolute inset-0 z-0 bg-stone-900">
-            <video ref={videoRef} className={`w-full h-full object-cover ${isCameraActive ? 'opacity-100' : 'opacity-0'}`} playsInline muted />
+        <div className="absolute inset-0 z-0 bg-[#050505]">
+            <video ref={videoRef} className={`w-full h-full object-cover transition-opacity duration-1000 ${isCameraActive ? 'opacity-100' : 'opacity-0'}`} playsInline muted />
             <canvas id="overlay-canvas" className="absolute inset-0 w-full h-full pointer-events-none z-10" width={window.innerWidth} height={window.innerHeight} />
             
             {/* INITIAL STATE */}
             {!isCameraActive && !previewUrl && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-8 space-y-12 z-20">
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-8 space-y-12 z-20 bg-stone-950">
                     <div className="space-y-4 text-center">
                         <div className="flex items-center justify-center gap-3 text-emerald-500">
                             <Aperture size={24} className="animate-spin-slow" />
-                            <span className="font-sans text-[10px] uppercase tracking-[0.5em] font-black">Mesopic Lens v2.0</span>
+                            <span className="font-sans text-[10px] uppercase tracking-[0.5em] font-black">Camera Obscura v4.0</span>
                         </div>
-                        <h2 className="font-serif text-4xl md:text-6xl italic text-white/90">"Authorize the Gaze."</h2>
+                        <h2 className="font-serif text-5xl md:text-7xl italic text-white/90">"Authorize the Gaze."</h2>
                         <p className="font-serif italic text-sm text-stone-500 max-w-md mx-auto leading-relaxed">
                             Open a high-fidelity channel to the Sovereign Observer.
                         </p>
@@ -335,68 +342,171 @@ export const MesopicLens: React.FC = () => {
         {/* LIVE HUD CONTROLS */}
         <AnimatePresence>
             {isCameraActive && !previewUrl && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-30 pointer-events-none flex flex-col justify-between p-8">
-                    {/* HEADER */}
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-30 pointer-events-none flex flex-col justify-between p-4 md:p-8">
+                    
+                    {/* TOP HUD BAR */}
                     <div className="flex justify-between items-start pointer-events-auto">
-                        <div className={`flex items-center gap-3 px-4 py-2 rounded-full border ${isConnected ? 'bg-emerald-950/30 border-emerald-500/50 text-emerald-400' : 'bg-black/40 border-white/10 text-stone-400'}`}>
-                            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-stone-500'}`} />
-                            <span className="font-mono text-[9px] uppercase tracking-widest font-black">
-                                {isConnected ? (isSpeaking ? "MIMI SPEAKING..." : "SIGNAL ACTIVE") : "CONNECTING..."}
-                            </span>
+                        <div className={`flex flex-col gap-1 font-mono text-[9px] ${hudTheme === 'obsidian' ? 'text-white' : 'text-black'}`}>
+                            <div className="flex items-center gap-2">
+                                <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-red-500'}`} />
+                                <span>{isConnected ? (isSpeaking ? "MIMI_VOICE_ACTIVE" : "LINK_ESTABLISHED") : "OFFLINE"}</span>
+                            </div>
+                            <span className="opacity-60">ISO: AUTO // FOCAL: INF</span>
                         </div>
-                        <button onClick={handleDisconnect} className="p-3 bg-red-500/10 border border-red-500/30 rounded-full text-red-400 hover:bg-red-500 hover:text-white transition-all">
-                            <X size={16} />
-                        </button>
+
+                        <div className="flex gap-4">
+                             <button onClick={() => setHudTheme(prev => prev === 'obsidian' ? 'alabaster' : 'obsidian')} className={`p-3 rounded-full border backdrop-blur-md transition-all ${hudColor} ${hudBg}`}>
+                                {hudTheme === 'obsidian' ? <Sun size={14} /> : <Moon size={14} />}
+                             </button>
+                             <button onClick={() => setShowGrid(!showGrid)} className={`p-3 rounded-full border backdrop-blur-md transition-all ${hudColor} ${hudBg}`}>
+                                <Grid3X3 size={14} />
+                             </button>
+                             <button onClick={handleDisconnect} className={`p-3 rounded-full border backdrop-blur-md transition-all ${hudTheme === 'obsidian' ? 'border-red-500/50 text-red-500 bg-red-900/20' : 'border-red-600/50 text-red-600 bg-red-100/50'}`}>
+                                <X size={14} />
+                             </button>
+                        </div>
                     </div>
 
-                    {/* FOOTER */}
-                    <div className="flex justify-center items-end gap-8 pointer-events-auto pb-8">
-                        <button onClick={() => fileInputRef.current?.click()} className="p-4 bg-black/40 border border-white/10 rounded-full text-stone-400 hover:text-white backdrop-blur-md transition-all">
-                            <Upload size={20} />
-                        </button>
-                        
-                        <button 
-                            onClick={handleStaticCapture}
-                            className="w-20 h-20 rounded-full border-4 border-white/20 flex items-center justify-center relative group active:scale-90 transition-transform"
-                        >
-                            <div className="w-16 h-16 bg-white rounded-full shadow-[0_0_30px_rgba(255,255,255,0.3)] group-hover:bg-emerald-400 transition-colors" />
-                        </button>
+                    {/* CENTRAL RETICLE & GRID */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        {/* Brackets */}
+                        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border border-dashed ${hudColor} opacity-30 rounded-full`} />
+                        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 border-t border-l ${hudColor}`} />
+                        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 border-t border-r ${hudColor}`} />
+                        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 border-b border-l ${hudColor}`} />
+                        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 border-b border-r ${hudColor}`} />
 
-                        <div className="w-12" /> {/* Spacer for balance */}
+                        {/* Grid */}
+                        {showGrid && (
+                            <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 w-full h-full opacity-20">
+                                <div className={`border-r border-b ${hudColor}`} />
+                                <div className={`border-r border-b ${hudColor}`} />
+                                <div className={`border-b ${hudColor}`} />
+                                <div className={`border-r border-b ${hudColor}`} />
+                                <div className={`border-r border-b ${hudColor}`} />
+                                <div className={`border-b ${hudColor}`} />
+                                <div className={`border-r ${hudColor}`} />
+                                <div className={`border-r ${hudColor}`} />
+                                <div />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* CONTROL DECK */}
+                    <div className="flex flex-col items-center gap-6 pointer-events-auto pb-4">
+                        <div className={`font-serif italic text-lg ${hudTheme === 'obsidian' ? 'text-white' : 'text-black'} opacity-80 text-shadow-sm`}>
+                             {isSpeaking ? "Analyzing..." : "Ready for Capture"}
+                        </div>
+                        
+                        <div className="flex items-center gap-8">
+                            <button onClick={() => fileInputRef.current?.click()} className={`p-4 rounded-full border backdrop-blur-md transition-all hover:scale-105 ${hudColor} ${hudBg}`}>
+                                <Upload size={20} />
+                            </button>
+                            
+                            <button 
+                                onClick={handleStaticCapture}
+                                className={`w-24 h-24 rounded-full border-4 flex items-center justify-center relative group active:scale-95 transition-transform ${hudTheme === 'obsidian' ? 'border-white/30' : 'border-black/30'}`}
+                            >
+                                <div className={`w-20 h-20 bg-white rounded-full shadow-lg group-hover:scale-90 transition-transform ${hudTheme === 'obsidian' ? 'shadow-[0_0_30px_rgba(255,255,255,0.4)]' : 'shadow-none border border-black'}`} />
+                            </button>
+
+                            <button onClick={isConnected ? disconnect : connect} className={`p-4 rounded-full border backdrop-blur-md transition-all hover:scale-105 ${isConnected ? (hudTheme === 'obsidian' ? 'bg-emerald-900/40 text-emerald-400 border-emerald-500/50' : 'bg-emerald-100/50 text-emerald-600 border-emerald-600/50') : `${hudColor} ${hudBg}`}`}>
+                                <Mic size={20} className={isSpeaking ? 'animate-pulse' : ''} />
+                            </button>
+                        </div>
                     </div>
                 </motion.div>
             )}
         </AnimatePresence>
 
-        {/* STATIC ANALYSIS VIEW (If Shutter Pressed or Uploaded) */}
+        {/* ALCHEMICAL BLUEPRINT REPORT (Static Analysis) */}
         <AnimatePresence>
             {previewUrl && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-50 bg-black flex flex-col md:flex-row">
-                    <div className="w-full md:w-1/2 h-1/2 md:h-full relative bg-stone-900">
-                        <img src={previewUrl} className="w-full h-full object-contain" />
-                        <button onClick={() => { setPreviewUrl(null); }} className="absolute top-6 left-6 p-3 bg-black/50 text-white rounded-full backdrop-blur-md"><X size={20}/></button>
-                    </div>
-                    <div className="w-full md:w-1/2 h-1/2 md:h-full bg-stone-950 border-l border-white/10 p-8 md:p-12 overflow-y-auto">
-                        {loading ? (
-                            <div className="h-full flex flex-col items-center justify-center gap-4">
-                                <Loader2 size={32} className="animate-spin text-emerald-500" />
-                                <span className="font-mono text-xs text-stone-400 animate-pulse">{RITUAL_TEXTS[ritualStep]}</span>
-                            </div>
-                        ) : (
-                            <div className="space-y-8 animate-fade-in">
-                                <div className="space-y-2">
-                                    <span className="font-sans text-[9px] uppercase tracking-widest text-emerald-500 font-black">Audit Complete</span>
-                                    <h3 className="font-serif text-4xl italic text-white">{instantId?.era || "Undetected"}</h3>
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-50 bg-[#F0EFE9] dark:bg-[#0A0A0A] flex flex-col transition-colors duration-1000">
+                    
+                    {/* BACKGROUND GRID */}
+                    <div className="absolute inset-0 pointer-events-none opacity-[0.1] dark:opacity-[0.05]" 
+                        style={{ backgroundImage: 'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)', backgroundSize: '40px 40px', color: '#10B981' }} 
+                    />
+
+                    {/* HEADER */}
+                    <header className="h-16 border-b border-black/10 dark:border-white/10 flex items-center justify-between px-6 bg-white/50 dark:bg-black/50 backdrop-blur-sm relative z-10 shrink-0">
+                        <div className="flex items-center gap-4 text-emerald-600 dark:text-emerald-500">
+                            <Radar size={18} />
+                            <span className="font-sans text-[10px] uppercase tracking-[0.4em] font-black">Alchemical Blueprint</span>
+                        </div>
+                        <button onClick={() => { setPreviewUrl(null); }} className="p-2 text-stone-400 hover:text-red-500 transition-colors"><X size={20}/></button>
+                    </header>
+
+                    {/* CONTENT */}
+                    <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative z-10">
+                        {/* IMAGE PLATE */}
+                        <div className="flex-1 p-6 md:p-12 flex items-center justify-center bg-stone-200/50 dark:bg-stone-900/50 overflow-hidden relative">
+                            <div className="relative shadow-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-black p-2">
+                                <img src={previewUrl} className="max-w-full max-h-[70vh] object-contain grayscale contrast-125" />
+                                {/* Overlay Graphics */}
+                                <div className="absolute inset-0 border border-emerald-500/20 pointer-events-none">
+                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-3 font-mono text-[8px] text-emerald-600 dark:text-emerald-400 bg-white dark:bg-black px-2">N. AXIS</div>
+                                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-3 font-mono text-[8px] text-emerald-600 dark:text-emerald-400 bg-white dark:bg-black px-2">S. AXIS</div>
+                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full border border-dashed border-emerald-500/30" />
                                 </div>
-                                <p className="font-serif italic text-xl text-stone-300 leading-relaxed border-l-2 border-emerald-500/30 pl-4">
-                                    "{analysis?.directors_note || "Signal weak."}"
-                                </p>
-                                <button onClick={handleArchive} disabled={isArchived} className="w-full py-4 bg-white text-black font-sans text-[10px] uppercase tracking-[0.4em] font-black rounded-full shadow-xl active:scale-95 flex items-center justify-center gap-3">
-                                    {isArchived ? <Check size={14} /> : <Save size={14} />}
-                                    {isArchived ? "Anchored" : "Commit to Archive"}
-                                </button>
                             </div>
-                        )}
+                        </div>
+
+                        {/* DATA COLUMN */}
+                        <div className="w-full md:w-[400px] border-l border-black/10 dark:border-white/10 bg-white/80 dark:bg-black/80 backdrop-blur-xl flex flex-col">
+                            {loading ? (
+                                <div className="flex-1 flex flex-col items-center justify-center gap-6 p-8 text-center">
+                                    <Loader2 size={32} className="animate-spin text-emerald-500" />
+                                    <div className="space-y-2">
+                                        <p className="font-serif italic text-xl text-stone-600 dark:text-stone-300">"Consulting the Void..."</p>
+                                        <span className="font-mono text-[9px] text-stone-400 uppercase tracking-widest">{RITUAL_TEXTS[ritualStep]}</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex-1 overflow-y-auto no-scrollbar p-8 space-y-10">
+                                    <div className="space-y-4 border-b border-black/5 dark:border-white/5 pb-8">
+                                        <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Primary Detection</span>
+                                        <h2 className="font-serif text-4xl italic text-nous-text dark:text-white leading-none">
+                                            {instantId?.era || "Undetected Signal"}
+                                        </h2>
+                                        <div className="flex gap-2">
+                                            <span className="px-2 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[9px] rounded-sm">CONFIDENCE: 98%</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Director's Note</span>
+                                        <p className="font-serif italic text-lg text-stone-600 dark:text-stone-300 leading-relaxed border-l-2 border-emerald-500/30 pl-4">
+                                            "{analysis?.directors_note || "Signal weak. No narrative detected."}"
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-4 pt-4">
+                                        <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Technical Readout</span>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="p-3 bg-stone-100 dark:bg-stone-900 rounded-sm">
+                                                <span className="block font-mono text-[8px] text-stone-400 mb-1">LIGHTING</span>
+                                                <span className="font-serif italic text-sm text-nous-text dark:text-white">{analysis?.lighting_analysis || "Unknown"}</span>
+                                            </div>
+                                            <div className="p-3 bg-stone-100 dark:bg-stone-900 rounded-sm">
+                                                <span className="block font-mono text-[8px] text-stone-400 mb-1">CULTURE</span>
+                                                <span className="font-serif italic text-sm text-nous-text dark:text-white">{analysis?.cultural_parallel || "None"}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {!loading && (
+                                <div className="p-6 border-t border-black/10 dark:border-white/10 bg-stone-50 dark:bg-stone-900 shrink-0">
+                                    <button onClick={handleArchive} disabled={isArchived} className="w-full py-4 bg-nous-text dark:bg-white text-white dark:text-black font-sans text-[10px] uppercase tracking-[0.4em] font-black rounded-sm shadow-xl active:scale-95 flex items-center justify-center gap-3 transition-all hover:bg-emerald-600 dark:hover:bg-stone-200">
+                                        {isArchived ? <Check size={14} /> : <Save size={14} />}
+                                        {isArchived ? "Blueprint Anchored" : "Archive to Codex"}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </motion.div>
             )}

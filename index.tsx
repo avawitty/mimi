@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 import React, { Component, ReactNode, StrictMode, useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
@@ -56,6 +55,7 @@ class RootErrorBoundary extends Component<Props, State> {
           <p style={{ opacity: 0.6, fontSize: '0.9rem', maxWidth: '300px', lineHeight: '1.4', color: '#1C1917' }}>The aesthetic frequency was too dense for this browser resolution.</p>
           <button 
             onClick={() => window.location.reload()} 
+            className="hover:scale-105 active:scale-95 transition-all duration-500 ease-out"
             style={{ 
               marginTop: '3rem', 
               padding: '1.2rem 3rem', 

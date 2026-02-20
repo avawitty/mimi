@@ -14,8 +14,6 @@ export interface ColorShard {
   descriptor?: string;
 }
 
-// ... [Existing Audit interfaces] ...
-
 export interface AgentEnrichment {
   autoTags?: string[];
   detectedEra?: string;
@@ -35,8 +33,6 @@ export interface PocketItem {
   parentShardId?: string;
   agentEnrichment?: AgentEnrichment; // NEW: Invisible Agent Data
 }
-
-// ... [Rest of file remains unchanged] ...
 
 export interface TailorLogicDraft {
   interests: {
@@ -84,6 +80,15 @@ export interface TailorLogicDraft {
     avoiding: string;
     materialityAudit?: string;
     fiscalVelocity?: string; // NEW: Budget/Resource intent
+  };
+  brandIdentity?: {
+    fonts: {
+      serif: string;
+      sans: string;
+      mono: string;
+    };
+    logo?: string;
+    palette: string[];
   };
   draftStatus: 'provisional' | 'aligned' | 'evolving';
   lastTailored: number;
@@ -249,7 +254,7 @@ export interface TasteAuditReport {
   conceptualThroughline: string;
   designBrief: string;
   colorStory: ColorShard[];
-  keyTouchpoints?: string[]; // Added: Specific cultural references
+  keyTouchpoints?: string[];
 }
 
 export interface VideoAuditReport {
@@ -265,7 +270,7 @@ export interface InvestmentReport {
   tailor_alignment_note?: string;
   capital_allocation: {
     category: "KEYSTONE ASSET" | "STRATEGIC EXPENSE" | "VANITY METRIC";
-    items: string[]; // Titles/URLs
+    items: string[];
     reasoning: string;
     fiscal_route: "Business Write-off" | "Personal Equity" | "Operational Cost";
   }[];
@@ -311,6 +316,13 @@ export interface EditorElementStyle {
   objectFit?: 'cover' | 'contain';
   filter?: string;
   hasPin?: boolean;
+  // BORDERS & OUTLINES
+  borderStyle?: 'none' | 'solid' | 'dashed' | 'dotted';
+  borderWidth?: number;
+  borderColor?: string;
+  borderRadius?: number;
+  padding?: number;
+  backgroundColor?: string;
 }
 
 export interface EditorElement {
@@ -321,6 +333,7 @@ export interface EditorElement {
   negativePrompt?: string;
   notes?: string;
   style: EditorElementStyle;
+  sourceRef?: string;
 }
 
 export interface ZinePage extends ZinePageSpec {
@@ -348,7 +361,7 @@ export interface Task {
   id: string;
   text: string;
   completed: boolean;
-  dueDate?: string; // ISO String YYYY-MM-DD
+  dueDate?: string;
   createdAt: number;
 }
 
@@ -358,7 +371,7 @@ export interface DossierFolder {
   name: string;
   createdAt: number;
   notes?: string;
-  tasks?: Task[]; // Added Task Array
+  tasks?: Task[];
 }
 
 export interface DossierElement {
@@ -425,7 +438,7 @@ export interface UserProfile extends UserPreferences {
   syncedUsers?: string[];
 }
 
-// -- PROPOSAL SYSTEM TYPES -- //
+// -- PROPOSAL SYSTEM -- //
 
 export type ProposalStatus = "draft" | "locked" | "exported";
 
@@ -441,7 +454,7 @@ export interface LayoutConfig {
   colorSet: string[];
   spacingScale: number;
   backgroundStyle?: string;
-  customStyles?: Record<string, string>; // Canonical addition
+  customStyles?: Record<string, string>;
 }
 
 export interface ProposalSection {
@@ -465,14 +478,11 @@ export interface Proposal {
   title: string;
   sourceFolderId: string;
   sourceArtifactIds: string[];
-  
   content: ProposalContent;
   layout: LayoutConfig;
   brandKitSnapshot?: BrandKit;
-  
   version: number;
   status: ProposalStatus;
-  
   createdAt: number;
   updatedAt: number;
 }
