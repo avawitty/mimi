@@ -3,12 +3,14 @@
 import { auth, db } from "./firebaseInit";
 import { signInAnonymously } from "firebase/auth";
 import { collection, doc, setDoc, getDocs, deleteDoc, getDoc, query, where } from "firebase/firestore";
-import { GoogleGenAI } from "@google/genai";
+import { getClient } from "./geminiService";
 
 const getAiClient = () => {
-    const key = process.env.API_KEY;
-    if (!key) return null;
-    return new GoogleGenAI({ apiKey: key });
+    try {
+        return getClient();
+    } catch (e) {
+        return null;
+    }
 };
 
 const ensureAnonymousAuth = async () => {

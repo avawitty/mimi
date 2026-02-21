@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { ZineMetadata } from '../types';
 // Fixed: Using fetchCommunityZines from firebase service as fetchArchive is not exported.
 import { fetchCommunityZines } from '../services/firebase';
-import { MIMI_THEMES, ArchetypeKey } from '../themes/archetypes';
 
 interface ArchetypeIndexProps {
   onSelectZine: (zine: ZineMetadata) => void;

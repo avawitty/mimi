@@ -4,9 +4,11 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useUser } from '../contexts/UserContext';
 import { useAgents } from '../contexts/AgentContext';
 import { fetchPocketItems } from '../services/firebase';
+import { fetchUserZines } from '../services/firebaseUtils';
 import { ShieldCheck, Activity, BrainCircuit, AlertTriangle, Fingerprint, Layers, Clock, Zap, Target, Grid3X3, History, Scan, Database, TrendingUp, Hash, Ghost, AlertCircle, ArrowUpRight, ArrowDownRight, Minus, MessageSquare, Send, ChevronRight, X, Loader2, Mic, Volume2, Crown, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLiveSession } from '../hooks/useLiveSession';
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 // --- SUB-COMPONENTS FOR DATA VIZ ---
 
@@ -284,6 +286,7 @@ export const TheWard: React.FC = () => {
   const [activeModule, setActiveModule] = useState<'CURATOR' | 'SENTINEL'>('CURATOR');
   const [showConsultation, setShowConsultation] = useState(false);
   const [pocketData, setPocketData] = useState<any[]>([]);
+  const [userZines, setUserZines] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPatron, setIsPatron] = useState(false);
 
@@ -296,9 +299,12 @@ export const TheWard: React.FC = () => {
               try {
                   const items = await fetchPocketItems(user.uid);
                   setPocketData(items || []);
+                  const zines = await fetchUserZines(user.uid);
+                  setUserZines(zines || []);
               } catch(e) {
                   console.warn("The Ward: Permission failure fetching items. Operating with limited context.");
                   setPocketData([]);
+                  setUserZines([]);
               }
               
               // Check local patronage state
@@ -354,6 +360,36 @@ export const TheWard: React.FC = () => {
          { label: 'Drift Volatility', delta: -2, trend: [80, 70, 60, 50, 40, 30, 20] },
       ];
   }, [pocketData]);
+
+  const zineActivityData = useMemo(() => {
+    if (!userZines.length) return [];
+    
+    const counts: Record<string, number> = {};
+    userZines.forEach(zine => {
+      const date = new Date(zine.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      counts[date] = (counts[date] || 0) + 1;
+    });
+    
+    return Object.entries(counts)
+      .map(([date, count]) => ({ date, count }))
+      .slice(-7); // Last 7 active days
+  }, [userZines]);
+
+  const toneDistributionData = useMemo(() => {
+    if (!userZines.length) return [];
+    
+    const counts: Record<string, number> = {};
+    userZines.forEach(zine => {
+      const tone = zine.tone || 'Unknown';
+      counts[tone] = (counts[tone] || 0) + 1;
+    });
+    
+    return Object.entries(counts)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [userZines]);
+  
+  const COLORS = ['#10B981', '#F59E0B', '#3B82F6', '#EF4444', '#8B5CF6', '#EC4899', '#6B7280'];
 
   const manifestoData = useMemo(() => {
       // Compare Stated (Tailor) vs Actual (Archetypes)
@@ -474,12 +510,64 @@ export const TheWard: React.FC = () => {
                         <div className="p-8 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-sm flex items-center justify-center">
                            <RadarChart data={archetypeData} />
                         </div>
+
+                        <h3 className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 border-b border-black/5 pb-2 mt-12">Tone Distribution</h3>
+                        <div className="p-8 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-sm flex items-center justify-center h-64">
+                           {toneDistributionData.length > 0 ? (
+                             <ResponsiveContainer width="100%" height="100%">
+                               <PieChart>
+                                 <Pie
+                                   data={toneDistributionData}
+                                   cx="50%"
+                                   cy="50%"
+                                   innerRadius={60}
+                                   outerRadius={80}
+                                   paddingAngle={5}
+                                   dataKey="value"
+                                   stroke="none"
+                                 >
+                                   {toneDistributionData.map((entry, index) => (
+                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                   ))}
+                                 </Pie>
+                                 <Tooltip 
+                                   contentStyle={{ backgroundColor: '#1c1917', border: 'none', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                                   itemStyle={{ color: '#10B981' }}
+                                 />
+                               </PieChart>
+                             </ResponsiveContainer>
+                           ) : (
+                             <span className="font-mono text-[9px] text-stone-400 italic">No tone data available.</span>
+                           )}
+                        </div>
                      </section>
 
                      <section className="space-y-12">
                         <div className="space-y-6">
                            <h3 className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 border-b border-black/5 pb-2">Signal Velocity</h3>
                            <SignalVelocity data={velocityData} />
+                        </div>
+
+                        <div className="space-y-6">
+                           <h3 className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 border-b border-black/5 pb-2">Manifestation Activity</h3>
+                           <div className="p-6 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-sm h-48">
+                              {zineActivityData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <BarChart data={zineActivityData}>
+                                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#78716c' }} dy={10} />
+                                    <Tooltip 
+                                      cursor={{ fill: 'rgba(16, 185, 129, 0.1)' }}
+                                      contentStyle={{ backgroundColor: '#1c1917', border: 'none', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                                    />
+                                    <Bar dataKey="count" fill="#10B981" radius={[2, 2, 0, 0]} maxBarSize={40} />
+                                  </BarChart>
+                                </ResponsiveContainer>
+                              ) : (
+                                <div className="h-full flex items-center justify-center">
+                                  <span className="font-mono text-[9px] text-stone-400 italic">No activity data available.</span>
+                                </div>
+                              )}
+                           </div>
                         </div>
 
                         {rogueSignal && (
@@ -528,6 +616,28 @@ export const TheWard: React.FC = () => {
                            </div>
                            <OmissionIndex missing={manifestoData.omissions} />
                            {manifestoData.omissions.length === 0 && <p className="font-serif italic text-sm text-stone-400">No major omissions detected. Alignment nominal.</p>}
+                        </section>
+
+                        <section className="space-y-6 mt-12">
+                           <div className="flex items-center justify-between border-b border-black/5 pb-2">
+                              <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">Manifest Activity</span>
+                           </div>
+                           <div className="p-8 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-sm flex items-center justify-center h-48">
+                             {zineActivityData.length > 0 ? (
+                               <ResponsiveContainer width="100%" height="100%">
+                                 <BarChart data={zineActivityData}>
+                                   <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
+                                   <Tooltip 
+                                     contentStyle={{ backgroundColor: '#1c1917', border: 'none', borderRadius: '4px', color: '#fff', fontSize: '12px' }}
+                                     cursor={{ fill: 'rgba(16, 185, 129, 0.1)' }}
+                                   />
+                                   <Bar dataKey="count" fill="#10B981" radius={[4, 4, 0, 0]} />
+                                 </BarChart>
+                               </ResponsiveContainer>
+                             ) : (
+                               <span className="font-mono text-[9px] text-stone-400 italic">No recent activity.</span>
+                             )}
+                           </div>
                         </section>
                      </div>
 

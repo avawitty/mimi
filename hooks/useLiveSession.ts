@@ -1,6 +1,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { GoogleGenAI, LiveServerMessage, Modality } from '@google/genai';
+import { LiveServerMessage, Modality } from '@google/genai';
+import { getClient } from '../services/geminiService';
 
 // Audio helpers
 function floatTo16BitPCM(input: Float32Array) {
@@ -41,10 +42,7 @@ export const useLiveSession = (systemInstruction: string) => {
   const connect = useCallback(async () => {
     setError(null);
     try {
-      const apiKey = process.env.API_KEY;
-      if (!apiKey) throw new Error("Registry Key Missing");
-
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = getClient();
       
       // 1. Setup Audio Output Context (24kHz for Gemini output)
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
@@ -95,8 +93,10 @@ export const useLiveSession = (systemInstruction: string) => {
 
                 sessionPromise.then(session => {
                   session.sendRealtimeInput({
-                    mimeType: 'audio/pcm;rate=16000',
-                    data: base64
+                    media: {
+                      mimeType: 'audio/pcm;rate=16000',
+                      data: base64
+                    }
                   });
                 });
               };
