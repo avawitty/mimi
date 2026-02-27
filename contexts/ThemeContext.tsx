@@ -49,7 +49,7 @@ export const PALETTES: Record<string, Palette> = {
     fontFamily: 'mono', headerFont: '"Space Mono", monospace', logoStyle: 'brutalist', logoItalic: false
   },
   "Haute Void": { 
-    name: 'Haute Void', genre: 'High-Fashion Silence', base: '#000000', text: '#FFFFFF', subtle: '#A8A29E', accent: '#D4D4D4', border: '#262626', isDark: true,
+    name: 'Haute Void', genre: 'High-Fashion Silence', base: '#000000', text: '#D4D4D4', subtle: '#525252', accent: '#FFFFFF', border: '#262626', isDark: true,
     fontFamily: 'mono', headerFont: '"Space Mono", monospace', logoStyle: 'brutalist', logoItalic: false
   }
 };

@@ -1,0 +1,60 @@
+
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AlertCircle, CheckCircle, Info, X } from 'lucide-react';
+
+export const RegistryAlert: React.FC = () => {
+  const [alerts, setAlerts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const handleAlert = (e: any) => {
+      const id = Math.random().toString(36).substr(2, 9);
+      const newAlert = { id, ...e.detail };
+      setAlerts(prev => [...prev, newAlert]);
+      
+      // Auto-remove after 5 seconds
+      setTimeout(() => {
+        setAlerts(prev => prev.filter(a => a.id !== id));
+      }, 5000);
+    };
+
+    window.addEventListener('mimi:registry_alert', handleAlert);
+    return () => window.removeEventListener('mimi:registry_alert', handleAlert);
+  }, []);
+
+  return (
+    <div className="fixed bottom-8 right-8 z-[10000] flex flex-col gap-3 pointer-events-none">
+      <AnimatePresence>
+        {alerts.map(alert => (
+          <motion.div
+            key={alert.id}
+            initial={{ opacity: 0, x: 20, scale: 0.95 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 20, scale: 0.95 }}
+            className={`pointer-events-auto min-w-[300px] p-4 rounded-sm border shadow-2xl flex items-center gap-4 backdrop-blur-xl ${
+              alert.type === 'error' 
+                ? 'bg-red-950/90 border-red-500/50 text-red-200' 
+                : 'bg-stone-900/90 border-stone-700/50 text-stone-100'
+            }`}
+          >
+            <div className={`shrink-0 ${alert.type === 'error' ? 'text-red-500' : 'text-emerald-500'}`}>
+              {alert.icon || (alert.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle size={18} />)}
+            </div>
+            <div className="flex-1">
+              <p className="font-sans text-[10px] uppercase tracking-widest font-black opacity-50 mb-1">
+                {alert.type === 'error' ? 'System Dissonance' : 'Registry Update'}
+              </p>
+              <p className="font-serif italic text-sm">{alert.message}</p>
+            </div>
+            <button 
+              onClick={() => setAlerts(prev => prev.filter(a => a.id !== alert.id))}
+              className="p-1 hover:bg-white/10 rounded-full transition-colors"
+            >
+              <X size={14} className="opacity-50" />
+            </button>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+};

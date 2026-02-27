@@ -18,7 +18,7 @@ const SectionHeader: React.FC<{ label: string; icon: any; color?: string; style?
       <Icon size={14} />
     </div>
     <span className="font-sans text-[9px] uppercase tracking-[0.4em] font-black text-stone-400">{label}</span>
-    <div className="h-px flex-1 bg-stone-200 dark:border-stone-800" />
+    <div className="h-px flex-1 bg-stone-200 dark:bg-stone-800" />
   </div>
 );
 
@@ -33,6 +33,8 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
   const [isAnimatingManifest, setIsAnimatingManifest] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [dialOpen, setDialOpen] = useState(false);
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [isBroadcasted, setIsBroadcasted] = useState(false);
   
   // TAILOR INTEGRATION: Fetch styling from the active persona's draft
   const tailor = activePersona?.tailorDraft || profile?.tailorDraft;
@@ -138,6 +140,36 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
     } catch (e) {}
   };
 
+  const handleBroadcast = async () => {
+      if (isBroadcasted || isBroadcasting) return;
+      setIsBroadcasting(true);
+      try {
+          const { collection, addDoc } = await import('firebase/firestore');
+          const { db } = await import('../services/firebase');
+          
+          const transmission = {
+              userId: user?.uid || 'ghost',
+              userHandle: profile?.handle || 'Ghost',
+              content: metadata.title,
+              imageUrl: metadata.coverImageUrl || metadata.content.hero_image_url || '',
+              timestamp: Date.now(),
+              type: 'manifest',
+              likes: 0,
+              zineData: metadata
+          };
+          
+          await addDoc(collection(db, 'public_transmissions'), transmission);
+          
+          setIsBroadcasted(true);
+          window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Manifest Broadcasted to Proscenium.", icon: <Radio size={14} style={{ color: accentColor }} /> } }));
+      } catch (e) {
+          console.error("Broadcast failed", e);
+          window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Broadcast Failed.", type: 'error' } }));
+      } finally {
+          setIsBroadcasting(false);
+      }
+  };
+
   const handleContinuum = () => {
       // Pass provocation AND original artifacts as context to input
       const provocation = metadata.content.poetic_provocation;
@@ -188,7 +220,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                       <span className="font-mono text-[9px] uppercase tracking-[0.5em] text-stone-400">Issue_0{Math.floor(Math.random() * 10)}</span>
                       {metadata.isDeepThinking && <div className="flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-500 font-sans text-[7px] font-black uppercase tracking-widest"><Radar size={10} className="animate-pulse" /> Deep Refraction</div>}
                    </div>
-                   <h1 className={`${fontStyle} text-7xl md:text-[11rem] tracking-tighter leading-[0.8] text-nous-text dark:text-white uppercase italic break-words hyphens-auto`}>
+                   <h1 className={`${fontStyle} text-7xl md:text-[11rem] tracking-tighter leading-[0.8] text-nous-text dark:text-stone-100 uppercase italic break-words hyphens-auto`}>
                       {metadata.title}
                    </h1>
                    <div className="flex flex-col md:flex-row md:items-center gap-12 pt-12 border-t border-stone-100 dark:border-stone-900">
@@ -635,6 +667,17 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                      <span className="bg-black/80 text-white px-2 py-1 rounded text-[9px] uppercase font-black tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Archive</span>
                      <div className={`w-12 h-12 bg-white dark:bg-stone-800 rounded-full shadow-lg border border-stone-200 dark:border-stone-700 flex items-center justify-center transition-colors ${isSaved ? 'text-emerald-500' : 'text-stone-500 hover:text-emerald-500'}`}>
                         {isSaved ? <Check size={18} /> : <Bookmark size={18} />}
+                     </div>
+                  </motion.button>
+
+                  <motion.button 
+                    initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.22 }}
+                    onClick={handleBroadcast} 
+                    className="flex items-center gap-4 group"
+                  >
+                     <span className="bg-black/80 text-white px-2 py-1 rounded text-[9px] uppercase font-black tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Broadcast</span>
+                     <div className={`w-12 h-12 bg-white dark:bg-stone-800 rounded-full shadow-lg border border-stone-200 dark:border-stone-700 flex items-center justify-center transition-colors ${isBroadcasted ? 'text-emerald-500' : 'text-stone-500 hover:text-emerald-500'}`}>
+                        {isBroadcasting ? <Loader2 size={18} className="animate-spin" /> : isBroadcasted ? <Check size={18} /> : <Radio size={18} />}
                      </div>
                   </motion.button>
 

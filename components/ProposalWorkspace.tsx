@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { Proposal, ProposalSection, EditorElement, UserProfile, BrandKit, PocketItem, EditorElementStyle } from '../types';
 import { saveProposalToRegistry, refineSectionContent } from '../services/proposalOrchestrator';
-import { refineProposalSection } from '../services/geminiService';
+import { refineProposalSection, generateRefinementVariations } from '../services/geminiService';
 import { SlideCanvas } from './SlideCanvas';
 import { useUser } from '../contexts/UserContext';
 import { fetchPocketItems } from '../services/firebase';
@@ -41,13 +41,16 @@ const REFINEMENT_MODES = [
 ];
 
 // --- EXPORT OVERLAY ---
-const ProposalExportOverlay: React.FC<{ onExport: (format: 'pdf' | 'png') => void; onClose: () => void }> = ({ onExport, onClose }) => {
+const ProposalExportOverlay: React.FC<{ 
+    onExport: (format: 'pdf' | 'png' | 'current_png' | 'current_jpg') => void; 
+    onClose: () => void;
+    activeSlideIndex: number;
+}> = ({ onExport, onClose, activeSlideIndex }) => {
     const [isExporting, setIsExporting] = useState(false);
 
-    const triggerExport = (format: 'pdf' | 'png') => {
+    const triggerExport = (format: 'pdf' | 'png' | 'current_png' | 'current_jpg') => {
         setIsExporting(true);
         onExport(format);
-        // The parent component handles the async operation and closing
     };
 
     return (
@@ -56,25 +59,44 @@ const ProposalExportOverlay: React.FC<{ onExport: (format: 'pdf' | 'png') => voi
                 <button onClick={onClose} className="absolute top-6 right-6 text-stone-400 hover:text-red-500"><X size={20} /></button>
                 <div className="space-y-2">
                     <h3 className="font-serif text-3xl italic tracking-tighter">Manifest Artifact.</h3>
-                    <p className="font-sans text-[9px] uppercase tracking-widest text-stone-400 font-black">Export High-Fidelity Deck</p>
+                    <p className="font-sans text-[9px] uppercase tracking-widest text-stone-400 font-black">Export High-Fidelity Output</p>
                 </div>
                 <div className="space-y-4">
                     <button onClick={() => triggerExport('pdf')} disabled={isExporting} className="w-full py-4 border border-stone-200 dark:border-stone-800 flex items-center justify-between px-6 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all group">
                         <div className="flex items-center gap-4">
                             <FileText size={18} className="text-stone-400 group-hover:text-emerald-500" />
-                            <span className="font-sans text-[9px] uppercase tracking-widest font-black">PDF Document</span>
+                            <span className="font-sans text-[9px] uppercase tracking-widest font-black">Full PDF Deck</span>
                         </div>
                         <ArrowRight size={14} className="text-stone-300 group-hover:translate-x-1 transition-transform" />
                     </button>
-                    <button onClick={() => triggerExport('png')} disabled={isExporting} className="w-full py-4 border border-stone-200 dark:border-stone-800 flex items-center justify-between px-6 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all group">
+                    
+                    <div className="h-px bg-stone-100 dark:bg-stone-800 my-2" />
+                    
+                    <button onClick={() => triggerExport('current_png')} disabled={isExporting} className="w-full py-4 border border-stone-200 dark:border-stone-800 flex items-center justify-between px-6 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all group">
                         <div className="flex items-center gap-4">
                             <FileImage size={18} className="text-stone-400 group-hover:text-amber-500" />
-                            <span className="font-sans text-[9px] uppercase tracking-widest font-black">PNG Cover Slide</span>
+                            <span className="font-sans text-[9px] uppercase tracking-widest font-black">Current Slide (High-Res PNG)</span>
+                        </div>
+                        <ArrowRight size={14} className="text-stone-300 group-hover:translate-x-1 transition-transform" />
+                    </button>
+
+                    <button onClick={() => triggerExport('current_jpg')} disabled={isExporting} className="w-full py-4 border border-stone-200 dark:border-stone-800 flex items-center justify-between px-6 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all group">
+                        <div className="flex items-center gap-4">
+                            <ImageIcon size={18} className="text-stone-400 group-hover:text-blue-500" />
+                            <span className="font-sans text-[9px] uppercase tracking-widest font-black">Current Slide (High-Res JPG)</span>
+                        </div>
+                        <ArrowRight size={14} className="text-stone-300 group-hover:translate-x-1 transition-transform" />
+                    </button>
+
+                    <button onClick={() => triggerExport('png')} disabled={isExporting} className="w-full py-4 border border-stone-200 dark:border-stone-800 flex items-center justify-between px-6 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all group">
+                        <div className="flex items-center gap-4">
+                            <Feather size={18} className="text-stone-400 group-hover:text-stone-600" />
+                            <span className="font-sans text-[9px] uppercase tracking-widest font-black">Cover Plate Only</span>
                         </div>
                         <ArrowRight size={14} className="text-stone-300 group-hover:translate-x-1 transition-transform" />
                     </button>
                 </div>
-                {isExporting && <div className="text-center text-emerald-500 font-mono text-xs animate-pulse">Rendering Full Deck...</div>}
+                {isExporting && <div className="text-center text-emerald-500 font-mono text-xs animate-pulse">Rendering High-Fidelity Plate...</div>}
             </motion.div>
         </div>
     );
@@ -99,6 +121,8 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
   
   // -- SELECTION STATE --
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
+  const [aiVariations, setAiVariations] = useState<{ punchy: string, strategic: string, poetic: string } | null>(null);
+  const [isGeneratingVariations, setIsGeneratingVariations] = useState(false);
   
   // -- ASSETS STATE --
   const [folderItems, setFolderItems] = useState<PocketItem[]>([]);
@@ -144,6 +168,30 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
       };
       if (mode === 'assets') loadAssets();
   }, [mode, proposal.sourceFolderId, proposal.sourceArtifactIds, user]);
+
+  useEffect(() => {
+    const fetchVariations = async () => {
+      const section = proposal.content.sections[activeSlideIndex];
+      const element = section?.elements.find(e => e.id === selectedElementId && e.type === 'text');
+      
+      if (element && element.content) {
+        setIsGeneratingVariations(true);
+        try {
+          const vars = await generateRefinementVariations(element.content, profile);
+          setAiVariations(vars);
+        } catch (e) {
+          console.error("Variations failed", e);
+        } finally {
+          setIsGeneratingVariations(false);
+        }
+      } else {
+        setAiVariations(null);
+      }
+    };
+
+    if (selectedElementId) fetchVariations();
+    else setAiVariations(null);
+  }, [selectedElementId, activeSlideIndex, proposal.content.sections]);
 
   const handleScroll = () => {
     if (!scrollContainerRef.current) return;
@@ -216,7 +264,7 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
     await Promise.all(promises);
   };
 
-  const handleProposalExport = async (format: 'pdf' | 'png') => {
+  const handleProposalExport = async (format: 'pdf' | 'png' | 'current_png' | 'current_jpg') => {
     const stage = document.getElementById('proposal-export-stage');
     if (!stage) return;
 
@@ -250,12 +298,24 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
             doc.addImage(imgData, 'JPEG', 0, 0, 1920, 1080);
         }
         doc.save(`${proposal.title.replace(/[^a-z0-9]/gi, '_')}_Deck.pdf`);
-    } else {
+    } else if (format === 'png') {
         const slide = slides[0] as HTMLElement;
         const canvas = await html2canvas(slide, { scale: 1, useCORS: true });
         const link = document.createElement('a');
         link.download = `${proposal.title.replace(/[^a-z0-9]/gi, '_')}_Cover.png`;
         link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } else if (format === 'current_png' || format === 'current_jpg') {
+        const slide = slides[activeSlideIndex] as HTMLElement;
+        // High-resolution scale: 3 (5760x3240)
+        const canvas = await html2canvas(slide, { scale: 3, useCORS: true, logging: false });
+        const link = document.createElement('a');
+        const ext = format === 'current_png' ? 'png' : 'jpg';
+        const mime = format === 'current_png' ? 'image/png' : 'image/jpeg';
+        link.download = `${proposal.title.replace(/[^a-z0-9]/gi, '_')}_Slide_${activeSlideIndex + 1}.${ext}`;
+        link.href = canvas.toDataURL(mime, 0.95);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -482,7 +542,7 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
       </div>
 
       <AnimatePresence>
-          {showExportOverlay && <ProposalExportOverlay onExport={handleProposalExport} onClose={() => setShowExportOverlay(false)} />}
+          {showExportOverlay && <ProposalExportOverlay onExport={handleProposalExport} onClose={() => setShowExportOverlay(false)} activeSlideIndex={activeSlideIndex} />}
       </AnimatePresence>
 
       {/* 1. TOP NAVIGATION */}
@@ -671,37 +731,127 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
                                         exit={{ opacity: 0, x: 20 }}
                                         className="absolute -right-4 top-4 md:-right-16 md:top-0 z-50 flex flex-col"
                                     >
-                                        <div className="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg shadow-xl p-4 w-64">
-                                            <div className="flex justify-between items-center mb-3 pb-2 border-b border-stone-100 dark:border-stone-700">
-                                                <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Refine Text Block</span>
+                                        <div className="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg shadow-xl p-4 w-72 max-h-[80vh] overflow-y-auto no-scrollbar space-y-6">
+                                            <div className="flex justify-between items-center pb-2 border-b border-stone-100 dark:border-stone-700">
+                                                <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-300">Text Inspector</span>
                                                 <button onClick={() => setSelectedElementId(null)} className="text-stone-400 hover:text-stone-600"><X size={12}/></button>
                                             </div>
-                                            <div className="space-y-2">
-                                                {REFINEMENT_MODES.map(rm => (
-                                                    <button 
-                                                        key={rm.id}
-                                                        onClick={() => handleRefineElement(section.id, selectedTextElement.id, rm.prompt)}
-                                                        disabled={isRefining === selectedTextElement.id}
-                                                        className="w-full flex items-center gap-3 px-3 py-2 hover:bg-stone-50 dark:hover:bg-stone-700 rounded text-[9px] uppercase tracking-widest text-left text-stone-600 dark:text-stone-300 transition-colors"
-                                                    >
-                                                        {isRefining === selectedTextElement.id ? <Loader2 size={12} className="animate-spin text-emerald-500" /> : rm.icon}
-                                                        <span>{rm.id}</span>
-                                                    </button>
-                                                ))}
+
+                                            {/* AI VARIATIONS */}
+                                            <div className="space-y-3">
+                                                <span className="font-sans text-[8px] uppercase tracking-widest font-black text-emerald-500 flex items-center gap-2"><Sparkles size={10} /> AI Refinements</span>
+                                                {isGeneratingVariations ? (
+                                                    <div className="flex items-center gap-2 py-4 justify-center">
+                                                        <Loader2 size={14} className="animate-spin text-emerald-500" />
+                                                        <span className="font-mono text-[8px] text-stone-400 dark:text-stone-500 uppercase">Consulting Oracle...</span>
+                                                    </div>
+                                                ) : aiVariations ? (
+                                                    <div className="space-y-2">
+                                                        {[
+                                                            { id: 'punchy', label: 'Punchy', content: aiVariations.punchy },
+                                                            { id: 'strategic', label: 'Strategic', content: aiVariations.strategic },
+                                                            { id: 'poetic', label: 'Poetic', content: aiVariations.poetic }
+                                                        ].map(v => (
+                                                            <button 
+                                                                key={v.id}
+                                                                onClick={() => {
+                                                                    const updatedElements = section.elements.map(e => e.id === selectedTextElement.id ? { ...e, content: v.content } : e);
+                                                                    handleUpdateSectionElements(section.id, updatedElements);
+                                                                }}
+                                                                className="w-full text-left p-2 bg-stone-50 dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-sm hover:border-emerald-500 transition-all group"
+                                                            >
+                                                                <span className="block font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-300 group-hover:text-emerald-500 mb-1">{v.label}</span>
+                                                                <p className="font-serif italic text-[10px] text-stone-600 dark:text-stone-300 line-clamp-2">{v.content}</p>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <p className="font-serif italic text-[10px] text-stone-400 dark:text-stone-500 text-center">Select text to generate variations.</p>
+                                                )}
                                             </div>
-                                            <div className="mt-3 pt-3 border-t border-stone-100 dark:border-stone-700 flex gap-2">
-                                                <input 
-                                                    value={customRefinePrompt}
-                                                    onChange={(e) => setCustomRefinePrompt(e.target.value)}
-                                                    className="flex-1 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-sm px-2 py-1 text-[10px] focus:outline-none"
-                                                    placeholder="Custom..."
-                                                />
+
+                                            {/* GEOMETRY */}
+                                            <div className="space-y-4 pt-4 border-t border-stone-100 dark:border-stone-700">
+                                                <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-300">Geometry</span>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-1">
+                                                        <label className="font-mono text-[7px] text-stone-400">WIDTH (%)</label>
+                                                        <input type="number" value={selectedTextElement.style.width} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { width: parseInt(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded px-2 py-1 text-[10px]" />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="font-mono text-[7px] text-stone-400">SIZE (VW)</label>
+                                                        <input type="number" step="0.1" value={selectedTextElement.style.fontSize} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { fontSize: parseFloat(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded px-2 py-1 text-[10px]" />
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-1">
+                                                        <label className="font-mono text-[7px] text-stone-400">TOP (%)</label>
+                                                        <input type="number" value={selectedTextElement.style.top} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { top: parseInt(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded px-2 py-1 text-[10px]" />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="font-mono text-[7px] text-stone-400">LEFT (%)</label>
+                                                        <input type="number" value={selectedTextElement.style.left} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { left: parseInt(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded px-2 py-1 text-[10px]" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* APPEARANCE */}
+                                            <div className="space-y-4 pt-4 border-t border-stone-100 dark:border-stone-700">
+                                                <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-300">Appearance</span>
+                                                <div className="space-y-2">
+                                                    <label className="font-mono text-[7px] text-stone-400 block">COLOR</label>
+                                                    <div className="flex items-center gap-2">
+                                                        <input type="color" value={selectedTextElement.style.color || '#000000'} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { color: e.target.value })} className="w-8 h-8 rounded-full border-none p-0 cursor-pointer" />
+                                                        <input value={selectedTextElement.style.color || '#000000'} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { color: e.target.value })} className="flex-1 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded px-2 py-1 text-[10px] font-mono" />
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="font-mono text-[7px] text-stone-400 block">FONT FAMILY</label>
+                                                    <select 
+                                                        value={selectedTextElement.style.fontFamily} 
+                                                        onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { fontFamily: e.target.value })}
+                                                        className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded px-2 py-1 text-[10px]"
+                                                    >
+                                                        <option value="serif">Editorial Serif</option>
+                                                        <option value="sans">Minimal Sans</option>
+                                                        <option value="mono">Brutalist Mono</option>
+                                                        {FONTS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            {/* BORDER & RADIUS */}
+                                            <div className="space-y-4 pt-4 border-t border-stone-100 dark:border-stone-700">
+                                                <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-300">Border & Radius</span>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-1">
+                                                        <label className="font-mono text-[7px] text-stone-400">WIDTH (PX)</label>
+                                                        <input type="number" value={selectedTextElement.style.borderWidth || 0} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { borderWidth: parseInt(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded px-2 py-1 text-[10px]" />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="font-mono text-[7px] text-stone-400">RADIUS (PX)</label>
+                                                        <input type="number" value={selectedTextElement.style.borderRadius || 0} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { borderRadius: parseInt(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded px-2 py-1 text-[10px]" />
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="font-mono text-[7px] text-stone-400 block">BORDER COLOR</label>
+                                                    <div className="flex items-center gap-2">
+                                                        <input type="color" value={selectedTextElement.style.borderColor || '#000000'} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { borderColor: e.target.value })} className="w-8 h-8 rounded-full border-none p-0 cursor-pointer" />
+                                                        <input value={selectedTextElement.style.borderColor || '#000000'} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { borderColor: e.target.value })} className="flex-1 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded px-2 py-1 text-[10px] font-mono" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="pt-4 border-t border-stone-100 dark:border-stone-700">
                                                 <button 
-                                                    onClick={() => handleRefineElement(section.id, selectedTextElement.id, customRefinePrompt)}
-                                                    disabled={!customRefinePrompt}
-                                                    className="p-1.5 bg-nous-text dark:bg-white text-white dark:text-black rounded-sm hover:opacity-80 disabled:opacity-50"
+                                                    onClick={() => {
+                                                        const updatedElements = section.elements.filter(e => e.id !== selectedTextElement.id);
+                                                        handleUpdateSectionElements(section.id, updatedElements);
+                                                        setSelectedElementId(null);
+                                                    }}
+                                                    className="w-full py-2 bg-red-500/10 text-red-500 rounded-sm font-sans text-[8px] uppercase tracking-widest font-black hover:bg-red-500 hover:text-white transition-all"
                                                 >
-                                                    <Send size={10} />
+                                                    Delete Element
                                                 </button>
                                             </div>
                                         </div>
@@ -718,14 +868,39 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
                                         exit={{ opacity: 0, x: 20 }}
                                         className="absolute -right-4 top-4 md:-right-16 md:top-0 z-50 flex flex-col"
                                     >
-                                        <div className="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg shadow-xl p-4 w-64 space-y-6">
+                                        <div className="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg shadow-xl p-4 w-72 max-h-[80vh] overflow-y-auto no-scrollbar space-y-6">
                                             <div className="flex justify-between items-center pb-2 border-b border-stone-100 dark:border-stone-700">
-                                                <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Visual Calibration</span>
+                                                <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-300">Visual Calibration</span>
                                                 <button onClick={() => setSelectedElementId(null)} className="text-stone-400 hover:text-stone-600"><X size={12}/></button>
                                             </div>
                                             
+                                            {/* GEOMETRY */}
+                                            <div className="space-y-4">
+                                                <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-300">Geometry</span>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-1">
+                                                        <label className="font-mono text-[7px] text-stone-400">WIDTH (%)</label>
+                                                        <input type="number" value={selectedImageElement.style.width} onChange={e => handleUpdateElementStyle(section.id, selectedImageElement.id, { width: parseInt(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded px-2 py-1 text-[10px]" />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="font-mono text-[7px] text-stone-400">TOP (%)</label>
+                                                        <input type="number" value={selectedImageElement.style.top} onChange={e => handleUpdateElementStyle(section.id, selectedImageElement.id, { top: parseInt(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded px-2 py-1 text-[10px]" />
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-1">
+                                                        <label className="font-mono text-[7px] text-stone-400">LEFT (%)</label>
+                                                        <input type="number" value={selectedImageElement.style.left} onChange={e => handleUpdateElementStyle(section.id, selectedImageElement.id, { left: parseInt(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded px-2 py-1 text-[10px]" />
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <label className="font-mono text-[7px] text-stone-400">ROTATION (°)</label>
+                                                        <input type="number" value={selectedImageElement.style.rotation || 0} onChange={e => handleUpdateElementStyle(section.id, selectedImageElement.id, { rotation: parseInt(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded px-2 py-1 text-[10px]" />
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                             {/* OPACITY */}
-                                            <div className="space-y-2">
+                                            <div className="space-y-2 pt-4 border-t border-stone-100 dark:border-stone-700">
                                                 <div className="flex justify-between">
                                                     <span className="font-mono text-[9px] text-stone-500">OPACITY</span>
                                                     <span className="font-mono text-[9px] text-stone-500">{Math.round((selectedImageElement.style.opacity !== undefined ? selectedImageElement.style.opacity : 1) * 100)}%</span>

@@ -2,6 +2,7 @@
 import React, { Component, ReactNode, StrictMode, useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './App';
+import './index.css';
 
 const rootElement = document.getElementById('root');
 
@@ -131,7 +132,12 @@ const MimiSplash: React.FC = () => {
 const startApp = () => {
   if (!rootElement) return;
   
-  const root = ReactDOM.createRoot(rootElement);
+  let root = (window as any)._mimiRoot;
+  if (!root) {
+    root = ReactDOM.createRoot(rootElement);
+    (window as any)._mimiRoot = root;
+  }
+  
   root.render(
     <StrictMode>
       <MimiSplash />

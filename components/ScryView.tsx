@@ -2,8 +2,9 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Loader2, Sparkles, Radio, ScanLine, Database, ArrowRight } from 'lucide-react';
+import { Search, Loader2, Sparkles, Radio, ScanLine, Database, ArrowRight, Globe, ExternalLink } from 'lucide-react';
 import { scryShadowMemory } from '../services/vectorSearch';
+import { scryWebSignals } from '../services/geminiService';
 import { useUser } from '../contexts/UserContext';
 import { PocketItem, ZineMetadata } from '../types';
 
@@ -11,19 +12,50 @@ export const ScryView: React.FC = () => {
   const { user } = useUser();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any[]>([]);
+  const [webResults, setWebResults] = useState<any[]>([]);
   const [isScrying, setIsScrying] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'zine' | 'shard'>('all');
+  const [isWebScrying, setIsWebScrying] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'zine' | 'shard' | 'web'>('all');
 
   const handleScry = async () => {
     if (!query.trim() || isScrying) return;
     setIsScrying(true);
+    setWebResults([]);
     try {
-      const hits = await scryShadowMemory(query, { filterType: activeFilter });
-      setResults(hits);
+      if (activeFilter === 'web') {
+        setIsWebScrying(true);
+        const webHits = await scryWebSignals(query);
+        setWebResults(webHits);
+        setResults([]);
+      } else {
+        const hits = await scryShadowMemory(query, { filterType: activeFilter });
+        setResults(hits);
+        
+        // If no local results, suggest web scry
+        if (hits.length === 0) {
+           // Optional: auto-trigger or just show button
+        }
+      }
     } catch (e) {
       console.error("Scrying failed", e);
     } finally {
       setIsScrying(false);
+      setIsWebScrying(false);
+    }
+  };
+
+  const handleWebScry = async () => {
+    if (!query.trim() || isWebScrying) return;
+    setIsWebScrying(true);
+    setActiveFilter('web');
+    try {
+      const webHits = await scryWebSignals(query);
+      setWebResults(webHits);
+      setResults([]);
+    } catch (e) {
+      console.error("Web Scrying failed", e);
+    } finally {
+      setIsWebScrying(false);
     }
   };
 
@@ -76,13 +108,13 @@ export const ScryView: React.FC = () => {
                 </div>
 
                 <div className="flex justify-center gap-4">
-                    {['all', 'zine', 'shard'].map(f => (
+                    {['all', 'zine', 'shard', 'web'].map(f => (
                         <button 
                             key={f} 
                             onClick={() => setActiveFilter(f as any)}
                             className={`px-4 py-2 rounded-sm font-sans text-[9px] uppercase tracking-widest font-black transition-all border ${activeFilter === f ? 'bg-white text-black border-white' : 'border-stone-800 text-stone-500 hover:border-stone-600'}`}
                         >
-                            {f}
+                            {f === 'web' ? <div className="flex items-center gap-2"><Globe size={10} /> {f}</div> : f}
                         </button>
                     ))}
                 </div>
@@ -124,12 +156,49 @@ export const ScryView: React.FC = () => {
                             </div>
                         </motion.div>
                     ))}
+
+                    {webResults.map((r, i) => (
+                        <motion.div 
+                            key={i}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ delay: i * 0.05 }}
+                            className="p-6 bg-emerald-950/10 border border-emerald-900/20 rounded-sm flex items-start gap-6 hover:border-emerald-500/30 transition-colors group"
+                        >
+                            <div className="w-16 h-16 bg-stone-900 rounded-sm overflow-hidden flex-shrink-0 border border-stone-800 flex items-center justify-center text-emerald-500/50">
+                                <Globe size={24} />
+                            </div>
+                            <div className="flex-1 min-w-0 space-y-2">
+                                <div className="flex justify-between items-start">
+                                    <span className="font-mono text-[9px] text-emerald-500 uppercase tracking-widest">Web Signal</span>
+                                    <span className="font-mono text-[9px] text-stone-600 uppercase tracking-widest">{r.relevance}</span>
+                                </div>
+                                <h4 className="font-serif text-xl text-white italic">{r.title}</h4>
+                                <p className="font-serif text-stone-400 text-sm line-clamp-3">{r.snippet}</p>
+                                <a 
+                                    href={r.url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 text-[9px] font-mono text-emerald-500 uppercase tracking-widest hover:underline pt-2"
+                                >
+                                    <ExternalLink size={10} /> Source URL
+                                </a>
+                            </div>
+                        </motion.div>
+                    ))}
                 </AnimatePresence>
                 
-                {!isScrying && results.length === 0 && query && (
-                    <div className="text-center py-20 opacity-30">
+                {!isScrying && results.length === 0 && webResults.length === 0 && query && (
+                    <div className="text-center py-20 opacity-30 flex flex-col items-center gap-6">
                         <ScanLine size={48} className="mx-auto mb-4" />
                         <p className="font-serif italic text-lg">"The void returned no echoes."</p>
+                        <button 
+                            onClick={handleWebScry}
+                            className="px-6 py-3 border border-stone-800 hover:border-emerald-500 text-stone-500 hover:text-emerald-500 font-sans text-[10px] uppercase tracking-widest font-black transition-all rounded-full flex items-center gap-3"
+                        >
+                            <Globe size={14} /> Scry the Web
+                        </button>
                     </div>
                 )}
             </div>

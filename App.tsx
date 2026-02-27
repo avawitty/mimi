@@ -20,13 +20,15 @@ import { TailorView } from './components/TailorView';
 import { ScryView } from './components/ScryView';
 import { DarkroomView } from './components/DarkroomView';
 import { ApiKeyShield } from './components/ApiKeyShield';
-import { ProposalView } from './components/AboutView'; 
+import { ProsceniumView } from './components/ProsceniumView'; 
 import { CaptiveSentinel } from './components/CaptiveSentinel';
 import { TheWard } from './components/TheWard'; 
 import { PatronMintView } from './components/PatronMintView';
 import { DossierView } from './components/DossierView';
+import { HelpView } from './components/HelpView';
+import { RegistryAlert } from './components/RegistryAlert';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, LayoutGrid, User, Menu, X, Newspaper, LogOut, ShieldAlert, Zap, Camera, Key, Radio, Activity as ActivityIcon, Archive, Moon, Sun, Scissors, FlaskConical, Eye, Radar, Compass, Info, Cpu, ShieldCheck, Briefcase } from 'lucide-react';
+import { Sparkles, LayoutGrid, User, Menu, X, Newspaper, LogOut, ShieldAlert, Zap, Camera, Key, Radio, Activity as ActivityIcon, Archive, Moon, Sun, Scissors, FlaskConical, Eye, Radar, Compass, Info, Cpu, ShieldCheck, Briefcase, BookOpen } from 'lucide-react';
 
 // ... (Rest of existing subcomponents: BinderRing, SidebarBtn, MobileMenu, DatabaseVoid) ...
 // BINDER RING COMPONENT
@@ -39,15 +41,15 @@ const BinderRing = ({ className }: { className?: string }) => (
 const SidebarBtn: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; label: string }> = ({ active, onClick, icon, label }) => (
   <button 
     onClick={onClick}
-    className={`w-full flex items-center gap-5 px-6 py-3 transition-all duration-300 group/btn relative overflow-hidden ${active ? 'text-white' : 'text-stone-500 hover:text-stone-300'}`}
+    className={`w-full flex items-center gap-5 px-6 py-3 transition-all duration-300 group/btn relative overflow-hidden ${active ? 'text-white dark:text-white' : 'text-stone-500 dark:text-stone-500 hover:text-white dark:hover:text-stone-300'}`}
   >
-    <div className={`absolute left-0 top-0 bottom-0 w-0.5 bg-white transition-all duration-300 ${active ? 'opacity-100 h-full' : 'opacity-0 h-0 group-hover/btn:h-full group-hover/btn:opacity-50'}`} />
+    <div className={`absolute left-0 top-0 bottom-0 w-0.5 bg-white dark:bg-white transition-all duration-300 ${active ? 'opacity-100 h-full' : 'opacity-0 h-0 group-hover/btn:h-full group-hover/btn:opacity-50'}`} />
     
-    <div className={`shrink-0 transition-transform duration-300 ${active ? 'scale-110 text-white' : 'group-hover/btn:scale-110'}`}>
+    <div className={`shrink-0 transition-transform duration-300 ${active ? 'scale-110 text-white dark:text-white' : 'group-hover/btn:scale-110'}`}>
       {React.cloneElement(icon as React.ReactElement, { strokeWidth: 1.5, size: 18 })}
     </div>
     
-    <span className={`font-sans text-[9px] uppercase tracking-[0.25em] font-bold opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 whitespace-nowrap delay-75 ${active ? 'text-white' : ''}`}>
+    <span className={`font-sans text-[9px] uppercase tracking-[0.25em] font-bold opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 whitespace-nowrap delay-75 ${active ? 'text-white dark:text-white' : 'text-white/40'}`}>
       {label}
     </span>
   </button>
@@ -77,25 +79,26 @@ const MobileMenu: React.FC<{
           </div>
           <div className="space-y-8 flex-1">
              <div className="space-y-4">
-                <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 block border-b border-stone-800 pb-2">Creation</span>
+                <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 dark:text-stone-400 block border-b border-stone-800 pb-2">Creation</span>
                 <button onClick={() => handleNav('studio')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Studio</button>
                 <button onClick={() => handleNav('dossier')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Projects</button>
                 <button onClick={() => handleNav('nebula')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">The Stand</button>
                 <button onClick={() => handleNav('scry')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Scry</button>
              </div>
              <div className="space-y-4">
-                <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 block border-b border-stone-800 pb-2">Alchemy</span>
+                <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 dark:text-stone-400 block border-b border-stone-800 pb-2">Alchemy</span>
                 <button onClick={() => handleNav('tailor')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">Tailor</button>
-                {/* <button onClick={() => handleNav('ward')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">The Ward</button> */}
+                <button onClick={() => handleNav('ward')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">The Ward</button>
                 <button onClick={() => handleNav('archival')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">Archive</button>
                 <button onClick={() => handleNav('mesopic')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">Mesopic</button>
                 <button onClick={() => handleNav('darkroom')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">Darkroom</button>
              </div>
              <div className="space-y-4">
-                <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 block border-b border-stone-800 pb-2">Discover</span>
-                <button onClick={() => handleNav('about')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-amber-400 transition-colors">Proposal</button>
+                <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 dark:text-stone-400 block border-b border-stone-800 pb-2">Discover</span>
+                <button onClick={() => handleNav('proscenium')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-amber-400 transition-colors">Proscenium</button>
                 <button onClick={() => handleNav('press')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-amber-400 transition-colors">Press</button>
                 <button onClick={() => handleNav('profile')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-amber-400 transition-colors">Profile</button>
+                <button onClick={() => handleNav('help')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-amber-400 transition-colors">Codex</button>
              </div>
           </div>
           <div className="pt-8 border-t border-stone-800">
@@ -221,28 +224,30 @@ const AppContent: React.FC = () => {
     <div className="h-full w-full bg-transparent dark:bg-stone-950 transition-colors duration-500 flex">
       <AnimatePresence>{showCaptiveSentinel && <CaptiveSentinel onClose={() => setShowCaptiveSentinel(false)} />}</AnimatePresence>
       
+      <RegistryAlert />
+      
       {!zineMetadata && (
-        <aside className="hidden md:flex flex-col h-full shrink-0 z-[2000] relative group/sidebar w-[88px] hover:w-72 transition-all duration-500 bg-[#1c1917] shadow-2xl">
+        <aside className="hidden md:flex flex-col h-full shrink-0 z-[2000] relative group/sidebar w-[88px] hover:w-72 transition-all duration-500 bg-[#121212] dark:bg-[#121212] border-r border-stone-200/10 dark:border-transparent shadow-2xl">
             <BinderRing className="top-[15%]" />
             <BinderRing className="top-[50%]" />
             <BinderRing className="top-[85%]" />
 
             <div className="flex-1 flex flex-col pt-12 overflow-hidden">
                 <div className="absolute left-0 top-0 bottom-0 w-[88px] flex items-center justify-center pointer-events-none group-hover/sidebar:opacity-0 transition-opacity duration-300">
-                    <h1 className="text-stone-600 font-[Cormorant] font-light italic text-4xl tracking-widest whitespace-nowrap transform -rotate-90 origin-center">
+                    <h1 className="text-white/20 dark:text-white/20 font-[Cormorant] font-light italic text-4xl tracking-widest whitespace-nowrap transform -rotate-90 origin-center">
                         Mimi Zine
                     </h1>
                 </div>
 
                 <div className="flex-1 flex flex-col opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-500 delay-100 w-72 px-4 pb-8 overflow-y-auto no-scrollbar">
                     <div className="mb-10 pl-6 pt-2">
-                        <h1 className="text-white font-[Cormorant] font-light italic text-4xl tracking-tighter">Mimi.</h1>
-                        <p className="text-stone-500 font-sans text-[9px] uppercase tracking-widest font-black mt-1">Sovereign Registry</p>
+                        <h1 className="text-white dark:text-white font-[Cormorant] font-light italic text-4xl tracking-tighter">Mimi.</h1>
+                        <p className="text-stone-500 dark:text-stone-500 font-sans text-[9px] uppercase tracking-widest font-black mt-1">Sovereign Registry</p>
                     </div>
 
                     <div className="space-y-8">
                         <div className="space-y-1">
-                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-600">Creation</span></div>
+                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-600">Creation</span></div>
                             <SidebarBtn active={viewMode === 'studio'} onClick={() => setViewMode('studio')} icon={<Sparkles />} label="Studio" />
                             <SidebarBtn active={viewMode === 'dossier'} onClick={() => setViewMode('dossier')} icon={<Briefcase />} label="Projects" />
                             <SidebarBtn active={viewMode === 'nebula'} onClick={() => setViewMode('nebula')} icon={<LayoutGrid />} label="Stand" />
@@ -250,34 +255,35 @@ const AppContent: React.FC = () => {
                         </div>
 
                         <div className="space-y-1">
-                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-600">Archive</span></div>
+                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-600">Archive</span></div>
                             <SidebarBtn active={viewMode === 'archival'} onClick={() => setViewMode('archival')} icon={<Archive />} label="Archive" />
                             <SidebarBtn active={viewMode === 'mesopic'} onClick={() => setViewMode('mesopic')} icon={<Camera />} label="Mesopic" />
                             <SidebarBtn active={viewMode === 'darkroom'} onClick={() => setViewMode('darkroom')} icon={<FlaskConical />} label="Darkroom" />
                         </div>
 
                         <div className="space-y-1">
-                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-600">Alchemy</span></div>
+                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-600">Alchemy</span></div>
                             <SidebarBtn active={viewMode === 'tailor'} onClick={() => setViewMode('tailor')} icon={<Scissors />} label="Tailor" />
-                            {/* <SidebarBtn active={viewMode === 'ward'} onClick={() => setViewMode('ward')} icon={<ShieldCheck />} label="The Ward" /> */}
+                            <SidebarBtn active={viewMode === 'ward'} onClick={() => setViewMode('ward')} icon={<ShieldCheck />} label="The Ward" />
                             <SidebarBtn active={viewMode === 'profile'} onClick={() => setViewMode('profile')} icon={<User />} label="Profile" />
                         </div>
 
                         <div className="space-y-1">
-                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-600">Discover</span></div>
-                            <SidebarBtn active={viewMode === 'about'} onClick={() => setViewMode('about')} icon={<Info />} label="Proposal" />
+                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-600">Discover</span></div>
+                            <SidebarBtn active={viewMode === 'proscenium'} onClick={() => setViewMode('proscenium')} icon={<Radio />} label="Proscenium" />
                             <SidebarBtn active={viewMode === 'press'} onClick={() => setViewMode('press')} icon={<Newspaper />} label="Press" />
+                            <SidebarBtn active={viewMode === 'help'} onClick={() => setViewMode('help')} icon={<BookOpen />} label="Codex" />
                         </div>
                     </div>
 
                     <div className="mt-auto pt-8">
-                        <SidebarBtn active={false} onClick={logout} icon={<LogOut className="text-red-900" />} label="De-Anchor" />
+                        <SidebarBtn active={false} onClick={logout} icon={<LogOut className="text-red-500 dark:text-red-900" />} label="De-Anchor" />
                     </div>
                 </div>
                 
                 <div className="absolute bottom-12 left-0 w-[88px] flex flex-col items-center gap-4 group-hover/sidebar:opacity-0 transition-opacity">
-                    <div className={`w-1.5 h-1.5 rounded-full ${systemStatus.oracle === 'ready' ? 'bg-emerald-600' : 'bg-red-900'}`} />
-                    {activeAgents.length > 0 && <Cpu size={12} className="text-indigo-900 animate-pulse" />}
+                    <div className={`w-1.5 h-1.5 rounded-full ${systemStatus.oracle === 'ready' ? 'bg-emerald-600' : 'bg-red-500 dark:bg-red-900'}`} />
+                    {activeAgents.length > 0 && <Cpu size={12} className="text-indigo-500 dark:text-indigo-900 animate-pulse" />}
                 </div>
             </div>
         </aside>
@@ -335,11 +341,12 @@ const AppContent: React.FC = () => {
                 {viewMode === 'tailor' && <TailorView initialOverrides={tailorOverrides} />}
                 {viewMode === 'scry' && <ScryView />}
                 {viewMode === 'press' && <ThePress />}
-                {viewMode === 'about' && <ProposalView folderData={proposalContext} />}
+                {viewMode === 'proscenium' && <ProsceniumView onSelectZine={(z) => { setZineMetadata(z); setAppState(AppState.REVEALED); }} />}
                 {viewMode === 'darkroom' && <DarkroomView />}
                 {viewMode === 'sanctuary' && <SanctuaryView />}
                 {viewMode === 'ward' && <TheWard />}
                 {viewMode === 'dossier' && <DossierView />}
+                {viewMode === 'help' && <HelpView />}
               </motion.div>
             )}
           </AnimatePresence>

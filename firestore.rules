@@ -17,43 +17,67 @@ service cloud.firestore {
     // LEGACY / FALLBACK (Read/Write: Owner only)
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      match /memory/{memoryId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
     
-    // ZINES (Read: Public, Write: Authenticated)
+    // ZINES (Read: Public, Write: Authenticated or Collaborator)
     match /zines/{zineId} {
       allow read: if true;
       allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
     }
     
-    // POCKET ITEMS (Owner only)
+    // PUBLIC TRANSMISSIONS (Proscenium)
+    match /public_transmissions/{transmissionId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update: if true; // Allow anyone to increment likes and add vibe notes
+      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+    
+    // POCKET ITEMS (Owner or Collaborator)
     match /pocket/{itemId} {
-      allow read, write: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
     }
     
-    // DOSSIER FOLDERS (Owner only)
+    // DOSSIER FOLDERS (Owner or Collaborator)
     match /dossier_folders/{folderId} {
-      allow read, write: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
     }
     
-    // DOSSIER ARTIFACTS (Owner only)
+    // DOSSIER ARTIFACTS (Owner or Collaborator)
     match /dossier_artifacts/{artifactId} {
-      allow read, write: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
     }
     
-    // PROPOSALS (Owner only)
+    // PROPOSALS (Owner or Collaborator)
     match /proposals/{proposalId} {
-      allow read, write: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
     }
     
     // CONTEXT (Owner only)
     match /context/{contextId} {
-      allow read, write: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
     
-    // SHADOW MEMORY (Owner only)
-    match /users/{userId}/memory/{memoryId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    // CONNECTIONS (Friends/Following)
+    match /connections/{connectionId} {
+      allow read: if true;
+      allow create: if request.auth != null && request.resource.data.followerId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.followerId == request.auth.uid;
     }
   }
 }

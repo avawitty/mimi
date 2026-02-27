@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Scissors, Ruler, Radio, Sparkles, Loader2, 
-  ShieldCheck, Zap, Wind, Anchor, 
+  ShieldCheck, Zap, Wind, Anchor, History,
   Waves, BookOpen, PenTool, Check, ArrowRight, 
   X, BrainCircuit, Save, Orbit, Feather, Activity, Target, Sliders, Layers, Info, Box, Palette, ImageIcon, Type, Plus, Trash2, Maximize2, MoveHorizontal, Mic, ArrowLeft, Heart, User, CheckCircle, Droplet, Hash, ListChecks, Radar, Globe, Instagram, Link, Stars, ExternalLink, ShieldAlert, Quote, FileText, Copy, Terminal, Gauge, Eraser, Binary, Wallet, Smartphone, ChevronRight, Moon, Compass, MapPin, Clock, Calendar, MessageSquare, Upload, Download, DollarSign, Settings, LayoutGrid, Edit3, Key
 } from 'lucide-react';
@@ -34,6 +34,54 @@ const CHROMATIC_PRESETS = [
   { name: 'Panic', base: '#000000', accent: '#EF4444', palette: [{ name: 'Blood', hex: '#991B1B' }, { name: 'Alert', hex: '#F87171' }] },
   { name: 'Archive', base: '#F5F5F4', accent: '#A8A29E', palette: [{ name: 'Dust', hex: '#D6D3D1' }, { name: 'Rust', hex: '#78350F' }] },
   { name: 'Cinema', base: '#0F172A', accent: '#38BDF8', palette: [{ name: 'Lens', hex: '#0EA5E9' }, { name: 'Grain', hex: '#334155' }] }
+];
+
+const VISUAL_PRESETS = [
+  {
+    name: 'Minimalist',
+    icon: <Wind size={14} />,
+    config: {
+      aestheticCore: { silhouettes: 'Minimal', textures: 'Matte Ceramic', eraFocus: '90s Minimal', density: 20 },
+      chromaticRegistry: { baseNeutral: '#FDFBF7', accentSignal: '#1C1917', primaryPalette: [{ name: 'Ink', hex: '#000000', descriptor: 'Preset' }] },
+      typographyIntent: { styleDescription: 'Cormorant Garamond', weightPreference: 'Light' }
+    }
+  },
+  {
+    name: 'Industrial',
+    icon: <Box size={14} />,
+    config: {
+      aestheticCore: { silhouettes: 'Brutalist', textures: 'Cold Concrete', eraFocus: 'Industrial', density: 80 },
+      chromaticRegistry: { baseNeutral: '#262626', accentSignal: '#F97316', primaryPalette: [{ name: 'Steel', hex: '#94A3B8', descriptor: 'Preset' }] },
+      typographyIntent: { styleDescription: 'Space Mono', weightPreference: 'Bold' }
+    }
+  },
+  {
+    name: 'Vintage',
+    icon: <History size={14} />,
+    config: {
+      aestheticCore: { silhouettes: 'Fluid', textures: 'Paper Grain', eraFocus: 'Old Money Noir', density: 40 },
+      chromaticRegistry: { baseNeutral: '#F5F5F4', accentSignal: '#78350F', primaryPalette: [{ name: 'Dust', hex: '#D6D3D1', descriptor: 'Preset' }] },
+      typographyIntent: { styleDescription: 'Playfair Display', weightPreference: 'Medium' }
+    }
+  },
+  {
+    name: 'Neo-Futurist',
+    icon: <Zap size={14} />,
+    config: {
+      aestheticCore: { silhouettes: 'Biomorphic', textures: 'Brushed Aluminum', eraFocus: 'Post-Digital', density: 70 },
+      chromaticRegistry: { baseNeutral: '#050505', accentSignal: '#10B981', primaryPalette: [{ name: 'Neon', hex: '#34D399', descriptor: 'Preset' }] },
+      typographyIntent: { styleDescription: 'Space Grotesk', weightPreference: 'Regular' }
+    }
+  },
+  {
+    name: 'Brutalist',
+    icon: <Terminal size={14} />,
+    config: {
+      aestheticCore: { silhouettes: 'Brutalist', textures: 'Cold Concrete', eraFocus: 'Industrial', density: 90 },
+      chromaticRegistry: { baseNeutral: '#FFFFFF', accentSignal: '#000000', primaryPalette: [{ name: 'Raw', hex: '#000000', descriptor: 'Preset' }] },
+      typographyIntent: { styleDescription: 'Space Mono', weightPreference: 'Bold' }
+    }
+  }
 ];
 
 const DEFAULT_FONTS = [
@@ -316,6 +364,16 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
       });
   };
 
+  const applyVisualPreset = (preset: typeof VISUAL_PRESETS[0]) => {
+    if (!draft) return;
+    updateDraft({
+      aestheticCore: { ...draft.aestheticCore, ...preset.config.aestheticCore },
+      chromaticRegistry: { ...draft.chromaticRegistry, ...preset.config.chromaticRegistry },
+      typographyIntent: { ...draft.typographyIntent, ...preset.config.typographyIntent }
+    });
+    window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: `${preset.name} Preset Applied.`, icon: preset.icon } }));
+  };
+
   const handleAlign = async () => {
     if (!profile || !activePersona || !draft) return;
     setIsSaving(true);
@@ -397,7 +455,7 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
   }
 
   return (
-    <div className="flex-1 w-full h-full overflow-y-auto no-scrollbar pb-96 px-4 md:px-16 pt-12 md:pt-20 bg-nous-base dark:bg-[#050505] text-nous-text dark:text-white transition-all duration-1000 relative">
+    <div className="flex-1 w-full h-full overflow-y-auto no-scrollbar pb-[40vh] px-4 md:px-16 pt-12 md:pt-20 bg-nous-base dark:bg-[#050505] text-nous-text dark:text-white transition-all duration-1000 relative">
       
       {/* BACKGROUND DOT GRID TEXTURE */}
       <div 
@@ -643,6 +701,26 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                 {activeStep === 'anchors' && (
                                     <>
                                         <p className="font-serif italic text-stone-500 mb-8">Ground your mask's logic in the physical world.</p>
+                                        
+                                        <FieldGroup label="Visual Presets" description="Apply a foundational aesthetic archetype.">
+                                          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+                                            {VISUAL_PRESETS.map(p => {
+                                              const isActive = draft.aestheticCore.silhouettes === p.config.aestheticCore.silhouettes && 
+                                                               draft.aestheticCore.eraFocus === p.config.aestheticCore.eraFocus;
+                                              return (
+                                                <button 
+                                                  key={p.name} 
+                                                  onClick={() => applyVisualPreset(p)} 
+                                                  className={`p-4 border rounded-sm transition-all group flex flex-col items-center gap-3 bg-white dark:bg-stone-900 shadow-sm ${isActive ? 'border-emerald-500 ring-1 ring-emerald-500/20' : 'border-stone-200 dark:border-stone-800 hover:border-emerald-500'}`}
+                                                >
+                                                  <div className={`${isActive ? 'text-emerald-500' : 'text-stone-400 group-hover:text-emerald-500'} transition-colors`}>{p.icon}</div>
+                                                  <span className={`font-sans text-[8px] uppercase tracking-widest font-black ${isActive ? 'text-emerald-500' : 'text-stone-400 group-hover:text-emerald-500'}`}>{p.name}</span>
+                                                </button>
+                                              );
+                                            })}
+                                          </div>
+                                        </FieldGroup>
+
                                         {primaryAnchorsMap.map(field => (
                                             <FieldGroup key={field.key} label={field.label}>
                                                 <input 
@@ -733,16 +811,22 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                             ))}
                                         </div>
 
-                                        <FieldGroup label="Base Neutral (Primary)" description="Your silence. Enter Hex.">
+                                        <FieldGroup label="Base Neutral (Primary)" description="Your silence. Enter Hex or use picker.">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: draft.chromaticRegistry.baseNeutral }} />
-                                                <input value={draft.chromaticRegistry.baseNeutral} onChange={e => updateDraft({ chromaticRegistry: { ...draft.chromaticRegistry, baseNeutral: e.target.value } })} className="bg-transparent border-b border-stone-200 py-2 font-mono text-lg" />
+                                                <div className="relative">
+                                                  <input type="color" value={draft.chromaticRegistry.baseNeutral} onChange={e => updateDraft({ chromaticRegistry: { ...draft.chromaticRegistry, baseNeutral: e.target.value } })} className="w-12 h-12 p-0 border-0 rounded-full cursor-pointer absolute inset-0 opacity-0" />
+                                                  <div className="w-12 h-12 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: draft.chromaticRegistry.baseNeutral }} />
+                                                </div>
+                                                <input value={draft.chromaticRegistry.baseNeutral} onChange={e => updateDraft({ chromaticRegistry: { ...draft.chromaticRegistry, baseNeutral: e.target.value } })} className="bg-transparent border-b border-stone-200 py-2 font-mono text-lg focus:outline-none focus:border-emerald-500" />
                                             </div>
                                         </FieldGroup>
-                                        <FieldGroup label="Accent Signal" description="Your alert. Enter Hex.">
+                                        <FieldGroup label="Accent Signal" description="Your alert. Enter Hex or use picker.">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: draft.chromaticRegistry.accentSignal }} />
-                                                <input value={draft.chromaticRegistry.accentSignal} onChange={e => updateDraft({ chromaticRegistry: { ...draft.chromaticRegistry, accentSignal: e.target.value } })} className="bg-transparent border-b border-stone-200 py-2 font-mono text-lg" />
+                                                <div className="relative">
+                                                  <input type="color" value={draft.chromaticRegistry.accentSignal} onChange={e => updateDraft({ chromaticRegistry: { ...draft.chromaticRegistry, accentSignal: e.target.value } })} className="w-12 h-12 p-0 border-0 rounded-full cursor-pointer absolute inset-0 opacity-0" />
+                                                  <div className="w-12 h-12 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: draft.chromaticRegistry.accentSignal }} />
+                                                </div>
+                                                <input value={draft.chromaticRegistry.accentSignal} onChange={e => updateDraft({ chromaticRegistry: { ...draft.chromaticRegistry, accentSignal: e.target.value } })} className="bg-transparent border-b border-stone-200 py-2 font-mono text-lg focus:outline-none focus:border-emerald-500" />
                                             </div>
                                         </FieldGroup>
                                         

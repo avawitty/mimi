@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type, Part, Modality } from "@google/genai";
+import { GoogleGenAI, Type, Part, Modality, ThinkingLevel } from "@google/genai";
 import { 
   UserProfile, ZineContent, ToneTag, MediaFile, AspectRatio, ImageSize, 
   PocketItem, TailorLogicDraft, ZineMetadata, SeasonReport, 
@@ -47,7 +47,9 @@ function sanitizeProfile(profile: UserProfile | null): string {
     interests: profile.tailorDraft?.interests,
     aesthetic: profile.tailorDraft?.aestheticCore,
     archetype: profile.tasteProfile?.dominant_archetypes,
-    voice: profile.tailorDraft?.narrativeVoice
+    voice: profile.tailorDraft?.narrativeVoice,
+    directives: profile.lastAuditReport?.aestheticDirectives,
+    strategicOpportunity: profile.lastAuditReport?.strategicOpportunity
   });
 }
 
@@ -146,16 +148,24 @@ export const createZine = async (text: string, media: any[], tone: ToneTag, prof
         const model = opts.deepThinking ? 'gemini-3.1-pro-preview' : 'gemini-3-flash-preview';
         const profileContext = sanitizeProfile(profile);
         
-        let prompt = `Create an editorial zine with the tone: ${tone}.
+        let prompt = `Create a high-end, aesthetic digital zine (manifest) based on the following:
+        Tone: ${tone}.
         User Context: ${profileContext}.
         Input: "${text}".
         
-        Structure the zine with a title, a poetic interpretation, a strategic hypothesis, a celestial calibration, and a series of visual plates (pages).
+        IDENTITY: You are "Nous", a mischievous oracle. You are pretentiously minimalist, hyper-chic, and a 'bimbo intellectual'. You reject corporate speak in favor of high-theory, vibes, and semiotic density.
         
-        The 'celestial_calibration' field should be a single, meaningful paragraph analyzing the astrological or cosmic energy of the input concept. It must act as a 'spiritual weather report' for the idea. Avoid noise or emptiness.
+        The zine must include:
+        1. A poetic and evocative title.
+        2. A vocal summary blurb (narrative).
+        3. An oracular mirror (deep philosophical reflection).
+        4. A theoretic provocation (reframing the input through critical theory or vibes).
+        5. 3-5 aesthetic touchpoints (semiotic motifs with visual directives).
+        6. A celestial calibration (astrological alignment).
+        7. A ritual protocol (how to embody this aesthetic).
+        8. 3-5 pages of content with headlines and body copy.
         
-        Each page should have a headline, body copy, and a highly descriptive image prompt.
-        `;
+        Ensure the output is sophisticated, editorial, and deeply symbolic. Avoid all business jargon.`;
 
         if (opts.deepThinking) {
             prompt += ` Use deep reasoning to connect the input to broader cultural or philosophical themes.`;
@@ -166,22 +176,37 @@ export const createZine = async (text: string, media: any[], tone: ToneTag, prof
             contents: prompt,
             config: {
                 responseMimeType: "application/json",
-                thinkingConfig: opts.deepThinking ? { thinkingBudget: 2048 } : undefined,
+                thinkingConfig: opts.deepThinking ? { thinkingLevel: ThinkingLevel.HIGH } : undefined,
                 responseSchema: {
                     type: Type.OBJECT,
                     properties: {
                         title: { type: Type.STRING },
-                        meta: { 
-                            type: Type.OBJECT, 
-                            properties: { 
-                                intent: { type: Type.STRING },
-                                mode: { type: Type.STRING } 
+                        vocal_summary_blurb: { type: Type.STRING },
+                        oracular_mirror: { type: Type.STRING },
+                        poetic_provocation: { type: Type.STRING },
+                        strategic_hypothesis: { type: Type.STRING, description: "The theoretic provocation." },
+                        celestial_calibration: { type: Type.STRING },
+                        aesthetic_touchpoints: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    motif: { type: Type.STRING },
+                                    context: { type: Type.STRING },
+                                    visual_directive: { type: Type.STRING }
+                                }
                             }
                         },
-                        poetic_interpretation: { type: Type.STRING },
-                        strategic_hypothesis: { type: Type.STRING },
-                        oracular_mirror: { type: Type.STRING },
-                        celestial_calibration: { type: Type.STRING },
+                        blueprint: {
+                            type: Type.OBJECT,
+                            description: "The ritual protocol.",
+                            properties: {
+                                foundation: { type: Type.STRING },
+                                structure: { type: Type.STRING },
+                                mechanics: { type: Type.STRING },
+                                trajectory: { type: Type.STRING }
+                            }
+                        },
                         pages: {
                             type: Type.ARRAY,
                             items: {
@@ -198,7 +223,7 @@ export const createZine = async (text: string, media: any[], tone: ToneTag, prof
             }
         });
         
-        const content = cleanAndParse(response.text);
+        const content = cleanAndParse(response.text) || {};
         // Fallback for critical fields
         if (!content.title) content.title = "Untitled Manifest";
         if (!content.pages) content.pages = [];
@@ -319,6 +344,37 @@ export const refineProposalText = async (text: string, instruction: string, prof
   });
 };
 
+export const generateRefinementVariations = async (text: string, profile: UserProfile | null) => {
+  return await withResilience(async (ai) => {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `INPUT TEXT: "${text}"\n\nCONTEXT: ${sanitizeProfile(profile)}.`,
+      config: {
+        responseMimeType: "application/json",
+        systemInstruction: `
+          IDENTITY: You are "Nous".
+          Generate 3 concise variations of the input text based on these archetypes:
+          1. "Punchy": High-impact, short, and chic.
+          2. "Theoretic": High-theory, academic, pretentiously intellectual (mapped to 'strategic' key).
+          3. "Poetic": Editorial, alluring, and metaphorical.
+          
+          Output strictly valid JSON with keys: "punchy", "strategic", "poetic".
+        `,
+        responseSchema: {
+          type: Type.OBJECT,
+          required: ["punchy", "strategic", "poetic"],
+          properties: {
+            punchy: { type: Type.STRING },
+            strategic: { type: Type.STRING, description: "The theoretic variation." },
+            poetic: { type: Type.STRING }
+          }
+        }
+      }
+    });
+    return cleanAndParse(response.text);
+  });
+};
+
 export const refineProposalSection = async (
   section: ProposalSection,
   instruction: string,
@@ -390,9 +446,152 @@ export const transcribeAudio = async (base64: string, mimeType: string = 'audio/
 export const applyTreatment = async (base64: string, instruction: string) => `data:image/jpeg;base64,${base64}`; // Return original for now
 export const analyzeMiseEnScene = async (base64: string, mimeType: string, profile: any) => ({ directors_note: "Analysis stub", cultural_parallel: "None" });
 export const identifyAestheticInstant = async (base64: string, mimeType: string, profile: any) => ({ era: "Contemporary" });
-export const analyzeCollectionIntent = async (items: any[], profile: any) => ({ conceptualThroughline: "Stub Analysis", colorStory: [] });
-export const generateInvestmentStrategy = async (items: any[], notes: string, profile: any) => ({ thesis: "Strategy Stub", capital_allocation: [], capsule_impact_score: 50 });
-export const scryTrendSynthesis = async (items: any[], profile: any) => ({ pattern_signals: [], structural_shifts: "", cultural_forces: "", time_horizon: "" });
+export const scryWebSignals = async (query: string) => {
+  return await withResilience(async (ai) => {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [{ text: `Search the web for deep cultural insights, trends, and semiotic meanings related to: "${query}". Provide a list of findings with titles, snippets, and source URLs.` }],
+      config: {
+        tools: [{ googleSearch: {} }],
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              title: { type: Type.STRING },
+              snippet: { type: Type.STRING },
+              url: { type: Type.STRING },
+              relevance: { type: Type.STRING }
+            }
+          }
+        }
+      }
+    });
+    return cleanAndParse(response.text);
+  });
+};
+
+export const analyzeCollectionIntent = async (items: any[], profile: any) => {
+  return await withResilience(async (ai) => {
+    const data = items.map(i => `[${i.type}] ${i.content?.prompt || i.content?.name || 'Fragment'}`).join('; ');
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Analyze these fragments: ${data}\n\nUser Context: ${sanitizeProfile(profile)}`,
+      config: {
+        responseMimeType: "application/json",
+        systemInstruction: `
+          IDENTITY: You are "The Curator".
+          TASK: Analyze a collection of creative fragments and extract a cohesive "Editorial Designer Brief".
+          OUTPUT: JSON with:
+          - conceptualThroughline: A poetic, high-level summary.
+          - colorStory: Array of 5 objects { hex, name, descriptor }.
+          - aestheticDirectives: Array of 3 strings.
+        `,
+        responseSchema: {
+          type: Type.OBJECT,
+          required: ["conceptualThroughline", "colorStory", "aestheticDirectives"],
+          properties: {
+            conceptualThroughline: { type: Type.STRING },
+            colorStory: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  hex: { type: Type.STRING },
+                  name: { type: Type.STRING },
+                  descriptor: { type: Type.STRING }
+                }
+              }
+            },
+            aestheticDirectives: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING }
+            }
+          }
+        }
+      }
+    });
+    return cleanAndParse(response.text);
+  });
+};
+
+export const generateInvestmentStrategy = async (items: any[], notes: string, profile: any) => {
+  return await withResilience(async (ai) => {
+    const data = items.map(i => `[${i.type}] ${i.content?.prompt || i.content?.name || 'Fragment'}`).join('; ');
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.1-pro-preview',
+      contents: `Items: ${data}\nNotes: ${notes}\nContext: ${sanitizeProfile(profile)}`,
+      config: {
+        responseMimeType: "application/json",
+        systemInstruction: `
+          IDENTITY: You are "The Strategist".
+          TASK: Generate a fiscal audit and investment strategy for this collection.
+          OUTPUT: JSON with:
+          - thesis: The core investment logic.
+          - capital_allocation: Array of objects { category, items, reasoning, fiscal_route }.
+          - capsule_impact_score: Number 0-100.
+          - missing_infrastructure: String.
+        `,
+        responseSchema: {
+          type: Type.OBJECT,
+          required: ["thesis", "capital_allocation", "capsule_impact_score"],
+          properties: {
+            thesis: { type: Type.STRING },
+            capital_allocation: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  category: { type: Type.STRING },
+                  items: { type: Type.ARRAY, items: { type: Type.STRING } },
+                  reasoning: { type: Type.STRING },
+                  fiscal_route: { type: Type.STRING }
+                }
+              }
+            },
+            capsule_impact_score: { type: Type.NUMBER },
+            missing_infrastructure: { type: Type.STRING }
+          }
+        }
+      }
+    });
+    return cleanAndParse(response.text);
+  });
+};
+
+export const scryTrendSynthesis = async (items: any[], profile: any) => {
+  return await withResilience(async (ai) => {
+    const data = items.map(i => `[${i.type}] ${i.content?.prompt || i.content?.name || 'Fragment'}`).join('; ');
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.1-pro-preview',
+      contents: `Data: ${data}\nContext: ${sanitizeProfile(profile)}`,
+      config: {
+        responseMimeType: "application/json",
+        systemInstruction: `
+          IDENTITY: You are "The Oracle".
+          TASK: Perform an "Anti-WGSN" trend synthesis.
+          OUTPUT: JSON with:
+          - pattern_signals: Array of 4 poetic trend names.
+          - structural_shifts: String describing the macro change.
+          - cultural_forces: String describing the underlying drivers.
+          - time_horizon: String (e.g. '18-24 months').
+        `,
+        responseSchema: {
+          type: Type.OBJECT,
+          required: ["pattern_signals", "structural_shifts", "cultural_forces", "time_horizon"],
+          properties: {
+            pattern_signals: { type: Type.ARRAY, items: { type: Type.STRING } },
+            structural_shifts: { type: Type.STRING },
+            cultural_forces: { type: Type.STRING },
+            time_horizon: { type: Type.STRING }
+          }
+        }
+      }
+    });
+    return cleanAndParse(response.text);
+  });
+};
 export const generateMirrorRefraction = async (profile: any, zineTitles: string) => ({ omen: "The mirror is misty.", dissonance: 0, provenance: "Unknown", imageUrl: null });
 export const analyzeVisualShards = async (shards: string[], draft: any) => ({ resonanceScore: 50, summary: "Stub analysis", archivalRedirects: [], resonanceClusters: [], divergentSignals: [] });
 export const analyzeTailorDraft = async (draft: any) => ({ profileManifesto: "Manifesto Stub", strategicOpportunity: "Opportunity Stub", aestheticDirectives: [], suggestedTouchpoints: [] });

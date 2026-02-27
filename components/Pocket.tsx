@@ -138,6 +138,80 @@ const FinancialBriefOverlay: React.FC<{ report: InvestmentReport; onClose: () =>
     </motion.div>
 );
 
+const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdate: (id: string, updates: any) => void }> = ({ item, onClose, onUpdate }) => {
+    const [notes, setNotes] = useState(item.notes || '');
+    const [isEditing, setIsEditing] = useState(false);
+    
+    const handleSave = async () => {
+        await updatePocketItem(item.userId, item.id, { notes });
+        onUpdate(item.id, { notes });
+        setIsEditing(false);
+    };
+
+    return (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9000] bg-white dark:bg-stone-950 flex flex-col md:flex-row overflow-hidden">
+            <button onClick={onClose} className="absolute top-8 right-8 z-50 p-4 bg-black/10 dark:bg-white/10 rounded-full hover:bg-red-500 hover:text-white transition-all">
+                <X size={24} />
+            </button>
+            
+            {/* VISUAL SIDE */}
+            <div className="flex-1 bg-stone-100 dark:bg-stone-900 flex items-center justify-center p-12 relative overflow-hidden">
+                <div className="absolute inset-0 opacity-20 pointer-events-none">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-stone-400/20 via-transparent to-transparent" />
+                </div>
+                <div className="relative z-10 max-w-full max-h-full shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]">
+                    {item.type === 'image' && <img src={item.content.imageUrl} className="max-w-full max-h-[80vh] object-contain" />}
+                    {(item.type === 'voicenote' || item.type === 'audio') && <SonicShardPlayer url={item.content.audioUrl} />}
+                </div>
+            </div>
+            
+            {/* DATA SIDE */}
+            <div className="w-full md:w-[450px] bg-white dark:bg-stone-950 border-l border-stone-100 dark:border-stone-800 p-12 flex flex-col gap-12 overflow-y-auto">
+                <div className="space-y-4">
+                    <span className="font-sans text-[10px] uppercase tracking-[0.5em] text-stone-400 font-black italic">Shard Metadata</span>
+                    <h2 className="font-serif text-4xl italic text-nous-text dark:text-white leading-tight">{item.content.prompt || item.content.name || 'Untitled Fragment'}</h2>
+                    <div className="flex items-center gap-4 text-stone-400 font-mono text-[10px]">
+                        <span className="px-2 py-1 bg-stone-100 dark:bg-stone-900 rounded-sm uppercase">{item.type}</span>
+                        <span>{new Date(item.savedAt).toLocaleDateString()}</span>
+                    </div>
+                </div>
+
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center border-b border-stone-100 dark:border-stone-800 pb-2">
+                        <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">Interior Notes</span>
+                        {!isEditing ? (
+                            <button onClick={() => setIsEditing(true)} className="text-stone-400 hover:text-nous-text dark:hover:text-white"><Pencil size={14} /></button>
+                        ) : (
+                            <button onClick={handleSave} className="text-emerald-500 hover:text-emerald-600"><Check size={14} /></button>
+                        )}
+                    </div>
+                    {isEditing ? (
+                        <textarea 
+                            value={notes} 
+                            onChange={e => setNotes(e.target.value)}
+                            className="w-full h-48 bg-stone-50 dark:bg-stone-900 p-4 font-serif italic text-lg focus:outline-none rounded-sm"
+                            placeholder="Record your perception..."
+                        />
+                    ) : (
+                        <p className="font-serif italic text-xl text-stone-600 dark:text-stone-400 leading-relaxed">
+                            {notes || "No interior reflections recorded for this shard."}
+                        </p>
+                    )}
+                </div>
+
+                <div className="mt-auto space-y-4">
+                    <button className="w-full py-4 bg-stone-900 dark:bg-white text-white dark:text-black rounded-full font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform">
+                        <Target size={14} /> Acquire Data
+                    </button>
+                    <button className="w-full py-4 border border-stone-200 dark:border-stone-800 rounded-full font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 hover:bg-stone-50 dark:hover:bg-stone-900 transition-colors">
+                        <Volume2 size={14} /> Voice Memo
+                    </button>
+                </div>
+            </div>
+        </motion.div>
+    );
+};
+
 // --- MAIN COMPONENT ---
 
 export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = ({ onSelectZine }) => {
@@ -162,6 +236,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
   // Modals
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [activeShard, setActiveShard] = useState<PocketItem | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -309,8 +384,11 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
     if (isSelectionMode) {
       setSelectedIds(prev => { const next = new Set(prev); if (next.has(item.id)) next.delete(item.id); else next.add(item.id); return next; });
     } else {
-      if (item.type === 'moodboard') setActiveBoard(item);
-      // else open detail view (omitted for brevity)
+      if (item.type === 'moodboard') {
+        setActiveBoard(item);
+      } else {
+        setActiveShard(item);
+      }
     }
   };
 
@@ -418,17 +496,38 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
                   <div className="relative aspect-[3/4] bg-stone-50 dark:bg-stone-950 overflow-hidden">
                      {item.type === 'image' && <img src={item.content.imageUrl} className="w-full h-full object-cover grayscale transition-all group-hover:grayscale-0 duration-[2s]" />}
                      {item.type === 'moodboard' && (
-                        <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-stone-900 text-white gap-6 text-center border-4 border-double border-emerald-500/20">
-                           <FolderOpen size={48} className="text-emerald-500" />
-                           <h3 className="font-serif italic text-2xl line-clamp-2">{item.content.name}</h3>
-                           <span className="font-sans text-[6px] uppercase tracking-widest text-emerald-500 font-black">{item.content.itemIds?.length} Fragments</span>
+                        <div className="w-full h-full grid grid-cols-2 grid-rows-2 gap-0.5 bg-stone-900 overflow-hidden group-hover:scale-105 transition-transform duration-700">
+                           {item.content.itemIds?.slice(0, 4).map((id, idx) => {
+                              const shard = items.find(i => i.id === id);
+                              return (
+                                <div key={idx} className="w-full h-full bg-stone-800 overflow-hidden">
+                                   {shard?.content?.imageUrl ? (
+                                      <img src={shard.content.imageUrl} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" />
+                                   ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-stone-700"><Layers size={12}/></div>
+                                   )}
+                                </div>
+                              );
+                           })}
+                           {(!item.content.itemIds || item.content.itemIds.length === 0) && (
+                              <div className="col-span-2 row-span-2 flex flex-col items-center justify-center p-8 bg-stone-900 text-white gap-4 text-center">
+                                 <FolderOpen size={32} className="text-emerald-500 opacity-30" />
+                                 <span className="font-sans text-[6px] uppercase tracking-widest text-emerald-500 font-black">Empty Stack</span>
+                              </div>
+                           )}
+                           <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-black/40 backdrop-blur-[2px] opacity-100 group-hover:opacity-0 transition-opacity pointer-events-none">
+                              <h3 className="font-serif italic text-xl text-white line-clamp-2 text-center drop-shadow-lg">{item.content.name}</h3>
+                              <span className="font-sans text-[6px] uppercase tracking-widest text-emerald-400 font-black mt-2">{item.content.itemIds?.length || 0} Fragments</span>
+                           </div>
                         </div>
                      )}
                      {(item.type === 'voicenote' || item.type === 'audio') && <SonicShardPlayer url={item.content.audioUrl} />}
-                     {item.type === 'analysis_report' && (
-                        <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-stone-50 dark:bg-stone-900 text-stone-400 gap-6 text-center">
-                           <Briefcase size={32} />
-                           <h3 className="font-serif italic text-xl line-clamp-3">{item.content.title}</h3>
+                     {item.type === 'zine_card' && (
+                        <div className="w-full h-full pointer-events-auto" onClick={(e) => { e.stopPropagation(); if(item.content.analysis && onSelectZine) onSelectZine({ id: item.content.zineId, title: item.content.title, content: item.content.analysis, tone: 'default', timestamp: item.timestamp, userHandle: 'Ghost' } as ZineMetadata); }}>
+                           <img src={item.content.imageUrl} className="w-full h-full object-cover grayscale transition-all group-hover:grayscale-0 duration-[2s]" />
+                           <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <span className="font-sans text-[8px] uppercase tracking-widest text-white font-black">Absorb Zine</span>
+                           </div>
                         </div>
                      )}
                      
@@ -494,6 +593,42 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
                             <ScrollText size={18} />
                             <span className="font-sans text-[7px] uppercase tracking-widest font-black">Proposal</span>
                         </button>
+                        <button 
+                            onClick={async () => {
+                                const targetItems = getSelection();
+                                if (targetItems.length === 0) return;
+                                try {
+                                    const { collection, addDoc } = await import('firebase/firestore');
+                                    const { db } = await import('../services/firebase');
+                                    for (const item of targetItems) {
+                                        if (item.type === 'image' || item.type === 'zine_card') {
+                                            const transmission = {
+                                                userId: user?.uid || 'ghost',
+                                                userHandle: profile?.handle || 'Ghost',
+                                                content: item.content.prompt || item.content.name || item.content.title || 'Untitled Fragment',
+                                                imageUrl: item.content.imageUrl || '',
+                                                timestamp: Date.now(),
+                                                type: 'signal',
+                                                likes: 0,
+                                                zineData: item.type === 'zine_card' ? item.content.analysis : null
+                                            };
+                                            await addDoc(collection(db, 'public_transmissions'), transmission);
+                                        }
+                                    }
+                                    window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Fragments Broadcasted.", icon: <Radio size={14} /> } }));
+                                    setIsSelectionMode(false);
+                                    setSelectedIds(new Set());
+                                } catch (e) {
+                                    console.error(e);
+                                    window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Broadcast Failed.", type: 'error' } }));
+                                }
+                            }}
+                            disabled={selectedIds.size === 0}
+                            className="flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-stone-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all disabled:opacity-30"
+                        >
+                            <Radio size={18} />
+                            <span className="font-sans text-[7px] uppercase tracking-widest font-black">Broadcast</span>
+                        </button>
                     </div>
                     <div className="flex items-center gap-4 px-4 border-l border-white/10">
                         <span className="font-mono text-xs text-white hidden md:inline">{selectedIds.size} Selected</span>
@@ -553,6 +688,16 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
                   </div>
                </motion.div>
             </motion.div>
+         )}
+
+         {activeShard && (
+            <ShardDetailView 
+                item={activeShard} 
+                onClose={() => setActiveShard(null)} 
+                onUpdate={(id, updates) => {
+                    setItems(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i));
+                }}
+            />
          )}
       </AnimatePresence>
 

@@ -224,7 +224,7 @@ export const InputStudio: React.FC<{
       
       {/* 1. MAIN WORKSPACE */}
       <div 
-        className="w-full max-w-7xl flex-1 flex flex-col items-center justify-center relative min-h-[60vh] px-4 md:px-0 z-10 transition-all duration-300 ease-out -mt-12" 
+        className="w-full max-w-7xl flex-1 flex flex-col items-center justify-center relative min-h-[70vh] pb-64 px-4 md:px-0 z-10 transition-all duration-300 ease-out -mt-12" 
         style={{ paddingRight: isFolderOpen ? '320px' : '0' }}
       >
         
@@ -417,7 +417,7 @@ export const InputStudio: React.FC<{
 
       {/* 3. BOTTOM FLOATING TOOLBAR */}
       <div 
-        className="fixed bottom-0 left-0 w-full z-40 bg-gradient-to-t from-nous-base via-nous-base to-transparent dark:from-stone-950 dark:via-stone-950 pt-20 pb-0 flex flex-col items-center transition-all duration-300 pointer-events-none"
+        className="fixed bottom-0 left-0 w-full z-40 bg-gradient-to-t from-nous-base via-nous-base to-transparent dark:from-stone-950 dark:via-stone-950 pt-12 pb-0 flex flex-col items-center transition-all duration-300 pointer-events-none"
         style={{ paddingRight: isFolderOpen && window.innerWidth >= 768 ? '360px' : '0' }}
       >
         <div className="pointer-events-auto w-full flex flex-col items-center">
@@ -469,8 +469,8 @@ export const InputStudio: React.FC<{
                     className={`
                     shrink-0 px-4 py-2 border rounded-full font-sans text-[9px] uppercase tracking-[0.2em] font-black transition-all duration-300
                     ${selectedTone === t 
-                        ? 'bg-nous-text dark:bg-white text-white dark:text-stone-900 border-transparent shadow-lg' 
-                        : 'bg-transparent border-stone-200 dark:border-stone-800 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300'}
+                        ? 'bg-stone-900 dark:bg-white text-white dark:text-stone-900 border-stone-900 dark:border-white shadow-lg' 
+                        : 'bg-white/80 dark:bg-stone-900/80 border-stone-200 dark:border-stone-800 text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'}
                     `}
                 >
                     {t}

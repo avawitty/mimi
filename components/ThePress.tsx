@@ -1,9 +1,14 @@
 
 // @ts-nocheck
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Globe, ArrowRight, BookOpen, Compass, Grid3X3, List, Search, ArrowUpRight, Hash, FileText, Layers, Archive, Zap } from 'lucide-react';
+import { Globe, ArrowRight, BookOpen, Compass, Grid3X3, List, Search, ArrowUpRight, Hash, FileText, Layers, Archive, Zap, Lock, Unlock, Eye } from 'lucide-react';
 import { EditorialSpread } from './EditorialSpread';
+import { useUser } from '../contexts/UserContext';
+import { fetchUserZines } from '../services/firebaseUtils';
+import { ZineMetadata } from '../types';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../services/firebaseInit';
 
 // --- DATA ---
 
@@ -162,13 +167,38 @@ const PRESS_ITEMS = [
 // --- COMPONENTS ---
 
 export const ThePress: React.FC = () => {
+  const { user } = useUser();
   const [activeArticle, setActiveArticle] = useState<any | null>(null);
   const [filter, setFilter] = useState('All Entries');
+  const [myEditions, setMyEditions] = useState<ZineMetadata[]>([]);
+  const [isLoadingEditions, setIsLoadingEditions] = useState(false);
+
+  useEffect(() => {
+    if (user && filter === 'My Editions') {
+      setIsLoadingEditions(true);
+      fetchUserZines(user.uid).then(zines => {
+        // Only show public zines in the Press view
+        setMyEditions(zines.filter(z => z.isPublic));
+        setIsLoadingEditions(false);
+      });
+    }
+  }, [user, filter]);
+
+  const togglePublicStatus = async (zineId: string, currentStatus: boolean) => {
+    if (!user) return;
+    try {
+      await updateDoc(doc(db, 'zines', zineId), { isPublic: !currentStatus });
+      setMyEditions(prev => prev.filter(z => z.id !== zineId)); // Remove from view if unpublished
+    } catch (e) {
+      console.error("Failed to update public status", e);
+    }
+  };
 
   const filteredItems = useMemo(() => {
       if (filter === 'All Entries') return PRESS_ITEMS;
       if (filter === 'Protocols') return PRESS_ITEMS.filter(i => i.tag === 'Protocol' || i.tag === 'Theory');
       if (filter === 'Case Studies') return PRESS_ITEMS.filter(i => i.tag === 'Case Study' || i.tag === 'Professional');
+      if (filter === 'My Editions') return []; // Handled separately
       return PRESS_ITEMS;
   }, [filter]);
 
@@ -202,7 +232,7 @@ export const ThePress: React.FC = () => {
          {/* FILTER BAR */}
          <div className="flex flex-wrap justify-between items-center gap-4 px-6 md:px-12 py-4 border-t border-stone-200 dark:border-stone-800 bg-[#F9F8F6] dark:bg-[#050505]">
             <div className="flex gap-8 overflow-x-auto no-scrollbar">
-                {['All Entries', 'Protocols', 'Case Studies'].map(f => (
+                {['All Entries', 'Protocols', 'Case Studies', 'My Editions'].map(f => (
                     <button 
                         key={f}
                         onClick={() => setFilter(f)}
@@ -213,7 +243,7 @@ export const ThePress: React.FC = () => {
                 ))}
             </div>
             <div className="font-mono text-[10px] text-stone-400 hidden md:block opacity-50">
-                Displaying 1-{filteredItems.length} of {PRESS_ITEMS.length} Records
+                Displaying {filter === 'My Editions' ? myEditions.length : filteredItems.length} Records
             </div>
          </div>
       </header>
@@ -221,59 +251,120 @@ export const ThePress: React.FC = () => {
       {/* GRID LAYOUT */}
       <div className="max-w-[1920px] mx-auto border-l border-stone-200 dark:border-stone-800">
          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-            {filteredItems.map((item, i) => (
-               <motion.article 
-                  key={item.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  onClick={() => setActiveArticle(item)}
-                  className="group relative border-r border-b border-stone-200 dark:border-stone-800 min-h-[500px] flex flex-col justify-between hover:bg-stone-50 dark:hover:bg-white/5 transition-colors duration-500 cursor-pointer overflow-hidden"
-               >
-                  <div className="p-6 h-full flex flex-col">
-                      {/* TOP META */}
-                      <div className="flex justify-between items-start mb-6 font-mono text-[10px] tracking-widest uppercase opacity-60">
-                         <span>ID: {item.ref}</span>
-                         <span>{item.timestamp}</span>
-                      </div>
+            {filter === 'My Editions' ? (
+               isLoadingEditions ? (
+                  <div className="col-span-full p-12 text-center text-stone-400 font-mono text-xs uppercase tracking-widest">Loading Editions...</div>
+               ) : myEditions.length === 0 ? (
+                  <div className="col-span-full p-12 text-center text-stone-400 font-mono text-xs uppercase tracking-widest">No public editions found. Publish from the Archive.</div>
+               ) : (
+                  myEditions.map((zine, i) => (
+                     <motion.article 
+                        key={zine.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        className="group relative border-r border-b border-stone-200 dark:border-stone-800 min-h-[500px] flex flex-col justify-between hover:bg-stone-50 dark:hover:bg-white/5 transition-colors duration-500 overflow-hidden"
+                     >
+                        <div className="p-6 h-full flex flex-col cursor-pointer" onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'reveal_artifact', detail_id: zine.id }))}>
+                            {/* TOP META */}
+                            <div className="flex justify-between items-start mb-6 font-mono text-[10px] tracking-widest uppercase opacity-60">
+                               <span>ID: {zine.id.slice(-6)}</span>
+                               <span>{new Date(zine.timestamp).toLocaleDateString()}</span>
+                            </div>
 
-                      {/* VISUAL PLACEHOLDER (COLOR SWATCH) */}
-                      <div className="aspect-[3/4] w-full mb-6 relative overflow-hidden group-hover:scale-[1.02] transition-transform duration-700" style={{ backgroundColor: item.hex }}>
-                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-20 mix-blend-overlay pointer-events-none" />
-                         
-                         <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="font-serif italic text-6xl text-white/10 mix-blend-overlay pr-4 select-none pointer-events-none">
-                                {item.ref.split('.')[0]}
-                            </span>
+                            {/* VISUAL PLACEHOLDER (COVER) */}
+                            <div className="aspect-[3/4] w-full mb-6 relative overflow-hidden group-hover:scale-[1.02] transition-transform duration-700 bg-stone-100 dark:bg-stone-900">
+                               {zine.coverImageUrl ? (
+                                  <img src={zine.coverImageUrl} alt="Cover" className="w-full h-full object-cover" />
+                               ) : (
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                     <span className="font-serif italic text-6xl text-stone-300 dark:text-stone-700 pr-4 select-none pointer-events-none">
+                                         {zine.title.substring(0, 2).toUpperCase()}
+                                     </span>
+                                  </div>
+                               )}
+                               <div className="absolute top-4 left-4">
+                                  <span className="font-mono text-[8px] uppercase tracking-widest text-white/90 bg-black/50 backdrop-blur-md px-2 py-1">{zine.tone}</span>
+                               </div>
+                            </div>
+
+                            <div className="mt-auto">
+                                <h3 className="font-serif text-4xl leading-[0.9] mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                                   {zine.title}
+                                </h3>
+                                <p className="font-mono text-[10px] uppercase tracking-wider opacity-70 mb-6 line-clamp-2">{zine.content.poetic_provocation}</p>
+                            </div>
+                        </div>
+
+                        <div className="p-6 pt-0 border-t border-transparent group-hover:border-stone-200 dark:group-hover:border-stone-800 transition-colors flex justify-between items-center">
+                           <div className="flex items-center gap-4 text-stone-400">
+                              <span className="flex items-center gap-1 font-mono text-[9px]"><Eye size={12} /> {zine.likes || 0}</span>
+                           </div>
+                           <button 
+                              onClick={(e) => { e.stopPropagation(); togglePublicStatus(zine.id, zine.isPublic); }}
+                              className="font-mono text-[9px] uppercase border border-red-500/30 text-red-500 hover:bg-red-500/10 px-2 py-1 transition-colors flex items-center gap-2"
+                           >
+                              <Lock size={10} /> Unpublish
+                           </button>
+                        </div>
+                     </motion.article>
+                  ))
+               )
+            ) : (
+               filteredItems.map((item, i) => (
+                  <motion.article 
+                     key={item.id}
+                     initial={{ opacity: 0, y: 20 }}
+                     animate={{ opacity: 1, y: 0 }}
+                     transition={{ delay: i * 0.1 }}
+                     onClick={() => setActiveArticle(item)}
+                     className="group relative border-r border-b border-stone-200 dark:border-stone-800 min-h-[500px] flex flex-col justify-between hover:bg-stone-50 dark:hover:bg-white/5 transition-colors duration-500 cursor-pointer overflow-hidden"
+                  >
+                     <div className="p-6 h-full flex flex-col">
+                         {/* TOP META */}
+                         <div className="flex justify-between items-start mb-6 font-mono text-[10px] tracking-widest uppercase opacity-60">
+                            <span>ID: {item.ref}</span>
+                            <span>{item.timestamp}</span>
                          </div>
 
-                         <div className="absolute top-4 left-4">
-                            <span className="font-mono text-[8px] uppercase tracking-widest text-white/90 bg-black/10 backdrop-blur-md px-2 py-1">{item.tag}</span>
+                         {/* VISUAL PLACEHOLDER (COLOR SWATCH) */}
+                         <div className="aspect-[3/4] w-full mb-6 relative overflow-hidden group-hover:scale-[1.02] transition-transform duration-700" style={{ backgroundColor: item.hex }}>
+                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-20 mix-blend-overlay pointer-events-none" />
+                            
+                            <div className="absolute inset-0 flex items-center justify-center">
+                               <span className="font-serif italic text-6xl text-white/10 mix-blend-overlay pr-4 select-none pointer-events-none">
+                                   {item.ref.split('.')[0]}
+                               </span>
+                            </div>
+
+                            <div className="absolute top-4 left-4">
+                               <span className="font-mono text-[8px] uppercase tracking-widest text-white/90 bg-black/10 backdrop-blur-md px-2 py-1">{item.tag}</span>
+                            </div>
                          </div>
-                      </div>
 
-                      <div className="mt-auto">
-                          <h3 className="font-serif text-4xl leading-[0.9] mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                             {item.brand}
-                          </h3>
-                          <p className="font-mono text-[10px] uppercase tracking-wider opacity-70 mb-6">{item.headline}</p>
-                      </div>
-                  </div>
-
-                  <div className="p-6 pt-0 border-t border-transparent group-hover:border-stone-200 dark:group-hover:border-stone-800 transition-colors">
-                     <p className="font-serif italic text-lg text-stone-500 dark:text-stone-400 group-hover:text-nous-text dark:group-hover:text-white transition-colors leading-tight">
-                        {item.subtitle}
-                     </p>
-                     <div className="mt-6 flex items-center justify-between">
-                        <span className="font-mono text-[9px] uppercase border border-nous-text dark:border-white px-2 py-1">Read Entry</span>
-                        <ArrowUpRight size={14} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                         <div className="mt-auto">
+                             <h3 className="font-serif text-4xl leading-[0.9] mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                                {item.brand}
+                             </h3>
+                             <p className="font-mono text-[10px] uppercase tracking-wider opacity-70 mb-6">{item.headline}</p>
+                         </div>
                      </div>
-                  </div>
-               </motion.article>
-            ))}
+
+                     <div className="p-6 pt-0 border-t border-transparent group-hover:border-stone-200 dark:group-hover:border-stone-800 transition-colors">
+                        <p className="font-serif italic text-lg text-stone-500 dark:text-stone-400 group-hover:text-nous-text dark:group-hover:text-white transition-colors leading-tight">
+                           {item.subtitle}
+                        </p>
+                        <div className="mt-6 flex items-center justify-between">
+                           <span className="font-mono text-[9px] uppercase border border-nous-text dark:border-white px-2 py-1">Read Entry</span>
+                           <ArrowUpRight size={14} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                        </div>
+                     </div>
+                  </motion.article>
+               ))
+            )}
             
             {/* FILLER CELLS (For Grid Aesthetic) */}
-            {Array.from({ length: Math.max(0, 4 - (filteredItems.length % 4 === 0 ? 4 : filteredItems.length % 4)) }).map((_, i) => (
+            {Array.from({ length: Math.max(0, 4 - ((filter === 'My Editions' ? myEditions.length : filteredItems.length) % 4 === 0 ? 4 : (filter === 'My Editions' ? myEditions.length : filteredItems.length) % 4)) }).map((_, i) => (
                 <div key={`filler-${i}`} className="hidden lg:block border-r border-b border-stone-200 dark:border-stone-800 min-h-[500px] bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-[0.03]" />
             ))}
          </div>

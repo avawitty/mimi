@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@config "./tailwind.config.js";
 
 @layer base {
   :root {
@@ -8,6 +9,7 @@
     --nous-subtle: #404040;
     --nous-accent: #000000;
     --nous-border: #E5E5E5;
+    --nous-silver: #D4D4D4;
   }
   
   html, body {

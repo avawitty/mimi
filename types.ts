@@ -489,6 +489,30 @@ export interface Proposal {
 
 // -- SHARED CONTEXT SYSTEM -- //
 
+export interface VibeNote {
+  id: string;
+  userId: string;
+  userHandle: string;
+  note: string; // The vibe (e.g., an emoji, a short phrase, a color hex)
+  timestamp: number;
+}
+
+export interface Transmission {
+  id: string;
+  userId: string;
+  userHandle: string;
+  content: string; // The text content or summary
+  timestamp: any; // Firestore Timestamp or number
+  type: 'manifest' | 'echo' | 'signal';
+  likes: number;
+  // New fields for Gallery Mode
+  title?: string;
+  coverImage?: string;
+  zineId?: string;
+  artifacts?: MediaFile[];
+  vibeNotes?: VibeNote[];
+}
+
 export interface ContextEntry {
   id: string;
   userId: string;
