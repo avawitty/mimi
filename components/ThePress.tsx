@@ -317,7 +317,10 @@ export const ThePress: React.FC = () => {
                      initial={{ opacity: 0, y: 20 }}
                      animate={{ opacity: 1, y: 0 }}
                      transition={{ delay: i * 0.1 }}
-                     onClick={() => setActiveArticle(item)}
+                     onClick={() => {
+                        window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'click' } }));
+                        setActiveArticle(item);
+                     }}
                      className="group relative border-r border-b border-stone-200 dark:border-stone-800 min-h-[500px] flex flex-col justify-between hover:bg-stone-50 dark:hover:bg-white/5 transition-colors duration-500 cursor-pointer overflow-hidden"
                   >
                      <div className="p-6 h-full flex flex-col">

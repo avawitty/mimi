@@ -4,10 +4,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
 import { fetchDossierFolders, fetchDossierArtifacts, createDossierFolder, createDossierArtifactFromImage, createDossierArtifactFromText, updateDossierFolder, fetchPocketItems } from '../services/firebase';
-import { DossierFolder, DossierArtifact, FruitionTrajectory, Task } from '../types';
-import { Briefcase, Folder, Plus, ChevronRight, FileText, Share2, Layout, ArrowRight, Loader2, X, Archive, Eye, Trash2, Globe, ExternalLink, Upload, ImageIcon, HeartHandshake, FolderOpen, LayoutGrid, FolderPlus, PenTool, Save, Quote, Info, StickyNote, Compass, Map, Terminal, Check, Calendar, AlertTriangle, ListChecks, Sparkles, Clock, Target, CalendarDays, GripVertical } from 'lucide-react';
+import { DossierFolder, DossierArtifact, FruitionTrajectory, Task, UserProfile } from '../types';
+import { Briefcase, Folder, Plus, ChevronRight, FileText, Share2, Layout, ArrowRight, Loader2, X, Archive, Eye, Trash2, Globe, ExternalLink, Upload, ImageIcon, HeartHandshake, FolderOpen, LayoutGrid, FolderPlus, PenTool, Save, Quote, Info, StickyNote, Compass, Map, Terminal, Check, Calendar, AlertTriangle, ListChecks, Sparkles, Clock, Target, CalendarDays, GripVertical, Users, UserPlus } from 'lucide-react';
 import { DossierArtifactView } from './DossierArtifactView';
 import { generateStrategicBlueprint, generateProjectTasks } from '../services/geminiService';
+import { db } from '../services/firebaseInit';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 export const DossierView: React.FC = () => {
   const { user, profile } = useUser();
@@ -19,6 +21,13 @@ export const DossierView: React.FC = () => {
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+
+  // Collaborator State
+  const [showCollabModal, setShowCollabModal] = useState(false);
+  const [collabSearchTerm, setCollabSearchTerm] = useState('');
+  const [collabSearchResults, setCollabSearchResults] = useState<UserProfile[]>([]);
+  const [isSearchingCollab, setIsSearchingCollab] = useState(false);
+  const [collabProfiles, setCollabProfiles] = useState<UserProfile[]>([]);
 
   // Note Modal State (Artifact Note)
   const [showNoteModal, setShowNoteModal] = useState(false);
@@ -71,13 +80,90 @@ export const DossierView: React.FC = () => {
         loadArtifacts(activeFolder.id);
         setFolderMemo(activeFolder.notes || '');
         setTasks(activeFolder.tasks || []);
+        loadCollaboratorProfiles(activeFolder.collaborators || []);
     }
     else {
         setArtifacts([]);
         setFolderMemo('');
         setTasks([]);
+        setCollabProfiles([]);
     }
   }, [activeFolder]);
+
+  const loadCollaboratorProfiles = async (uids: string[]) => {
+      if (!uids.length) {
+          setCollabProfiles([]);
+          return;
+      }
+      try {
+          // Chunking to avoid 'in' query limits (max 10)
+          const chunks = [];
+          for (let i = 0; i < uids.length; i += 10) {
+              chunks.push(uids.slice(i, i + 10));
+          }
+          
+          let profiles: UserProfile[] = [];
+          for (const chunk of chunks) {
+              const q = query(collection(db, 'profiles'), where('uid', 'in', chunk));
+              const snap = await getDocs(q);
+              profiles = [...profiles, ...snap.docs.map(d => d.data() as UserProfile)];
+          }
+          setCollabProfiles(profiles);
+      } catch (e) {
+          console.error("Failed to load collaborator profiles", e);
+      }
+  };
+
+  const handleSearchCollaborators = async () => {
+      if (!collabSearchTerm.trim()) return;
+      setIsSearchingCollab(true);
+      try {
+          // Simple prefix search on handle
+          const q = query(
+              collection(db, 'profiles'), 
+              where('handle', '>=', collabSearchTerm.toLowerCase()),
+              where('handle', '<=', collabSearchTerm.toLowerCase() + '\uf8ff')
+          );
+          const snap = await getDocs(q);
+          const results = snap.docs.map(d => d.data() as UserProfile).filter(p => p.uid !== user?.uid);
+          setCollabSearchResults(results);
+      } catch (e) {
+          console.error(e);
+      } finally {
+          setIsSearchingCollab(false);
+      }
+  };
+
+  const handleAddCollaborator = async (collabUid: string) => {
+      if (!activeFolder) return;
+      const currentCollabs = activeFolder.collaborators || [];
+      if (currentCollabs.includes(collabUid)) return;
+      
+      const updatedCollabs = [...currentCollabs, collabUid];
+      try {
+          await updateDossierFolder(activeFolder.id, { collaborators: updatedCollabs });
+          setActiveFolder({ ...activeFolder, collaborators: updatedCollabs });
+          setFolders(prev => prev.map(f => f.id === activeFolder.id ? { ...f, collaborators: updatedCollabs } : f));
+          loadCollaboratorProfiles(updatedCollabs);
+          window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Collaborator Added.", icon: <UserPlus size={14} /> } }));
+      } catch (e) {
+          console.error(e);
+      }
+  };
+
+  const handleRemoveCollaborator = async (collabUid: string) => {
+      if (!activeFolder) return;
+      const updatedCollabs = (activeFolder.collaborators || []).filter(id => id !== collabUid);
+      try {
+          await updateDossierFolder(activeFolder.id, { collaborators: updatedCollabs });
+          setActiveFolder({ ...activeFolder, collaborators: updatedCollabs });
+          setFolders(prev => prev.map(f => f.id === activeFolder.id ? { ...f, collaborators: updatedCollabs } : f));
+          loadCollaboratorProfiles(updatedCollabs);
+          window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Collaborator Removed.", icon: <Trash2 size={14} /> } }));
+      } catch (e) {
+          console.error(e);
+      }
+  };
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;

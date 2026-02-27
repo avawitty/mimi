@@ -47,7 +47,16 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
           timestamp: Date.now(), 
           type: 'manifest', 
           likes: 42,
-          vibeNotes: []
+          vibeNotes: [],
+          zineData: {
+              id: 'mock_1',
+              title: 'Biological Imperative',
+              content: '',
+              isPublic: true,
+              mask: {
+                  typographyIntent: { archetype: 'minimalist-sans' }
+              }
+          } as any
       },
       { 
           id: 'sim_2', 
@@ -58,7 +67,16 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
           timestamp: Date.now() - 100000, 
           type: 'manifest', 
           likes: 12,
-          vibeNotes: []
+          vibeNotes: [],
+          zineData: {
+              id: 'mock_2',
+              title: 'Hyper Nostalgia',
+              content: '',
+              isPublic: true,
+              mask: {
+                  typographyIntent: { archetype: 'editorial-serif' }
+              }
+          } as any
       },
       { 
           id: 'sim_3', 
@@ -69,7 +87,16 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
           timestamp: Date.now() - 200000, 
           type: 'echo', 
           likes: 8,
-          vibeNotes: []
+          vibeNotes: [],
+          zineData: {
+              id: 'mock_3',
+              title: 'Loudest Texture',
+              content: '',
+              isPublic: true,
+              mask: {
+                  typographyIntent: { archetype: 'brutalist-mono' }
+              }
+          } as any
       },
   ]);
 
@@ -132,6 +159,7 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
       }
 
       try {
+          window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'shimmer' } }));
           const ref = doc(db, 'public_transmissions', id);
           await updateDoc(ref, { likes: increment(1) });
       } catch (e) {
@@ -141,11 +169,45 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
 
   const handleAbsorb = (t: Transmission, e?: React.MouseEvent) => {
       if (e) e.stopPropagation();
+      window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'transition' } }));
       if (t.zineData && onSelectZine) {
           onSelectZine(t.zineData);
       } else {
           setSelectedArtifact(t);
       }
+  };
+
+  const handleAbsorbToStudio = async (t: Transmission) => {
+      if (!t.zineData || !user) return;
+      
+      try {
+          const { absorbTransmission } = await import('../services/firebaseUtils');
+          const folderId = await absorbTransmission(user.uid, t.zineData);
+          
+          if (folderId) {
+              window.dispatchEvent(new CustomEvent('mimi:change_view', { 
+                  detail: 'dossier',
+                  detail_data: { folderId }
+              } as any));
+              window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Manifest Absorbed into Dossier.", icon: <Zap size={14} /> } }));
+          }
+      } catch (e) {
+          console.error("Failed to absorb", e);
+      }
+  };
+
+  const handleRemix = (t: Transmission) => {
+      if (!t.zineData || !user) return;
+      
+      // Dispatch event to open in Studio for remixing
+      window.dispatchEvent(new CustomEvent('mimi:change_view', { 
+          detail: 'studio', 
+          detail_data: { 
+              action: 'remix',
+              zineData: t.zineData 
+          } 
+      } as any));
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Shards loaded for Remix.", icon: <Zap size={14} /> } }));
   };
 
   const handleOpenProfile = (userId: string, e?: React.MouseEvent) => {
@@ -261,6 +323,11 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
                                 >
                                   {t.userHandle}
                                 </button>
+                                {t.zineData?.mask?.typographyIntent?.archetype && (
+                                    <span className="font-mono text-[7px] uppercase tracking-widest text-white/30 ml-2">
+                                        [{t.zineData.mask.typographyIntent.archetype.replace('-', ' ')}]
+                                    </span>
+                                )}
                             </div>
                             <p className="font-serif text-lg italic text-white leading-tight mb-4 line-clamp-2">
                                 {t.content}
@@ -268,12 +335,40 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
                             
                             <div className="flex items-center gap-4 text-white/70">
                                 <button onClick={(e) => handleWitness(t.id, e)} className="flex items-center gap-1.5 hover:text-emerald-400 transition-colors">
-                                    <Eye size={12} /> <span className="font-mono text-[9px] uppercase tracking-widest">Witness ({t.likes})</span>
+                                    <Eye size={12} /> <span className="font-mono text-[9px] uppercase tracking-widest">Resonate ({t.likes})</span>
                                 </button>
                                 <button onClick={(e) => handleAbsorb(t, e)} className="flex items-center gap-1.5 hover:text-white transition-colors ml-auto">
                                     <Maximize2 size={12} /> <span className="font-mono text-[9px] uppercase tracking-widest">Absorb</span>
                                 </button>
                             </div>
+                            
+                            {/* Zine Actions & Lineage */}
+                            {t.zineData && (
+                                <div className="mt-4 pt-4 border-t border-white/10 flex flex-col gap-2">
+                                    <div className="flex items-center justify-between">
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); handleAbsorbToStudio(t); }}
+                                            className="font-sans text-[8px] uppercase tracking-widest font-black text-white hover:text-emerald-400 transition-colors"
+                                        >
+                                            ABSORB TRANSMISSION
+                                        </button>
+                                        
+                                        {t.zineData.isLocked ? (
+                                            <span className="font-mono text-[8px] uppercase opacity-50 text-stone-400">Sealed by Creator</span>
+                                        ) : (
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); handleRemix(t); }}
+                                                className="font-sans text-[8px] uppercase tracking-widest font-black text-white hover:text-indigo-400 transition-colors"
+                                            >
+                                                REMIX SHARDS
+                                            </button>
+                                        )}
+                                    </div>
+                                    <p className="font-mono text-[8px] uppercase tracking-widest opacity-40 mt-1">
+                                        Origin: {t.zineData.authorship || t.userHandle} {t.zineData.lineage?.length > 0 && `(Resonated ${t.zineData.lineage.length}x)`}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </motion.div>
@@ -341,7 +436,7 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
                                   onClick={(e) => handleWitness(selectedArtifact.id, e)}
                                   className="w-full py-4 border border-white/20 text-white font-sans text-[10px] uppercase tracking-[0.3em] font-black hover:bg-white hover:text-black transition-all flex items-center justify-center gap-3"
                               >
-                                  <Eye size={14} /> Witness ({selectedArtifact.likes})
+                                  <Eye size={14} /> Resonate ({selectedArtifact.likes})
                               </button>
                               <button className="w-full py-4 bg-white/5 text-white/50 font-sans text-[10px] uppercase tracking-[0.3em] font-black hover:bg-white/10 transition-all flex items-center justify-center gap-3">
                                   <Share2 size={14} /> Transmit

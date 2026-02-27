@@ -4,11 +4,12 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useUser } from '../contexts/UserContext';
 import { UserProfile, TypographicArchetype, Persona } from '../types';
 import { isHandleAvailable, uploadBlob, saveUserProfile, fetchUserZines, fetchPocketItems } from '../services/firebaseUtils';
-import { Loader2, Camera, Check, Type, PenTool, Layers, Moon, Orbit, ShieldCheck, Fingerprint, Palette, Scissors, Anchor, Heart, Info, ArrowRight, MapPin, Clock, Calendar, Cloud, Save, MousePointer2, Radio, Upload, Settings, Plus, X, Trash2, Key, ExternalLink, ToggleLeft, ToggleRight, Box, CheckCircle2, Zap, Wallet, User, ChevronRight, ChevronLeft, Sparkles, Eraser, Shield, Cpu, Link, Database, Crown, Download, FileJson, RefreshCw } from 'lucide-react';
+import { Loader2, Camera, Check, Type, PenTool, Layers, Moon, Orbit, ShieldCheck, Fingerprint, Palette, Scissors, Anchor, Heart, Info, ArrowRight, MapPin, Clock, Calendar, Cloud, Save, MousePointer2, Radio, Upload, Settings, Plus, X, Trash2, Key, ExternalLink, ToggleLeft, ToggleRight, Box, CheckCircle2, Zap, Wallet, User, ChevronRight, ChevronLeft, Sparkles, Eraser, Shield, Cpu, Link, Database, Crown, Download, FileJson, RefreshCw, Users } from 'lucide-react';
 import { useTheme, PALETTES } from '../contexts/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DeveloperSettings } from './DeveloperSettings';
 import { ImperialPatronageModal } from './ImperialPatronageModal';
+import { ConnectionsManager } from './ConnectionsManager';
 
 const DNAButton: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; label: string }> = ({ active, onClick, icon, label }) => (
   <button 
@@ -180,13 +181,27 @@ export const UserProfileView: React.FC = () => {
       setTimeout(() => setMessage(null), 3000);
   };
 
-  const handleGoogleLink = async () => {
+  const handleGoogleLink = async (forceRedirect = false) => {
       if (user?.isAnonymous) {
           try {
+              if (forceRedirect) {
+                  await linkAccount(true);
+                  return;
+              }
               await linkAccount();
               setMessage({ text: "Identity Anchored to Google.", type: 'success' });
           } catch(e) {
+              console.error("Link Error:", e);
               setMessage({ text: e.message || "Link Failed.", type: 'error' });
+              // If it's an internal error, show troubleshooting
+              if (e.code === 'auth/internal-error' || e.message?.includes('internal-error')) {
+                  window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+                      detail: { 
+                          message: "Auth Internal Error detected. Try Redirect Flow.", 
+                          type: 'error' 
+                      } 
+                  }));
+              }
           }
       }
   };
@@ -270,12 +285,26 @@ export const UserProfileView: React.FC = () => {
                 {/* DISCRETE GOOGLE ANCHOR / AGENT PROTOCOLS / SOVEREIGN KEY */}
                 <div className="flex flex-wrap items-center gap-4 justify-center">
                     {user?.isAnonymous ? (
-                        <button 
-                          onClick={handleGoogleLink} 
-                          className="px-5 py-2.5 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[8px] uppercase tracking-widest font-black text-stone-500 hover:text-emerald-600 hover:border-emerald-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900"
-                        >
-                           <Link size={12} /> Anchor Identity (Google)
-                        </button>
+                        <div className="flex flex-col items-center gap-4">
+                            <div className="flex flex-wrap items-center gap-4 justify-center">
+                                <button 
+                                  onClick={() => handleGoogleLink(false)} 
+                                  className="px-5 py-2.5 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[8px] uppercase tracking-widest font-black text-stone-500 hover:text-emerald-600 hover:border-emerald-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900"
+                                >
+                                   <Link size={12} /> Anchor Identity (Google)
+                                </button>
+                                <button 
+                                  onClick={() => handleGoogleLink(true)} 
+                                  className="px-5 py-2.5 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 hover:text-amber-600 hover:border-amber-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900"
+                                  title="Use this if the standard login fails"
+                                >
+                                   <RefreshCw size={12} /> Force Redirect Flow
+                                </button>
+                            </div>
+                            <p className="font-serif italic text-[10px] text-stone-400 max-w-xs">
+                                If you encounter <span className="text-red-400">auth/internal-error</span>, ensure <code className="bg-stone-100 dark:bg-stone-800 px-1 rounded">*.run.app</code> is added to Authorized Domains in Firebase Console.
+                            </p>
+                        </div>
                     ) : (
                         <div className="flex items-center gap-4">
                             <span className="inline-flex items-center gap-2 font-sans text-[8px] uppercase tracking-widest font-black text-emerald-600 dark:text-emerald-400 cursor-default bg-emerald-500/10 px-5 py-2.5 rounded-full border border-emerald-500/20">
@@ -405,6 +434,18 @@ export const UserProfileView: React.FC = () => {
                   </motion.div>
                )}
             </AnimatePresence>
+        </section>
+
+        {/* SOCIAL GRAPH / CONNECTIONS */}
+        <section className="space-y-12">
+            <div className="flex flex-col items-center gap-2 text-center">
+               <div className="flex items-center gap-3 text-stone-400">
+                  <Users size={18} />
+                  <h3 className="font-sans text-[9px] uppercase tracking-[0.4em] font-black">Social Resonance Graph</h3>
+               </div>
+               <p className="font-serif italic text-lg text-stone-500 max-w-md">Manage your network of resonators and established connections.</p>
+            </div>
+            <ConnectionsManager />
         </section>
 
         {/* TYPOGRAPHIC ARCHETYPE */}

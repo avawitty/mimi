@@ -224,7 +224,7 @@ export const InputStudio: React.FC<{
       
       {/* 1. MAIN WORKSPACE */}
       <div 
-        className="w-full max-w-7xl flex-1 flex flex-col items-center justify-center relative min-h-[70vh] pb-64 px-4 md:px-0 z-10 transition-all duration-300 ease-out -mt-12" 
+        className="w-full max-w-7xl flex-1 flex flex-col items-center justify-center relative min-h-[70vh] pb-64 px-4 md:px-0 z-10 transition-all duration-300 ease-out -mt-4" 
         style={{ paddingRight: isFolderOpen ? '320px' : '0' }}
       >
         

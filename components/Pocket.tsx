@@ -342,6 +342,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
+    window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'success' } }));
     try {
       await createMoodboard(user?.uid || 'ghost', newFolderName, Array.from(selectedIds));
       setNewFolderName(''); setShowFolderModal(false); setIsSelectionMode(false); setSelectedIds(new Set());
@@ -551,125 +552,92 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
       {/* FOOTER TOOLBAR */}
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[4000] w-full max-w-2xl px-6">
          <AnimatePresence mode="wait">
-            {isSelectionMode ? (
-                <motion.div 
-                    key="toolbar"
-                    initial={{ y: 20, opacity: 0 }} 
-                    animate={{ y: 0, opacity: 1 }} 
-                    exit={{ y: 20, opacity: 0 }}
-                    className="bg-stone-900/95 backdrop-blur-3xl p-3 rounded-2xl shadow-2xl flex items-center justify-between border border-white/10 gap-2"
-                >
-                    <div className="flex items-center gap-1">
-                        <button 
-                            onClick={() => setShowFolderModal(true)} 
-                            disabled={selectedIds.size === 0}
-                            className="flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-stone-400 hover:text-white hover:bg-white/5 transition-all disabled:opacity-30"
-                        >
-                            <FolderPlus size={18} />
-                            <span className="font-sans text-[7px] uppercase tracking-widest font-black">Stack</span>
-                        </button>
-                        <div className="w-px h-8 bg-white/10" />
-                        <button 
-                            onClick={handleDesignerAudit}
-                            disabled={selectedIds.size === 0}
-                            className="flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-stone-400 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all disabled:opacity-30"
-                        >
-                            <Briefcase size={18} />
-                            <span className="font-sans text-[7px] uppercase tracking-widest font-black">Audit</span>
-                        </button>
-                        <button 
-                            onClick={handleFinancialAnalysis}
-                            disabled={selectedIds.size === 0}
-                            className="flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-stone-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all disabled:opacity-30"
-                        >
-                            <Wallet size={18} />
-                            <span className="font-sans text-[7px] uppercase tracking-widest font-black">Acquire</span>
-                        </button>
-                        <button 
-                            onClick={handleProposal}
-                            disabled={selectedIds.size === 0}
-                            className="flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-stone-400 hover:text-amber-400 hover:bg-amber-500/10 transition-all disabled:opacity-30"
-                        >
-                            <ScrollText size={18} />
-                            <span className="font-sans text-[7px] uppercase tracking-widest font-black">Proposal</span>
-                        </button>
-                        <button 
-                            onClick={async () => {
-                                const targetItems = getSelection();
-                                if (targetItems.length === 0) return;
-                                try {
-                                    const { collection, addDoc } = await import('firebase/firestore');
-                                    const { db } = await import('../services/firebase');
-                                    for (const item of targetItems) {
-                                        if (item.type === 'image' || item.type === 'zine_card') {
-                                            const transmission = {
-                                                userId: user?.uid || 'ghost',
-                                                userHandle: profile?.handle || 'Ghost',
-                                                content: item.content.prompt || item.content.name || item.content.title || 'Untitled Fragment',
-                                                imageUrl: item.content.imageUrl || '',
-                                                timestamp: Date.now(),
-                                                type: 'signal',
-                                                likes: 0,
-                                                zineData: item.type === 'zine_card' ? item.content.analysis : null
-                                            };
-                                            await addDoc(collection(db, 'public_transmissions'), transmission);
-                                        }
-                                    }
-                                    window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Fragments Broadcasted.", icon: <Radio size={14} /> } }));
-                                    setIsSelectionMode(false);
-                                    setSelectedIds(new Set());
-                                } catch (e) {
-                                    console.error(e);
-                                    window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Broadcast Failed.", type: 'error' } }));
-                                }
-                            }}
-                            disabled={selectedIds.size === 0}
-                            className="flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-stone-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all disabled:opacity-30"
-                        >
-                            <Radio size={18} />
-                            <span className="font-sans text-[7px] uppercase tracking-widest font-black">Broadcast</span>
-                        </button>
-                    </div>
-                    <div className="flex items-center gap-4 px-4 border-l border-white/10">
-                        <span className="font-mono text-xs text-white hidden md:inline">{selectedIds.size} Selected</span>
-                        <button onClick={() => { setIsSelectionMode(false); setSelectedIds(new Set()); }} className="p-2 bg-white/10 rounded-full hover:bg-red-500 hover:text-white text-stone-400 transition-colors">
-                            <X size={16} />
-                        </button>
-                    </div>
-                </motion.div>
-            ) : (
-                <motion.div 
-                    key="standard"
-                    initial={{ y: 20, opacity: 0 }} 
-                    animate={{ y: 0, opacity: 1 }} 
-                    exit={{ y: 20, opacity: 0 }}
-                    className="bg-white/90 dark:bg-stone-900/90 backdrop-blur-3xl p-2 rounded-full shadow-2xl flex items-center justify-between border border-black/5 gap-4 px-6"
-                >
-                    <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-3 text-stone-500 hover:text-nous-text dark:hover:text-white transition-colors group">
-                        <div className="p-2 bg-stone-100 dark:bg-stone-800 rounded-full group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                            <Plus size={18} />
-                        </div>
-                        <span className="font-sans text-[9px] uppercase tracking-widest font-black hidden md:block">Add Debris</span>
-                    </button>
-
-                    <div className="w-px h-6 bg-stone-200 dark:bg-stone-800" />
-
-                    <button onClick={handleTrendSynthesis} className="flex items-center gap-3 text-stone-500 hover:text-amber-500 transition-colors group" title="Scry Trends">
-                        <Radar size={18} />
-                        <span className="font-sans text-[9px] uppercase tracking-widest font-black hidden md:block">Radar</span>
-                    </button>
-
-                    <div className="w-px h-6 bg-stone-200 dark:bg-stone-800" />
-
-                    <button 
-                        onClick={() => setIsSelectionMode(true)}
-                        className="flex items-center gap-3 text-stone-500 hover:text-indigo-500 transition-colors group"
-                    >
-                        <CheckCircle2 size={18} />
-                        <span className="font-sans text-[9px] uppercase tracking-widest font-black hidden md:block">Select</span>
-                    </button>
-                </motion.div>
-            )}
+             <motion.div 
+                 key="toolbar"
+                 initial={{ y: 20, opacity: 0 }} 
+                 animate={{ y: 0, opacity: 1 }} 
+                 exit={{ y: 20, opacity: 0 }}
+                 className="bg-stone-900/95 backdrop-blur-3xl p-3 rounded-2xl shadow-2xl flex items-center justify-between border border-white/10 gap-2"
+             >
+                 <div className="flex items-center gap-1">
+                     <button 
+                         onClick={() => setShowFolderModal(true)} 
+                         disabled={selectedIds.size === 0}
+                         className="flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-stone-400 hover:text-white hover:bg-white/5 transition-all disabled:opacity-30"
+                     >
+                         <FolderPlus size={18} />
+                         <span className="font-sans text-[7px] uppercase tracking-widest font-black">Stack</span>
+                     </button>
+                     <div className="w-px h-8 bg-white/10" />
+                     <button 
+                         onClick={handleDesignerAudit}
+                         disabled={selectedIds.size === 0}
+                         className="flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-stone-400 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all disabled:opacity-30"
+                     >
+                         <Briefcase size={18} />
+                         <span className="font-sans text-[7px] uppercase tracking-widest font-black">Audit</span>
+                     </button>
+                     <button 
+                         onClick={handleFinancialAnalysis}
+                         disabled={selectedIds.size === 0}
+                         className="flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-stone-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all disabled:opacity-30"
+                     >
+                         <Wallet size={18} />
+                         <span className="font-sans text-[7px] uppercase tracking-widest font-black">Acquire</span>
+                     </button>
+                     <button 
+                         onClick={handleProposal}
+                         disabled={selectedIds.size === 0}
+                         className="flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-stone-400 hover:text-amber-400 hover:bg-amber-500/10 transition-all disabled:opacity-30"
+                     >
+                         <ScrollText size={18} />
+                         <span className="font-sans text-[7px] uppercase tracking-widest font-black">Proposal</span>
+                     </button>
+                     <button 
+                         onClick={async () => {
+                             const targetItems = getSelection();
+                             if (targetItems.length === 0) return;
+                             window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'shimmer' } }));
+                             try {
+                                 const { collection, addDoc } = await import('firebase/firestore');
+                                 const { db } = await import('../services/firebase');
+                                 for (const item of targetItems) {
+                                     if (item.type === 'image' || item.type === 'zine_card') {
+                                         const transmission = {
+                                             userId: user?.uid || 'ghost',
+                                             userHandle: profile?.handle || 'Ghost',
+                                             content: item.content.prompt || item.content.name || item.content.title || 'Untitled Fragment',
+                                             imageUrl: item.content.imageUrl || '',
+                                             timestamp: Date.now(),
+                                             type: 'signal',
+                                             likes: 0,
+                                             zineData: item.type === 'zine_card' ? item.content.analysis : null
+                                         };
+                                         await addDoc(collection(db, 'public_transmissions'), transmission);
+                                     }
+                                 }
+                                 window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Fragments Broadcasted.", icon: <Radio size={14} /> } }));
+                                 setIsSelectionMode(false);
+                                 setSelectedIds(new Set());
+                             } catch (e) {
+                                 console.error(e);
+                                 window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Broadcast Failed.", type: 'error' } }));
+                             }
+                         }}
+                         disabled={selectedIds.size === 0}
+                         className="flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-stone-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all disabled:opacity-30"
+                     >
+                         <Radio size={18} />
+                         <span className="font-sans text-[7px] uppercase tracking-widest font-black">Broadcast</span>
+                     </button>
+                 </div>
+                 <div className="flex items-center gap-4 px-4 border-l border-white/10">
+                     <span className="font-mono text-xs text-white hidden md:inline">{selectedIds.size} Selected</span>
+                     <button onClick={() => { setIsSelectionMode(!isSelectionMode); if(isSelectionMode) setSelectedIds(new Set()); }} className={`p-2 rounded-full transition-colors ${isSelectionMode ? 'bg-red-500 text-white' : 'bg-white/10 text-stone-400 hover:bg-white/20'}`}>
+                         {isSelectionMode ? <X size={16} /> : <CheckCircle2 size={16} />}
+                     </button>
+                 </div>
+             </motion.div>
          </AnimatePresence>
       </div>
 

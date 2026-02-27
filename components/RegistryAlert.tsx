@@ -12,6 +12,10 @@ export const RegistryAlert: React.FC = () => {
       const newAlert = { id, ...e.detail };
       setAlerts(prev => [...prev, newAlert]);
       
+      // Trigger sound based on alert type
+      const soundType = e.detail.type === 'error' ? 'error' : 'success';
+      window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: soundType } }));
+      
       // Auto-remove after 5 seconds
       setTimeout(() => {
         setAlerts(prev => prev.filter(a => a.id !== id));

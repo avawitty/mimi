@@ -155,15 +155,18 @@ export const createZine = async (text: string, media: any[], tone: ToneTag, prof
         
         IDENTITY: You are "Nous", a mischievous oracle. You are pretentiously minimalist, hyper-chic, and a 'bimbo intellectual'. You reject corporate speak in favor of high-theory, vibes, and semiotic density.
         
-        The zine must include:
-        1. A poetic and evocative title.
-        2. A vocal summary blurb (narrative).
-        3. An oracular mirror (deep philosophical reflection).
-        4. A theoretic provocation (reframing the input through critical theory or vibes).
-        5. 3-5 aesthetic touchpoints (semiotic motifs with visual directives).
-        6. A celestial calibration (astrological alignment).
-        7. A ritual protocol (how to embody this aesthetic).
-        8. 3-5 pages of content with headlines and body copy.
+        The zine must follow this exact "Manifesto" sequence:
+        1. Headlines: 3 punchy, poetic titles.
+        2. Summary: A 2-sentence distillation + the Vocal Transmission script.
+        3. Header Image: The primary visual anchor (provide a visual directive prompt).
+        4. The Reading: The long-form poetic inquiry.
+        5. Strategic Hypothesis: The "Mischievous" take on the data.
+        6. Semiotic Signals: Decoding the visual subtext (3-5 motifs).
+        7. Celestial Calibration: The "Astrological" or "Oracular" timing.
+        8. Visual Plates: A series of 4 specific image prompts for the gallery.
+        9. The Roadmap: Where the thought goes next.
+        10. Original Thought: The raw "debris" that started it.
+        11. Mimi’s Provocation: A final, stinging question.
         
         Ensure the output is sophisticated, editorial, and deeply symbolic. Avoid all business jargon.`;
 
@@ -181,11 +184,11 @@ export const createZine = async (text: string, media: any[], tone: ToneTag, prof
                     type: Type.OBJECT,
                     properties: {
                         title: { type: Type.STRING },
+                        headlines: { type: Type.ARRAY, items: { type: Type.STRING } },
                         vocal_summary_blurb: { type: Type.STRING },
-                        oracular_mirror: { type: Type.STRING },
-                        poetic_provocation: { type: Type.STRING },
-                        strategic_hypothesis: { type: Type.STRING, description: "The theoretic provocation." },
-                        celestial_calibration: { type: Type.STRING },
+                        header_image_prompt: { type: Type.STRING },
+                        the_reading: { type: Type.STRING },
+                        strategic_hypothesis: { type: Type.STRING },
                         aesthetic_touchpoints: {
                             type: Type.ARRAY,
                             items: {
@@ -197,16 +200,11 @@ export const createZine = async (text: string, media: any[], tone: ToneTag, prof
                                 }
                             }
                         },
-                        blueprint: {
-                            type: Type.OBJECT,
-                            description: "The ritual protocol.",
-                            properties: {
-                                foundation: { type: Type.STRING },
-                                structure: { type: Type.STRING },
-                                mechanics: { type: Type.STRING },
-                                trajectory: { type: Type.STRING }
-                            }
-                        },
+                        celestial_calibration: { type: Type.STRING },
+                        visual_plates: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        the_roadmap: { type: Type.STRING },
+                        originalThought: { type: Type.STRING },
+                        poetic_provocation: { type: Type.STRING },
                         pages: {
                             type: Type.ARRAY,
                             items: {
@@ -225,6 +223,7 @@ export const createZine = async (text: string, media: any[], tone: ToneTag, prof
         
         const content = cleanAndParse(response.text) || {};
         // Fallback for critical fields
+        if (!content.title && content.headlines?.length > 0) content.title = content.headlines[0];
         if (!content.title) content.title = "Untitled Manifest";
         if (!content.pages) content.pages = [];
         if (!content.celestial_calibration) content.celestial_calibration = "The stars are silent on this matter.";
@@ -237,7 +236,7 @@ export const generateAudio = async (text: string): Promise<Uint8Array> => {
     return await withResilience(async (ai) => {
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash-preview-tts",
-            contents: { parts: [{ text }] },
+            contents: [{ parts: [{ text }] }],
             config: {
                 responseModalities: [Modality.AUDIO],
                 speechConfig: {
@@ -264,9 +263,13 @@ export const generateZineImage = async (prompt: string, ar: AspectRatio, size: I
         // Note: For higher quality one would use 'gemini-3-pro-image-preview' but usually requires paid tier/specific quota.
         // Fallback to flash-image for reliability in free tier contexts unless specified.
         
+        const defaultStyle = "Style: Editorial flat flash photography, high-contrast 35mm film grain, Vogue Italia 1990s aesthetic. Subject is centered with sharp shadows. Strictly avoid: 3D render, neon, tech-interfaces, or digital glowing lines. Colors: Desaturated, chic, muted palettes";
+        const currentMaskName = profile?.tailorDraft?.aestheticCore?.eraFocus || profile?.tasteProfile?.dominant_archetypes?.[0] || 'Editorial Observer';
+        const finalPrompt = `AS THE ${currentMaskName} ARCHETYPE: ${prompt}. ${defaultStyle}`;
+        
         const response = await ai.models.generateContent({
             model: model,
-            contents: { parts: [{ text: prompt }] },
+            contents: { parts: [{ text: finalPrompt }] },
             config: {
                 // responseMimeType is not supported for nano banana series (flash-image)
             }
@@ -443,7 +446,39 @@ export const refineProposalSection = async (
 
 export const animateShardWithVeo = async (imageUrl: string, prompt: string, ratio: string) => "https://example.com/video_stub.mp4";
 export const transcribeAudio = async (base64: string, mimeType: string = 'audio/webm') => "Transcribed audio content.";
-export const applyTreatment = async (base64: string, instruction: string) => `data:image/jpeg;base64,${base64}`; // Return original for now
+export const applyTreatment = async (base64: string, instruction: string, profile?: any, isNanoPro2: boolean = true) => {
+    return await withResilience(async (ai) => {
+        const model = isNanoPro2 ? 'gemini-3.1-flash-image-preview' : 'gemini-2.5-flash-image';
+        
+        const systemDirective = "Operate as an editorial director for a high-fashion zine. Every output must prioritize 35mm film textures, flat flash lighting, and desaturated palettes. Avoid all digital 'glow' or 'neon' tropes. If the user's Tailor Profile is active, bleed those specific archetypal traits into the visual composition.";
+        const tailorTraits = profile?.tailorDraft?.aestheticCore?.eraFocus || profile?.tasteProfile?.dominant_archetypes?.join(', ') || '';
+        const finalPrompt = `${systemDirective} Tailor Traits: ${tailorTraits}. INSTRUCTION: ${instruction}`;
+
+        const response = await ai.models.generateContent({
+            model: model,
+            contents: {
+                parts: [
+                    {
+                        inlineData: {
+                            data: base64,
+                            mimeType: "image/jpeg",
+                        },
+                    },
+                    {
+                        text: finalPrompt,
+                    },
+                ],
+            },
+        });
+
+        for (const part of response.candidates?.[0]?.content?.parts || []) {
+            if (part.inlineData) {
+                return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+            }
+        }
+        throw new Error("No image generated from treatment");
+    });
+};
 export const analyzeMiseEnScene = async (base64: string, mimeType: string, profile: any) => ({ directors_note: "Analysis stub", cultural_parallel: "None" });
 export const identifyAestheticInstant = async (base64: string, mimeType: string, profile: any) => ({ era: "Contemporary" });
 export const scryWebSignals = async (query: string) => {
@@ -594,8 +629,58 @@ export const scryTrendSynthesis = async (items: any[], profile: any) => {
 };
 export const generateMirrorRefraction = async (profile: any, zineTitles: string) => ({ omen: "The mirror is misty.", dissonance: 0, provenance: "Unknown", imageUrl: null });
 export const analyzeVisualShards = async (shards: string[], draft: any) => ({ resonanceScore: 50, summary: "Stub analysis", archivalRedirects: [], resonanceClusters: [], divergentSignals: [] });
-export const analyzeTailorDraft = async (draft: any) => ({ profileManifesto: "Manifesto Stub", strategicOpportunity: "Opportunity Stub", aestheticDirectives: [], suggestedTouchpoints: [] });
-export const generateRawImage = async (prompt: string, ar: string) => "data:image/png;base64,";
+export const analyzeTailorDraft = async (draft: any) => {
+  return await withResilience(async (ai) => {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.1-pro-preview',
+      contents: `Draft Data: ${JSON.stringify(draft)}`,
+      config: {
+        responseMimeType: "application/json",
+        systemInstruction: `
+          IDENTITY: You are "The Oracle" auditing a user's Tailor Profile draft.
+          TASK: Generate a poetic and insightful audit report of their aesthetic and strategic identity.
+          OUTPUT: JSON with:
+          - profileManifesto: A short, powerful manifesto summarizing their vibe.
+          - strategicOpportunity: A strategic insight on how they can leverage their aesthetic.
+          - aestheticDirectives: Array of 3-5 specific visual or conceptual rules they should follow.
+          - suggestedTouchpoints: Array of 3-5 cultural references or motifs that align with their profile.
+        `,
+        responseSchema: {
+          type: Type.OBJECT,
+          required: ["profileManifesto", "strategicOpportunity", "aestheticDirectives", "suggestedTouchpoints"],
+          properties: {
+            profileManifesto: { type: Type.STRING },
+            strategicOpportunity: { type: Type.STRING },
+            aestheticDirectives: { type: Type.ARRAY, items: { type: Type.STRING } },
+            suggestedTouchpoints: { type: Type.ARRAY, items: { type: Type.STRING } }
+          }
+        }
+      }
+    });
+    return cleanAndParse(response.text);
+  });
+};
+export const generateRawImage = async (prompt: string, ar: string) => {
+  return await withResilience(async (ai) => {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.1-flash-image-preview',
+      contents: { parts: [{ text: prompt }] },
+      config: {
+        imageConfig: {
+          aspectRatio: ar as any,
+          imageSize: "1K"
+        }
+      }
+    });
+    
+    for (const part of response.candidates?.[0]?.content?.parts || []) {
+      if (part.inlineData) {
+        return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+      }
+    }
+    throw new Error("No image generated");
+  });
+};
 export const cropImage = async (url: string, crop: any) => url;
 export const generateProjectTasks = async (name: string, memo: string, artifacts: any[], profile: any) => [];
 export const generateStrategicBlueprint = async (items: any[], memo: string, profile: any) => null;

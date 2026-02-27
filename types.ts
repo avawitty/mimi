@@ -126,14 +126,21 @@ export interface ZineSpec {
     composition_density: number;
   };
   title?: string;
-  oracular_mirror?: string;
-  poetic_interpretation?: string;
+  headlines?: string[];
+  vocal_summary_blurb?: string;
+  header_image_prompt?: string;
+  the_reading?: string;
   strategic_hypothesis?: string;
   aesthetic_touchpoints?: SemioticSignal[];
   celestial_calibration?: string;
+  visual_plates?: string[];
+  the_roadmap?: string;
   originalThought?: string;
   poetic_provocation?: string;
-  vocal_summary_blurb?: string;
+  
+  // Legacy fields
+  oracular_mirror?: string;
+  poetic_interpretation?: string;
   blueprint?: FruitionTrajectory;
 }
 
@@ -162,9 +169,11 @@ export interface ZineMetadata {
   isDeepThinking?: boolean;
   isLite?: boolean;
   isPublic?: boolean;
+  isLocked?: boolean;
   authorship?: string;
   originalInput?: string; 
   artifacts?: MediaFile[];
+  lineage?: string[];
 }
 
 export interface SemioticSignal {
@@ -372,6 +381,7 @@ export interface DossierFolder {
   createdAt: number;
   notes?: string;
   tasks?: Task[];
+  collaborators?: string[];
 }
 
 export interface DossierElement {

@@ -40,30 +40,30 @@ service cloud.firestore {
     
     // POCKET ITEMS (Owner or Collaborator)
     match /pocket/{itemId} {
-      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || ('collaborators' in resource.data && request.auth.uid in resource.data.collaborators));
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
+      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || ('collaborators' in resource.data && request.auth.uid in resource.data.collaborators));
     }
     
     // DOSSIER FOLDERS (Owner or Collaborator)
     match /dossier_folders/{folderId} {
-      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || ('collaborators' in resource.data && request.auth.uid in resource.data.collaborators));
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
+      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || ('collaborators' in resource.data && request.auth.uid in resource.data.collaborators));
     }
     
     // DOSSIER ARTIFACTS (Owner or Collaborator)
     match /dossier_artifacts/{artifactId} {
-      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || ('collaborators' in resource.data && request.auth.uid in resource.data.collaborators));
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
+      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || ('collaborators' in resource.data && request.auth.uid in resource.data.collaborators));
     }
     
     // PROPOSALS (Owner or Collaborator)
     match /proposals/{proposalId} {
-      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || ('collaborators' in resource.data && request.auth.uid in resource.data.collaborators));
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
+      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || ('collaborators' in resource.data && request.auth.uid in resource.data.collaborators));
     }
     
     // CONTEXT (Owner only)
@@ -78,6 +78,20 @@ service cloud.firestore {
       allow read: if true;
       allow create: if request.auth != null && request.resource.data.followerId == request.auth.uid;
       allow update, delete: if request.auth != null && resource.data.followerId == request.auth.uid;
+    }
+
+    // FRIEND REQUESTS
+    match /friend_requests/{requestId} {
+      allow read: if request.auth != null && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      allow create: if request.auth != null && request.resource.data.senderId == request.auth.uid;
+      allow update, delete: if request.auth != null && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+    }
+    
+    // FRIENDSHIPS
+    match /friendships/{friendshipId} {
+      allow read: if request.auth != null && (resource.data.user1 == request.auth.uid || resource.data.user2 == request.auth.uid);
+      allow create: if request.auth != null && (request.resource.data.user1 == request.auth.uid || request.resource.data.user2 == request.auth.uid);
+      allow update, delete: if request.auth != null && (resource.data.user1 == request.auth.uid || resource.data.user2 == request.auth.uid);
     }
   }
 }

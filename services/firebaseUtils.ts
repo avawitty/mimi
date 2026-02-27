@@ -16,25 +16,41 @@ export const isCaptiveInWebview = () => {
   return isSocial && !isStandalone;
 };
 
+export const searchUsers = async (searchTerm: string): Promise<UserProfile[]> => {
+  if (!searchTerm || searchTerm.length < 2) return [];
+  const q = query(
+    collection(db, "users"),
+    where("handle", ">=", searchTerm.toLowerCase()),
+    where("handle", "<=", searchTerm.toLowerCase() + "\uf8ff"),
+    limit(10)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => d.data() as UserProfile);
+};
+
 export const anchorIdentity = async (forceRedirect = false): Promise<void> => {
   const provider = new GoogleAuthProvider();
   if (isCaptiveInWebview() || forceRedirect) return signInWithRedirect(auth, provider);
   try { await signInWithPopup(auth, provider); } catch (e) { await signInWithRedirect(auth, provider); }
 };
 
-export const linkIdentity = async (): Promise<void> => {
+export const linkIdentity = async (forceRedirect = false): Promise<void> => {
   if (!auth.currentUser) throw new Error("No active session to link.");
   const provider = new GoogleAuthProvider();
-  // Optional: Add Drive scope for future data management features
-  // provider.addScope('https://www.googleapis.com/auth/drive.file'); 
   
+  if (isCaptiveInWebview() || forceRedirect) {
+    return linkWithRedirect(auth.currentUser, provider);
+  }
+
   try {
     await linkWithPopup(auth.currentUser, provider);
   } catch (e: any) {
     if (e.code === 'auth/credential-already-in-use') {
        throw new Error("This Google frequency is already occupied by another registry.");
     }
-    throw e;
+    // Fallback to redirect for internal errors or blocked popups
+    console.warn("MIMI // Popup Link failed, falling back to redirect:", e.code);
+    await linkWithRedirect(auth.currentUser, provider);
   }
 };
 
@@ -57,7 +73,21 @@ export const saveZineToProfile = async (uid: string, handle: string, avatar: str
     try {
       await setDoc(doc(db, "zines", targetId), meta);
       syncToShadowMemory(meta);
-    } catch (e) { console.warn("MIMI // Zine Sync Skipped:", e.code); }
+      
+      if (isPublic) {
+        const transmission = {
+          userId: uid,
+          userHandle: handle,
+          content: zine.title,
+          imageUrl: coverUrl || (zine.pages && zine.pages[0]?.image_url) || '',
+          timestamp: Date.now(),
+          type: 'manifest',
+          likes: 0,
+          zineData: meta
+        };
+        await addDoc(collection(db, 'public_transmissions'), transmission);
+      }
+    } catch (e) { console.warn("MIMI // Zine Sync/Broadcast Skipped:", e.code); }
   }
   return targetId;
 };
@@ -178,11 +208,86 @@ export const fetchZineById = async (id: string) => {
 
 export const createDossierFolder = async (uid: string, name: string): Promise<string> => {
   const id = `folder_${Date.now()}`;
-  const folder: DossierFolder = { id, userId: uid, name, createdAt: Date.now() };
+  const folder: DossierFolder = { id, userId: uid, name, createdAt: Date.now(), collaborators: [] };
   if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
     try { await setDoc(doc(db, "dossier_folders", id), folder); } catch (e) {}
   }
   return id;
+};
+
+export const absorbTransmission = async (uid: string, zineData: ZineMetadata): Promise<string> => {
+  if (!uid || !auth.currentUser || auth.currentUser.isAnonymous || !navigator.onLine) return '';
+  
+  try {
+    // 1. Create a new Dossier Folder for the absorbed zine
+    const folderId = `folder_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+    const folder: DossierFolder = { 
+        id: folderId, 
+        userId: uid, 
+        name: `Absorbed: ${zineData.title}`, 
+        createdAt: Date.now(), 
+        collaborators: [],
+        notes: `Absorbed from ${zineData.authorship || zineData.userHandle} on ${new Date().toLocaleDateString()}.\n\nOriginal Provocation: ${zineData.content.poetic_provocation || ''}`
+    };
+    await setDoc(doc(db, "dossier_folders", folderId), folder);
+
+    // 2. Add the original input as a text artifact
+    if (zineData.originalInput) {
+        const textArtifactId = `art_${Date.now()}_text`;
+        const textArtifact: DossierArtifact = {
+            id: textArtifactId,
+            userId: uid,
+            folderId,
+            type: 'text',
+            title: 'Original Input',
+            createdAt: Date.now(),
+            elements: [{ id: `el_${Date.now()}`, type: 'text', content: zineData.originalInput, style: { zIndex: 1 } }]
+        };
+        await setDoc(doc(db, "dossier_artifacts", textArtifactId), textArtifact);
+    }
+
+    // 3. Add any media artifacts
+    if (zineData.artifacts && zineData.artifacts.length > 0) {
+        for (const media of zineData.artifacts) {
+            const mediaArtifactId = `art_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+            const mediaArtifact: DossierArtifact = {
+                id: mediaArtifactId,
+                userId: uid,
+                folderId,
+                type: media.type,
+                title: 'Absorbed Media',
+                createdAt: Date.now(),
+                elements: [{ id: `el_${Date.now()}`, type: media.type, content: media.url || media.data, style: { zIndex: 1 } }]
+            };
+            await setDoc(doc(db, "dossier_artifacts", mediaArtifactId), mediaArtifact);
+        }
+    }
+
+    // 4. Add the generated zine content as a text artifact
+    const contentArtifactId = `art_${Date.now()}_content`;
+    const contentText = `
+TITLE: ${zineData.content.title}
+SUMMARY: ${zineData.content.vocal_summary_blurb || ''}
+READING: ${zineData.content.the_reading || ''}
+HYPOTHESIS: ${zineData.content.strategic_hypothesis || ''}
+    `.trim();
+    
+    const contentArtifact: DossierArtifact = {
+        id: contentArtifactId,
+        userId: uid,
+        folderId,
+        type: 'text',
+        title: 'Zine Manifest Content',
+        createdAt: Date.now(),
+        elements: [{ id: `el_${Date.now()}`, type: 'text', content: contentText, style: { zIndex: 1 } }]
+    };
+    await setDoc(doc(db, "dossier_artifacts", contentArtifactId), contentArtifact);
+
+    return folderId;
+  } catch (e) {
+    console.error("Failed to absorb transmission:", e);
+    return '';
+  }
 };
 
 export const updateDossierFolder = async (folderId: string, patch: Partial<DossierFolder>) => {
@@ -193,8 +298,19 @@ export const updateDossierFolder = async (folderId: string, patch: Partial<Dossi
 
 export const fetchDossierFolders = async (uid: string) => {
   try {
-    const q = query(collection(db, "dossier_folders"), where("userId", "==", uid), orderBy("createdAt", "desc"));
-    return (await getDocs(q)).docs.map(d => d.data() as DossierFolder);
+    // We need to fetch folders where userId == uid OR collaborators array contains uid
+    // Since Firestore doesn't support OR queries easily without composite indexes or multiple queries,
+    // we'll do two queries and merge them.
+    const q1 = query(collection(db, "dossier_folders"), where("userId", "==", uid));
+    const q2 = query(collection(db, "dossier_folders"), where("collaborators", "array-contains", uid));
+    
+    const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+    
+    const foldersMap = new Map<string, DossierFolder>();
+    snap1.docs.forEach(d => foldersMap.set(d.id, d.data() as DossierFolder));
+    snap2.docs.forEach(d => foldersMap.set(d.id, d.data() as DossierFolder));
+    
+    return Array.from(foldersMap.values()).sort((a, b) => b.createdAt - a.createdAt);
   } catch (e) { return []; }
 };
 

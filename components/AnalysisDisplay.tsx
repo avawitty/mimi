@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { ZineMetadata, PocketItem } from '../types';
 import { generateAudio, animateShardWithVeo, transcribeAudio } from '../services/geminiService';
 import { addToPocket } from '../services/firebase';
-import { Loader2, X, Volume2, Orbit, Eye, Target, Layers, Moon, Sparkles, Terminal, Quote, ArrowDown, Grid3X3, Printer, Bookmark, Check, Play, Pause, ExternalLink, Download, Share2, Star, FileText, Map, Compass, Zap, RefreshCw, PenTool, Save, Mic, Square, AlertCircle, StickyNote, History, MessageSquareQuote, Radar, Maximize2, Activity, Archive, FolderPlus, Compass as RoadmapIcon, Stars as CelestialIcon, ArrowRight, CornerDownRight, Image as ImageIcon, Film, MousePointer2, Briefcase, ChevronDown, Hash, Search, Menu, Plus } from 'lucide-react';
+import { Loader2, X, Volume2, Orbit, Eye, Target, Layers, Moon, Sparkles, Terminal, Quote, ArrowDown, Grid3X3, Printer, Bookmark, Check, Play, Pause, ExternalLink, Download, Share2, Star, FileText, Map, Compass, Zap, RefreshCw, PenTool, Save, Mic, Square, AlertCircle, StickyNote, History, MessageSquareQuote, Radar, Maximize2, Activity, Archive, FolderPlus, Compass as RoadmapIcon, Stars as CelestialIcon, ArrowRight, CornerDownRight, Image as ImageIcon, Film, MousePointer2, Briefcase, ChevronDown, Hash, Search, Menu, Plus, Radio } from 'lucide-react';
 import { Visualizer } from './Visualizer';
 import { ExportChamber } from './ExportChamber';
 import { SocialShareModal } from './SocialShareModal';
@@ -143,6 +143,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
   const handleBroadcast = async () => {
       if (isBroadcasted || isBroadcasting) return;
       setIsBroadcasting(true);
+      window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'shimmer' } }));
       try {
           const { collection, addDoc } = await import('firebase/firestore');
           const { db } = await import('../services/firebase');

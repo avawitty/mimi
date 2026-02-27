@@ -30,6 +30,14 @@ interface ControlsContentProps {
   handleBatchRefine: () => void;
   isSelectionMode: boolean;
   selectedCount: number;
+  useFlatFlash: boolean;
+  setUseFlatFlash: (val: boolean) => void;
+  grainAmount: number;
+  setGrainAmount: (val: number) => void;
+  exposure: number;
+  setExposure: (val: number) => void;
+  semioticTension: number;
+  setSemioticTension: (val: number) => void;
 }
 
 const ControlsContent: React.FC<ControlsContentProps> = ({
@@ -43,10 +51,65 @@ const ControlsContent: React.FC<ControlsContentProps> = ({
   isProcessing,
   handleBatchRefine,
   isSelectionMode,
-  selectedCount
+  selectedCount,
+  useFlatFlash,
+  setUseFlatFlash,
+  grainAmount,
+  setGrainAmount,
+  exposure,
+  setExposure,
+  semioticTension,
+  setSemioticTension
 }) => (
     <div className="flex flex-col h-full bg-[#080808]">
       <div className="p-8 space-y-10 flex-1 overflow-y-auto no-scrollbar">
+         
+         {/* NANO BANANA PRO 2 CONTROLS */}
+         <div className="space-y-6">
+            <span className="font-sans text-[9px] uppercase tracking-widest font-black text-emerald-500 flex items-center gap-2">
+               <Sliders size={14} /> Global Adjustments
+            </span>
+            
+            <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-stone-900 border border-white/5 rounded-sm">
+                    <div className="flex flex-col">
+                        <span className="font-sans text-[9px] uppercase font-black text-white">Vogue Italia Filter</span>
+                        <span className="font-mono text-[7px] text-stone-500 uppercase tracking-widest">Flat Flash & High Contrast</span>
+                    </div>
+                    <button 
+                        onClick={() => setUseFlatFlash(!useFlatFlash)}
+                        className={`w-10 h-5 rounded-full relative transition-colors ${useFlatFlash ? 'bg-emerald-500' : 'bg-stone-700'}`}
+                    >
+                        <div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-transform ${useFlatFlash ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                </div>
+
+                <div className="space-y-2 p-4 bg-stone-900 border border-white/5 rounded-sm">
+                    <div className="flex justify-between items-center">
+                        <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-500">Grain Intensity</span>
+                        <span className="font-mono text-[8px] text-emerald-500">{grainAmount}%</span>
+                    </div>
+                    <input type="range" min="0" max="100" value={grainAmount} onChange={(e) => setGrainAmount(parseInt(e.target.value))} className="w-full accent-emerald-500 bg-stone-800 h-1 rounded-full cursor-pointer" />
+                </div>
+
+                <div className="space-y-2 p-4 bg-stone-900 border border-white/5 rounded-sm">
+                    <div className="flex justify-between items-center">
+                        <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-500">Exposure</span>
+                        <span className="font-mono text-[8px] text-emerald-500">{exposure > 0 ? '+' : ''}{exposure}</span>
+                    </div>
+                    <input type="range" min="-100" max="100" value={exposure} onChange={(e) => setExposure(parseInt(e.target.value))} className="w-full accent-emerald-500 bg-stone-800 h-1 rounded-full cursor-pointer" />
+                </div>
+
+                <div className="space-y-2 p-4 bg-stone-900 border border-white/5 rounded-sm">
+                    <div className="flex justify-between items-center">
+                        <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-500">Semiotic Tension</span>
+                        <span className="font-mono text-[8px] text-emerald-500">{semioticTension}%</span>
+                    </div>
+                    <input type="range" min="0" max="100" value={semioticTension} onChange={(e) => setSemioticTension(parseInt(e.target.value))} className="w-full accent-emerald-500 bg-stone-800 h-1 rounded-full cursor-pointer" />
+                </div>
+            </div>
+         </div>
+
          {/* LAYER STACK */}
          <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -293,7 +356,16 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
   const [isManifesting, setIsManifesting] = useState(false);
   const [isCropping, setIsCropping] = useState(false);
   
+  const [showUrlModal, setShowUrlModal] = useState(false);
+  const [imageUrlInput, setImageUrlInput] = useState('');
+  
   const [showMobileControls, setShowMobileControls] = useState(false);
+  
+  const [isNanoPro2, setIsNanoPro2] = useState(true);
+  const [useFlatFlash, setUseFlatFlash] = useState(false);
+  const [grainAmount, setGrainAmount] = useState(50);
+  const [exposure, setExposure] = useState(0);
+  const [semioticTension, setSemioticTension] = useState(50);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -421,9 +493,34 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
     }
   };
 
+  const handleUrlUpload = async () => {
+    if (!imageUrlInput.trim() || isProcessing) return;
+    setIsProcessing(true);
+    try {
+        // We add it directly as a URL. 
+        // Note: Some URLs might fail due to CORS if we try to process them later, 
+        // but for now we just inject it into the pocket.
+        await addToPocket(user?.uid || 'ghost', 'image', {
+            imageUrl: imageUrlInput,
+            prompt: "External Shard",
+            timestamp: Date.now(),
+            origin: 'URL_Injection'
+        });
+        await loadShards(true);
+        setShowUrlModal(false);
+        setImageUrlInput('');
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "External Shard Injected.", icon: <ImageIcon size={14} /> } }));
+    } catch (e) {
+        console.error("URL Injection Failed:", e);
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Injection Failed.", type: 'error' } }));
+    } finally {
+        setIsProcessing(false);
+    }
+  };
+
   const handleBatchRefine = async () => {
     const activeLayers = layerStack.filter(l => l.isVisible && l.opacity > 0);
-    if ((activeLayers.length === 0 && !customInstruction.trim()) || (isSelectionMode && selectedIds.size === 0) || (!isSelectionMode && !activeShard)) return;
+    if ((activeLayers.length === 0 && !customInstruction.trim() && !useFlatFlash && grainAmount === 50 && exposure === 0 && semioticTension === 50) || (isSelectionMode && selectedIds.size === 0) || (!isSelectionMode && !activeShard)) return;
     
     setIsProcessing(true);
     const targets = isSelectionMode ? shards.filter(s => selectedIds.has(s.id)) : [activeShard];
@@ -440,6 +537,8 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
     const fullInstruction = [
         "Aesthetic Composite Sequence:",
         layerInstructions, 
+        useFlatFlash ? "Apply Vogue Italia 1990s flat flash lighting, high contrast, sharp shadows." : "",
+        `Grain Intensity: ${grainAmount}%. Exposure Adjustment: ${exposure}%. Semiotic Tension (Surrealism/Edge): ${semioticTension}%.`,
         customInstruction ? `Final Global Treatment: ${customInstruction}` : ''
     ].filter(i => i.trim()).join(". ");
 
@@ -452,7 +551,7 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
         const [header, base64] = dataUrl.split(',');
         if (!base64) continue;
         
-        const manifestedUrl = await applyTreatment(base64, fullInstruction);
+        const manifestedUrl = await applyTreatment(base64, fullInstruction, profile, isNanoPro2);
         await addToPocket(user?.uid || 'ghost', 'image', {
           ...shard.content,
           imageUrl: manifestedUrl,
@@ -518,7 +617,15 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
     isProcessing,
     handleBatchRefine,
     isSelectionMode,
-    selectedCount: isSelectionMode ? selectedIds.size : (activeShard ? 1 : 0)
+    selectedCount: isSelectionMode ? selectedIds.size : (activeShard ? 1 : 0),
+    useFlatFlash,
+    setUseFlatFlash,
+    grainAmount,
+    setGrainAmount,
+    exposure,
+    setExposure,
+    semioticTension,
+    setSemioticTension
   };
 
   return (
@@ -547,6 +654,10 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
 
               <button onClick={() => setShowManifestModal(true)} disabled={isProcessing} className="shrink-0 px-8 py-3 bg-stone-900 border border-white/10 text-white rounded-full font-sans text-[9px] uppercase tracking-widest font-black flex items-center gap-3 shadow-xl active:scale-95 transition-all hover:bg-stone-800 snap-start">
                  <Sparkles size={14} className="text-emerald-500" /> Manifest Shard
+              </button>
+
+              <button onClick={() => setShowUrlModal(true)} disabled={isProcessing} className="shrink-0 px-8 py-3 bg-stone-900 border border-white/10 text-white rounded-full font-sans text-[9px] uppercase tracking-widest font-black flex items-center gap-3 shadow-xl active:scale-95 transition-all hover:bg-stone-800 snap-start">
+                 <ImageIcon size={14} className="text-indigo-400" /> Inject URL
               </button>
 
               <button onClick={() => fileInputRef.current?.click()} disabled={isProcessing} className="shrink-0 px-8 py-3 bg-white text-black rounded-full font-sans text-[9px] uppercase tracking-widest font-black flex items-center gap-3 shadow-xl active:scale-95 transition-all disabled:opacity-50 snap-start">
@@ -701,7 +812,63 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
                 </motion.div>
             </motion.div>
         )}
+
+        {showUrlModal && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[8000] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+                <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="w-full max-w-lg bg-stone-900 border border-white/10 p-10 rounded-sm shadow-2xl space-y-8 relative">
+                    <button onClick={() => { setShowUrlModal(false); setImageUrlInput(''); }} className="absolute top-6 right-6 text-stone-500 hover:text-white transition-colors"><X size={20}/></button>
+                    
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3 text-indigo-400">
+                            <ImageIcon size={18} />
+                            <span className="font-sans text-[9px] uppercase tracking-[0.5em] font-black">URL Injection</span>
+                        </div>
+                        <h3 className="font-header text-4xl italic tracking-tighter text-white">External Source.</h3>
+                        <p className="font-serif italic text-base text-stone-400">Import an artifact from the wider web.</p>
+                    </div>
+
+                    <div className="space-y-6">
+                        <input 
+                            type="url"
+                            id="imageUrlInput"
+                            name="imageUrlInput"
+                            value={imageUrlInput} 
+                            onChange={e => setImageUrlInput(e.target.value)}
+                            placeholder="https://example.com/image.jpg"
+                            className="w-full bg-black/40 border border-white/10 p-6 font-sans text-sm focus:outline-none focus:border-indigo-500 transition-colors rounded-sm text-white placeholder:text-stone-700"
+                            autoFocus
+                        />
+                    </div>
+
+                    <button 
+                        onClick={handleUrlUpload}
+                        disabled={isProcessing || !imageUrlInput.trim()}
+                        className="w-full py-6 bg-indigo-600 text-white rounded-full font-sans text-[10px] uppercase tracking-[0.4em] font-black shadow-xl hover:bg-indigo-500 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                    >
+                        {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                        {isProcessing ? "Injecting..." : "Inject Shard"}
+                    </button>
+                </motion.div>
+            </motion.div>
+        )}
       </AnimatePresence>
+
+      {/* FOOTER */}
+      <footer className="fixed bottom-0 left-0 right-0 p-4 border-t border-white/5 bg-black/80 backdrop-blur-md z-[5000] flex justify-between items-center lg:pr-[460px]">
+          <div className="flex items-center gap-4">
+              <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-500">Engine:</span>
+              <div className="flex items-center gap-2">
+                  <span className={`font-sans text-[9px] uppercase tracking-widest font-black transition-colors ${isNanoPro2 ? 'text-emerald-500' : 'text-stone-500'}`}>Nano Pro 2</span>
+                  <button 
+                      onClick={() => setIsNanoPro2(!isNanoPro2)}
+                      className={`w-8 h-4 rounded-full relative transition-colors ${isNanoPro2 ? 'bg-emerald-500' : 'bg-stone-700'}`}
+                  >
+                      <div className={`w-2 h-2 bg-white rounded-full absolute top-1 transition-transform ${isNanoPro2 ? 'translate-x-5' : 'translate-x-1'}`} />
+                  </button>
+              </div>
+          </div>
+          <span className="font-mono text-[8px] uppercase tracking-widest text-stone-600">Darkroom_v2.0</span>
+      </footer>
 
       <input type="file" ref={fileInputRef} className="hidden" multiple accept="image/*" onChange={handleManualUpload} />
     </div>

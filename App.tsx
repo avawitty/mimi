@@ -21,6 +21,7 @@ import { ScryView } from './components/ScryView';
 import { DarkroomView } from './components/DarkroomView';
 import { ApiKeyShield } from './components/ApiKeyShield';
 import { ProsceniumView } from './components/ProsceniumView'; 
+import { AmbientSoundscape } from './components/AmbientSoundscape';
 import { CaptiveSentinel } from './components/CaptiveSentinel';
 import { TheWard } from './components/TheWard'; 
 import { PatronMintView } from './components/PatronMintView';
@@ -28,7 +29,7 @@ import { DossierView } from './components/DossierView';
 import { HelpView } from './components/HelpView';
 import { RegistryAlert } from './components/RegistryAlert';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, LayoutGrid, User, Menu, X, Newspaper, LogOut, ShieldAlert, Zap, Camera, Key, Radio, Activity as ActivityIcon, Archive, Moon, Sun, Scissors, FlaskConical, Eye, Radar, Compass, Info, Cpu, ShieldCheck, Briefcase, BookOpen } from 'lucide-react';
+import { Sparkles, LayoutGrid, User, Menu, X, Newspaper, LogOut, ShieldAlert, Zap, Camera, Key, Radio, Activity as ActivityIcon, Archive, Moon, Sun, Scissors, FlaskConical, Eye, Radar, Compass, Info, Cpu, ShieldCheck, Briefcase, BookOpen, Volume2, VolumeX } from 'lucide-react';
 
 // ... (Rest of existing subcomponents: BinderRing, SidebarBtn, MobileMenu, DatabaseVoid) ...
 // BINDER RING COMPONENT
@@ -151,6 +152,24 @@ const AppContent: React.FC = () => {
   const [tailorOverrides, setTailorOverrides] = useState<any>(null);
   const [isPatronMint, setIsPatronMint] = useState(false);
   const [proposalContext, setProposalContext] = useState<any>(null);
+  const [soundEnabled, setSoundEnabled] = useState(() => {
+    const saved = localStorage.getItem('mimi_sound_enabled');
+    return saved === null ? true : saved === 'true';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('mimi_sound_enabled', soundEnabled.toString());
+  }, [soundEnabled]);
+
+  const toggleSound = () => {
+    setSoundEnabled(!soundEnabled);
+    if (!soundEnabled) {
+      // Small delay to ensure audio context can start on user interaction
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'click' } }));
+      }, 50);
+    }
+  };
 
   useEffect(() => {
     if (isCaptiveInWebview()) setShowCaptiveSentinel(true);
@@ -165,6 +184,7 @@ const AppContent: React.FC = () => {
 
     const handleChangeView = async (e: any) => {
       if (e.detail === 'reveal_artifact' && e.detail_id) {
+         window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'transition' } }));
          try {
            const zine = await fetchZineById(e.detail_id);
            if (zine) { setZineMetadata(zine); setAppState(AppState.REVEALED); }
@@ -172,6 +192,7 @@ const AppContent: React.FC = () => {
          return;
       }
       if (e.detail) { 
+        window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'click' } }));
         setViewMode(e.detail); setZineMetadata(null); setAppState(AppState.IDLE);
         if (e.detail === 'studio' && e.detail_data) {
             setThreadValue(e.detail_data.context || e.detail_data);
@@ -191,6 +212,7 @@ const AppContent: React.FC = () => {
   const handleRefine = useCallback(async (text, media, tone, opts) => {
     setIsDeepRefraction(!!opts.deepThinking);
     setAppState(AppState.THINKING);
+    window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'shimmer' } }));
     
     const personaKey = activePersona?.apiKey ? activePersona.apiKey : undefined;
 
@@ -203,6 +225,7 @@ const AppContent: React.FC = () => {
           artifacts: media, 
           originalInput: text 
       });
+      window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'success' } }));
       setAppState(AppState.REVEALED);
     } catch (e) { 
         console.error("Zine Creation Failed:", e);
@@ -222,6 +245,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="h-full w-full bg-transparent dark:bg-stone-950 transition-colors duration-500 flex">
+      <AmbientSoundscape enabled={soundEnabled} />
       <AnimatePresence>{showCaptiveSentinel && <CaptiveSentinel onClose={() => setShowCaptiveSentinel(false)} />}</AnimatePresence>
       
       <RegistryAlert />
@@ -293,9 +317,14 @@ const AppContent: React.FC = () => {
         <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-black/10 to-transparent pointer-events-none z-20 mix-blend-multiply dark:mix-blend-overlay" />
 
         <ApiKeyShield />
-        <button onClick={toggleMode} className="fixed top-6 right-6 md:right-12 z-[5000] p-3 rounded-full bg-stone-100/50 dark:bg-stone-900/50 text-stone-400 hover:text-nous-text dark:hover:text-white transition-all backdrop-blur-sm border border-stone-200/20">
-           {currentPalette?.isDark ? <Sun size={20} /> : <Moon size={20} />}
-        </button>
+        <div className="fixed top-6 right-6 md:right-12 z-[5000] flex items-center gap-3">
+          <button onClick={toggleSound} className="p-3 rounded-full bg-stone-100/50 dark:bg-stone-900/50 text-stone-400 hover:text-nous-text dark:hover:text-white transition-all backdrop-blur-sm border border-stone-200/20">
+            {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+          </button>
+          <button onClick={toggleMode} className="p-3 rounded-full bg-stone-100/50 dark:bg-stone-900/50 text-stone-400 hover:text-nous-text dark:hover:text-white transition-all backdrop-blur-sm border border-stone-200/20">
+            {currentPalette?.isDark ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+        </div>
         
         {!zineMetadata && <button onClick={() => setMobileMenuOpen(true)} className="md:hidden fixed top-6 left-6 z-[5001] p-3 bg-white/50 dark:bg-black/50 backdrop-blur-md rounded-full text-nous-text dark:text-white border border-stone-200 shadow-lg"><Menu size={20} /></button>}
         
