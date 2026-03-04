@@ -149,6 +149,14 @@ const startApp = () => {
 };
 
 // Immediate manifestation
+window.addEventListener('unhandledrejection', (event) => {
+  console.error("MIMI // Unhandled Promise Rejection:", event.reason);
+});
+
+window.addEventListener('error', (event) => {
+  console.error("MIMI // Uncaught Error:", event.error);
+});
+
 try {
   startApp();
 } catch (err) {

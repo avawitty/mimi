@@ -8,7 +8,8 @@ import { withResilience } from "./geminiService";
 export interface AgentConfig {
   curatorEnabled: boolean;
   sentinelEnabled: boolean;
-  thinkingBudget: number;
+  curatorThinkingBudget: number;
+  sentinelThinkingBudget: number;
 }
 
 /**
@@ -22,7 +23,7 @@ export const runCuratorAgent = async (item: PocketItem, profile: UserProfile | n
     
     return await withResilience(async (ai) => {
         const model = "gemini-3.1-pro-preview"; // Thinking model required for deep semiotic analysis
-        const budget = config?.thinkingBudget || 1024;
+        const budget = config?.curatorThinkingBudget || 1024;
 
         let promptParts = [];
         if (item.type === 'image' && item.content.imageUrl) {
@@ -88,7 +89,7 @@ export const runSentinelAgent = async (recentItems: PocketItem[], profile: UserP
 
     return await withResilience(async (ai) => {
         const model = "gemini-3.1-pro-preview";
-        const budget = config?.thinkingBudget || 1024;
+        const budget = config?.sentinelThinkingBudget || 1024;
 
         const shardSummaries = recentItems.map(i => i.content.prompt || i.content.name || i.agentEnrichment?.visualSemiotics || "Visual Shard").join("; ");
         const manifesto = JSON.stringify(profile.tailorDraft);

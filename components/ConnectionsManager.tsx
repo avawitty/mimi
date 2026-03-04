@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, UserPlus, UserMinus, Check, X, Loader2, Users, Heart, ArrowRight, Search } from 'lucide-react';
+import { User, UserPlus, UserMinus, Check, X, Loader2, Users, Heart, ArrowRight, Search, Handshake, Clock, Link2Off, Zap } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { fetchFollowers, fetchFollowing, fetchFriends, fetchFriendRequests, acceptFriendRequest, rejectFriendRequest, removeFriend, unfollowUser, Friendship, FriendRequest, Connection, sendFriendRequest, followUser, checkConnectionStatus } from '../services/connections';
 import { getUserProfile, searchUsers } from '../services/firebaseUtils';
@@ -115,6 +115,14 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId
   if (loading) return <div className="h-16 animate-pulse bg-stone-100 dark:bg-stone-900/50 rounded-sm" />;
   if (!profile) return null;
 
+  const getStatusIcon = () => {
+    if (type === 'friend' || connectionStatus?.status === 'friends') return <Handshake size={12} className="text-emerald-500" title="Connected" />;
+    if (type === 'request' || connectionStatus?.status === 'request_sent' || connectionStatus?.status === 'request_received') return <Clock size={12} className="text-amber-500 animate-pulse" title="Pending" />;
+    if (type === 'following') return <Zap size={12} className="text-indigo-500" title="Resonating" />;
+    if (type === 'search' && connectionStatus?.status === 'none') return <Link2Off size={12} className="text-stone-300" title="Disconnected" />;
+    return null;
+  };
+
   return (
     <div className="flex items-center justify-between p-4 bg-white dark:bg-stone-900/30 border border-stone-100 dark:border-stone-800 rounded-sm group transition-all hover:border-stone-200 dark:hover:border-stone-700">
       <div className="flex items-center gap-4">
@@ -122,9 +130,12 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId
           <img src={profile.photoURL || `https://ui-avatars.com/api/?name=${profile.handle || 'U'}&background=1c1917&color=fff`} className="w-full h-full object-cover grayscale" alt="" />
         </div>
         <div>
-          <h4 className="font-serif italic text-sm text-nous-text dark:text-white">@{profile.handle}</h4>
+          <div className="flex items-center gap-2">
+            <h4 className="font-serif italic text-sm text-nous-text dark:text-white">@{profile.handle}</h4>
+            {getStatusIcon()}
+          </div>
           <p className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">
-            {type === 'friend' ? 'Connected' : type === 'follower' ? 'Resonator' : type === 'following' ? 'Resonating' : 'Pending Request'}
+            {type === 'follower' ? 'Resonator' : 'Sovereign'}
           </p>
         </div>
       </div>
@@ -136,6 +147,7 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId
               onClick={handleAccept} 
               disabled={actionLoading}
               className="p-2 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-full transition-colors"
+              title="Accept Request"
             >
               {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <Check size={16} />}
             </button>
@@ -143,6 +155,7 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId
               onClick={handleReject} 
               disabled={actionLoading}
               className="p-2 text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-full transition-colors"
+              title="Reject Request"
             >
               <X size={16} />
             </button>
@@ -151,51 +164,55 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId
           <button 
             onClick={handleRemoveFriend} 
             disabled={actionLoading}
-            className="px-3 py-1.5 font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 hover:text-red-500 transition-colors"
+            className="p-2 text-stone-300 hover:text-red-500 transition-colors rounded-full hover:bg-red-50 dark:hover:bg-red-500/10"
+            title="Disconnect"
           >
-            {actionLoading ? <Loader2 size={10} className="animate-spin" /> : 'Disconnect'}
+            {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <Link2Off size={16} />}
           </button>
         ) : type === 'following' ? (
           <button 
             onClick={handleUnfollow} 
             disabled={actionLoading}
-            className="px-3 py-1.5 font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 hover:text-red-500 transition-colors"
+            className="p-2 text-stone-300 hover:text-red-500 transition-colors rounded-full hover:bg-red-50 dark:hover:bg-red-500/10"
+            title="Stop Resonating"
           >
-            {actionLoading ? <Loader2 size={10} className="animate-spin" /> : 'Stop Resonating'}
+            {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <UserMinus size={16} />}
           </button>
         ) : type === 'search' ? (
           <div className="flex items-center gap-2">
             {connectionStatus?.status === 'friends' ? (
-              <span className="px-3 py-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full font-sans text-[7px] uppercase tracking-widest font-black border border-emerald-500/20">
-                Connected
-              </span>
+              <div className="p-2 text-emerald-500 bg-emerald-500/10 rounded-full" title="Connected">
+                <Handshake size={16} />
+              </div>
             ) : connectionStatus?.status === 'request_sent' ? (
-              <span className="px-3 py-1.5 bg-stone-100 dark:bg-stone-800 text-stone-400 rounded-full font-sans text-[7px] uppercase tracking-widest font-black border border-stone-200 dark:border-stone-700">
-                Request Sent
-              </span>
+              <div className="p-2 text-amber-500 bg-amber-500/10 rounded-full animate-pulse" title="Request Sent">
+                <Clock size={16} />
+              </div>
             ) : connectionStatus?.status === 'request_received' ? (
               <button 
                 onClick={() => handleAccept()} 
                 disabled={actionLoading}
-                className="px-3 py-1.5 bg-emerald-500 text-white rounded-full font-sans text-[7px] uppercase tracking-widest font-black hover:bg-emerald-600 transition-all"
+                className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500 text-white rounded-full font-sans text-[7px] uppercase tracking-widest font-black hover:bg-emerald-600 transition-all shadow-sm"
               >
-                Accept Request
+                <Check size={10} /> Accept
               </button>
             ) : (
               <>
                 <button 
                   onClick={handleConnect} 
                   disabled={actionLoading}
-                  className="px-3 py-1.5 bg-nous-text dark:bg-white text-white dark:text-black rounded-full font-sans text-[7px] uppercase tracking-widest font-black hover:opacity-80 transition-all"
+                  className="p-2 bg-nous-text dark:bg-white text-white dark:text-black rounded-full hover:opacity-80 transition-all shadow-sm"
+                  title="Connect"
                 >
-                  {actionLoading ? <Loader2 size={10} className="animate-spin" /> : 'Connect'}
+                  {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={16} />}
                 </button>
                 <button 
                   onClick={handleFollow} 
                   disabled={actionLoading}
-                  className="px-3 py-1.5 border border-stone-200 dark:border-stone-700 rounded-full font-sans text-[7px] uppercase tracking-widest font-black text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all"
+                  className="p-2 border border-stone-200 dark:border-stone-700 rounded-full text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all"
+                  title="Resonate"
                 >
-                  {actionLoading ? <Loader2 size={10} className="animate-spin" /> : 'Resonate'}
+                  {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <Zap size={16} />}
                 </button>
               </>
             )}

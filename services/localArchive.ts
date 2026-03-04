@@ -2,11 +2,13 @@
 import { ZineMetadata, PocketItem, UserProfile } from "../types";
 
 const DB_NAME = 'MimiSovereignArchive';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORES = {
   ZINES: 'zines',
   POCKET: 'pocket',
-  PROFILE: 'profile'
+  PROFILE: 'profile',
+  FOLDERS: 'dossier_folders',
+  ARTIFACTS: 'dossier_artifacts'
 };
 
 const openDB = (): Promise<IDBDatabase> => {
@@ -29,6 +31,12 @@ const openDB = (): Promise<IDBDatabase> => {
         }
         if (!db.objectStoreNames.contains(STORES.PROFILE)) {
           db.createObjectStore(STORES.PROFILE, { keyPath: 'uid' });
+        }
+        if (!db.objectStoreNames.contains(STORES.FOLDERS)) {
+          db.createObjectStore(STORES.FOLDERS, { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains(STORES.ARTIFACTS)) {
+          db.createObjectStore(STORES.ARTIFACTS, { keyPath: 'id' });
         }
       };
 
@@ -200,6 +208,63 @@ export const deleteLocalPocketItem = async (id: string) => {
   } catch (e) {}
 };
 
+export const saveFolderLocally = async (folder: any) => {
+  if (!folder || !folder.id) return;
+  try {
+    const db = await openDB();
+    return new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORES.FOLDERS, 'readwrite');
+      const store = tx.objectStore(STORES.FOLDERS);
+      const request = store.put(folder);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      request.onerror = () => reject(request.error);
+    });
+  } catch (e) {}
+};
+
+export const getLocalFolders = async (): Promise<any[]> => {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORES.FOLDERS, 'readonly');
+    const request = tx.objectStore(STORES.FOLDERS).getAll();
+    return new Promise((resolve) => {
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => resolve([]);
+    });
+  } catch (e) { return []; }
+};
+
+export const saveArtifactLocally = async (artifact: any) => {
+  if (!artifact || !artifact.id) return;
+  try {
+    const db = await openDB();
+    return new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORES.ARTIFACTS, 'readwrite');
+      const store = tx.objectStore(STORES.ARTIFACTS);
+      const request = store.put(artifact);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      request.onerror = () => reject(request.error);
+    });
+  } catch (e) {}
+};
+
+export const getLocalArtifacts = async (folderId: string): Promise<any[]> => {
+  try {
+    const db = await openDB();
+    const tx = db.transaction(STORES.ARTIFACTS, 'readonly');
+    const request = tx.objectStore(STORES.ARTIFACTS).getAll();
+    return new Promise((resolve) => {
+      request.onsuccess = () => {
+        const results = request.result as any[];
+        resolve(results.filter(a => a.folderId === folderId));
+      };
+      request.onerror = () => resolve([]);
+    });
+  } catch (e) { return []; }
+};
+
 export const clearLocalMemory = async () => {
   try {
     localStorage.removeItem('mimi_sovereign_id');
@@ -214,6 +279,10 @@ export const clearLocalMemory = async () => {
     await txP.objectStore(STORES.POCKET).clear();
     const txPr = db.transaction(STORES.PROFILE, 'readwrite');
     await txPr.objectStore(STORES.PROFILE).clear();
+    const txF = db.transaction(STORES.FOLDERS, 'readwrite');
+    await txF.objectStore(STORES.FOLDERS).clear();
+    const txA = db.transaction(STORES.ARTIFACTS, 'readwrite');
+    await txA.objectStore(STORES.ARTIFACTS).clear();
   } catch (e) {}
   window.location.reload();
 };

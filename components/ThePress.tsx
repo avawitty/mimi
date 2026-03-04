@@ -332,7 +332,6 @@ export const ThePress: React.FC = () => {
 
                          {/* VISUAL PLACEHOLDER (COLOR SWATCH) */}
                          <div className="aspect-[3/4] w-full mb-6 relative overflow-hidden group-hover:scale-[1.02] transition-transform duration-700" style={{ backgroundColor: item.hex }}>
-                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-20 mix-blend-overlay pointer-events-none" />
                             
                             <div className="absolute inset-0 flex items-center justify-center">
                                <span className="font-serif italic text-6xl text-white/10 mix-blend-overlay pr-4 select-none pointer-events-none">
@@ -368,7 +367,7 @@ export const ThePress: React.FC = () => {
             
             {/* FILLER CELLS (For Grid Aesthetic) */}
             {Array.from({ length: Math.max(0, 4 - ((filter === 'My Editions' ? myEditions.length : filteredItems.length) % 4 === 0 ? 4 : (filter === 'My Editions' ? myEditions.length : filteredItems.length) % 4)) }).map((_, i) => (
-                <div key={`filler-${i}`} className="hidden lg:block border-r border-b border-stone-200 dark:border-stone-800 min-h-[500px] bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-[0.03]" />
+                <div key={`filler-${i}`} className="hidden lg:block border-r border-b border-stone-200 dark:border-stone-800 min-h-[500px] bg-stone-50 dark:bg-white/5 opacity-[0.03]" />
             ))}
          </div>
       </div>

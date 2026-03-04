@@ -12,9 +12,9 @@ import { Visualizer } from './Visualizer';
 
 const PRESET_TREATMENTS: Treatment[] = [
   { id: 'object_purge', name: 'Object Purge', instruction: 'Identify and remove distracting background objects or people while seamlessly reconstructing the background. Maintain high resolution.', variance: 'anchored' },
-  { id: 'scotopic', name: 'Scotopic Grain', instruction: 'Apply high-density 35mm film grain, deepen scotopic shadows, and reduce overall temperature to cold mercury.', variance: 'anchored' },
-  { id: 'ethereal', name: 'Ethereal Bloom', instruction: 'Raise white point, add a soft bloom to highlights, and introduce a subtle warm silk texture.', variance: 'interpretive' },
-  { id: 'editorial_94', name: 'Editorial 94', instruction: 'Slightly overexpose, add a magenta tint to shadows, and simulate high-speed vintage film grain.', variance: 'interpretive' },
+  { id: 'scotopic', name: 'Scotopic Depth', instruction: 'Deepen scotopic shadows and reduce overall temperature to cold mercury for a nocturnal feel.', variance: 'anchored' },
+  { id: 'ethereal', name: 'Ethereal Bloom', instruction: 'Raise white point, add a soft bloom to highlights, and introduce a soft atmospheric glow.', variance: 'interpretive' },
+  { id: 'editorial_94', name: 'Editorial 94', instruction: 'Slightly overexpose and add a magenta tint to shadows for a vintage editorial aesthetic.', variance: 'interpretive' },
   { id: 'brutalist', name: 'Brutalist Raw', instruction: 'Increase contrast, crush blacks, and convert to high-fidelity monochromatic silver seed.', variance: 'anchored' }
 ];
 
@@ -32,8 +32,6 @@ interface ControlsContentProps {
   selectedCount: number;
   useFlatFlash: boolean;
   setUseFlatFlash: (val: boolean) => void;
-  grainAmount: number;
-  setGrainAmount: (val: number) => void;
   exposure: number;
   setExposure: (val: number) => void;
   semioticTension: number;
@@ -54,8 +52,6 @@ const ControlsContent: React.FC<ControlsContentProps> = ({
   selectedCount,
   useFlatFlash,
   setUseFlatFlash,
-  grainAmount,
-  setGrainAmount,
   exposure,
   setExposure,
   semioticTension,
@@ -82,14 +78,6 @@ const ControlsContent: React.FC<ControlsContentProps> = ({
                     >
                         <div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-transform ${useFlatFlash ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
-                </div>
-
-                <div className="space-y-2 p-4 bg-stone-900 border border-white/5 rounded-sm">
-                    <div className="flex justify-between items-center">
-                        <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-500">Grain Intensity</span>
-                        <span className="font-mono text-[8px] text-emerald-500">{grainAmount}%</span>
-                    </div>
-                    <input type="range" min="0" max="100" value={grainAmount} onChange={(e) => setGrainAmount(parseInt(e.target.value))} className="w-full accent-emerald-500 bg-stone-800 h-1 rounded-full cursor-pointer" />
                 </div>
 
                 <div className="space-y-2 p-4 bg-stone-900 border border-white/5 rounded-sm">
@@ -339,7 +327,7 @@ const CropEditor: React.FC<{ imageUrl: string; onCancel: () => void; onSave: (cr
 };
 
 export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialShard }) => {
-  const { user, profile } = useUser();
+  const { user, profile, hasApiKey, openKeySelector } = useUser();
   const [shards, setShards] = useState<PocketItem[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -363,9 +351,13 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
   
   const [isNanoPro2, setIsNanoPro2] = useState(true);
   const [useFlatFlash, setUseFlatFlash] = useState(false);
-  const [grainAmount, setGrainAmount] = useState(50);
   const [exposure, setExposure] = useState(0);
   const [semioticTension, setSemioticTension] = useState(50);
+
+  const [isEditingMetadata, setIsEditingMetadata] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editTags, setEditTags] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -394,6 +386,41 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
           setActiveShard(initialShard);
       }
   }, [initialShard]);
+
+  useEffect(() => {
+    if (activeShard) {
+      setEditTitle(activeShard.content.title || activeShard.content.prompt || '');
+      setEditDescription(activeShard.content.description || '');
+      setEditTags((activeShard.content.tags || []).join(', '));
+      setIsEditingMetadata(false);
+    }
+  }, [activeShard]);
+
+  const handleSaveMetadata = async () => {
+    if (!activeShard) return;
+    setIsProcessing(true);
+    try {
+      const tagsArray = editTags.split(',').map(t => t.trim()).filter(Boolean);
+      const updatedContent = {
+        ...activeShard.content,
+        title: editTitle,
+        description: editDescription,
+        tags: tagsArray,
+        prompt: editTitle || activeShard.content.prompt
+      };
+      
+      await updatePocketItem(activeShard.id, { content: updatedContent });
+      
+      setActiveShard(prev => prev ? { ...prev, content: updatedContent } : null);
+      await loadShards(true);
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Metadata Updated.", icon: <Check size={14} /> } }));
+      setIsEditingMetadata(false);
+    } catch (e) {
+      console.error("Failed to save metadata", e);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const toggleSelection = (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -472,9 +499,19 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
 
   const handleManifestShard = async () => {
     if (!manifestPrompt.trim() || isManifesting) return;
+    
+    if (!hasApiKey) {
+        try {
+            await openKeySelector();
+        } catch (e) {
+            console.error("Key selection failed:", e);
+            return;
+        }
+    }
+
     setIsManifesting(true);
     try {
-        const base64Image = await generateRawImage(manifestPrompt, manifestAr);
+        const base64Image = await generateRawImage(manifestPrompt, manifestAr, profile);
         await addToPocket(user?.uid || 'ghost', 'image', {
             imageUrl: base64Image,
             prompt: manifestPrompt,
@@ -520,7 +557,7 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
 
   const handleBatchRefine = async () => {
     const activeLayers = layerStack.filter(l => l.isVisible && l.opacity > 0);
-    if ((activeLayers.length === 0 && !customInstruction.trim() && !useFlatFlash && grainAmount === 50 && exposure === 0 && semioticTension === 50) || (isSelectionMode && selectedIds.size === 0) || (!isSelectionMode && !activeShard)) return;
+    if ((activeLayers.length === 0 && !customInstruction.trim() && !useFlatFlash && exposure === 0 && semioticTension === 50) || (isSelectionMode && selectedIds.size === 0) || (!isSelectionMode && !activeShard)) return;
     
     setIsProcessing(true);
     const targets = isSelectionMode ? shards.filter(s => selectedIds.has(s.id)) : [activeShard];
@@ -538,7 +575,7 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
         "Aesthetic Composite Sequence:",
         layerInstructions, 
         useFlatFlash ? "Apply Vogue Italia 1990s flat flash lighting, high contrast, sharp shadows." : "",
-        `Grain Intensity: ${grainAmount}%. Exposure Adjustment: ${exposure}%. Semiotic Tension (Surrealism/Edge): ${semioticTension}%.`,
+        `Exposure Adjustment: ${exposure}%. Semiotic Tension (Surrealism/Edge): ${semioticTension}%.`,
         customInstruction ? `Final Global Treatment: ${customInstruction}` : ''
     ].filter(i => i.trim()).join(". ");
 
@@ -566,9 +603,15 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
       setSelectedIds(new Set());
       setActiveShard(null);
       setShowMobileControls(false);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Processing Dissonance.", type: 'error' } }));
+      if (e.message?.includes('overloaded') || e.code === 'QUOTA_EXCEEDED') {
+          window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+              detail: { message: "Oracle Overloaded. Frequency too high.", icon: <ShieldAlert size={14} className="text-red-500" /> } 
+          }));
+      } else {
+          window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Processing Dissonance.", type: 'error' } }));
+      }
     } finally {
       setIsProcessing(false);
       setCurrentlyProcessingId(null);
@@ -630,11 +673,6 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
 
   return (
     <div className="flex flex-col h-full bg-[#050505] text-white transition-all duration-1000 relative selection:bg-white selection:text-black overflow-hidden">
-      
-      {/* TEXTURE OVERLAY */}
-      <div className="grain-overlay" />
-      
-      <div className="absolute inset-0 pointer-events-none opacity-[0.05] bg-[url('https://www.transparenttextures.com/patterns/noise.png')] z-0 mix-blend-screen" />
       
       <header className="flex flex-col md:flex-row md:items-end justify-between border-b border-white/5 pb-8 pt-12 md:pt-16 px-6 md:px-16 gap-8 shrink-0 z-10 bg-[#050505]">
            <div className="space-y-4">
@@ -741,9 +779,62 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
                 </div>
                 <div className="hidden md:flex md:w-[320px] flex-col gap-10 shrink-0">
                    <div className="space-y-4">
-                      <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-emerald-500 font-black">Archive Manifest</span>
-                      <h3 className="font-header text-5xl italic tracking-tighter text-white">Inspected.</h3>
-                      <p className="font-serif italic text-xl text-stone-400">"{activeShard.content.prompt || 'Untitled shard'}"</p>
+                      <div className="flex justify-between items-center">
+                          <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-emerald-500 font-black">Archive Manifest</span>
+                          {!isEditingMetadata && (
+                              <button onClick={() => setIsEditingMetadata(true)} className="text-stone-500 hover:text-emerald-500 transition-colors">
+                                  <PenTool size={14} />
+                              </button>
+                          )}
+                      </div>
+                      
+                      {isEditingMetadata ? (
+                          <div className="space-y-4">
+                              <input 
+                                  type="text" 
+                                  value={editTitle} 
+                                  onChange={e => setEditTitle(e.target.value)} 
+                                  placeholder="Title..." 
+                                  className="w-full bg-black/40 border border-white/10 p-3 font-serif italic text-2xl text-white focus:outline-none focus:border-emerald-500 rounded-sm"
+                              />
+                              <textarea 
+                                  value={editDescription} 
+                                  onChange={e => setEditDescription(e.target.value)} 
+                                  placeholder="Description..." 
+                                  className="w-full bg-black/40 border border-white/10 p-3 font-sans text-xs text-stone-300 focus:outline-none focus:border-emerald-500 rounded-sm h-24 resize-none"
+                              />
+                              <input 
+                                  type="text" 
+                                  value={editTags} 
+                                  onChange={e => setEditTags(e.target.value)} 
+                                  placeholder="Tags (comma separated)..." 
+                                  className="w-full bg-black/40 border border-white/10 p-3 font-mono text-[10px] text-stone-400 focus:outline-none focus:border-emerald-500 rounded-sm"
+                              />
+                              <div className="flex gap-2 pt-2">
+                                  <button onClick={() => setIsEditingMetadata(false)} className="flex-1 py-2 border border-stone-700 text-stone-300 rounded-sm font-sans text-[9px] uppercase tracking-widest font-black hover:bg-stone-800">Cancel</button>
+                                  <button onClick={handleSaveMetadata} disabled={isProcessing} className="flex-1 py-2 bg-emerald-600 text-white rounded-sm font-sans text-[9px] uppercase tracking-widest font-black hover:bg-emerald-500 flex items-center justify-center gap-2">
+                                      {isProcessing ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Save
+                                  </button>
+                              </div>
+                          </div>
+                      ) : (
+                          <>
+                              <h3 className="font-header text-5xl italic tracking-tighter text-white">{activeShard.content.title || 'Inspected.'}</h3>
+                              <p className="font-serif italic text-xl text-stone-400">"{activeShard.content.prompt || 'Untitled shard'}"</p>
+                              {activeShard.content.description && (
+                                  <p className="font-sans text-sm text-stone-500">{activeShard.content.description}</p>
+                              )}
+                              {activeShard.content.tags && activeShard.content.tags.length > 0 && (
+                                  <div className="flex flex-wrap gap-2 pt-2">
+                                      {activeShard.content.tags.map((tag: string, i: number) => (
+                                          <span key={i} className="px-2 py-1 bg-white/5 border border-white/10 rounded-sm font-mono text-[9px] text-stone-400 uppercase tracking-widest">
+                                              {tag}
+                                          </span>
+                                      ))}
+                                  </div>
+                              )}
+                          </>
+                      )}
                    </div>
                    <div className="space-y-6 pt-12 border-t border-white/5">
                       <button onClick={() => downloadShard(activeShard.content.imageUrl, activeShard.id)} className="flex items-center justify-center gap-3 py-5 bg-white text-black rounded-full font-sans text-[10px] uppercase tracking-[0.4em] font-black transition-all active:scale-95 w-full">

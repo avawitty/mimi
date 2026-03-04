@@ -42,9 +42,23 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [agentConfig, setAgentConfig] = useState<AgentConfig>(() => {
       try {
           const stored = localStorage.getItem('mimi_agent_config');
-          return stored ? JSON.parse(stored) : { curatorEnabled: true, sentinelEnabled: true, thinkingBudget: 2048 };
+          const defaultBudget = 2048;
+          if (stored) {
+              const parsed = JSON.parse(stored);
+              // Migrate old config if needed
+              if (parsed.thinkingBudget !== undefined) {
+                  return {
+                      curatorEnabled: parsed.curatorEnabled ?? true,
+                      sentinelEnabled: parsed.sentinelEnabled ?? true,
+                      curatorThinkingBudget: parsed.thinkingBudget,
+                      sentinelThinkingBudget: parsed.thinkingBudget
+                  };
+              }
+              return parsed;
+          }
+          return { curatorEnabled: true, sentinelEnabled: true, curatorThinkingBudget: defaultBudget, sentinelThinkingBudget: defaultBudget };
       } catch {
-          return { curatorEnabled: true, sentinelEnabled: true, thinkingBudget: 2048 };
+          return { curatorEnabled: true, sentinelEnabled: true, curatorThinkingBudget: 2048, sentinelThinkingBudget: 2048 };
       }
   });
 

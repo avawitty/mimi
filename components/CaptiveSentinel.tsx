@@ -42,7 +42,6 @@ export const CaptiveSentinel: React.FC<{ onClose: () => void }> = ({ onClose }) 
 
       <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-red-500 rounded-full blur-[160px] animate-pulse" />
-         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-40 mix-blend-multiply" />
       </div>
 
       <div className="max-w-md w-full space-y-12 text-center relative z-[20002]">

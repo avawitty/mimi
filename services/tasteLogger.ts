@@ -34,6 +34,11 @@ export const logTasteEvent = async (event: TasteEvent): Promise<void> => {
   }
 };
 
+// Sigmoid normalization for taste vector
+function sigmoidNormalize(value: number): number {
+    return 1 / (1 + Math.exp(-0.5 * (value - 5)));
+}
+
 const aggregateUserProfile = async (event: TasteEvent): Promise<void> => {
     try {
         const db = await ensureDb();
@@ -61,6 +66,13 @@ const aggregateUserProfile = async (event: TasteEvent): Promise<void> => {
             if (genArchetype) {
                 taste.archetype_weights[genArchetype] = (taste.archetype_weights[genArchetype] || 0) + 1;
             }
+
+            // Normalize weights to 0-1
+            const normalizedWeights: Record<string, number> = {};
+            Object.entries(taste.archetype_weights).forEach(([key, val]) => {
+                normalizedWeights[key] = sigmoidNormalize(val);
+            });
+            taste.archetype_weights = normalizedWeights;
 
             if (event.output_context.colors?.length) {
                 event.output_context.colors.forEach(hex => {

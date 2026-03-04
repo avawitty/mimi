@@ -42,7 +42,7 @@ export const useLiveSession = (systemInstruction: string) => {
   const connect = useCallback(async () => {
     setError(null);
     try {
-      const ai = getClient();
+      const { ai } = getClient();
       
       // 1. Setup Audio Output Context (24kHz for Gemini output)
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;

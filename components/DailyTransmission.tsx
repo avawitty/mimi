@@ -86,10 +86,14 @@ export const DailyTransmission: React.FC = () => {
       setIsTired(true);
       setLastTrace({ code: err.code || 'SIGNAL_DRIFT', message: err.message });
       
-      // Emit specific registry alert for 500s
+      // Emit specific registry alert for 500s or quota errors
       if (err.message?.includes('500') || err.message?.includes('internal')) {
         window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
             detail: { message: "Oracle Drift detected. Retrying handshake...", icon: <ShieldAlert size={14} className="text-amber-500" /> } 
+        }));
+      } else if (err.message?.includes('overloaded') || err.code === 'QUOTA_EXCEEDED') {
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+            detail: { message: "Oracle Overloaded. Frequency too high.", icon: <ShieldAlert size={14} className="text-red-500" /> } 
         }));
       }
       

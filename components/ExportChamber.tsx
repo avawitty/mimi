@@ -18,7 +18,7 @@ const SECTION_DEFS = [
   { id: 'reading', label: 'The Reading', icon: <FileText size={14} /> },
   { id: 'signals', label: 'Archetype', icon: <Layers size={14} /> },
   { id: 'plates', label: 'Plates', icon: <LayoutGrid size={14} /> },
-  { id: 'blueprint', label: 'Blueprint', icon: <Terminal size={14} /> },
+  { id: 'roadmap', label: 'Roadmap', icon: <Terminal size={14} /> },
   { id: 'debris', label: 'Field Debris', icon: <Info size={14} /> }
 ];
 
@@ -343,19 +343,31 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
                 </div>
              ))}
 
-             {/* 5. BLUEPRINT (NEW) */}
-             {selectedSections.has('blueprint') && content.blueprint && (
+             {/* 5. ROADMAP (NEW) */}
+             {selectedSections.has('roadmap') && content.roadmap && (
                 <div className={blockClass}>
-                    <SectionHeader label="The Blueprint" icon={<Terminal />} />
+                    <SectionHeader label="The Roadmap" icon={<Terminal />} />
                     <div className="flex-1 flex flex-col justify-center gap-8">
-                        {Object.entries(content.blueprint).map(([key, val], i) => (
-                            <div key={i} className="space-y-2">
-                                <span className="font-sans text-[7px] uppercase tracking-[0.2em] font-black text-emerald-600 dark:text-emerald-400 block">{key.replace('_', ' ')}</span>
-                                <p className="font-serif italic text-lg text-nous-text dark:text-white leading-snug border-b border-stone-100 dark:border-stone-900 pb-4">
-                                    {String(val)}
-                                </p>
-                            </div>
-                        ))}
+                        <div className="space-y-2">
+                            <span className="font-sans text-[7px] uppercase tracking-[0.2em] font-black text-emerald-600 dark:text-emerald-400 block">Strategic Thesis</span>
+                            <p className="font-serif italic text-lg text-nous-text dark:text-white leading-snug border-b border-stone-100 dark:border-stone-900 pb-4">
+                                {content.roadmap.strategicThesis}
+                            </p>
+                        </div>
+                        <div className="space-y-2">
+                            <span className="font-sans text-[7px] uppercase tracking-[0.2em] font-black text-emerald-600 dark:text-emerald-400 block">Positioning Axis</span>
+                            <p className="font-serif italic text-lg text-nous-text dark:text-white leading-snug border-b border-stone-100 dark:border-stone-900 pb-4">
+                                {content.roadmap.positioningAxis}
+                            </p>
+                        </div>
+                        <div className="space-y-2">
+                            <span className="font-sans text-[7px] uppercase tracking-[0.2em] font-black text-emerald-600 dark:text-emerald-400 block">Authority Anchor</span>
+                            <p className="font-serif italic text-sm text-stone-500 leading-snug border-b border-stone-100 dark:border-stone-900 pb-4">
+                                <strong>Core Claim:</strong> {content.roadmap.authorityAnchor.coreClaim}<br/>
+                                <strong>Repetition Vector:</strong> {content.roadmap.authorityAnchor.repetitionVector}<br/>
+                                <strong>Exclusion Principle:</strong> {content.roadmap.authorityAnchor.exclusionPrinciple}
+                            </p>
+                        </div>
                     </div>
                 </div>
              )}

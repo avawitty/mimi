@@ -211,7 +211,6 @@ export const EditorialSpread: React.FC<EditorialSpreadProps> = ({ article, onClo
                             <div className="absolute -top-3 left-1/4 w-12 h-6 bg-stone-200/50 dark:bg-stone-800/50 backdrop-blur rotate-12 z-20 shadow-sm"></div>
                             <div className="bg-white dark:bg-stone-900 p-4 pb-12 shadow-xl -rotate-2 relative z-10 border border-stone-100 dark:border-stone-800">
                                 <div className="w-full h-64 bg-stone-200 dark:bg-stone-800 mb-4 overflow-hidden">
-                                    <div className="w-full h-full opacity-40 bg-[url('https://www.transparenttextures.com/patterns/noise.png')]"></div>
                                 </div>
                                 <p className="font-handwritten text-xl text-stone-600 dark:text-stone-400 text-center font-serif italic">Fig 1.A — Latent Space Debris</p>
                             </div>

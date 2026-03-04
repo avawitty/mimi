@@ -175,9 +175,9 @@ export const generateProposalFromFolder = async (
   
   // Resolve Layout from Tailor
   const tailor = config.profile?.tailorDraft;
-  const primaryFont = tailor?.typographyIntent?.styleDescription?.includes('Sans') ? 'Space Grotesk' : 'Cormorant Garamond';
-  const primaryColor = tailor?.chromaticRegistry?.baseNeutral || '#FDFBF7';
-  const textColor = tailor?.chromaticRegistry?.accentSignal || '#1C1917';
+  const primaryFont = tailor?.expressionEngine?.typographyIntent?.styleDescription?.includes('Sans') ? 'Space Grotesk' : 'Cormorant Garamond';
+  const primaryColor = tailor?.expressionEngine?.chromaticRegistry?.baseNeutral || '#FDFBF7';
+  const textColor = tailor?.expressionEngine?.chromaticRegistry?.accentSignal || '#1C1917';
 
   const proposal: Proposal = {
     id: proposalId,
@@ -204,7 +204,7 @@ export const generateProposalFromFolder = async (
     brandKitSnapshot: {
       primaryFont: primaryFont,
       secondaryFont: 'Space Grotesk',
-      colorPalette: tailor?.chromaticRegistry?.primaryPalette?.map(c => c.hex) || []
+      colorPalette: tailor?.expressionEngine?.chromaticRegistry?.primaryPalette?.map(c => c.hex) || []
     },
 
     version: 1,

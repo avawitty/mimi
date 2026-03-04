@@ -5,8 +5,9 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, sendPasswordResetEmail, linkWithPopup, linkWithRedirect, signInAnonymously, ActionCodeSettings } from "firebase/auth";
 import { auth, db, storage } from "./firebaseInit";
 import { ZineContent, ZineMetadata, ToneTag, PocketItem, UserProfile, DossierFolder, DossierArtifact, Treatment, UserPreferences, MediaFile, Proposal, ContextEntry } from "../types";
-import { saveZineLocally, savePocketItemLocally, getLocalProfile, getLocalPocket, getLocalZines, deleteLocalPocketItem } from "./localArchive";
+import { saveZineLocally, savePocketItemLocally, getLocalProfile, getLocalPocket, getLocalZines, deleteLocalPocketItem, saveFolderLocally, getLocalFolders, saveArtifactLocally, getLocalArtifacts } from "./localArchive";
 import { syncToShadowMemory, deleteFromShadowMemory } from "./vectorSearch";
+import { extractTasteVector } from "./geminiService";
 
 export const isCaptiveInWebview = () => {
   if (typeof window === 'undefined' || !navigator) return false;
@@ -19,7 +20,7 @@ export const isCaptiveInWebview = () => {
 export const searchUsers = async (searchTerm: string): Promise<UserProfile[]> => {
   if (!searchTerm || searchTerm.length < 2) return [];
   const q = query(
-    collection(db, "users"),
+    collection(db, "profiles"),
     where("handle", ">=", searchTerm.toLowerCase()),
     where("handle", "<=", searchTerm.toLowerCase() + "\uf8ff"),
     limit(10)
@@ -54,7 +55,7 @@ export const linkIdentity = async (forceRedirect = false): Promise<void> => {
   }
 };
 
-export const saveZineToProfile = async (uid: string, handle: string, avatar: string | undefined, zine: ZineContent, tone: ToneTag, coverUrl?: string, deep?: boolean, isPublic?: boolean, isLite?: boolean, artifacts?: MediaFile[], originalInput?: string): Promise<string> => {
+export const saveZineToProfile = async (uid: string, handle: string, avatar: string | undefined, zine: ZineContent, tone: ToneTag, coverUrl?: string, deep?: boolean, isPublic?: boolean, isLite?: boolean, artifacts?: MediaFile[], originalInput?: string, transmissionsUsed?: any[]): Promise<string> => {
   const targetId = `zine_${uid}_${Date.now()}`;
   
   // Ensure we capture the original thought properly, falling back to metadata if arg is missing
@@ -65,7 +66,8 @@ export const saveZineToProfile = async (uid: string, handle: string, avatar: str
     title: zine.title, tone, coverImageUrl: coverUrl || null, timestamp: Date.now(), likes: 0,
     content: zine, isDeepThinking: !!deep, isPublic: !!isPublic, isLite: !!isLite,
     artifacts: artifacts || [],
-    originalInput: rawInput 
+    originalInput: rawInput,
+    transmissionsUsed: transmissionsUsed || []
   };
   
   await saveZineLocally(meta);
@@ -74,6 +76,9 @@ export const saveZineToProfile = async (uid: string, handle: string, avatar: str
       await setDoc(doc(db, "zines", targetId), meta);
       syncToShadowMemory(meta);
       
+      // Update taste graph with the generated zine content
+      updateTasteGraph(uid, 'text', { content: `${zine.title} - ${zine.meta?.intent || ''} - ${zine.pages?.map(p => p.text).join(' ')}` });
+
       if (isPublic) {
         const transmission = {
           userId: uid,
@@ -85,11 +90,67 @@ export const saveZineToProfile = async (uid: string, handle: string, avatar: str
           likes: 0,
           zineData: meta
         };
-        await addDoc(collection(db, 'public_transmissions'), transmission);
+        const cleanTransmission = JSON.parse(JSON.stringify(transmission));
+        await addDoc(collection(db, 'public_transmissions'), cleanTransmission);
       }
     } catch (e) { console.warn("MIMI // Zine Sync/Broadcast Skipped:", e.code); }
   }
   return targetId;
+};
+
+export const updateTasteGraph = async (uid: string, type: PocketItem['type'], content: any) => {
+  try {
+    let textToAnalyze = '';
+    let isImage = false;
+    let mimeType = 'image/jpeg';
+
+    if (type === 'image' && content.imageUrl) {
+      textToAnalyze = content.imageUrl;
+      isImage = true;
+      if (content.imageUrl.startsWith('data:')) {
+         const match = content.imageUrl.match(/^data:(image\/[a-zA-Z0-9]+);base64,(.+)$/);
+         if (match) {
+            mimeType = match[1];
+            textToAnalyze = match[2];
+         } else {
+            return; // Not a valid base64 image
+         }
+      } else {
+         return; // Can't easily analyze external URLs without downloading
+      }
+    } else if (type === 'text' && content.content) {
+      textToAnalyze = content.content;
+    } else if (type === 'link' && content.url) {
+      textToAnalyze = content.url + (content.title ? ` - ${content.title}` : '');
+    } else {
+      return; // Unsupported type for taste extraction
+    }
+
+    const newVector = await extractTasteVector(textToAnalyze, isImage, mimeType);
+    if (!newVector || Object.keys(newVector).length === 0) return;
+
+    // Fetch current profile
+    const userRef = doc(db, "users", uid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) return;
+
+    const profile = userSnap.data() as UserProfile;
+    const currentVector = profile.tasteVector || {};
+    const updatedVector = { ...currentVector };
+
+    // Blend vectors (simple moving average or additive with decay)
+    // For now, we'll do an additive approach with a cap of 1.0
+    for (const [tag, intensity] of Object.entries(newVector)) {
+       const currentVal = updatedVector[tag] || 0;
+       // Add 20% of the new intensity to the current value, capping at 1.0
+       updatedVector[tag] = Math.min(1.0, currentVal + (intensity * 0.2));
+    }
+
+    await updateDoc(userRef, { tasteVector: updatedVector });
+    console.info("MIMI // Taste Graph Updated");
+  } catch (e) {
+    console.warn("MIMI // Taste Graph Update Failed:", e);
+  }
 };
 
 export const addToPocket = async (uid: string, type: PocketItem['type'], content: any): Promise<void> => {
@@ -100,6 +161,8 @@ export const addToPocket = async (uid: string, type: PocketItem['type'], content
     try {
       await setDoc(doc(db, "pocket", itemId), item);
       syncToShadowMemory(item);
+      // Asynchronously update the taste graph
+      updateTasteGraph(uid, type, content);
     } catch (e) { console.warn("MIMI // Pocket Sync Skipped:", e.code); }
   }
   return itemId; // Returned ID for immediate reference
@@ -150,52 +213,58 @@ export const updatePocketItem = async (itemId: string, patch: Partial<PocketItem
 
 export const fetchPocketItems = async (uid: string) => {
     try {
-      const q = query(collection(db, "pocket"), where("userId", "==", uid), orderBy("savedAt", "desc"));
-      return (await getDocs(q)).docs.map(d => d.data() as PocketItem);
-    } catch (e) { 
+      const q = query(collection(db, "pocket"), where("userId", "==", uid));
+      const docs = (await getDocs(q)).docs.map(d => d.data() as PocketItem);
+      return docs.sort((a, b) => b.savedAt - a.savedAt);
+    } catch (e: any) { 
       console.warn("MIMI // Pocket Fetch Error:", e.code);
       return []; 
     }
 };
 
 export const subscribeToPocketItems = (uid: string, callback: (data: PocketItem[]) => void) => {
-  const q = query(collection(db, "pocket"), where("userId", "==", uid), orderBy("savedAt", "desc"));
+  const q = query(collection(db, "pocket"), where("userId", "==", uid));
   return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map(d => d.data() as PocketItem));
+    const docs = snapshot.docs.map(d => d.data() as PocketItem);
+    callback(docs.sort((a, b) => b.savedAt - a.savedAt));
   }, (e) => console.warn("MIMI // Pocket Sub Error:", e.code));
 };
 
 export const fetchUserZines = async (uid: string) => {
     try {
-      const q = query(collection(db, "zines"), where("userId", "==", uid), orderBy("timestamp", "desc"));
-      return (await getDocs(q)).docs.map(d => d.data() as ZineMetadata);
-    } catch (e) { 
+      const q = query(collection(db, "zines"), where("userId", "==", uid));
+      const docs = (await getDocs(q)).docs.map(d => d.data() as ZineMetadata);
+      return docs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    } catch (e: any) { 
       console.warn("MIMI // Zine Fetch Error:", e.code);
       return []; 
     }
 };
 
 export const subscribeToUserZines = (uid: string, callback: (data: ZineMetadata[]) => void) => {
-  const q = query(collection(db, "zines"), where("userId", "==", uid), orderBy("timestamp", "desc"));
+  const q = query(collection(db, "zines"), where("userId", "==", uid));
   return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map(d => d.data() as ZineMetadata));
+    const docs = snapshot.docs.map(d => d.data() as ZineMetadata);
+    callback(docs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)));
   }, (e) => console.warn("MIMI // User Zine Sub Error:", e.code));
 };
 
 export const fetchCommunityZines = async (count: number) => {
     try {
-      const q = query(collection(db, "zines"), where("isPublic", "==", true), orderBy("timestamp", "desc"), limit(count));
-      return (await getDocs(q)).docs.map(d => d.data() as ZineMetadata);
-    } catch (e) {
+      const q = query(collection(db, "zines"), where("isPublic", "==", true));
+      const docs = (await getDocs(q)).docs.map(d => d.data() as ZineMetadata);
+      return docs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, count);
+    } catch (e: any) {
       console.warn("MIMI // Community Fetch Error:", e.code);
       return [];
     }
 };
 
 export const subscribeToCommunityZines = (callback: (data: ZineMetadata[]) => void) => {
-  const q = query(collection(db, "zines"), where("isPublic", "==", true), orderBy("timestamp", "desc"), limit(30));
+  const q = query(collection(db, "zines"), where("isPublic", "==", true));
   return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map(d => d.data() as ZineMetadata));
+    const docs = snapshot.docs.map(d => d.data() as ZineMetadata);
+    callback(docs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)).slice(0, 30));
   }, (e) => console.warn("MIMI // Community Sub Error:", e.code));
 };
 
@@ -209,6 +278,10 @@ export const fetchZineById = async (id: string) => {
 export const createDossierFolder = async (uid: string, name: string): Promise<string> => {
   const id = `folder_${Date.now()}`;
   const folder: DossierFolder = { id, userId: uid, name, createdAt: Date.now(), collaborators: [] };
+  
+  // Always save locally
+  await saveFolderLocally(folder);
+  
   if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
     try { await setDoc(doc(db, "dossier_folders", id), folder); } catch (e) {}
   }
@@ -297,21 +370,31 @@ export const updateDossierFolder = async (folderId: string, patch: Partial<Dossi
 };
 
 export const fetchDossierFolders = async (uid: string) => {
+  const localFolders = await getLocalFolders();
+  
+  if (!uid || !auth.currentUser || auth.currentUser.isAnonymous || !navigator.onLine) {
+    return localFolders.sort((a, b) => b.createdAt - a.createdAt);
+  }
+
   try {
     // We need to fetch folders where userId == uid OR collaborators array contains uid
-    // Since Firestore doesn't support OR queries easily without composite indexes or multiple queries,
-    // we'll do two queries and merge them.
     const q1 = query(collection(db, "dossier_folders"), where("userId", "==", uid));
     const q2 = query(collection(db, "dossier_folders"), where("collaborators", "array-contains", uid));
     
     const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
     
     const foldersMap = new Map<string, DossierFolder>();
+    // Add local folders first
+    localFolders.forEach(f => foldersMap.set(f.id, f));
+    // Overwrite with cloud folders
     snap1.docs.forEach(d => foldersMap.set(d.id, d.data() as DossierFolder));
     snap2.docs.forEach(d => foldersMap.set(d.id, d.data() as DossierFolder));
     
     return Array.from(foldersMap.values()).sort((a, b) => b.createdAt - a.createdAt);
-  } catch (e) { return []; }
+  } catch (e) { 
+    console.error("MIMI // Dossier Fetch Error:", e);
+    return localFolders.sort((a, b) => b.createdAt - a.createdAt); 
+  }
 };
 
 export const createDossierArtifactFromImage = async (uid: string, folderId: string, title: string, imageUrl: string) => {
@@ -320,6 +403,9 @@ export const createDossierArtifactFromImage = async (uid: string, folderId: stri
     id, userId: uid, folderId, type: 'moodboard', title, createdAt: Date.now(),
     elements: [{ id: 'el_0', type: 'image', content: imageUrl }]
   };
+  
+  await saveArtifactLocally(artifact);
+  
   if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
     try { await setDoc(doc(db, "dossier_artifacts", id), artifact); } catch (e) {}
   }
@@ -332,6 +418,9 @@ export const createDossierArtifactFromText = async (uid: string, folderId: strin
     id, userId: uid, folderId, type: 'brief', title, createdAt: Date.now(),
     elements: [{ id: 'el_0', type: 'text', content: text }]
   };
+  
+  await saveArtifactLocally(artifact);
+  
   if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
     try { await setDoc(doc(db, "dossier_artifacts", id), artifact); } catch (e) {}
   }
@@ -339,10 +428,26 @@ export const createDossierArtifactFromText = async (uid: string, folderId: strin
 };
 
 export const fetchDossierArtifacts = async (folderId: string) => {
+  const localArtifacts = await getLocalArtifacts(folderId);
+  
+  if (!auth.currentUser || auth.currentUser.isAnonymous || !navigator.onLine) {
+    return localArtifacts.sort((a, b) => b.createdAt - a.createdAt);
+  }
+
   try {
-    const q = query(collection(db, "dossier_artifacts"), where("folderId", "==", folderId), orderBy("createdAt", "desc"));
-    return (await getDocs(q)).docs.map(d => d.data() as DossierArtifact);
-  } catch (e) { return []; }
+    const q = query(collection(db, "dossier_artifacts"), where("folderId", "==", folderId));
+    const snap = await getDocs(q);
+    const cloudArtifacts = snap.docs.map(d => d.data() as DossierArtifact);
+    
+    const artifactsMap = new Map<string, DossierArtifact>();
+    localArtifacts.forEach(a => artifactsMap.set(a.id, a));
+    cloudArtifacts.forEach(a => artifactsMap.set(a.id, a));
+    
+    return Array.from(artifactsMap.values()).sort((a, b) => b.createdAt - a.createdAt);
+  } catch (e) { 
+    console.error("MIMI // Artifact Fetch Error:", e);
+    return localArtifacts.sort((a, b) => b.createdAt - a.createdAt);
+  }
 };
 
 // -- PROPOSAL SYSTEM CRUD -- //
@@ -355,8 +460,9 @@ export const saveProposal = async (proposal: Proposal): Promise<void> => {
 
 export const fetchUserProposals = async (uid: string) => {
   try {
-    const q = query(collection(db, "proposals"), where("userId", "==", uid), orderBy("updatedAt", "desc"));
-    return (await getDocs(q)).docs.map(d => d.data() as Proposal);
+    const q = query(collection(db, "proposals"), where("userId", "==", uid));
+    const docs = (await getDocs(q)).docs.map(d => d.data() as Proposal);
+    return docs.sort((a, b) => b.updatedAt - a.updatedAt);
   } catch (e) { return []; }
 };
 
@@ -494,12 +600,34 @@ export const startGhostSession = () => signInAnonymously(auth);
 // SAFER REDIRECT HANDLER
 export const handleAuthRedirect = async () => {
   try {
-    return await getRedirectResult(auth);
-  } catch(e) {
-    console.warn("MIMI // Redirect Result Error (Ignored):", e);
+    const result = await getRedirectResult(auth);
+    if (result) {
+      console.info("MIMI // Redirect Handshake Successful:", result.user.email);
+    }
+    return result;
+  } catch(e: any) {
+    console.warn("MIMI // Redirect Handshake Error:", e.code, e.message);
+    // If it's a link error, we might want to notify the user via a global event
+    if (e.code === 'auth/credential-already-in-use') {
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+            detail: { message: "This Google frequency is already occupied by another registry.", type: 'error' } 
+        }));
+    }
     return null;
   }
 };
 
-export const isHandleAvailable = async () => true; 
-export const uploadBlob = async (b: any, p: string) => b;
+export const isHandleAvailable = async (handle: string, excludeUid?: string): Promise<boolean> => {
+  if (!handle || handle.length < 2) return false;
+  const q = query(collection(db, "profiles"), where("handle", "==", handle.toLowerCase()));
+  const snap = await getDocs(q);
+  if (snap.empty) return true;
+  if (excludeUid && snap.docs.length === 1 && snap.docs[0].data().uid === excludeUid) return true;
+  return false;
+};
+
+export const uploadBlob = async (blob: Blob, path: string): Promise<string> => {
+  const storageRef = ref(storage, path);
+  await uploadBytes(storageRef, blob);
+  return getDownloadURL(storageRef);
+};

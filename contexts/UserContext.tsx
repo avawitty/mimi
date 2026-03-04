@@ -7,8 +7,10 @@ import {
   bootstrapAuth, ensureAuth, getUserProfile, saveUserProfile, 
   anchorIdentity, linkIdentity, handleAuthRedirect, startGhostSession, 
   initializeAuthPersistence, getUserPreferences, saveUserPreferences, 
-  subscribeToUserProfile, subscribeToUserPreferences, migrateLocalToCloud, db 
+  subscribeToUserProfile, subscribeToUserPreferences, migrateLocalToCloud, db,
+  isCaptiveInWebview
 } from '../services/firebase';
+import { recordSession as recordSessionService } from '../services/retentionService';
 import { onAuthStateChanged } from 'firebase/auth';
 import { Star } from 'lucide-react';
 import { setGlobalKeyRing } from '../services/geminiService';
@@ -38,6 +40,8 @@ interface UserContextType {
   ghostLogin: () => Promise<void>;
   speedGhostEntrance: () => Promise<void>;
   linkAccount: (forceRedirect?: boolean) => Promise<void>;
+  keyLogin: (handle: string, apiKey: string) => Promise<void>;
+  verifyIdentity: () => Promise<void>;
   isEnvironmentRestricted: boolean;
   isDatabaseMissing: boolean; 
   authError: string | null;
@@ -52,6 +56,8 @@ interface UserContextType {
   removeKeyFromRing: (key: string) => void;
   featureFlags: FeatureFlags;
   toggleFeature: (key: keyof FeatureFlags) => void;
+  enabledAlgos: string[];
+  toggleAlgo: (algoId: string) => void;
   personas: Persona[];
   activePersonaId: string | undefined;
   activePersona: Persona | undefined;
@@ -59,6 +65,12 @@ interface UserContextType {
   createPersona: (name: string, apiKey?: string) => Promise<void>;
   updatePersona: (persona: Persona) => Promise<void>;
   deletePersona: (personaId: string) => Promise<void>;
+  // Patron & Generation Tracking
+  canGenerate: boolean;
+  generationsRemaining: number;
+  activatePatron: (key: string) => Promise<void>;
+  incrementGeneration: () => Promise<void>;
+  recordSession: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -80,18 +92,47 @@ const DEFAULT_FLAGS: FeatureFlags = {
 };
 
 const DEFAULT_DRAFT: TailorLogicDraft = {
-  interests: { anime: '', designer: '', topic: '', book: '', favoriteThing: '' },
-  aestheticCore: { silhouettes: '', textures: '', eraFocus: '90s Minimal', manualEra: '', density: 50, developmentRoadmap: [], visualShards: [] },
-  celestialCalibration: { zodiac: 'gemini', astrologicalLineage: '', seasonalAlignment: '' },
-  chromaticRegistry: { primaryPalette: [], baseNeutral: '#F2F1ED', accentSignal: '#1C1917' },
-  typographyIntent: { styleDescription: '', weightPreference: '' },
-  narrativeVoice: { emotionalTemperature: 'CLINICAL', sentenceStructure: 'CONCISE', culturalRegister: ['EDITORIAL'] },
-  desireVectors: { moreOf: '', lessOf: '', experimentingWith: '', avoiding: '', materialityAudit: '' },
+  positioningCore: {
+    anchors: { culturalReferences: [], ideologicalBias: [] },
+    aestheticCore: { silhouettes: [], materiality: [], eraBias: 'Post-Digital', density: 5, entropy: 5 },
+    positioningAxis: 'Signal vs Noise',
+    authorityClaim: 'Aesthetic infrastructure for long-term cultural positioning.',
+    exclusionPrinciples: ['Avoid reactive trend commentary', 'Refuse cross-cluster dilution without thesis']
+  },
+  expressionEngine: {
+    chromaticRegistry: { primaryPalette: [], baseNeutral: '#F2F1ED', accentSignal: '#1C1917' },
+    typographyIntent: { styleDescription: 'Cormorant Garamond', weightPreference: 'Light' },
+    narrativeVoice: { emotionalTemperature: 'CLINICAL', structureBias: 'CONCISE', lexicalDensity: 5, restraintLevel: 8, voiceNotes: '' },
+    brandIdentity: { fonts: { serif: 'Cormorant Garamond', sans: 'Inter', mono: 'Space Mono' }, logo: '', palette: ['#000000', '#FFFFFF'] }
+  },
+  strategicVectors: {
+    expansionTolerance: 5,
+    fiscalVelocity: 'measured',
+    desireVectors: { deepen: [], reduce: [], experiment: [], refuse: [] },
+    saturationAwareness: { oversaturatedClusters: [], fragileDifferentiators: [] }
+  },
+  diagnostics: {
+    contradictionFlags: [],
+    dilutionRisks: [],
+    authorityStrengthScore: 50,
+    driftVulnerability: 5
+  },
+  strategicSummary: {
+    identityVector: 'A baseline identity vector focused on signal over noise.',
+    authorityAnchor: 'Aesthetic infrastructure.',
+    exclusionRules: [],
+    elasticityIndex: 5,
+    tonalConstraints: 'Restrained and precise.',
+    aestheticDNA: 'Post-Digital Minimalism.'
+  },
+  celestialCalibration: { enabled: false, zodiac: 'gemini', astrologicalLineage: '', seasonalAlignment: '' },
+  generationTemperature: 0.8,
   draftStatus: 'provisional',
   lastTailored: Date.now()
 };
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isInitializing, setIsInitializing] = useState(true);
   const [user, setUser] = useState<{ uid: string, isAnonymous: boolean, email?: string | null } | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -136,6 +177,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('mimi_feature_flags', JSON.stringify(next));
       return next;
     });
+  };
+
+  const toggleAlgo = (algoId: string) => {
+    if (!profile) return;
+    const current = profile.enabledAlgos || [];
+    const next = current.includes(algoId) ? current.filter(a => a !== algoId) : [...current, algoId];
+    updateProfile({ ...profile, enabledAlgos: next });
   };
 
   const addKeyToRing = (key: string) => {
@@ -207,15 +255,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const reconcileProfile = useCallback(async (fbUser: any) => {
     if (!fbUser) {
+      console.warn("MIMI // Reconcile: No user provided.");
       setUser(null); setProfile(null); setLoading(false);
       setSystemStatus(prev => ({ ...prev, auth: 'offline' }));
-      // Cleanup listeners
       if (unsubscribeProfile.current) unsubscribeProfile.current();
       if (unsubscribePrefs.current) unsubscribePrefs.current();
       return;
     }
     
-    if (reconciliationInProgress.current === fbUser.uid) return;
+    console.info("MIMI // Reconciling Profile for:", fbUser.uid, fbUser.isAnonymous ? "(Ghost)" : "(Swan)");
+    if (reconciliationInProgress.current === fbUser.uid) {
+      console.info("MIMI // Reconciliation already in progress for this UID. Skipping.");
+      return;
+    }
     reconciliationInProgress.current = fbUser.uid;
     setSystemStatus(prev => ({ ...prev, auth: 'syncing' }));
 
@@ -231,10 +283,28 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // SWAN PATH (Authenticated)
           
           // 1. Initial Cloud Check & potential Migration
-          const [cloudProfileSnap, cloudPrefsSnap] = await Promise.all([
-              getUserProfile(fbUser.uid),
-              getUserPreferences(fbUser.uid)
-          ]);
+          let cloudProfileSnap = null;
+          let cloudPrefsSnap = null;
+          
+          // Retry logic for "permission-denied" which often happens during the auth-to-firestore propagation window
+          let retries = 3;
+          while (retries > 0) {
+              try {
+                  [cloudProfileSnap, cloudPrefsSnap] = await Promise.all([
+                      getUserProfile(fbUser.uid),
+                      getUserPreferences(fbUser.uid)
+                  ]);
+                  break; 
+              } catch (err: any) {
+                  if (err.code === 'permission-denied' && retries > 1) {
+                      console.warn(`MIMI // Permission Denied. Retrying in 500ms... (${retries} left)`);
+                      await new Promise(r => setTimeout(r, 500));
+                      retries--;
+                  } else {
+                      throw err;
+                  }
+              }
+          }
           
           // If no cloud data exists, but we have local data (fresh sign-up or first sync)
           if (!cloudProfileSnap && !cloudPrefsSnap && currentLocal) {
@@ -263,7 +333,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
               ...(cloudPrefsSnap || {}),
               uid: fbUser.uid,
               isSwan: true,
-              email: fbUser.email
+              email: fbUser.email,
+              photoURL: (cloudProfileSnap?.photoURL) || fbUser.photoURL || null
           } as UserProfile;
 
           // If migration happened, local is the best source until listeners fire
@@ -271,7 +342,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (cloudProfileSnap || cloudPrefsSnap) {
               initialProfile = mergedCloud;
           } else if (currentLocal) {
-              initialProfile = { ...currentLocal, uid: fbUser.uid, isSwan: true, email: fbUser.email };
+              initialProfile = { 
+                ...currentLocal, 
+                uid: fbUser.uid, 
+                isSwan: true, 
+                email: fbUser.email,
+                photoURL: currentLocal.photoURL || fbUser.photoURL || null
+              };
           } else {
               // Brand new user, no local data either
               initialProfile = {
@@ -279,6 +356,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   handle: 'Swan_' + fbUser.uid.slice(-4),
                   isSwan: true,
                   email: fbUser.email,
+                  photoURL: fbUser.photoURL || null,
                   createdAt: Date.now(),
                   lastActive: Date.now(),
                   onboardingComplete: false,
@@ -348,7 +426,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       lastActive: Date.now(),
       tasteProfile: { archetype_weights: {}, color_frequency: {} },
       starredZineIds: [],
-      onboardingComplete: true
+      onboardingComplete: false
     };
 
     const safeSpeedProfile = ensurePersonas(speedProfile);
@@ -374,49 +452,67 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (initStarted.current) return;
     initStarted.current = true;
-    const safetyValve = setTimeout(() => {
-      setLoading(false);
-      setSystemStatus(prev => ({ ...prev, auth: 'offline' }));
-      document.body.classList.add('hydrated');
-    }, 4000); 
+
     const performRitual = async () => {
+      console.info("MIMI // Initiating Auth Ritual...");
       try {
         await initializeAuthPersistence();
-        const redirectResult = await handleAuthRedirect();
-        if (redirectResult && redirectResult.uid) {
-           await reconcileProfile(redirectResult);
-        } else {
-           const bUser = await bootstrapAuth();
-           if (bUser) await reconcileProfile(bUser);
-           else {
-             const local = await getLocalProfile();
-             if (local) {
-               setProfile(ensurePersonas(local));
-               setUser({ uid: local.uid, isAnonymous: !local.isSwan });
-               setLoading(false);
-               setSystemStatus(prev => ({ ...prev, auth: 'anchored' }));
-               document.body.classList.add('hydrated');
-             } else await speedGhostEntrance();
-           }
-        }
         const authInstance = await ensureAuth();
-        onAuthStateChanged(authInstance, (fbUser) => {
-          if (fbUser) reconcileProfile(fbUser);
-          else {
-             setUser(null); 
-             // Cleanup listeners on auth state change to null
-             if (unsubscribeProfile.current) unsubscribeProfile.current();
-             if (unsubscribePrefs.current) unsubscribePrefs.current();
-             setLoading(false);
+
+        // 1. Handle Redirect Result FIRST
+        // We wait for this to resolve before we trust the onAuthStateChanged(null) signal
+        let rResult = null;
+        try {
+          rResult = await handleAuthRedirect();
+        } catch (e) {
+          console.warn("MIMI // Redirect Result Error:", e);
+        }
+
+        if (rResult && rResult.user) {
+           console.info("MIMI // Redirect Result Detected:", rResult.user.email);
+           await reconcileProfile(rResult.user);
+        }
+
+        // 2. Setup Observer
+        const unsubscribe = onAuthStateChanged(authInstance, async (fbUser) => {
+          if (fbUser) {
+            console.info("MIMI // Auth State Changed: Active", fbUser.uid);
+            await reconcileProfile(fbUser);
+          } else {
+             console.info("MIMI // Auth State Changed: Null");
+             
+             // CRITICAL: Only fallback to ghost if we are NOT in a redirect flow
+             // and we don't already have a profile (to prevent flicker)
+             if (!rResult && !profile) {
+                 const local = await getLocalProfile();
+                 if (local) {
+                   console.info("MIMI // Local Archive Found. Restoring Ghost Identity.");
+                   setProfile(ensurePersonas(local));
+                   setUser({ uid: local.uid, isAnonymous: !local.isSwan });
+                   setSystemStatus(prev => ({ ...prev, auth: 'anchored' }));
+                 } else {
+                   console.info("MIMI // No Identity Found. Entering Speed Ghost Flow.");
+                   await speedGhostEntrance();
+                 }
+             }
+             
+             if (!fbUser && !rResult) {
+                setLoading(false);
+             }
           }
+          setIsInitializing(false);
         });
+
+        unsubscribeProfile.current = unsubscribe;
       } catch (e) {
+        console.error("MIMI // Ritual Failed:", e);
         setLoading(false);
+        setIsInitializing(false);
         document.body.classList.add('hydrated');
       }
     };
-    performRitual().finally(() => clearTimeout(safetyValve));
-    return () => clearTimeout(safetyValve);
+
+    performRitual();
   }, [reconcileProfile, speedGhostEntrance]);
 
   const updateProfile = async (newProfile: UserProfile) => {
@@ -502,7 +598,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthError(null);
     try { 
         if (user?.isAnonymous) {
-            await linkIdentity();
+            await linkIdentity(forceRedirect);
+            // If it was a popup, we need to manually reconcile to propagate the "Swan" state
+            if (!forceRedirect && !isCaptiveInWebview()) {
+                const authInstance = await ensureAuth();
+                if (authInstance.currentUser) {
+                    await reconcileProfile(authInstance.currentUser);
+                }
+            }
         } else {
             // Already anchored, or switching
             await anchorIdentity(forceRedirect); 
@@ -510,6 +613,58 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e: any) { 
         setAuthError(e.code || e.message); 
         throw e; 
+    }
+  };
+
+  const keyLogin = async (handle: string, apiKey: string) => {
+    setLoading(true);
+    try {
+      const trimmedHandle = handle.trim().toLowerCase();
+      const trimmedKey = apiKey.trim();
+      
+      if (!trimmedHandle || !trimmedKey) throw new Error("Handle and Key are required.");
+
+      // 1. Add key to ring
+      addKeyToRing(trimmedKey);
+
+      // 2. Update profile
+      if (profile) {
+        const updated = { 
+          ...profile, 
+          handle: trimmedHandle, 
+          onboardingComplete: true,
+          lastActive: Date.now()
+        };
+        await updateProfile(updated);
+      }
+      
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+        detail: { message: `Identity Anchored: @${trimmedHandle}`, type: 'success' } 
+      }));
+    } catch (e: any) {
+      setAuthError(e.message);
+      throw e;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyIdentity = async () => {
+    setLoading(true);
+    try {
+      const authInstance = await ensureAuth();
+      if (authInstance.currentUser) {
+        // Force a fresh reconciliation
+        reconciliationInProgress.current = null; 
+        await reconcileProfile(authInstance.currentUser);
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+            detail: { message: "Identity Verified. Handshake complete.", type: 'success' } 
+        }));
+      }
+    } catch (e) {
+      setAuthError(e.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -540,20 +695,45 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const activePersona = profile?.personas?.find(p => p.id === profile.activePersonaId);
 
+  const canGenerate = profile?.isPatron || (profile?.generationCount || 0) < 5;
+  const generationsRemaining = profile?.isPatron ? Infinity : Math.max(0, 5 - (profile?.generationCount || 0));
+
+  const activatePatron = async (key: string) => {
+    if (!profile) return;
+    await updateProfile({ ...profile, isPatron: true, patronActivatedAt: Date.now(), patronKey: key });
+  };
+
+  const incrementGeneration = async () => {
+    if (!profile) return;
+    await updateProfile({ ...profile, generationCount: (profile.generationCount || 0) + 1 });
+  };
+
+  const recordSession = async () => {
+    if (!user || user.isAnonymous) return;
+    await recordSessionService(user.uid);
+  };
+
   return (
     <UserContext.Provider value={{ 
       user, profile, loading, updateProfile, toggleZineStar, isOnboardingComplete: !!profile?.onboardingComplete, 
-      login, ghostLogin, speedGhostEntrance, linkAccount, isEnvironmentRestricted, isDatabaseMissing, authError,
+      login, ghostLogin, speedGhostEntrance, linkAccount, keyLogin, verifyIdentity, isEnvironmentRestricted, isDatabaseMissing, authError,
       hasApiKey, openKeySelector, logout, refreshHasApiKey, systemStatus, setOracleStatus,
       keyRing, addKeyToRing, removeKeyFromRing,
       featureFlags, toggleFeature,
+      enabledAlgos: profile?.enabledAlgos || [],
+      toggleAlgo,
       personas: profile?.personas || [],
       activePersonaId: profile?.activePersonaId,
       activePersona,
       switchPersona,
       createPersona,
       updatePersona,
-      deletePersona
+      deletePersona,
+      canGenerate,
+      generationsRemaining,
+      activatePatron,
+      incrementGeneration,
+      recordSession
     }}>
       {children}
     </UserContext.Provider>

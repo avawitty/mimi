@@ -61,21 +61,13 @@
 }
 
 /* TEXTURE SYSTEM */
-.grain-overlay {
-  position: fixed;
-  inset: 0;
-  /* Using a subtle noise pattern */
-  background-image: url("https://www.transparenttextures.com/patterns/noise.png");
-  opacity: 0.08; /* Increased parchment grain */
-  pointer-events: none;
-  z-index: 9999;
-  mix-blend-mode: multiply;
+.paper-texture {
+  background-image: url("https://www.transparenttextures.com/patterns/cream-paper.png");
+  background-repeat: repeat;
 }
 
-.dark .grain-overlay {
-  mix-blend-mode: overlay;
-  opacity: 0.25; /* Increased scope gram/grain on dark mode */
-  background-image: url("https://www.transparenttextures.com/patterns/stardust.png"); 
+.dark .paper-texture {
+  background-image: url("https://www.transparenttextures.com/patterns/stardust.png");
 }
 
 .canvas-texture {

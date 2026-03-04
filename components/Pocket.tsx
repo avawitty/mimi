@@ -1,12 +1,13 @@
 
 // @ts-nocheck
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { PocketItem, ZineMetadata, TasteAuditReport, TrendSynthesisReport, ColorShard, InvestmentReport } from '../types';
 import { fetchPocketItems, deleteFromPocket, addToPocket, updatePocketItem, createMoodboard } from '../services/firebase';
 import { getLocalPocket } from '../services/localArchive';
 import { useUser } from '../contexts/UserContext';
-import { analyzeCollectionIntent, scryTrendSynthesis, generateInvestmentStrategy, compressImage } from '../services/geminiService';
-import { Loader2, Trash2, Sparkles, RefreshCw, X, CheckCircle2, Filter, Search, Link as LinkIcon, Anchor, Info, Compass, ShieldCheck, Target, ChevronRight, Binary, Orbit, Zap, Activity, Fingerprint, Waves, Play, Pause, Volume2, Shield, Plus, Layers, PenTool, Layout, Save, Wand2, Pencil, FolderPlus, FolderOpen, ArrowLeft, Copy, Check, Send, Radio, Briefcase, Eye, EyeOff, Globe2, Radar, ExternalLink, ImageIcon, Wallet, ScrollText, DollarSign, PieChart, Coins, AlertTriangle } from 'lucide-react';
+import { analyzeCollectionIntent, scryTrendSynthesis, generateInvestmentStrategy, compressImage, applyAestheticRefraction } from '../services/geminiService';
+import { Loader2, Trash2, Sparkles, RefreshCw, X, CheckCircle2, Filter, Search, Link as LinkIcon, Anchor, Info, Compass, ShieldCheck, Target, ChevronRight, Binary, Orbit, Zap, Activity, Fingerprint, Waves, Play, Pause, Volume2, Shield, Plus, Layers, PenTool, Layout, Save, Wand2, Pencil, FolderPlus, FolderOpen, ArrowLeft, Copy, Check, Send, Radio, Briefcase, Eye, EyeOff, Globe2, Radar, ExternalLink, ImageIcon, Wallet, ScrollText, DollarSign, PieChart, Coins, AlertTriangle, LayoutGrid, Upload, FileText, Share2, Wand } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // --- SUB-COMPONENTS ---
@@ -138,14 +139,75 @@ const FinancialBriefOverlay: React.FC<{ report: InvestmentReport; onClose: () =>
     </motion.div>
 );
 
-const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdate: (id: string, updates: any) => void }> = ({ item, onClose, onUpdate }) => {
+const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdate: (id: string, updates: any) => void; onAcquire?: (item: PocketItem) => void }> = ({ item, onClose, onUpdate, onAcquire }) => {
     const [notes, setNotes] = useState(item.notes || '');
+    const [title, setTitle] = useState(item.content.title || item.content.prompt || item.content.name || '');
+    const [description, setDescription] = useState(item.content.description || '');
+    const [price, setPrice] = useState(item.content.price || '');
     const [isEditing, setIsEditing] = useState(false);
+    const [isRefracting, setIsRefracting] = useState(false);
+    const { profile } = useUser();
     
     const handleSave = async () => {
-        await updatePocketItem(item.userId, item.id, { notes });
-        onUpdate(item.id, { notes });
+        const updates = { 
+            notes, 
+            content: { 
+                ...item.content, 
+                title, 
+                description, 
+                price 
+            } 
+        };
+        await updatePocketItem(item.userId, item.id, updates);
+        onUpdate(item.id, updates);
         setIsEditing(false);
+    };
+
+    const handleShare = async () => {
+        const shareData = {
+            title: title || 'Mimi Shard',
+            text: description || notes || 'Check out this aesthetic shard from Mimi.',
+            url: item.content.imageUrl || window.location.href
+        };
+        
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                await navigator.clipboard.writeText(shareData.url);
+                window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Link copied to clipboard.", type: 'success' } }));
+            }
+        } catch (err) {
+            console.error("Share failed", err);
+        }
+    };
+
+    const handleRefract = async () => {
+        const stylePrompt = prompt("Enter an aesthetic style or directive for refraction (e.g., '90s Cyberpunk', 'Minimalist Editorial', 'Surrealist Oil Painting'):");
+        if (!stylePrompt) return;
+
+        setIsRefracting(true);
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Refracting Aesthetic Frequency...", icon: <Sparkles size={14} className="animate-pulse" /> } }));
+
+        try {
+            const refractedUrl = await applyAestheticRefraction(item.content.imageUrl, stylePrompt, profile);
+            const updates = {
+                content: {
+                    ...item.content,
+                    imageUrl: refractedUrl,
+                    originalUrl: item.content.imageUrl,
+                    refractionStyle: stylePrompt
+                }
+            };
+            await updatePocketItem(item.userId, item.id, updates);
+            onUpdate(item.id, updates);
+            window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Aesthetic Refraction Complete.", type: 'success' } }));
+        } catch (err) {
+            console.error("Refraction failed", err);
+            window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Refraction Failed.", type: 'error' } }));
+        } finally {
+            setIsRefracting(false);
+        }
     };
 
     return (
@@ -160,36 +222,188 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-stone-400/20 via-transparent to-transparent" />
                 </div>
                 <div className="relative z-10 max-w-full max-h-full shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]">
-                    {item.type === 'image' && <img src={item.content.imageUrl} className="max-w-full max-h-[80vh] object-contain" />}
+                    {item.type === 'image' && (
+                        <div className="relative group space-y-8">
+                            <img src={item.content.imageUrl} className="max-w-full max-h-[80vh] object-contain shadow-2xl" />
+                            
+                            {/* Expanded Metadata */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {item.agentEnrichment && (
+                                    <div className="p-6 bg-stone-50 dark:bg-stone-900/50 rounded-sm border border-stone-100 dark:border-stone-800 space-y-4">
+                                        <div className="flex items-center gap-2">
+                                            <Fingerprint size={14} className="text-emerald-500" />
+                                            <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">Agent Enrichment</span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <span className="block font-mono text-[7px] text-stone-400 uppercase tracking-widest">Detected Era</span>
+                                                <span className="font-serif italic text-sm text-stone-900 dark:text-white">{item.agentEnrichment.detectedEra || 'Unknown'}</span>
+                                            </div>
+                                            <div>
+                                                <span className="block font-mono text-[7px] text-stone-400 uppercase tracking-widest">Cultural Ref</span>
+                                                <span className="font-serif italic text-sm text-stone-900 dark:text-white">{item.agentEnrichment.culturalReference || 'N/A'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {item.content.semiotic_touchpoints && (
+                                    <div className="p-6 bg-stone-50 dark:bg-stone-900/50 rounded-sm border border-stone-100 dark:border-stone-800 space-y-4">
+                                        <div className="flex items-center gap-2">
+                                            <Zap size={14} className="text-indigo-500" />
+                                            <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">Semiotic Signals</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {item.content.semiotic_touchpoints.map((pt: string, i: number) => (
+                                                <span key={i} className="px-2 py-1 bg-white dark:bg-stone-800 text-stone-500 dark:text-stone-400 font-mono text-[8px] rounded-sm border border-stone-100 dark:border-stone-800">
+                                                    {pt}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    {item.type === 'zine_card' && (
+                        <div className="w-full max-w-2xl bg-white dark:bg-stone-900 p-12 space-y-8 overflow-y-auto max-h-[80vh] border border-stone-100 dark:border-stone-800">
+                            <div className="space-y-2 border-b border-stone-100 dark:border-stone-800 pb-6">
+                                <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-emerald-500 font-black">Zine Inspection</span>
+                                <h2 className="font-serif text-4xl italic text-nous-text dark:text-white">{item.content.title}</h2>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                {[
+                                    item.content.imageUrl,
+                                    ...(item.content.analysis?.pages?.map(p => p.imageUrl) || []),
+                                    ...(item.content.analysis?.visual_shards?.map(s => s.imageUrl) || [])
+                                ].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).map((url, i) => (
+                                    <div key={i} className="group relative aspect-square bg-stone-50 dark:bg-stone-950 rounded-sm overflow-hidden border border-stone-100 dark:border-stone-800">
+                                        <img src={url} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
+                                            <button 
+                                                onClick={async () => {
+                                                    await addToPocket(item.userId, 'image', {
+                                                        imageUrl: url,
+                                                        prompt: `Extracted from: ${item.content.title}`,
+                                                        timestamp: Date.now(),
+                                                        origin: 'Zine_Extraction'
+                                                    });
+                                                    window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Shard Injected to Pocket.", icon: <CheckCircle2 size={14} /> } }));
+                                                    window.dispatchEvent(new CustomEvent('mimi:pocket_updated'));
+                                                }}
+                                                className="w-full py-2 bg-emerald-500 text-white font-sans text-[8px] uppercase tracking-widest font-black rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all"
+                                            >
+                                                Inject Shard
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                     {(item.type === 'voicenote' || item.type === 'audio') && <SonicShardPlayer url={item.content.audioUrl} />}
+                    {item.type === 'analysis_report' && (
+                        <div className="w-full max-w-2xl bg-stone-900 text-white p-12 space-y-8 overflow-y-auto max-h-[80vh]">
+                            <div className="space-y-2 border-b border-white/10 pb-6">
+                                <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-emerald-500 font-black">Mesopic Analysis</span>
+                                <h2 className="font-serif text-4xl italic">{item.content.title}</h2>
+                            </div>
+                            
+                            <div className="space-y-4">
+                                <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Director's Note</span>
+                                <p className="font-serif italic text-lg text-stone-300 leading-relaxed border-l-2 border-emerald-500/30 pl-4">
+                                    "{item.content.content?.directors_note}"
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-4 bg-black/40 rounded-sm">
+                                    <span className="block font-mono text-[8px] text-stone-400 mb-2">LIGHTING</span>
+                                    <span className="font-serif italic text-sm text-white">{item.content.content?.lighting_analysis}</span>
+                                </div>
+                                <div className="p-4 bg-black/40 rounded-sm">
+                                    <span className="block font-mono text-[8px] text-stone-400 mb-2">CULTURE</span>
+                                    <span className="font-serif italic text-sm text-white">{item.content.content?.cultural_parallel}</span>
+                                </div>
+                            </div>
+
+                            {item.content.content?.creative_potential && (
+                                <div className="space-y-4">
+                                    <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Creative Potential</span>
+                                    <p className="font-serif italic text-sm text-stone-300 leading-relaxed border-l-2 border-indigo-500/30 pl-4">
+                                        {item.content.content.creative_potential}
+                                    </p>
+                                </div>
+                            )}
+
+                            {item.content.content?.semiotic_touchpoints && (
+                                <div className="space-y-4">
+                                    <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Semiotic Touchpoints</span>
+                                    <div className="flex flex-wrap gap-2">
+                                        {item.content.content.semiotic_touchpoints.map((pt: string, i: number) => (
+                                            <span key={i} className="px-3 py-1.5 bg-black/40 text-stone-300 font-mono text-[9px] rounded-sm border border-white/5">
+                                                {pt}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
             
             {/* DATA SIDE */}
             <div className="w-full md:w-[450px] bg-white dark:bg-stone-950 border-l border-stone-100 dark:border-stone-800 p-12 flex flex-col gap-12 overflow-y-auto">
-                <div className="space-y-4">
-                    <span className="font-sans text-[10px] uppercase tracking-[0.5em] text-stone-400 font-black italic">Shard Metadata</span>
-                    <h2 className="font-serif text-4xl italic text-nous-text dark:text-white leading-tight">{item.content.prompt || item.content.name || 'Untitled Fragment'}</h2>
-                    <div className="flex items-center gap-4 text-stone-400 font-mono text-[10px]">
-                        <span className="px-2 py-1 bg-stone-100 dark:bg-stone-900 rounded-sm uppercase">{item.type}</span>
-                        <span>{new Date(item.savedAt).toLocaleDateString()}</span>
-                    </div>
-                </div>
-
-                <div className="space-y-6">
+                <div className="space-y-8">
                     <div className="flex justify-between items-center border-b border-stone-100 dark:border-stone-800 pb-2">
-                        <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">Interior Notes</span>
+                        <span className="font-sans text-[10px] uppercase tracking-[0.5em] text-stone-400 font-black italic">Shard Metadata</span>
                         {!isEditing ? (
                             <button onClick={() => setIsEditing(true)} className="text-stone-400 hover:text-nous-text dark:hover:text-white"><Pencil size={14} /></button>
                         ) : (
                             <button onClick={handleSave} className="text-emerald-500 hover:text-emerald-600"><Check size={14} /></button>
                         )}
                     </div>
+                    
+                    {isEditing ? (
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="font-sans text-[8px] uppercase tracking-widest text-stone-400 font-black">Title</label>
+                                <input value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-stone-50 dark:bg-stone-900 p-3 font-serif italic text-xl focus:outline-none rounded-sm border-b border-stone-200 dark:border-stone-800" placeholder="Shard Title..." />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="font-sans text-[8px] uppercase tracking-widest text-stone-400 font-black">Description</label>
+                                <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full h-24 bg-stone-50 dark:bg-stone-900 p-3 font-serif italic text-sm focus:outline-none rounded-sm border-b border-stone-200 dark:border-stone-800" placeholder="Aesthetic description..." />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="font-sans text-[8px] uppercase tracking-widest text-stone-400 font-black">Price / Valuation</label>
+                                <input value={price} onChange={e => setPrice(e.target.value)} className="w-full bg-stone-50 dark:bg-stone-900 p-3 font-mono text-sm focus:outline-none rounded-sm border-b border-stone-200 dark:border-stone-800" placeholder="$0.00" />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            <h2 className="font-serif text-4xl italic text-nous-text dark:text-white leading-tight">{title || 'Untitled Fragment'}</h2>
+                            {description && <p className="font-serif text-sm text-stone-500 dark:text-stone-400 italic leading-relaxed">{description}</p>}
+                            {price && (
+                                <div className="flex items-center gap-2 text-emerald-500 font-mono text-sm bg-emerald-500/5 px-3 py-2 rounded-sm w-fit border border-emerald-500/10">
+                                    <DollarSign size={14} />
+                                    <span className="font-black">{price}</span>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center border-b border-stone-100 dark:border-stone-800 pb-2">
+                        <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">Interior Notes</span>
+                    </div>
                     {isEditing ? (
                         <textarea 
                             value={notes} 
                             onChange={e => setNotes(e.target.value)}
-                            className="w-full h-48 bg-stone-50 dark:bg-stone-900 p-4 font-serif italic text-lg focus:outline-none rounded-sm"
+                            className="w-full h-48 bg-stone-50 dark:bg-stone-900 p-4 font-serif italic text-lg focus:outline-none rounded-sm border-b border-stone-200 dark:border-stone-800"
                             placeholder="Record your perception..."
                         />
                     ) : (
@@ -200,9 +414,37 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
                 </div>
 
                 <div className="mt-auto space-y-4">
-                    <button className="w-full py-4 bg-stone-900 dark:bg-white text-white dark:text-black rounded-full font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform">
+                    <button 
+                        onClick={() => {
+                            if (onAcquire) onAcquire(item);
+                            else {
+                                // Fallback to financial analysis if no onAcquire passed
+                                window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Initiating Fiscal Audit...", icon: <Wallet size={14} /> } }));
+                                // This assumes the parent Pocket component will handle the actual logic via some event or shared state
+                                // But better to just ensure onAcquire is passed.
+                            }
+                        }}
+                        className="w-full py-4 bg-stone-900 dark:bg-white text-white dark:text-black rounded-full font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform"
+                    >
                         <Target size={14} /> Acquire Data
                     </button>
+                    <div className="grid grid-cols-2 gap-4">
+                        <button 
+                            onClick={handleShare}
+                            className="py-4 border border-stone-200 dark:border-stone-800 rounded-full font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 hover:bg-stone-50 dark:hover:bg-stone-900 transition-colors"
+                        >
+                            <Share2 size={14} /> Share Shard
+                        </button>
+                        {item.type === 'image' && (
+                            <button 
+                                onClick={handleRefract}
+                                disabled={isRefracting}
+                                className="py-4 border border-stone-200 dark:border-stone-800 rounded-full font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 hover:bg-stone-50 dark:hover:bg-stone-900 transition-colors disabled:opacity-50"
+                            >
+                                {isRefracting ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} />} Refract Style
+                            </button>
+                        )}
+                    </div>
                     <button className="w-full py-4 border border-stone-200 dark:border-stone-800 rounded-full font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 hover:bg-stone-50 dark:hover:bg-stone-900 transition-colors">
                         <Volume2 size={14} /> Voice Memo
                     </button>
@@ -234,6 +476,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
   const [activeTrendReport, setActiveTrendReport] = useState<TrendSynthesisReport | null>(null);
   
   // Modals
+  const [showInjectModal, setShowInjectModal] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [activeShard, setActiveShard] = useState<PocketItem | null>(null);
@@ -253,7 +496,19 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
     } catch (e) {} finally { setLoading(false); }
   }, [user]);
 
-  useEffect(() => { loadPocket(); }, [loadPocket]);
+  useEffect(() => {
+    loadPocket();
+    const handleShardAdded = (e: any) => {
+      setItems(prev => [e.detail, ...prev]);
+    };
+    const handlePocketUpdate = () => loadPocket(true);
+    window.addEventListener('mimi:shard_added', handleShardAdded);
+    window.addEventListener('mimi:pocket_updated', handlePocketUpdate);
+    return () => {
+      window.removeEventListener('mimi:shard_added', handleShardAdded);
+      window.removeEventListener('mimi:pocket_updated', handlePocketUpdate);
+    };
+  }, [loadPocket]);
 
   const filteredItems = useMemo(() => {
     if (activeBoard) return items.filter(i => activeBoard.content.itemIds?.includes(i.id));
@@ -290,17 +545,22 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
     } finally { setIsAnalyzing(false); setActiveAgent(null); }
   };
 
-  const handleFinancialAnalysis = async () => {
-    const targetItems = getSelection();
+  const handleFinancialAnalysis = async (singleItem?: PocketItem) => {
+    const targetItems = singleItem ? [singleItem] : getSelection();
     if (targetItems.length === 0) return;
 
     setIsAnalyzing(true);
     setActiveAgent('strategist');
 
     try {
-        // Collect notes from all items to give context
-        const collectiveNotes = targetItems.map(i => i.notes).filter(Boolean).join('\n');
-        const res = await generateInvestmentStrategy(targetItems, collectiveNotes, profile);
+        // Collect notes and metadata from all items to give context
+        const collectiveContext = targetItems.map(i => {
+            const p = i.content.price ? ` [Price/Valuation: ${i.content.price}]` : '';
+            const d = i.content.description ? ` [Description: ${i.content.description}]` : '';
+            return `${i.content.title || i.content.prompt || 'Untitled Fragment'}${p}${d}\nNotes: ${i.notes || 'None'}`;
+        }).join('\n---\n');
+
+        const res = await generateInvestmentStrategy(targetItems, collectiveContext, profile);
         setActiveInvestment(res);
         window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Fiscal Strategy Generated.", icon: <Wallet size={14} /> } }));
     } catch (e) {
@@ -358,12 +618,17 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
     try {
       for (const file of Array.from(files)) {
         const reader = new FileReader();
-        const base64 = await new Promise((resolve) => {
+        const base64 = await new Promise<string>((resolve, reject) => {
             reader.onload = async (ev) => {
-                const raw = ev.target?.result as string;
-                const compressed = await compressImage(raw);
-                resolve(compressed);
+                try {
+                    const raw = ev.target?.result as string;
+                    const compressed = await compressImage(raw);
+                    resolve(compressed);
+                } catch (err) {
+                    reject(err);
+                }
             };
+            reader.onerror = reject;
             reader.readAsDataURL(file);
         });
         const type = file.type.startsWith('audio') ? 'voicenote' : 'image';
@@ -411,7 +676,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
           )}
       </AnimatePresence>
 
-      <header className="px-8 md:px-12 pt-12 md:pt-16 pb-8 border-b border-stone-100 dark:border-stone-900 bg-white/50 dark:bg-stone-900/50 backdrop-blur-xl shrink-0">
+      <header className="px-4 md:px-8 lg:px-12 pt-12 md:pt-16 pb-8 border-b border-stone-100 dark:border-stone-900 bg-white/50 dark:bg-stone-900/50 backdrop-blur-xl shrink-0">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div className="space-y-4">
               <div className="flex items-center gap-4">
@@ -424,6 +689,12 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
             </div>
             
             <div className="flex items-center gap-6">
+                <button 
+                    onClick={() => setShowInjectModal(true)}
+                    className="flex items-center gap-2 px-6 py-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full font-sans text-[9px] uppercase tracking-widest font-black hover:bg-emerald-500 hover:text-white transition-all"
+                >
+                    <Plus size={14} /> Inject Shard
+                </button>
                 <div className="flex items-center gap-3 px-4 py-2 bg-stone-50 dark:bg-stone-800 rounded-full border border-black/5">
                     <Shield size={10} className={systemStatus.auth === 'anchored' ? 'text-emerald-500' : 'text-stone-300'} />
                     <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">{systemStatus.auth === 'anchored' ? 'SYNC ACTIVE' : 'LOCAL'}</span>
@@ -432,7 +703,31 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
           </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar px-8 md:px-12 pt-12 pb-64">
+      <AnimatePresence>
+          {showInjectModal && (
+              <div className="fixed inset-0 z-[10000] flex items-center justify-center p-8 bg-stone-950/90 backdrop-blur-xl">
+                  <div className="w-full max-w-md bg-white dark:bg-stone-900 p-8 rounded-sm space-y-8 border border-stone-200 dark:border-stone-800 shadow-2xl">
+                      <div className="flex justify-between items-center">
+                          <div className="space-y-1">
+                              <h3 className="font-serif text-2xl italic">Inject Shard.</h3>
+                              <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400 font-black">Material Ingestion Protocol</p>
+                          </div>
+                          <button onClick={() => setShowInjectModal(false)} className="p-2 text-stone-400 hover:text-red-500 transition-colors"><X size={20}/></button>
+                      </div>
+                      <div className="grid gap-4">
+                          <button onClick={() => { fileInputRef.current?.click(); setShowInjectModal(false); }} className="w-full py-4 bg-stone-50 dark:bg-stone-800 hover:bg-emerald-500 hover:text-white transition-all rounded-sm font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 group">
+                              <Upload size={14} className="text-stone-400 group-hover:text-white" /> Upload Local File
+                          </button>
+                          <button onClick={() => { window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'archival' })); setShowInjectModal(false); }} className="w-full py-4 bg-stone-50 dark:bg-stone-800 hover:bg-emerald-500 hover:text-white transition-all rounded-sm font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 group">
+                              <FileText size={14} className="text-stone-400 group-hover:text-white" /> From Authored Registry
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          )}
+      </AnimatePresence>
+
+      <div className="flex-1 overflow-y-auto no-scrollbar px-4 md:px-8 lg:px-12 pt-12 pb-64">
          {/* REPORT OVERLAYS */}
          <AnimatePresence>
             {activeTrendReport && (
@@ -496,6 +791,13 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
               <motion.div key={item.id} layout onClick={() => handleItemClick(item)} className={`group relative bg-white dark:bg-stone-900 border p-1 shadow-sm rounded-sm flex flex-col transition-all cursor-pointer ${isSelectionMode && selectedIds.has(item.id) ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-stone-100 dark:border-stone-800'}`}>
                   <div className="relative aspect-[3/4] bg-stone-50 dark:bg-stone-950 overflow-hidden">
                      {item.type === 'image' && <img src={item.content.imageUrl} className="w-full h-full object-cover grayscale transition-all group-hover:grayscale-0 duration-[2s]" />}
+                     {item.type === 'analysis_report' && (
+                        <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-stone-900 text-white gap-4 text-center border border-emerald-500/20">
+                           <Radar size={32} className="text-emerald-500 opacity-50" />
+                           <h3 className="font-serif italic text-xl text-white line-clamp-2">{item.content.title}</h3>
+                           <span className="font-sans text-[6px] uppercase tracking-widest text-emerald-500 font-black">Mesopic Analysis</span>
+                        </div>
+                     )}
                      {item.type === 'moodboard' && (
                         <div className="w-full h-full grid grid-cols-2 grid-rows-2 gap-0.5 bg-stone-900 overflow-hidden group-hover:scale-105 transition-transform duration-700">
                            {item.content.itemIds?.slice(0, 4).map((id, idx) => {
@@ -550,15 +852,16 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
       </div>
 
       {/* FOOTER TOOLBAR */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[4000] w-full max-w-2xl px-6">
-         <AnimatePresence mode="wait">
-             <motion.div 
-                 key="toolbar"
-                 initial={{ y: 20, opacity: 0 }} 
-                 animate={{ y: 0, opacity: 1 }} 
-                 exit={{ y: 20, opacity: 0 }}
-                 className="bg-stone-900/95 backdrop-blur-3xl p-3 rounded-2xl shadow-2xl flex items-center justify-between border border-white/10 gap-2"
-             >
+      {createPortal(
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[4000] w-full max-w-2xl px-6">
+             <AnimatePresence mode="wait">
+                 <motion.div 
+                     key="toolbar"
+                     initial={{ y: 20, opacity: 0 }} 
+                     animate={{ y: 0, opacity: 1 }} 
+                     exit={{ y: 20, opacity: 0 }}
+                     className="bg-stone-900/95 backdrop-blur-3xl p-3 rounded-2xl shadow-2xl flex items-center justify-between border border-white/10 gap-2"
+                 >
                  <div className="flex items-center gap-1">
                      <button 
                          onClick={() => setShowFolderModal(true)} 
@@ -586,14 +889,6 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
                          <span className="font-sans text-[7px] uppercase tracking-widest font-black">Acquire</span>
                      </button>
                      <button 
-                         onClick={handleProposal}
-                         disabled={selectedIds.size === 0}
-                         className="flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-stone-400 hover:text-amber-400 hover:bg-amber-500/10 transition-all disabled:opacity-30"
-                     >
-                         <ScrollText size={18} />
-                         <span className="font-sans text-[7px] uppercase tracking-widest font-black">Proposal</span>
-                     </button>
-                     <button 
                          onClick={async () => {
                              const targetItems = getSelection();
                              if (targetItems.length === 0) return;
@@ -613,7 +908,8 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
                                              likes: 0,
                                              zineData: item.type === 'zine_card' ? item.content.analysis : null
                                          };
-                                         await addDoc(collection(db, 'public_transmissions'), transmission);
+                                         const cleanTransmission = JSON.parse(JSON.stringify(transmission));
+                                         await addDoc(collection(db, 'public_transmissions'), cleanTransmission);
                                      }
                                  }
                                  window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Fragments Broadcasted.", icon: <Radio size={14} /> } }));
@@ -639,7 +935,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
                  </div>
              </motion.div>
          </AnimatePresence>
-      </div>
+      </div>, document.body)}
 
       <AnimatePresence>
          {showFolderModal && (
@@ -664,6 +960,10 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
                 onClose={() => setActiveShard(null)} 
                 onUpdate={(id, updates) => {
                     setItems(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i));
+                }}
+                onAcquire={(item) => {
+                    setActiveShard(null);
+                    handleFinancialAnalysis(item);
                 }}
             />
          )}

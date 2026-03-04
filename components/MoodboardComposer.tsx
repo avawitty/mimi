@@ -13,9 +13,9 @@ interface MoodboardComposerProps {
 }
 
 const parseRoadmapToText = (content: any): string => {
-  if (!content || !content.blueprint) return "Unstructured Roadmap";
-  const bp = content.blueprint;
-  return `ACT I: INCITING LOGIC\n${bp.inciting_debris || '---'}\n\nACT II: STRUCTURAL PIVOT\n${bp.structural_pivot || '---'}\n\nACT III: CLIMAX\n${bp.climax_manifest || '---'}\n\nOUTPUT SPEC\n${bp.end_product_spec || '---'}`;
+  if (!content || !content.roadmap) return "Unstructured Roadmap";
+  const rm = content.roadmap;
+  return `STRATEGIC THESIS\n${rm.strategicThesis || '---'}\n\nPOSITIONING AXIS\n${rm.positioningAxis || '---'}\n\nAUTHORITY ANCHOR\nCore Claim: ${rm.authorityAnchor?.coreClaim || '---'}\nRepetition Vector: ${rm.authorityAnchor?.repetitionVector || '---'}\nExclusion Principle: ${rm.authorityAnchor?.exclusionPrinciple || '---'}`;
 };
 
 export const MoodboardComposer: React.FC<MoodboardComposerProps> = ({ selectedItems, report, onCancel, onFinalize }) => {

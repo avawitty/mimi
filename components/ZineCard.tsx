@@ -86,9 +86,6 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
     >
       <div className={`w-full flex flex-col ${isMasonry ? '' : 'min-h-[500px]'} ${isMasonry ? 'aspect-auto' : styles.aspect} ${styles.wrapper} border ${styles.border} relative transition-colors duration-1000`}>
         
-        {/* TEXTURE LAYER */}
-        <div className={`absolute inset-0 pointer-events-none ${styles.grainOpacity} bg-[url('https://www.transparenttextures.com/patterns/noise.png')] z-0 mix-blend-overlay`} />
-        
         {/* IMAGE LAYER (Masonry: Image is visible by default, not just on hover) */}
         {(zine.coverImageUrl || zine.content?.hero_image_url) && (
             <div className={`relative w-full ${isMasonry ? 'h-auto' : 'absolute inset-0 opacity-0 group-hover:opacity-100'} transition-opacity duration-[1.5s] z-0 overflow-hidden`}>
@@ -153,7 +150,7 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
                    animate={{ opacity: 1, y: 0 }}
                    className={`font-serif italic text-sm md:text-lg opacity-60 max-w-xs leading-tight ${styles.text}`}
                  >
-                     "{zine.content?.oracular_mirror}"
+                     "{zine.content?.oracular_mirror || zine.content?.the_reading || "The mirror is silent."}"
                  </motion.p>
                )}
                {isMasonry && (

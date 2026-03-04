@@ -251,7 +251,6 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
 
   return (
     <div className="flex-1 w-full h-full overflow-y-auto no-scrollbar bg-nous-base dark:bg-[#050505] text-nous-text dark:text-white transition-all duration-1000 relative">
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-20 pointer-events-none mix-blend-overlay" />
       
       <div className="max-w-7xl mx-auto pt-20 px-6 md:px-12 pb-32">
         <header className="mb-16 space-y-6 text-center">

@@ -3,15 +3,207 @@
 import React, { useState, useEffect } from 'react';
 import { Shelf } from './Shelf';
 import { Pocket } from './Pocket';
-import { ZineMetadata } from '../types';
+import { ZineMetadata, PocketItem } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Upload, ImageIcon, FileText, X, Loader2, Search, ArrowRight, Check } from 'lucide-react';
+import { useUser } from '../contexts/UserContext';
+import { addToPocket, fetchUserZines, fetchPocketItems } from '../services/firebase';
+import { compressImage } from '../services/geminiService';
 
-interface ArchivalViewProps {
-  onSelectZine: (zine: ZineMetadata) => void;
-}
+const InjectShardModal: React.FC<{ onClose: () => void, onInjected: () => void }> = ({ onClose, onInjected }) => {
+    const { user, profile } = useUser();
+    const [mode, setMode] = useState<'upload' | 'authored' | 'url'>('upload');
+    const [authoredZines, setAuthoredZines] = useState<ZineMetadata[]>([]);
+    const [selectedZine, setSelectedZine] = useState<ZineMetadata | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [urlInput, setUrlInput] = useState('');
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (mode === 'authored' && user?.uid) {
+            setLoading(true);
+            fetchUserZines(user.uid).then(zines => {
+                setAuthoredZines(zines);
+                setLoading(false);
+            });
+        }
+    }, [mode, user]);
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        setLoading(true);
+        try {
+            for (const file of Array.from(files)) {
+                const reader = new FileReader();
+                const base64 = await new Promise((resolve) => {
+                    reader.onload = async (ev) => {
+                        const raw = ev.target?.result as string;
+                        const compressed = await compressImage(raw);
+                        resolve(compressed);
+                    };
+                    reader.readAsDataURL(file);
+                });
+                const type = file.type.startsWith('audio') ? 'voicenote' : 'image';
+                await addToPocket(user?.uid || 'ghost', type, {
+                    imageUrl: type === 'image' ? base64 : undefined,
+                    audioUrl: type === 'voicenote' ? base64 : undefined,
+                    prompt: file.name,
+                    timestamp: Date.now(),
+                    origin: 'Archive_Injection'
+                });
+            }
+            onInjected();
+            onClose();
+        } catch (err) { console.error(err); } finally { setLoading(false); }
+    };
+
+    const handleInjectFromZine = async (imageUrl: string, title: string) => {
+        if (!user?.uid) return;
+        setLoading(true);
+        try {
+            await addToPocket(user.uid, 'image', {
+                imageUrl,
+                prompt: `Extracted from: ${title}`,
+                timestamp: Date.now(),
+                origin: 'Zine_Extraction'
+            });
+            window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Shard Injected from Zine.", icon: <Check size={14} /> } }));
+            onInjected();
+        } catch (e) { console.error(e); } finally { setLoading(false); }
+    };
+
+    const handleUrlInject = async () => {
+        if (!urlInput.trim() || !user?.uid) return;
+        setLoading(true);
+        try {
+            await addToPocket(user.uid, 'image', {
+                imageUrl: urlInput,
+                prompt: "External Injection",
+                timestamp: Date.now(),
+                origin: 'URL_Injection'
+            });
+            onInjected();
+            onClose();
+        } catch (e) { console.error(e); } finally { setLoading(false); }
+    };
+
+    return (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[10000] bg-stone-950/90 backdrop-blur-xl flex items-center justify-center p-4 md:p-8">
+            <div className="w-full max-w-4xl bg-white dark:bg-stone-900 rounded-sm shadow-2xl flex flex-col max-h-[90vh] overflow-hidden border border-stone-200 dark:border-stone-800">
+                <header className="p-6 border-b border-stone-100 dark:border-stone-800 flex justify-between items-center shrink-0">
+                    <div className="space-y-1">
+                        <h3 className="font-serif text-2xl italic text-nous-text dark:text-white">Inject Shard.</h3>
+                        <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400 font-black">Material Ingestion Protocol</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 text-stone-400 hover:text-red-500 transition-colors"><X size={24} /></button>
+                </header>
+
+                <div className="flex border-b border-stone-100 dark:border-stone-800 shrink-0">
+                    <button onClick={() => { setMode('upload'); setSelectedZine(null); }} className={`flex-1 py-4 font-sans text-[9px] uppercase tracking-widest font-black transition-all ${mode === 'upload' ? 'bg-stone-50 dark:bg-stone-800 text-emerald-500 border-b-2 border-emerald-500' : 'text-stone-400 hover:text-stone-600'}`}>Upload File</button>
+                    <button onClick={() => setMode('authored')} className={`flex-1 py-4 font-sans text-[9px] uppercase tracking-widest font-black transition-all ${mode === 'authored' ? 'bg-stone-50 dark:bg-stone-800 text-emerald-500 border-b-2 border-emerald-500' : 'text-stone-400 hover:text-stone-600'}`}>From Authored</button>
+                    <button onClick={() => { setMode('url'); setSelectedZine(null); }} className={`flex-1 py-4 font-sans text-[9px] uppercase tracking-widest font-black transition-all ${mode === 'url' ? 'bg-stone-50 dark:bg-stone-800 text-emerald-500 border-b-2 border-emerald-500' : 'text-stone-400 hover:text-stone-600'}`}>URL Injection</button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-8 no-scrollbar">
+                    {mode === 'upload' && (
+                        <div 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="h-64 border-2 border-dashed border-stone-200 dark:border-stone-800 rounded-sm flex flex-col items-center justify-center gap-4 cursor-pointer hover:border-emerald-500 hover:bg-emerald-500/5 transition-all group"
+                        >
+                            <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" multiple accept="image/*,audio/*" />
+                            <Upload size={32} className="text-stone-300 group-hover:text-emerald-500 transition-colors" />
+                            <div className="text-center">
+                                <p className="font-serif italic text-xl text-stone-500">Drop shards here.</p>
+                                <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400 mt-2">Images or Audio (max 10MB)</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {mode === 'authored' && !selectedZine && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {authoredZines.map(zine => (
+                                <button key={zine.id} onClick={() => setSelectedZine(zine)} className="p-4 bg-stone-50 dark:bg-stone-800/50 border border-stone-100 dark:border-stone-800 rounded-sm hover:border-emerald-500 transition-all text-left flex gap-4 group">
+                                    <div className="w-16 h-16 bg-stone-200 dark:bg-stone-900 shrink-0 overflow-hidden rounded-sm">
+                                        {(zine.coverImageUrl || zine.content?.hero_image_url) && <img src={zine.coverImageUrl || zine.content?.hero_image_url} className="w-full h-full object-cover grayscale group-hover:grayscale-0" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-serif italic text-lg text-nous-text dark:text-white line-clamp-1">{zine.title}</h4>
+                                        <p className="font-sans text-[7px] uppercase tracking-widest text-stone-400">{new Date(zine.timestamp).toLocaleDateString()}</p>
+                                    </div>
+                                    <ArrowRight size={16} className="text-stone-300 self-center" />
+                                </button>
+                            ))}
+                            {loading && <div className="col-span-full py-12 flex justify-center"><Loader2 size={32} className="animate-spin text-stone-300" /></div>}
+                        </div>
+                    )}
+
+                    {mode === 'authored' && selectedZine && (
+                        <div className="space-y-8">
+                            <button onClick={() => setSelectedZine(null)} className="flex items-center gap-2 text-stone-400 hover:text-nous-text dark:hover:text-white transition-colors">
+                                <ArrowRight size={14} className="rotate-180" />
+                                <span className="font-sans text-[9px] uppercase tracking-widest font-black">Back to Registry</span>
+                            </button>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                {/* Extract images from zine content */}
+                                {[
+                                    selectedZine.coverImageUrl,
+                                    selectedZine.content?.hero_image_url,
+                                    ...(selectedZine.content?.pages?.map(p => p.imageUrl) || []),
+                                    ...(selectedZine.content?.visual_shards?.map(s => s.imageUrl) || [])
+                                ].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).map((url, i) => (
+                                    <div key={i} className="group relative aspect-square bg-stone-100 dark:bg-stone-950 rounded-sm overflow-hidden border border-stone-200 dark:border-stone-800">
+                                        <img src={url} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
+                                            <button 
+                                                onClick={() => handleInjectFromZine(url, selectedZine.title)}
+                                                className="w-full py-2 bg-emerald-500 text-white font-sans text-[8px] uppercase tracking-widest font-black rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all"
+                                            >
+                                                Inject Shard
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {mode === 'url' && (
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">External Image URL</label>
+                                <input 
+                                    type="text" 
+                                    value={urlInput} 
+                                    onChange={e => setUrlInput(e.target.value)}
+                                    placeholder="https://..."
+                                    className="w-full p-4 bg-stone-50 dark:bg-stone-800 border border-stone-100 dark:border-stone-800 rounded-sm font-mono text-xs focus:outline-none focus:border-emerald-500 transition-all"
+                                />
+                            </div>
+                            <button 
+                                onClick={handleUrlInject}
+                                disabled={!urlInput.trim() || loading}
+                                className="w-full py-4 bg-nous-text dark:bg-white text-white dark:text-black rounded-full font-sans text-[10px] uppercase tracking-[0.4em] font-black shadow-xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30"
+                            >
+                                {loading ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Execute Injection"}
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {loading && mode !== 'authored' && (
+                    <div className="absolute inset-0 bg-white/50 dark:bg-stone-950/50 backdrop-blur-sm flex items-center justify-center z-50">
+                        <Loader2 size={48} className="animate-spin text-emerald-500" />
+                    </div>
+                )}
+            </div>
+        </motion.div>
+    );
+};
 
 export const ArchivalView: React.FC<ArchivalViewProps> = ({ onSelectZine }) => {
   const [activeTab, setActiveTab] = useState<'issues' | 'pocket'>('issues');
+  const [showInjectModal, setShowInjectModal] = useState(false);
 
   // Listen for navigation requests to specific tabs
   useEffect(() => {
@@ -27,7 +219,7 @@ export const ArchivalView: React.FC<ArchivalViewProps> = ({ onSelectZine }) => {
   return (
     <div className="w-full pt-32 md:pt-48 animate-fade-in transition-all duration-1000">
        
-       <div className="px-12 md:px-24 mb-24 flex flex-col md:flex-row md:items-end justify-between gap-12 border-b border-stone-100 dark:border-stone-800 pb-16">
+       <div className="px-6 md:px-24 mb-24 flex flex-col md:flex-row md:items-end justify-between gap-12 border-b border-stone-100 dark:border-stone-800 pb-16">
            <div className="space-y-4">
                <h2 className="font-[Cormorant] font-light text-7xl md:text-9xl italic text-nous-text dark:text-white tracking-tighter luminescent-text leading-none">The Archive.</h2>
                <p className="font-sans text-[10px] uppercase tracking-[1em] text-stone-400 font-black">
@@ -35,21 +227,36 @@ export const ArchivalView: React.FC<ArchivalViewProps> = ({ onSelectZine }) => {
                </p>
            </div>
 
-           <div className="flex gap-16">
+           <div className="flex gap-16 items-end">
                <button 
-                 onClick={() => setActiveTab('issues')}
-                 className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'issues' ? 'text-nous-text dark:text-white border-nous-text dark:border-white' : 'text-stone-300 border-transparent hover:text-stone-500'}`}
+                 onClick={() => setShowInjectModal(true)}
+                 className="flex items-center gap-2 px-6 py-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full font-sans text-[9px] uppercase tracking-widest font-black hover:bg-emerald-500 hover:text-white transition-all mb-1"
                >
-                  Authored
+                 <Plus size={14} /> Inject Shard
                </button>
-               <button 
-                 onClick={() => setActiveTab('pocket')}
-                 className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'pocket' ? 'text-nous-text dark:text-white border-nous-text dark:border-white' : 'text-stone-300 border-transparent hover:text-stone-500'}`}
-               >
-                  Curated
-               </button>
+               <div className="flex gap-16">
+                   <button 
+                     onClick={() => setActiveTab('issues')}
+                     className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'issues' ? 'text-nous-text dark:text-white border-nous-text dark:border-white' : 'text-stone-300 border-transparent hover:text-stone-500'}`}
+                   >
+                      Authored
+                   </button>
+                   <button 
+                     onClick={() => setActiveTab('pocket')}
+                     className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'pocket' ? 'text-nous-text dark:text-white border-nous-text dark:border-white' : 'text-stone-300 border-transparent hover:text-stone-500'}`}
+                   >
+                      Curated
+                   </button>
+               </div>
            </div>
        </div>
+
+       <AnimatePresence>
+           {showInjectModal && <InjectShardModal onClose={() => setShowInjectModal(false)} onInjected={() => {
+               // Trigger refresh in child components if needed
+               window.dispatchEvent(new CustomEvent('mimi:pocket_updated'));
+           }} />}
+       </AnimatePresence>
 
        <div className="w-full min-h-[70vh]">
           <AnimatePresence mode="wait">

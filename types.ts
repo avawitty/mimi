@@ -35,23 +35,88 @@ export interface PocketItem {
 }
 
 export interface TailorLogicDraft {
-  interests: {
-    anime?: string;
-    designer?: string;
-    topic?: string;
-    book?: string;
-    favoriteThing?: string;
+  positioningCore: {
+    anchors: {
+      culturalReferences: string[];
+      ideologicalBias?: string[];
+      culturalSynthesis?: string[];
+      trendClusters?: string[];
+    };
+    aestheticCore: {
+      silhouettes: string[];
+      materiality: string[];
+      eraBias: string;
+      density: number;  // 1–10
+      entropy: number;  // 1–10
+      tags: string[];
+      visualShards?: string[];
+    };
+    positioningAxis: string;
+    authorityClaim: string;
+    exclusionPrinciples: string[];
   };
-  aestheticCore: {
-    silhouettes: string;
-    textures?: string; 
-    eraFocus: string;
-    manualEra?: string;
-    density: number; 
-    developmentRoadmap: string[];
-    visualShards?: string[];
+
+  expressionEngine: {
+    chromaticRegistry: {
+      primaryPalette: ColorShard[];
+      baseNeutral: string;
+      accentSignal: string;
+    };
+    typographyIntent: {
+      styleDescription: string;
+      weightPreference: string;
+    };
+    narrativeVoice: {
+      emotionalTemperature: string;
+      structureBias: string;
+      lexicalDensity: number;  // 1–10
+      restraintLevel: number;  // 1–10
+      voiceNotes?: string;
+    };
+    brandIdentity?: {
+      fonts: {
+        serif: string;
+        sans: string;
+        mono: string;
+      };
+      logo?: string;
+      palette: string[];
+    };
   };
+
+  strategicVectors: {
+    expansionTolerance: number;  // 1–10
+    fiscalVelocity: "conservative" | "measured" | "accelerated";
+    desireVectors: {
+      deepen: string[];
+      reduce: string[];
+      experiment: string[];
+      refuse: string[];
+    };
+    saturationAwareness: {
+      oversaturatedClusters: string[];
+      fragileDifferentiators: string[];
+    };
+  };
+
+  diagnostics: {
+    contradictionFlags: string[];
+    dilutionRisks: string[];
+    authorityStrengthScore: number;  // 0–100
+    driftVulnerability: number;      // 1–10
+  };
+
+  strategicSummary: {
+    identityVector: string;  
+    authorityAnchor: string;
+    exclusionRules: string[];
+    elasticityIndex: number;
+    tonalConstraints: string;
+    aestheticDNA: string;
+  };
+
   celestialCalibration?: {
+    enabled: boolean;
     zodiac?: ZodiacSign;
     birthDate?: string;
     birthTime?: string;
@@ -59,38 +124,10 @@ export interface TailorLogicDraft {
     astrologicalLineage?: string;
     seasonalAlignment?: string;
   };
-  chromaticRegistry: {
-    primaryPalette: ColorShard[];
-    baseNeutral: string;
-    accentSignal: string;
-  };
-  typographyIntent: {
-    styleDescription: string;
-    weightPreference: string;
-  };
-  narrativeVoice: {
-    emotionalTemperature: 'DETACHED' | 'CLINICAL' | 'OBSERVATIONAL' | 'INTIMATE' | 'VISCERAL';
-    sentenceStructure: 'CONCISE' | 'FLOWING' | 'FRAGMENTED' | 'STACCATO' | 'ACADEMIC';
-    culturalRegister: string[];
-  };
-  desireVectors: {
-    moreOf: string;
-    lessOf: string;
-    experimentingWith: string;
-    avoiding: string;
-    materialityAudit?: string;
-    fiscalVelocity?: string; // NEW: Budget/Resource intent
-  };
-  brandIdentity?: {
-    fonts: {
-      serif: string;
-      sans: string;
-      mono: string;
-    };
-    logo?: string;
-    palette: string[];
-  };
+
+  generationTemperature?: number; 
   draftStatus: 'provisional' | 'aligned' | 'evolving';
+  aiSignature?: string;
   lastTailored: number;
 }
 
@@ -100,6 +137,7 @@ export interface Persona {
   tailorDraft: TailorLogicDraft;
   apiKey?: string; // Optional override for specific billing
   themePreference?: string;
+  photoURL?: string; // Visual representation for the mask
   createdAt: number;
 }
 
@@ -142,6 +180,44 @@ export interface ZineSpec {
   oracular_mirror?: string;
   poetic_interpretation?: string;
   blueprint?: FruitionTrajectory;
+  roadmap?: Roadmap;
+}
+
+export type RoadmapPhaseType = "establish" | "differentiate" | "operationalize" | "expand" | "evolve";
+
+export interface AuthorityAnchor {
+  coreClaim: string;
+  repetitionVector: string;
+  exclusionPrinciple: string;
+}
+
+export interface RoadmapPhase {
+  type: RoadmapPhaseType;
+  objective: string;
+  strategicMove: string;
+  artifactOutputs: string[];
+  riskToIntegrity: string;
+  signalToMonitor: string;
+}
+
+export interface DriftForecast {
+  predictedClusterShift: string;
+  audienceEvolution: string;
+  absorptionRisk: string;
+  overexposureRisk: string;
+  refusalPoint: string;
+}
+
+export interface Roadmap {
+  strategicThesis: string;
+  positioningAxis: string;
+  authorityAnchor: AuthorityAnchor;
+  intensity: "low" | "medium" | "high";
+  densityLevel: number;
+  entropyLevel: number;
+  timelineMode: "compressed" | "standard" | "long-arc";
+  phases: RoadmapPhase[];
+  driftForecast: DriftForecast;
 }
 
 export interface ZinePageSpec {
@@ -179,7 +255,9 @@ export interface ZineMetadata {
 export interface SemioticSignal {
   motif: string;
   context: string;
-  visual_directive?: string; // NEW: Visual description
+  visual_directive?: string; 
+  type?: 'acquisition' | 'conceptual' | 'lexical'; // NEW: Referential types
+  link?: string; // NEW: Grounding link for acquisition
 }
 
 export interface FruitionTrajectory {
@@ -189,7 +267,7 @@ export interface FruitionTrajectory {
   end_product_spec: string;
 }
 
-export type ToneTag = 'chic' | 'nostalgia' | 'dream' | 'unhinged' | 'panic' | 'editorial' | 'Cinematic Witness' | 'Editorial Stillness' | 'Romantic Interior' | 'Structured Desire' | 'Documentary B&W';
+export type ToneTag = 'chic' | 'nostalgia' | 'dream' | 'unhinged' | 'panic' | 'editorial' | 'research' | 'Cinematic Witness' | 'Editorial Stillness' | 'Romantic Interior' | 'Structured Desire' | 'Documentary B&W';
 export type AspectRatio = '1:1' | '2:3' | '3:2' | '3:4' | '4:3' | '9:16' | '16:9' | '21:9';
 export type ImageSize = '1K' | '2K' | '4K';
 
@@ -211,6 +289,16 @@ export interface DriftEvent {
   triggerZineId: string;
 }
 
+export interface SovereignIdentityCard {
+  aestheticCoordinates: {
+    name: string;
+    description: string;
+  }[];
+  tasteDriftPercentage: number;
+  svgVisual: string; // NEW
+  generatedAt: number;
+}
+
 export interface TasteProfile {
   archetype_weights: Record<string, number>;
   color_frequency: Record<string, number>;
@@ -218,6 +306,7 @@ export interface TasteProfile {
   semantic_signature?: string;
   dominant_archetypes?: TypographicArchetype[];
   inspirations?: string;
+  sovereignIdentity?: SovereignIdentityCard; // NEW
 }
 
 export interface TasteEvent {
@@ -332,6 +421,8 @@ export interface EditorElementStyle {
   borderRadius?: number;
   padding?: number;
   backgroundColor?: string;
+  backgroundImage?: string;
+  mixBlendMode?: string;
 }
 
 export interface EditorElement {
@@ -428,6 +519,7 @@ export interface UserPreferences {
   tasteProfile?: TasteProfile;
   starredZineIds?: string[];
   lastAuditReport?: TailorAuditReport;
+  enabledAlgos?: string[]; // NEW: User-defined firewalls for specific functions
 }
 
 export interface UserProfile extends UserPreferences {
@@ -446,6 +538,16 @@ export interface UserProfile extends UserPreferences {
   useLikeness?: boolean;
   onboardingComplete?: boolean;
   syncedUsers?: string[];
+  tasteVector?: Record<string, number>;
+  // Patron & Retention Tracking
+  isPatron?: boolean;
+  patronActivatedAt?: number;
+  patronKey?: string;
+  generationCount?: number;
+  firstVisitAt?: number;
+  lastVisitAt?: number;
+  visitCount?: number;
+  sessionDates?: number[];
 }
 
 // -- PROPOSAL SYSTEM -- //

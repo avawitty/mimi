@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Key, ExternalLink, Loader2, Check, Crown, Lock, Star, Fingerprint } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 
-export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => void; prefillKey?: string }> = ({ isOpen, onClose, prefillKey }) => {
-  const { toggleFeature } = useUser();
+export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => void; prefillKey?: string; isLimitReached?: boolean }> = ({ isOpen, onClose, prefillKey, isLimitReached }) => {
+  const { activatePatron } = useUser();
   const [keyInput, setKeyInput] = useState(prefillKey || '');
   const [status, setStatus] = useState<'idle' | 'validating' | 'success' | 'error'>('idle');
 
@@ -14,37 +14,22 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
       if (prefillKey) setKeyInput(prefillKey);
   }, [prefillKey]);
 
-  const handleValidate = () => {
+  const handleValidate = async () => {
     if (!keyInput.trim()) return;
     setStatus('validating');
     
-    // Simulating validation delay
-    setTimeout(() => {
-        // Validation logic: Checks for specific "Gold" keys, Stripe patterns, or the new Minted Key format
-        const cleanKey = keyInput.trim();
-        const isValid = 
-            cleanKey === 'MIMI-GOLD' || 
-            cleanKey.startsWith('sk_') || 
-            cleanKey.includes('PATRON') ||
-            cleanKey.startsWith('MIMI-IMP-'); // New Minted Key Format
-
-        if (isValid) {
-            setStatus('success');
-            toggleFeature('proposal'); // Example: Unlocks the Proposal feature
-            
-            // Persist locally for immediate gratification
-            localStorage.setItem('mimi_patron_status', 'active');
-            
-            setTimeout(() => {
-                onClose();
-                setKeyInput('');
-                setStatus('idle');
-            }, 2000);
-        } else {
-            setStatus('error');
-            setTimeout(() => setStatus('idle'), 2000);
-        }
-    }, 1500);
+    try {
+        await activatePatron(keyInput.trim());
+        setStatus('success');
+        setTimeout(() => {
+            onClose();
+            setKeyInput('');
+            setStatus('idle');
+        }, 2000);
+    } catch (e) {
+        setStatus('error');
+        setTimeout(() => setStatus('idle'), 2000);
+    }
   };
 
   if (!isOpen) return null;
@@ -67,10 +52,6 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
         <div 
             className="absolute inset-0 pointer-events-none opacity-40 mix-blend-multiply z-0"
             style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/cream-paper.png')" }} 
-        />
-        <div 
-            className="absolute inset-0 pointer-events-none opacity-10 mix-blend-multiply z-0"
-            style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/noise.png')" }} 
         />
 
         {/* HANG TAG HOLE */}
@@ -103,6 +84,11 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
 
             {/* CONTEXT */}
             <div className="space-y-6 flex-1 flex flex-col justify-center w-full">
+                {isLimitReached && (
+                    <div className="bg-amber-100 text-amber-800 p-3 rounded-sm text-[10px] font-sans uppercase tracking-widest font-bold">
+                        Free generation limit reached.
+                    </div>
+                )}
                 <p className="font-serif italic text-sm text-stone-600 leading-relaxed px-2">
                     "Patronage unlocks deeper resonance: 4K Export, Unlimited Storage, and priority Agent processing."
                 </p>

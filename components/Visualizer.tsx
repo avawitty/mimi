@@ -1,9 +1,9 @@
 
 // @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
-import { generateZineImage, applyTreatment, animateShardWithVeo } from '../services/geminiService';
+import { generateZineImage, applyTreatment, animateShardWithVeo, analyzeMiseEnScene } from '../services/geminiService';
 import { addToPocket } from '../services/firebase';
-import { Loader2, RefreshCw, Bookmark, Check, Pencil, Download, Square, RectangleHorizontal, RectangleVertical, X, Sparkles, Image as ImageIcon, Ruler, Film, Activity, Zap, Maximize2, Layers } from 'lucide-react';
+import { Loader2, RefreshCw, Bookmark, Check, Pencil, Download, Square, RectangleHorizontal, RectangleVertical, X, Sparkles, Image as ImageIcon, Ruler, Film, Activity, Zap, Maximize2, Layers, Eye } from 'lucide-react';
 import { AspectRatio, ImageSize } from '../types';
 import { useUser } from '../contexts/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,12 +17,14 @@ export const Visualizer: React.FC<{
   initialImage?: string; 
   isArtifact?: boolean;
   isLite?: boolean; 
-}> = ({ prompt, defaultAspectRatio = '1:1', initialImage, isArtifact, isLite }) => {
-  const { user, profile } = useUser();
+  delay?: number;
+}> = ({ prompt, defaultAspectRatio = '1:1', initialImage, isArtifact, isLite, delay = 0 }) => {
+  const { user, profile, activePersona } = useUser();
   const [variants, setVariants] = useState<string[]>(initialImage ? [initialImage] : []);
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isPocketSaved, setIsPocketSaved] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [refinementText, setRefinementText] = useState('');
@@ -31,8 +33,11 @@ export const Visualizer: React.FC<{
   const [imgLoaded, setImgLoaded] = useState(false);
 
   useEffect(() => {
-    if (variants.length === 0 && prompt && !isLoading) handleDevelop();
-  }, [prompt]);
+    if (variants.length === 0 && prompt && !isLoading) {
+        const t = setTimeout(() => handleDevelop(), delay);
+        return () => clearTimeout(t);
+    }
+  }, [prompt, delay]);
 
   const isVideo = (url: string) => url?.startsWith('data:video/') || url?.includes('.mp4');
 
@@ -43,7 +48,8 @@ export const Visualizer: React.FC<{
     setIsPocketSaved(false);
     setIsEditing(false);
     try {
-      const result = await generateZineImage(prompt, aspectRatio, imageSize, profile, isLite);
+      const personaKey = activePersona?.apiKey ? activePersona.apiKey : undefined;
+      const result = await generateZineImage(prompt, aspectRatio, imageSize, profile, isLite, personaKey);
       setVariants(prev => {
           const next = [...prev, result];
           const limited = next.slice(-3); // Keep only 3 most recent
@@ -84,6 +90,44 @@ export const Visualizer: React.FC<{
     }
   };
 
+  const handleAnalyze = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!variants[selectedIdx] || isAnalyzing) return;
+    setIsAnalyzing(true);
+    
+    window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+        detail: { message: "Analyzing Mise en Scène...", icon: <Eye size={14} className="text-indigo-500" /> } 
+    }));
+    
+    try {
+      const currentSource = variants[selectedIdx];
+      // Extract base64 and mimeType
+      const match = currentSource.match(/^data:(image\/[a-zA-Z0-9]+);base64,(.+)$/);
+      if (!match) throw new Error("Invalid image format");
+      const mimeType = match[1];
+      const base64 = match[2];
+      
+      const analysis = await analyzeMiseEnScene(base64, mimeType, profile);
+      
+      // Store in pocket
+      await addToPocket(user?.uid || 'ghost', 'text', {
+          content: `Mise en Scène Analysis:\n\nDirector's Note: ${analysis.directors_note}\n\nLighting: ${analysis.lighting_analysis}\n\nCultural Parallel: ${analysis.cultural_parallel}\n\nSemiotic Touchpoints: ${analysis.semiotic_touchpoints?.join(', ')}`,
+          sourceImage: currentSource
+      });
+      
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+        detail: { message: "Analysis Saved to Pocket.", icon: <Check size={14} className="text-emerald-500" /> } 
+      }));
+    } catch (e) {
+      console.error("MIMI // Analysis Failure:", e);
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+        detail: { message: "Analysis Failed.", icon: <X size={14} className="text-red-500" /> } 
+      }));
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const cycleRatio = (e: React.MouseEvent) => {
     e.stopPropagation();
     const nextIdx = (SUPPORTED_ASPECT_RATIOS.indexOf(aspectRatio) + 1) % SUPPORTED_ASPECT_RATIOS.length;
@@ -117,11 +161,11 @@ export const Visualizer: React.FC<{
         style={isArtifact ? {} : { aspectRatio: aspectRatio.replace(':', '/') }}
       >
         <AnimatePresence>
-            {(isLoading || isAnimating) && (
+            {(isLoading || isAnimating || isAnalyzing) && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-30 bg-stone-950/40 backdrop-blur-xl flex flex-col items-center justify-center gap-6">
                  <Loader2 size={32} className="animate-spin text-emerald-500" />
                  <span className="font-sans text-[8px] uppercase tracking-[0.6em] text-white font-black animate-pulse">
-                    {isAnimating ? 'Refracting Motion...' : 'Developing Plate...'}
+                    {isAnalyzing ? 'Analyzing Mise en Scène...' : isAnimating ? 'Refracting Motion...' : 'Developing Plate...'}
                  </span>
               </motion.div>
             )}
@@ -155,6 +199,7 @@ export const Visualizer: React.FC<{
                </div>
                <button onClick={(e) => { e.stopPropagation(); setIsEditing(true); }} className="p-2.5 text-stone-400 hover:text-white transition-colors"><Pencil size={14}/></button>
                <button onClick={saveToPocket} className={`p-2.5 transition-all ${isPocketSaved ? 'text-emerald-500' : 'text-stone-400 hover:text-white'}`}>{isPocketSaved ? <Check size={14}/> : <Bookmark size={14}/>}</button>
+               <button onClick={handleAnalyze} disabled={isAnalyzing} className="p-2.5 text-stone-400 hover:text-indigo-400"><Eye size={14}/></button>
                <button onClick={handleAnimate} disabled={isAnimating} className="p-2.5 text-stone-400 hover:text-amber-400"><Film size={14}/></button>
                <div className="w-px h-6 bg-white/10 mx-1" />
                <button onClick={cycleRatio} className="p-2.5 text-stone-400 hover:text-white font-mono text-[8px]">{aspectRatio}</button>

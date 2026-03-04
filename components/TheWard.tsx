@@ -9,6 +9,7 @@ import { ShieldCheck, Activity, BrainCircuit, AlertTriangle, Fingerprint, Layers
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLiveSession } from '../hooks/useLiveSession';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { TasteGraph } from './TasteGraph';
 
 // --- SUB-COMPONENTS FOR DATA VIZ ---
 
@@ -539,6 +540,10 @@ export const TheWard: React.FC = () => {
                            ) : (
                              <span className="font-mono text-[9px] text-stone-400 italic">No tone data available.</span>
                            )}
+                        </div>
+
+                        <div className="mt-12">
+                           <TasteGraph tasteVector={profile?.tasteVector} variant="diagnostic" />
                         </div>
                      </section>
 

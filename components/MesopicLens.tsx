@@ -263,15 +263,27 @@ export const MesopicLens: React.FC = () => {
   const handleArchive = async () => {
     if (isArchived || !previewUrl) return;
     try {
-      await addToPocket(user?.uid || 'ghost', 'image', { 
+      // Save the image
+      const imageId = await addToPocket(user?.uid || 'ghost', 'image', { 
         imageUrl: previewUrl,
         prompt: analysis?.directors_note || "Mesopic Intercept",
         notes: `Captured via Mesopic Lens.`,
         timestamp: Date.now()
       });
+
+      // Save the analysis report if available
+      if (analysis) {
+        await addToPocket(user?.uid || 'ghost', 'analysis_report', {
+          title: `Mesopic Analysis: ${instantId?.era || 'Intercept'}`,
+          content: analysis,
+          sourceImageId: imageId,
+          timestamp: Date.now()
+        });
+      }
+
       setIsArchived(true);
       window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
-          detail: { message: "Blueprint Anchored.", icon: <Save size={14} /> } 
+          detail: { message: "Blueprint & Analysis Anchored.", icon: <Save size={14} /> } 
       }));
     } catch (e) { console.error(e); }
   };
@@ -495,6 +507,28 @@ export const MesopicLens: React.FC = () => {
                                             </div>
                                         </div>
                                     </div>
+
+                                    {analysis?.creative_potential && (
+                                        <div className="space-y-4 pt-4">
+                                            <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Creative Potential</span>
+                                            <p className="font-serif italic text-sm text-stone-600 dark:text-stone-300 leading-relaxed border-l-2 border-indigo-500/30 pl-4">
+                                                {analysis.creative_potential}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {analysis?.semiotic_touchpoints && analysis.semiotic_touchpoints.length > 0 && (
+                                        <div className="space-y-4 pt-4">
+                                            <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Semiotic Touchpoints</span>
+                                            <div className="flex flex-wrap gap-2">
+                                                {analysis.semiotic_touchpoints.map((pt: string, i: number) => (
+                                                    <span key={i} className="px-2 py-1 bg-stone-100 dark:bg-stone-900 text-stone-600 dark:text-stone-300 font-mono text-[9px] rounded-sm border border-black/5 dark:border-white/5">
+                                                        {pt}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 

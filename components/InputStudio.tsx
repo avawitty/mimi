@@ -5,13 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MediaFile, ToneTag } from '../types';
 import { useRecorder } from '../hooks/useRecorder';
 import { useTasteLogging } from '../hooks/useTasteLogging';
-import { Plus, BrainCircuit, X, Globe, Mic, Loader2, Square, Radio, Mail, Info, Sparkles, AlertCircle, Eraser, Zap, Image as ImageIcon, Link as LinkIcon, Twitter, Instagram, Shield, Users, ArrowUpRight, FolderOpen, Paperclip, ChevronLeft, ChevronRight, GripVertical, FileText } from 'lucide-react';
+import { Plus, BrainCircuit, X, Globe, Mic, Loader2, Square, Check, Radio, Mail, Info, Sparkles, AlertCircle, Eraser, Zap, Image as ImageIcon, Link as LinkIcon, Twitter, Instagram, Shield, Users, ArrowUpRight, FolderOpen, Paperclip, ChevronLeft, ChevronRight, GripVertical, FileText } from 'lucide-react';
 import { transcribeAudio, compressImage } from '../services/geminiService';
 import { CuratorNote } from './CuratorNote';
 import { useUser } from '../contexts/UserContext';
 import { LegalOverlay } from './LegalOverlay';
 
-const TONE_OPTIONS: ToneTag[] = ['chic', 'nostalgia', 'dream', 'unhinged', 'panic', 'editorial'];
+const TONE_OPTIONS: ToneTag[] = ['chic', 'nostalgia', 'dream', 'unhinged', 'panic', 'editorial', 'research'];
 
 const PROMPTS_BY_TONE: Record<ToneTag, string[]> = {
   chic: [
@@ -43,6 +43,11 @@ const PROMPTS_BY_TONE: Record<ToneTag, string[]> = {
     "How would you headline your own silence?",
     "What is the ROI of being seen in this specific light?",
     "If your life was a layout, where would you place the void?"
+  ],
+  research: [
+    "What cultural force is currently shaping your perception?",
+    "If your interest was a historical archive, what would be the primary document?",
+    "How does this specific materiality connect to broader aesthetic history?"
   ]
 };
 
@@ -79,6 +84,7 @@ export const InputStudio: React.FC<{
   const [useSearch, setUseSearch] = useState(true); 
   const [selectedTone, setSelectedTone] = useState<ToneTag>('chic');
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [transcriptionStatus, setTranscriptionStatus] = useState<'idle' | 'transcribing' | 'success' | 'error'>('idle');
   const [showColophon, setShowColophon] = useState(false);
   const [promptIndex, setPromptIndex] = useState(0);
   const [legalType, setLegalType] = useState<'privacy' | 'terms' | null>(null);
@@ -140,6 +146,7 @@ export const InputStudio: React.FC<{
     if (audioBlob) {
       const handleTranscription = async () => {
         setIsTranscribing(true);
+        setTranscriptionStatus('transcribing');
         try {
           const reader = new FileReader();
           const base64 = await new Promise((resolve) => {
@@ -149,10 +156,14 @@ export const InputStudio: React.FC<{
           // Pass the mimeType dynamically
           const text = await transcribeAudio(base64, audioBlob.type);
           setInput(prev => prev ? `${prev}\n\n${text}` : text);
+          setTranscriptionStatus('success');
           window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Vocal shard transcribed.", icon: <Mic size={14} className="text-emerald-500" /> } }));
+          setTimeout(() => setTranscriptionStatus('idle'), 4000);
         } catch (e) { 
           console.error(e); 
+          setTranscriptionStatus('error');
           window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Transcription failed.", type: 'error' } }));
+          setTimeout(() => setTranscriptionStatus('idle'), 4000);
         } finally { 
           setIsTranscribing(false); 
         }
@@ -189,20 +200,27 @@ export const InputStudio: React.FC<{
       reader.onload = async (event) => {
         const rawBase64 = event.target?.result as string;
         if (rawBase64) {
-          // If image, compress it. Audio is kept as is.
-          let processedBase64 = rawBase64;
-          if (file.type.startsWith('image')) {
-             processedBase64 = await compressImage(rawBase64, 0.6, 1200);
+          try {
+            // If image, compress it. Audio is kept as is.
+            let processedBase64 = rawBase64;
+            if (file.type.startsWith('image')) {
+               processedBase64 = await compressImage(rawBase64, 0.6, 1200);
+            }
+            
+            setMediaFiles(prev => [...prev, { 
+              type: file.type.startsWith('audio') ? 'audio' : 'image', 
+              url: URL.createObjectURL(file), // Keep preview URL lightweight
+              data: processedBase64.split(',')[1], 
+              mimeType: file.type,
+              name: file.name 
+            }]);
+            setIsFolderOpen(true);
+          } catch (err) {
+            console.error("MIMI // Upload Error:", err);
+            window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+              detail: { message: "Asset processing failed.", type: 'error' } 
+            }));
           }
-          
-          setMediaFiles(prev => [...prev, { 
-            type: file.type.startsWith('audio') ? 'audio' : 'image', 
-            url: URL.createObjectURL(file), // Keep preview URL lightweight
-            data: processedBase64.split(',')[1], 
-            mimeType: file.type,
-            name: file.name 
-          }]);
-          setIsFolderOpen(true);
         }
       };
       reader.readAsDataURL(file);
@@ -219,17 +237,13 @@ export const InputStudio: React.FC<{
   return (
     <div className="w-full h-full flex flex-col items-center relative overflow-hidden transition-all duration-1000 bg-transparent">
       
-      {/* TEXTURE OVERLAY */}
-      <div className="grain-overlay" />
-      
       {/* 1. MAIN WORKSPACE */}
       <div 
-        className="w-full max-w-7xl flex-1 flex flex-col items-center justify-center relative min-h-[70vh] pb-64 px-4 md:px-0 z-10 transition-all duration-300 ease-out -mt-4" 
-        style={{ paddingRight: isFolderOpen ? '320px' : '0' }}
+        className={`w-full max-w-7xl flex-1 flex flex-col items-center justify-center relative min-h-[70vh] pb-64 px-4 md:px-0 z-10 transition-all duration-300 ease-out mt-20 ${isFolderOpen ? 'md:pr-[320px]' : ''}`}
       >
         
         {/* PROMPT HEADER */}
-        <div className="relative z-20 mb-12 md:mb-16 text-center max-w-xl">
+        <div className="relative z-20 mb-8 md:mb-12 text-center max-w-xl">
            <AnimatePresence mode="wait">
              {activeProvocation ? (
                <motion.div
@@ -417,15 +431,14 @@ export const InputStudio: React.FC<{
 
       {/* 3. BOTTOM FLOATING TOOLBAR */}
       <div 
-        className="fixed bottom-0 left-0 w-full z-40 bg-gradient-to-t from-nous-base via-nous-base to-transparent dark:from-stone-950 dark:via-stone-950 pt-12 pb-0 flex flex-col items-center transition-all duration-300 pointer-events-none"
-        style={{ paddingRight: isFolderOpen && window.innerWidth >= 768 ? '360px' : '0' }}
+        className={`fixed bottom-0 left-0 w-full z-40 bg-gradient-to-t from-nous-base via-nous-base to-transparent dark:from-stone-950 dark:via-stone-950 pt-12 pb-0 flex flex-col items-center transition-all duration-300 pointer-events-none ${isFolderOpen ? 'md:pr-[360px]' : ''}`}
       >
         <div className="pointer-events-auto w-full flex flex-col items-center">
             {/* TOOLS */}
             <div className="relative flex items-center justify-center gap-8 md:gap-12 mb-8 px-4 text-stone-400">
                 {/* TRANSCRIPTION INDICATOR - UPDATED POSITIONING */}
                 <AnimatePresence>
-                  {isTranscribing && (
+                  {transcriptionStatus !== 'idle' && (
                      <motion.div 
                        initial={{ opacity: 0, y: 10 }}
                        animate={{ opacity: 1, y: -50 }}
@@ -433,8 +446,24 @@ export const InputStudio: React.FC<{
                        className="absolute left-1/2 -translate-x-1/2 bg-white dark:bg-stone-800 px-4 py-2 rounded-full shadow-lg border border-stone-100 dark:border-stone-700 flex items-center gap-2 whitespace-nowrap z-50 pointer-events-none"
                        style={{ top: '-10px' }}
                      >
-                        <Loader2 size={12} className="animate-spin text-emerald-500" />
-                        <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-500">Transcribing Audio...</span>
+                        {transcriptionStatus === 'transcribing' && (
+                          <>
+                            <Loader2 size={12} className="animate-spin text-emerald-500" />
+                            <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-500">Transcribing Audio...</span>
+                          </>
+                        )}
+                        {transcriptionStatus === 'success' && (
+                          <>
+                            <Check size={12} className="text-emerald-500" />
+                            <span className="font-sans text-[8px] uppercase tracking-widest font-black text-emerald-500">Transcription Complete</span>
+                          </>
+                        )}
+                        {transcriptionStatus === 'error' && (
+                          <>
+                            <AlertCircle size={12} className="text-red-500" />
+                            <span className="font-sans text-[8px] uppercase tracking-widest font-black text-red-500">Transcription Failed</span>
+                          </>
+                        )}
                      </motion.div>
                   )}
                 </AnimatePresence>
@@ -442,17 +471,17 @@ export const InputStudio: React.FC<{
                 <button onClick={() => mediaInputRef.current?.click()} className="transition-all flex flex-col items-center gap-1 group hover:text-nous-text dark:hover:text-white" title="Upload Asset">
                     <ImageIcon size={18} strokeWidth={1.5} className="group-hover:scale-110 transition-transform" />
                 </button>
-                <div className="w-px h-6 bg-stone-200 dark:bg-stone-800" />
                 <button onClick={isRecording ? stopRecording : startRecording} className={`transition-all flex flex-col items-center gap-1 group ${isRecording ? 'text-red-500 animate-pulse' : 'hover:text-nous-text dark:hover:text-white'}`} title="Vocal Note">
                     {isRecording ? <Square size={18} fill="currentColor" /> : <Mic size={18} strokeWidth={1.5} className="group-hover:scale-110 transition-transform" />}
                 </button>
+                <div className="w-px h-6 bg-stone-200 dark:bg-stone-800" />
                 <button onClick={() => { setLiteMode(!liteMode); if(!liteMode) setDeepThinking(false); }} className={`transition-colors flex flex-col items-center gap-1 group ${liteMode ? 'text-cyan-500' : 'hover:text-nous-text dark:hover:text-white'}`} title="Lite Protocol">
                 <Zap size={18} strokeWidth={1.5} className="group-hover:scale-110 transition-transform" />
                 </button>
                 <button onClick={() => { setDeepThinking(!deepThinking); if(!deepThinking) setLiteMode(false); }} className={`transition-colors flex flex-col items-center gap-1 group ${deepThinking ? 'text-amber-500' : 'hover:text-nous-text dark:hover:text-white'}`} title="Deep Mode">
                 <BrainCircuit size={18} strokeWidth={1.5} className={`group-hover:scale-110 transition-transform ${deepThinking ? 'animate-pulse' : ''}`} />
                 </button>
-                <button onClick={() => setUseSearch(!useSearch)} className={`transition-colors flex flex-col items-center gap-1 group ${useSearch ? 'text-emerald-500' : 'hover:text-nous-text dark:hover:text-white'}`} title="Search Grounding">
+                <button onClick={() => setUseSearch(!useSearch)} className={`transition-colors flex flex-col items-center gap-1 group ${useSearch ? 'text-emerald-500' : 'hover:text-nous-text dark:hover:text-white'}`} title="Educational Grounding">
                 <Globe size={18} strokeWidth={1.5} className="group-hover:scale-110 transition-transform" />
                 </button>
                 <button onClick={() => setFreshState(!freshState)} className={`transition-colors flex flex-col items-center gap-1 group ${freshState ? 'text-pink-500' : 'hover:text-nous-text dark:hover:text-white'}`} title="Bypass Logic">
@@ -481,7 +510,6 @@ export const InputStudio: React.FC<{
 
             {/* FOOTER LINKS */}
             <div className="w-full px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-6 md:gap-0 font-mono text-[9px] uppercase tracking-widest text-stone-400 border-t border-white/10 pt-6 pb-6 pb-safe bg-[#1C1C1C] backdrop-blur-md relative overflow-hidden">
-                <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/noise.png')" }} />
                 
                 <div className="flex items-center gap-8 relative z-10 pl-2">
                     <button onClick={() => window.open('https://x.com/themimizine', '_blank')} className="hover:text-white transition-colors"><Twitter size={12} /></button>

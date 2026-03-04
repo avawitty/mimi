@@ -8,7 +8,7 @@ import {
   Settings2, Wand2, Briefcase, Feather, Zap, 
   RefreshCw, MousePointer2, Edit3, Eye,
   ArrowRight, ArrowLeft, Plus, FolderOpen, Image as ImageIcon,
-  Scroll, FileImage, FileText, Send, Sparkles, MessageSquare, Terminal
+  Scroll, FileImage, FileText, Send, Sparkles, MessageSquare, Terminal, Users, UserPlus, Shield
 } from 'lucide-react';
 import { Proposal, ProposalSection, EditorElement, UserProfile, BrandKit, PocketItem, EditorElementStyle } from '../types';
 import { saveProposalToRegistry, refineSectionContent } from '../services/proposalOrchestrator';
@@ -113,7 +113,7 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   // -- WORKSPACE STATE --
-  const [mode, setMode] = useState<'content' | 'design' | 'assets' | 'assistant'>('content');
+  const [mode, setMode] = useState<'content' | 'design' | 'assets' | 'assistant' | 'collaborators'>('content');
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [isRefining, setIsRefining] = useState<string | null>(null);
@@ -564,6 +564,10 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
                >
                  <Sparkles size={12} /> Assistant
                </button>
+               <button onClick={() => setMode('collaborators')} className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'collaborators' ? 'bg-white dark:bg-stone-800 text-nous-text dark:text-white shadow-sm' : 'text-stone-400'}`}
+               >
+                 <Users size={12} /> Team
+               </button>
             </div>
          </div>
 
@@ -688,6 +692,51 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
                           <p>Source: {folderItems.length} Artifacts</p>
                           <p>Profile: {activePersona?.name || 'Ghost'}</p>
                           <p>Logic: {layoutConfig.template.toUpperCase()}</p>
+                      </div>
+                   </div>
+                </div>
+             </motion.aside>
+           )}
+
+           {mode === 'collaborators' && (
+             <motion.aside key="collaborators-sidebar" initial={{ width: 0, opacity: 0 }} animate={{ width: 320, opacity: 1 }} exit={{ width: 0, opacity: 0 }} className="bg-white dark:bg-stone-900 border-r border-stone-100 dark:border-stone-800 overflow-y-auto no-scrollbar shrink-0 z-40 hidden md:block">
+                <div className="p-8 space-y-10 min-w-[320px]">
+                   <div className="space-y-4">
+                      <div className="flex items-center gap-3 text-emerald-500">
+                         <Users size={18} />
+                         <span className="font-sans text-[9px] uppercase tracking-widest font-black">Workspace Access</span>
+                      </div>
+                      <p className="font-serif italic text-sm text-stone-500">Manage who can view and edit this proposal.</p>
+                   </div>
+                   
+                   <div className="space-y-6">
+                      <div className="space-y-4">
+                         <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">Current Members</span>
+                         <div className="flex items-center justify-between p-3 bg-stone-50 dark:bg-stone-950 border border-stone-100 dark:border-stone-800 rounded-sm">
+                            <div className="flex items-center gap-3">
+                               <div className="w-8 h-8 rounded-full bg-stone-200 dark:bg-stone-800 flex items-center justify-center">
+                                  <Shield size={14} className="text-stone-500" />
+                               </div>
+                               <div>
+                                  <p className="font-sans text-[10px] uppercase tracking-widest font-bold text-stone-900 dark:text-stone-100">@{profile?.handle || 'You'}</p>
+                                  <p className="font-serif italic text-xs text-stone-500">Owner</p>
+                               </div>
+                            </div>
+                         </div>
+                      </div>
+
+                      <div className="space-y-4 pt-4 border-t border-stone-100 dark:border-stone-800">
+                         <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">Invite Collaborator</span>
+                         <div className="flex gap-2">
+                            <input 
+                              type="text" 
+                              placeholder="@handle or email" 
+                              className="flex-1 bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-sm px-3 py-2 font-mono text-xs focus:outline-none focus:border-emerald-500"
+                            />
+                            <button className="p-2 bg-stone-900 dark:bg-white text-white dark:text-black rounded-sm hover:bg-emerald-500 transition-colors">
+                               <UserPlus size={14} />
+                            </button>
+                         </div>
                       </div>
                    </div>
                 </div>

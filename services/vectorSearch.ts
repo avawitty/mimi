@@ -7,7 +7,8 @@ import { getClient } from "./geminiService";
 
 const getAiClient = () => {
     try {
-        return getClient();
+        const { ai } = getClient();
+        return ai;
     } catch (e) {
         return null;
     }

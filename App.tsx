@@ -18,16 +18,20 @@ import { ThePress } from './components/ThePress';
 import { SanctuaryView } from './components/SanctuaryView';
 import { TailorView } from './components/TailorView';
 import { ScryView } from './components/ScryView';
+import { OracleResearchView } from './components/OracleResearchView';
 import { DarkroomView } from './components/DarkroomView';
 import { ApiKeyShield } from './components/ApiKeyShield';
 import { ProsceniumView } from './components/ProsceniumView'; 
 import { AmbientSoundscape } from './components/AmbientSoundscape';
 import { CaptiveSentinel } from './components/CaptiveSentinel';
+import { SovereignEntrance } from './components/SovereignEntrance';
 import { TheWard } from './components/TheWard'; 
 import { PatronMintView } from './components/PatronMintView';
 import { DossierView } from './components/DossierView';
 import { HelpView } from './components/HelpView';
 import { RegistryAlert } from './components/RegistryAlert';
+import { ImperialPatronageModal } from './components/ImperialPatronageModal';
+import Founding50Tracker from './components/Founding50Tracker';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, LayoutGrid, User, Menu, X, Newspaper, LogOut, ShieldAlert, Zap, Camera, Key, Radio, Activity as ActivityIcon, Archive, Moon, Sun, Scissors, FlaskConical, Eye, Radar, Compass, Info, Cpu, ShieldCheck, Briefcase, BookOpen, Volume2, VolumeX } from 'lucide-react';
 
@@ -84,6 +88,7 @@ const MobileMenu: React.FC<{
                 <button onClick={() => handleNav('studio')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Studio</button>
                 <button onClick={() => handleNav('dossier')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Projects</button>
                 <button onClick={() => handleNav('nebula')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">The Stand</button>
+                <button onClick={() => handleNav('oracle')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Oracle</button>
                 <button onClick={() => handleNav('scry')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Scry</button>
              </div>
              <div className="space-y-4">
@@ -136,7 +141,7 @@ const DatabaseVoid: React.FC = () => (
 );
 
 const AppContent: React.FC = () => {
-  const { user, profile, updateProfile, loading: authLoading, logout, setOracleStatus, systemStatus, activePersona, isDatabaseMissing } = useUser();
+  const { user, profile, updateProfile, loading: authLoading, logout, setOracleStatus, systemStatus, activePersona, isDatabaseMissing, isOnboardingComplete, canGenerate, incrementGeneration, recordSession, generationsRemaining } = useUser();
   const { currentPalette, toggleMode } = useTheme();
   const { activeAgents } = useAgents();
   
@@ -151,15 +156,30 @@ const AppContent: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [tailorOverrides, setTailorOverrides] = useState<any>(null);
   const [isPatronMint, setIsPatronMint] = useState(false);
+  const [showPatronModal, setShowPatronModal] = useState(false);
   const [proposalContext, setProposalContext] = useState<any>(null);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const saved = localStorage.getItem('mimi_sound_enabled');
     return saved === null ? true : saved === 'true';
   });
+  const [volume, setVolume] = useState(() => {
+    const saved = localStorage.getItem('mimi_volume');
+    return saved === null ? 0.5 : parseFloat(saved);
+  });
+
+  useEffect(() => {
+    if (user && !user.isAnonymous) {
+        recordSession();
+    }
+  }, [user]);
 
   useEffect(() => {
     localStorage.setItem('mimi_sound_enabled', soundEnabled.toString());
   }, [soundEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem('mimi_volume', volume.toString());
+  }, [volume]);
 
   const toggleSound = () => {
     setSoundEnabled(!soundEnabled);
@@ -205,11 +225,26 @@ const AppContent: React.FC = () => {
         }
       }
     };
+    const handleSelectZine = (e: any) => {
+      if (e.detail?.zine) {
+        setZineMetadata(e.detail.zine);
+        setAppState(AppState.REVEALED);
+      }
+    };
+
     window.addEventListener('mimi:change_view', handleChangeView);
-    return () => window.removeEventListener('mimi:change_view', handleChangeView);
+    window.addEventListener('mimi:select_zine', handleSelectZine);
+    return () => {
+      window.removeEventListener('mimi:change_view', handleChangeView);
+      window.removeEventListener('mimi:select_zine', handleSelectZine);
+    };
   }, []);
 
   const handleRefine = useCallback(async (text, media, tone, opts) => {
+    if (!canGenerate) {
+        setShowPatronModal(true);
+        return;
+    }
     setIsDeepRefraction(!!opts.deepThinking);
     setAppState(AppState.THINKING);
     window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'shimmer' } }));
@@ -217,13 +252,25 @@ const AppContent: React.FC = () => {
     const personaKey = activePersona?.apiKey ? activePersona.apiKey : undefined;
 
     try {
-      const result = await createZine(text, media, tone, profile, opts, personaKey);
+      // Fetch recent transmissions to provide cultural context
+      let transmissions = [];
+      try {
+          const { collection, query, orderBy, limit, getDocs } = await import('firebase/firestore');
+          const { db } = await import('./services/firebase');
+          const q = query(collection(db, 'public_transmissions'), orderBy('timestamp', 'desc'), limit(10));
+          const snapshot = await getDocs(q);
+          transmissions = snapshot.docs.map(doc => doc.data());
+      } catch (e) { console.warn("MIMI // Transmission context failed to load."); }
+
+      const result = await createZine(text, media, tone, profile, opts, personaKey, transmissions);
+      await incrementGeneration();
       const targetUid = profile?.uid || user?.uid || 'ghost';
-      const id = await saveZineToProfile(targetUid, profile?.handle || 'Ghost', profile?.photoURL, result.content, tone, undefined, opts.deepThinking, opts.isPublic, opts.isLite, media, text);
+      const id = await saveZineToProfile(targetUid, profile?.handle || 'Ghost', profile?.photoURL, result.content, tone, undefined, opts.deepThinking, opts.isPublic, opts.isLite, media, text, transmissions);
       setZineMetadata({ 
           id, userId: targetUid, userHandle: profile?.handle || 'Ghost', title: result.content.title, tone, timestamp: Date.now(), likes: 0, content: result.content,
           artifacts: media, 
-          originalInput: text 
+          originalInput: text,
+          transmissionsUsed: transmissions
       });
       window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'success' } }));
       setAppState(AppState.REVEALED);
@@ -234,10 +281,14 @@ const AppContent: React.FC = () => {
         }));
         setAppState(AppState.IDLE); 
     }
-  }, [user, profile, activePersona]);
+  }, [user, profile, activePersona, canGenerate, incrementGeneration]);
 
   if (isDatabaseMissing) return <DatabaseVoid />;
   if (authLoading) return <ElevatorLoader />;
+
+  if (!isOnboardingComplete) {
+    return <SovereignEntrance />;
+  }
 
   if (isPatronMint) {
       return <PatronMintView onExit={() => setIsPatronMint(false)} />;
@@ -245,10 +296,11 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="h-full w-full bg-transparent dark:bg-stone-950 transition-colors duration-500 flex">
-      <AmbientSoundscape enabled={soundEnabled} />
+      <AmbientSoundscape enabled={soundEnabled} volume={volume} />
       <AnimatePresence>{showCaptiveSentinel && <CaptiveSentinel onClose={() => setShowCaptiveSentinel(false)} />}</AnimatePresence>
       
       <RegistryAlert />
+      <ImperialPatronageModal isOpen={showPatronModal} onClose={() => setShowPatronModal(false)} isLimitReached={!canGenerate} />
       
       {!zineMetadata && (
         <aside className="hidden md:flex flex-col h-full shrink-0 z-[2000] relative group/sidebar w-[88px] hover:w-72 transition-all duration-500 bg-[#121212] dark:bg-[#121212] border-r border-stone-200/10 dark:border-transparent shadow-2xl">
@@ -300,7 +352,20 @@ const AppContent: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="mt-auto pt-8">
+                    <div className="mt-auto pt-8 space-y-4">
+                        <Founding50Tracker />
+                        <div className="px-6 py-2 flex items-center gap-4 group/status cursor-pointer" onClick={() => setShowPatronModal(true)}>
+                            <div className={`w-2 h-2 rounded-full shrink-0 ${profile?.isPatron ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                            <span className={`font-sans text-[8px] uppercase tracking-widest font-black transition-colors ${profile?.isPatron ? 'text-amber-500' : 'text-emerald-500/60'}`}>
+                                {profile?.isPatron ? 'Patron Active' : `${generationsRemaining} free left`}
+                            </span>
+                        </div>
+                        <div className="px-6 py-2 flex items-center gap-4 group/status cursor-help" onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }))}>
+                            <div className={`w-2 h-2 rounded-full shrink-0 ${systemStatus.oracle === 'ready' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)] animate-pulse'}`} />
+                            <span className={`font-sans text-[8px] uppercase tracking-widest font-black transition-colors ${systemStatus.oracle === 'ready' ? 'text-emerald-500/60' : 'text-red-500'}`}>
+                                Oracle: {systemStatus.oracle === 'ready' ? 'Ready' : 'Saturated'}
+                            </span>
+                        </div>
                         <SidebarBtn active={false} onClick={logout} icon={<LogOut className="text-red-500 dark:text-red-900" />} label="De-Anchor" />
                     </div>
                 </div>
@@ -317,7 +382,22 @@ const AppContent: React.FC = () => {
         <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-black/10 to-transparent pointer-events-none z-20 mix-blend-multiply dark:mix-blend-overlay" />
 
         <ApiKeyShield />
-        <div className="fixed top-6 right-6 md:right-12 z-[5000] flex items-center gap-3">
+        <div className="fixed top-6 right-6 md:right-12 z-[5000] flex items-center gap-3 group/audio">
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            whileHover={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-2 bg-stone-100/50 dark:bg-stone-900/50 backdrop-blur-sm border border-stone-200/20 rounded-full px-3 py-2 opacity-0 group-hover/audio:opacity-100 transition-all"
+          >
+            <input 
+              type="range" 
+              min="0" 
+              max="1" 
+              step="0.01" 
+              value={volume} 
+              onChange={(e) => setVolume(parseFloat(e.target.value))}
+              className="w-16 md:w-24 h-1 bg-stone-300 dark:bg-stone-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+            />
+          </motion.div>
           <button onClick={toggleSound} className="p-3 rounded-full bg-stone-100/50 dark:bg-stone-900/50 text-stone-400 hover:text-nous-text dark:hover:text-white transition-all backdrop-blur-sm border border-stone-200/20">
             {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
           </button>
@@ -339,7 +419,6 @@ const AppContent: React.FC = () => {
               transition={{ duration: 0.8, ease: "easeInOut" }}
               className={`fixed top-0 right-0 left-0 md:left-[88px] h-20 md:h-24 z-[50] flex items-center justify-center px-8 transition-all duration-1000 pt-safe overflow-hidden border-b border-black/5 dark:border-white/10 bg-nous-base dark:bg-[#1C1C1C] backdrop-blur-xl`}
             >
-                <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-multiply dark:mix-blend-overlay" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/noise.png')" }} />
                 <div onClick={() => { setViewMode('studio'); setZineMetadata(null); setAppState(AppState.IDLE); }} className="cursor-pointer flex flex-col items-center group relative z-10">
                   <h1 className="text-3xl md:text-6xl tracking-[-0.08em] font-[Cormorant] font-light italic text-nous-text dark:text-white opacity-95 transition-all luminescent-text">Mimi</h1>
                   <div className="w-12 h-px bg-nous-text dark:bg-white opacity-20 mt-1 group-hover:w-24 transition-all duration-700" />

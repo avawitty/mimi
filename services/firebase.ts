@@ -1,5 +1,5 @@
 
-import { setPersistence, browserLocalPersistence, onAuthStateChanged, User } from "firebase/auth";
+import { setPersistence, indexedDBLocalPersistence, onAuthStateChanged, User } from "firebase/auth";
 import { auth, db, storage } from "./firebaseInit";
 
 export { auth, db, storage };
@@ -11,9 +11,10 @@ export const initializeAuthPersistence = async (): Promise<void> => {
   if (persistenceInitialized) return;
   
   try {
-    await setPersistence(auth, browserLocalPersistence);
+    // indexedDB is more reliable in iframes than localStorage
+    await setPersistence(auth, indexedDBLocalPersistence);
     persistenceInitialized = true;
-    console.info("MIMI // Persistence Locked: browserLocal");
+    console.info("MIMI // Persistence Locked: indexedDB");
   } catch (err: any) {
     console.error("MIMI // Persistence Calibration Failed:", err.code, err.message);
     persistenceInitialized = true;
@@ -22,7 +23,7 @@ export const initializeAuthPersistence = async (): Promise<void> => {
 
 /**
  * BOOTSTRAP AUTH
- * Extended timeout (2.5s) to allow for fresh project cold-starts.
+ * Extended timeout (5s) to allow for redirect recovery in iframes.
  */
 export const bootstrapAuth = async (): Promise<User | null> => {
   try {
@@ -37,7 +38,7 @@ export const bootstrapAuth = async (): Promise<User | null> => {
       const timeout = setTimeout(() => {
         console.warn("MIMI // Bootstrap: Signal Weak, Proceeding as Guest.");
         resolve(null);
-      }, 2500); // Increased to 2.5s for reliability
+      }, 5000); // Increased to 5s for iframe reliability
 
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         clearTimeout(timeout);

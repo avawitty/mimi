@@ -40,13 +40,13 @@ export const ApiKeyShield: React.FC = () => {
 
             <div className="space-y-8 font-serif italic text-lg text-stone-500 dark:text-stone-400 leading-relaxed text-balance">
               <p>
-                The Oracle has reached its maximum frequency for this period. To continue manifesting Zen, anchor a fresh Sovereign Key from your AI Studio registry.
+                The Oracle has reached its maximum frequency for this period. To continue manifesting, anchor a fresh Sovereign Key or manage your Key Ring.
               </p>
               <div className="p-6 bg-amber-50/50 dark:bg-stone-900/40 rounded-2xl border border-amber-200 dark:border-amber-900/20 text-sm">
                 <p className="text-amber-600 dark:text-amber-400 font-bold mb-2 flex items-center justify-center gap-2">
                     <Zap size={14} /> Quota Debt Detected
                 </p>
-                A new key reset will clear the thermal noise and allow for immediate ascension.
+                A new key reset or adding multiple keys to your <span className="text-amber-600 dark:text-amber-400 font-bold cursor-pointer underline" onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }))}>Key Ring</span> will clear the thermal noise.
               </div>
             </div>
 

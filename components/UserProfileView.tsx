@@ -4,12 +4,15 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useUser } from '../contexts/UserContext';
 import { UserProfile, TypographicArchetype, Persona } from '../types';
 import { isHandleAvailable, uploadBlob, saveUserProfile, fetchUserZines, fetchPocketItems } from '../services/firebaseUtils';
-import { Loader2, Camera, Check, Type, PenTool, Layers, Moon, Orbit, ShieldCheck, Fingerprint, Palette, Scissors, Anchor, Heart, Info, ArrowRight, MapPin, Clock, Calendar, Cloud, Save, MousePointer2, Radio, Upload, Settings, Plus, X, Trash2, Key, ExternalLink, ToggleLeft, ToggleRight, Box, CheckCircle2, Zap, Wallet, User, ChevronRight, ChevronLeft, Sparkles, Eraser, Shield, Cpu, Link, Database, Crown, Download, FileJson, RefreshCw, Users } from 'lucide-react';
+import { Loader2, Camera, Check, Type, PenTool, Layers, Moon, Orbit, ShieldCheck, Fingerprint, Palette, Scissors, Anchor, Heart, Info, ArrowRight, MapPin, Clock, Calendar, Cloud, Save, MousePointer2, Radio, Upload, Settings, Plus, X, Trash2, Key, ExternalLink, ToggleLeft, ToggleRight, Box, CheckCircle2, Zap, Wallet, User, ChevronRight, ChevronLeft, Sparkles, Eraser, Shield, Cpu, Link, Database, Crown, Download, FileJson, RefreshCw, Users, BookOpen, Activity } from 'lucide-react';
 import { useTheme, PALETTES } from '../contexts/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DeveloperSettings } from './DeveloperSettings';
 import { ImperialPatronageModal } from './ImperialPatronageModal';
 import { ConnectionsManager } from './ConnectionsManager';
+import { ArchetypeIndex } from './ArchetypeIndex';
+import { TasteGraph } from './TasteGraph';
+import { SovereignIdentityCardView } from './SovereignIdentityCardView'; // NEW
 
 const DNAButton: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; label: string }> = ({ active, onClick, icon, label }) => (
   <button 
@@ -22,61 +25,96 @@ const DNAButton: React.FC<{ active: boolean; onClick: () => void; icon: React.Re
   </button>
 );
 
-const MaskCard: React.FC<{ persona: Persona; isActive: boolean; onSelect: () => void; onDelete: () => void }> = ({ persona, isActive, onSelect, onDelete }) => (
-    <motion.div 
-        layout
-        whileHover={{ y: -5 }}
-        onClick={onSelect}
-        className={`relative shrink-0 w-64 md:w-80 p-8 rounded-sm border transition-all duration-700 cursor-pointer group ${isActive ? 'bg-white dark:bg-stone-900 border-emerald-500 shadow-2xl ring-1 ring-emerald-500/20' : 'bg-stone-50 dark:bg-black/20 border-stone-100 dark:border-stone-800 opacity-60 hover:opacity-100 shadow-sm'}`}
-    >
-        <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:rotate-12 transition-transform duration-1000">
-            <User size={120} />
-        </div>
-        
-        <div className="flex justify-between items-start mb-10 relative z-10">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-inner ${isActive ? 'bg-emerald-500 text-white animate-pulse' : 'bg-stone-200 dark:bg-stone-800 text-stone-400'}`}>
-                <User size={18} />
+const MaskCard: React.FC<{ persona: Persona; isActive: boolean; onSelect: () => void; onDelete: () => void; onUpdate: (p: Persona) => void; userUid: string }> = ({ persona, isActive, onSelect, onDelete, onUpdate, userUid }) => {
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            try {
+                const url = await uploadBlob(file, `avatars/${userUid}_mask_${persona.id}_${Date.now()}`);
+                onUpdate({ ...persona, photoURL: url });
+                window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Mask Visual Anchored.", type: 'success' } }));
+            } catch (err) {
+                console.error("Mask upload failed", err);
+                window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Upload Failed.", type: 'error' } }));
+            }
+        }
+    };
+
+    return (
+        <motion.div 
+            layout
+            whileHover={{ y: -5 }}
+            onClick={onSelect}
+            className={`relative shrink-0 w-64 md:w-80 p-8 rounded-sm border transition-all duration-700 cursor-pointer group ${isActive ? 'bg-white dark:bg-stone-900 border-emerald-500 shadow-2xl ring-1 ring-emerald-500/20' : 'bg-stone-50 dark:bg-black/20 border-stone-100 dark:border-stone-800 opacity-60 hover:opacity-100 shadow-sm'}`}
+        >
+            <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:rotate-12 transition-transform duration-1000">
+                <User size={120} />
             </div>
-            {isActive && (
-                <div className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-                    <span className="font-sans text-[7px] uppercase tracking-widest font-black text-emerald-600 dark:text-emerald-400">Active Mask</span>
+            
+            <div className="flex justify-between items-start mb-10 relative z-10">
+                <div 
+                    onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center shadow-inner overflow-hidden border border-black/5 dark:border-white/5 cursor-pointer relative group/avatar ${isActive ? 'bg-emerald-500 text-white animate-pulse' : 'bg-stone-200 dark:bg-stone-800 text-stone-400'}`}
+                >
+                    {persona.photoURL ? (
+                        <img src={persona.photoURL} className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover/avatar:grayscale-0" alt="" />
+                    ) : (
+                        <User size={18} />
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center transition-opacity duration-300">
+                        <Camera size={14} className="text-white" />
+                    </div>
                 </div>
+                <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={handleImageUpload} 
+                />
+                {isActive && (
+                    <div className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
+                        <span className="font-sans text-[7px] uppercase tracking-widest font-black text-emerald-600 dark:text-emerald-400">Active Mask</span>
+                    </div>
+                )}
+            </div>
+
+            <div className="space-y-6 relative z-10">
+                <div className="space-y-1">
+                    <h3 className={`font-serif text-3xl italic tracking-tighter transition-colors ${isActive ? 'text-nous-text dark:text-white' : 'text-stone-500'}`}>{persona.name}.</h3>
+                    <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400 font-black">Identity Namespace</p>
+                </div>
+
+                <div className="flex flex-col gap-2 pt-4 border-t border-black/5 dark:border-white/5">
+                    <div className="flex items-center gap-2 text-stone-400">
+                        <Wallet size={10} className={persona.apiKey ? 'text-emerald-500' : ''} />
+                        <span className="font-sans text-[7px] uppercase tracking-widest font-black">
+                            {persona.apiKey ? 'Specific Billing Enabled' : 'Global Billing Registry'}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-stone-400">
+                        <Calendar size={10} />
+                        <span className="font-sans text-[7px] uppercase tracking-widest font-black">Minted: {new Date(persona.createdAt).toLocaleDateString()}</span>
+                    </div>
+                </div>
+            </div>
+
+            {!isActive && (
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                    className="absolute bottom-6 right-6 p-2 text-stone-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                >
+                    <Trash2 size={14} />
+                </button>
             )}
-        </div>
-
-        <div className="space-y-6 relative z-10">
-            <div className="space-y-1">
-                <h3 className={`font-serif text-3xl italic tracking-tighter transition-colors ${isActive ? 'text-nous-text dark:text-white' : 'text-stone-500'}`}>{persona.name}.</h3>
-                <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400 font-black">Identity Namespace</p>
-            </div>
-
-            <div className="flex flex-col gap-2 pt-4 border-t border-black/5 dark:border-white/5">
-                <div className="flex items-center gap-2 text-stone-400">
-                    <Wallet size={10} className={persona.apiKey ? 'text-emerald-500' : ''} />
-                    <span className="font-sans text-[7px] uppercase tracking-widest font-black">
-                        {persona.apiKey ? 'Specific Billing Enabled' : 'Global Billing Registry'}
-                    </span>
-                </div>
-                <div className="flex items-center gap-2 text-stone-400">
-                    <Calendar size={10} />
-                    <span className="font-sans text-[7px] uppercase tracking-widest font-black">Minted: {new Date(persona.createdAt).toLocaleDateString()}</span>
-                </div>
-            </div>
-        </div>
-
-        {!isActive && (
-            <button 
-                onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                className="absolute bottom-6 right-6 p-2 text-stone-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-            >
-                <Trash2 size={14} />
-            </button>
-        )}
-    </motion.div>
-);
+        </motion.div>
+    );
+};
 
 export const UserProfileView: React.FC = () => {
-  const { user, profile, updateProfile, logout, personas, activePersonaId, switchPersona, createPersona, deletePersona, linkAccount, featureFlags, toggleFeature, keyRing, addKeyToRing, removeKeyFromRing } = useUser();
+  const { user, profile, updateProfile, logout, personas, activePersonaId, switchPersona, createPersona, updatePersona, deletePersona, linkAccount, verifyIdentity, featureFlags, toggleFeature, keyRing, addKeyToRing, removeKeyFromRing, openKeySelector } = useUser();
   const { currentPalette } = useTheme();
   
   const [handle, setHandle] = useState('');
@@ -85,6 +123,7 @@ export const UserProfileView: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+  const [showHandleConfirm, setShowHandleConfirm] = useState(false);
   
   const [archetype, setArchetype] = useState<TypographicArchetype>('minimalist-sans');
   const [tasteDefinition, setTasteDefinition] = useState('');
@@ -157,6 +196,13 @@ export const UserProfileView: React.FC = () => {
 
   const handleSave = async () => {
     if (!profile || isSaving || handleAvailable === false) return;
+    
+    // If handle changed, require confirmation
+    if (handle.trim().toLowerCase() !== profile.handle && !showHandleConfirm) {
+        setShowHandleConfirm(true);
+        return;
+    }
+
     setIsSaving(true);
     try {
       await updateProfile({ 
@@ -169,6 +215,7 @@ export const UserProfileView: React.FC = () => {
         }
       });
       setMessage({ text: "Sovereign Registry Anchored.", type: 'success' });
+      setShowHandleConfirm(false);
       setTimeout(() => setMessage(null), 3000);
     } catch (e) { setMessage({ text: "Handshake Error.", type: 'error' }); } finally { setIsSaving(false); }
   };
@@ -270,65 +317,126 @@ export const UserProfileView: React.FC = () => {
                     <img src={profile?.photoURL || `https://ui-avatars.com/api/?name=${handle || 'G'}&background=1c1917&color=fff`} className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0" alt="" />
                     <div className="absolute inset-0 bg-nous-text/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-500"><Camera size={24} className="text-white" /></div>
                 </div>
-                <input type="file" id="avatarUpload" name="avatarUpload" ref={avatarInputRef} className="hidden" accept="image/*" onChange={(e) => {}} />
+                <input 
+                    type="file" 
+                    id="avatarUpload" 
+                    name="avatarUpload" 
+                    ref={avatarInputRef} 
+                    className="hidden" 
+                    accept="image/*" 
+                    onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file && profile) {
+                            try {
+                                const url = await uploadBlob(file, `avatars/${user?.uid}_${Date.now()}`);
+                                await updateProfile({ ...profile, photoURL: url });
+                                setMessage({ text: "Identity Visual Anchored.", type: 'success' });
+                                setTimeout(() => setMessage(null), 3000);
+                            } catch (err) {
+                                setMessage({ text: "Upload Failed.", type: 'error' });
+                                setTimeout(() => setMessage(null), 3000);
+                            }
+                        }
+                    }} 
+                />
             </div>
 
-            <div className="space-y-6 w-full">
+            <div className="space-y-4 w-full">
                 <div className="flex flex-col items-center">
-                    <span className="font-sans text-[7px] uppercase tracking-[0.6em] text-stone-400 font-black mb-2 italic">Global Registry Handle</span>
-                    <div className="relative inline-flex items-center gap-4">
-                        <span className="font-header text-3xl md:text-5xl text-stone-200">@</span>
-                        <input type="text" id="userHandle" name="userHandle" value={handle} onChange={(e) => setHandle(e.target.value.toLowerCase())} className={`bg-transparent border-none p-0 font-header text-4xl md:text-7xl italic tracking-tighter focus:outline-none leading-none text-center ${handleAvailable === false ? 'text-red-500' : 'text-nous-text dark:text-white'}`} />
+                    <span className="font-sans text-[7px] uppercase tracking-[0.6em] text-stone-400 font-black mb-1 italic">Global Registry Handle</span>
+                    <div className="relative inline-flex flex-col items-center gap-2">
+                        <div className="flex items-center gap-3">
+                            <span className="font-header text-2xl md:text-4xl text-stone-200">@</span>
+                            <input 
+                                type="text" 
+                                id="userHandle" 
+                                name="userHandle" 
+                                value={handle} 
+                                onChange={(e) => {
+                                    setHandle(e.target.value.toLowerCase());
+                                    setShowHandleConfirm(false);
+                                }} 
+                                className={`bg-transparent border-none p-0 font-header text-3xl md:text-6xl italic tracking-tighter focus:outline-none leading-none text-center ${handleAvailable === false ? 'text-red-500' : 'text-nous-text dark:text-white'}`} 
+                            />
+                        </div>
+                        
+                        {showHandleConfirm && (
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.9 }} 
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="mt-4 p-4 bg-amber-500/5 border border-amber-500/20 rounded-sm space-y-3 max-w-xs"
+                            >
+                                <p className="font-sans text-[8px] uppercase tracking-widest text-amber-600 dark:text-amber-400 font-black">Confirm Registry Handle Change?</p>
+                                <div className="flex gap-3 justify-center">
+                                    <button 
+                                        onClick={handleSave}
+                                        className="px-4 py-1.5 bg-amber-500 text-white text-[8px] uppercase tracking-widest font-black rounded-full hover:bg-amber-600 transition-colors shadow-lg"
+                                    >
+                                        Confirm
+                                    </button>
+                                    <button 
+                                        onClick={() => { setHandle(profile?.handle || ''); setShowHandleConfirm(false); }}
+                                        className="px-4 py-1.5 bg-stone-100 dark:bg-stone-800 text-stone-500 text-[8px] uppercase tracking-widest font-black rounded-full hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
                     </div>
                 </div>
                 
                 {/* DISCRETE GOOGLE ANCHOR / AGENT PROTOCOLS / SOVEREIGN KEY */}
-                <div className="flex flex-wrap items-center gap-4 justify-center">
-                    {user?.isAnonymous ? (
-                        <div className="flex flex-col items-center gap-4">
-                            <div className="flex flex-wrap items-center gap-4 justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 w-full max-w-4xl">
+                        {user?.isAnonymous ? (
+                            <>
                                 <button 
                                   onClick={() => handleGoogleLink(false)} 
-                                  className="px-5 py-2.5 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[8px] uppercase tracking-widest font-black text-stone-500 hover:text-emerald-600 hover:border-emerald-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900"
+                                  className="h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black text-stone-500 hover:text-emerald-600 hover:border-emerald-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap"
                                 >
-                                   <Link size={12} /> Anchor Identity (Google)
+                                   <Link size={10} /> Anchor Identity
                                 </button>
                                 <button 
                                   onClick={() => handleGoogleLink(true)} 
-                                  className="px-5 py-2.5 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 hover:text-amber-600 hover:border-amber-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900"
+                                  className="h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 hover:text-amber-600 hover:border-amber-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap"
                                   title="Use this if the standard login fails"
                                 >
-                                   <RefreshCw size={12} /> Force Redirect Flow
+                                   <RefreshCw size={10} /> Force Redirect
                                 </button>
+                                <button 
+                                  onClick={verifyIdentity} 
+                                  className="h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 hover:text-emerald-600 hover:border-emerald-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap"
+                                  title="Manually verify identity if state is stuck"
+                                >
+                                   <ShieldCheck size={10} /> Verify Handshake
+                                </button>
+                            </>
+                        ) : (
+                            <div className="h-9 flex items-center gap-3 px-4 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+                                <span className="inline-flex items-center gap-2 font-sans text-[7px] uppercase tracking-widest font-black text-emerald-600 dark:text-emerald-400 cursor-default">
+                                   <Shield size={10} /> Identity Anchored
+                                </span>
+                                {user?.email && (
+                                    <span className="font-serif italic text-[9px] text-stone-400 hidden md:inline border-l border-emerald-500/20 pl-3">{user.email}</span>
+                                )}
                             </div>
-                            <p className="font-serif italic text-[10px] text-stone-400 max-w-xs">
-                                If you encounter <span className="text-red-400">auth/internal-error</span>, ensure <code className="bg-stone-100 dark:bg-stone-800 px-1 rounded">*.run.app</code> is added to Authorized Domains in Firebase Console.
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="flex items-center gap-4">
-                            <span className="inline-flex items-center gap-2 font-sans text-[8px] uppercase tracking-widest font-black text-emerald-600 dark:text-emerald-400 cursor-default bg-emerald-500/10 px-5 py-2.5 rounded-full border border-emerald-500/20">
-                               <Shield size={12} /> Identity Anchored
-                            </span>
-                            {user?.email && (
-                                <span className="font-serif italic text-xs text-stone-400 hidden md:inline">{user.email}</span>
-                            )}
-                        </div>
-                    )}
-                    
-                    <button 
-                      onClick={() => setShowDevSettings(true)}
-                      className="px-5 py-2.5 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[8px] uppercase tracking-widest font-black text-stone-500 hover:text-indigo-500 hover:border-indigo-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900"
-                    >
-                       <Cpu size={12} /> Agent Protocols
-                    </button>
+                        )}
+                        
+                        <button 
+                          onClick={() => setShowDevSettings(true)}
+                          className="h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black text-stone-500 hover:text-indigo-500 hover:border-indigo-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap"
+                        >
+                           <Cpu size={10} /> Protocols
+                        </button>
 
-                    <button 
-                      onClick={() => setShowKeyRing(!showKeyRing)}
-                      className={`px-5 py-2.5 rounded-full border font-sans text-[8px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-white dark:bg-stone-900 ${showKeyRing || keyRing.length > 0 ? 'border-amber-500/50 text-amber-600 dark:text-amber-500' : 'border-stone-200 dark:border-stone-800 text-stone-500 hover:text-amber-500 hover:border-amber-500/50'}`}
-                    >
-                       <Key size={12} /> API Key Ring ({keyRing.length})
-                    </button>
+                        <button 
+                          onClick={() => setShowKeyRing(!showKeyRing)}
+                          className={`h-9 px-4 rounded-full border font-sans text-[7px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap ${showKeyRing || keyRing.length > 0 ? 'border-amber-500/50 text-amber-600 dark:text-amber-500' : 'border-stone-200 dark:border-stone-800 text-stone-500 hover:text-amber-500 hover:border-amber-500/50'}`}
+                        >
+                           <Key size={10} /> Key Ring ({keyRing.length})
+                        </button>
+                    </div>
                 </div>
                 
                 {/* KEY RING EXPANDER */}
@@ -353,6 +461,14 @@ export const UserProfileView: React.FC = () => {
                                     <input type="password" value={newRingKey} onChange={e => setNewRingKey(e.target.value)} placeholder="Paste AI Studio Key..." className="flex-1 bg-white dark:bg-black border border-stone-200 dark:border-stone-800 p-2 font-mono text-xs focus:outline-none focus:border-amber-500 rounded-sm" />
                                     <button onClick={handleAddRingKey} className="px-4 bg-amber-500 text-white font-sans text-[8px] uppercase font-black rounded-sm hover:bg-amber-600 transition-colors">Add</button>
                                 </div>
+                                <div className="pt-2">
+                                    <button 
+                                        onClick={openKeySelector}
+                                        className="w-full py-3 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-sans text-[8px] uppercase tracking-widest font-black rounded-sm hover:bg-amber-500/10 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <Sparkles size={10} /> Select Sovereign Key (Paid Registry)
+                                    </button>
+                                </div>
                                 <p className="text-[9px] text-stone-400 text-center px-4 leading-tight">
                                     Adding multiple keys enables automatic rotation if one frequency becomes saturated (429/Quota Limit). Keys are stored locally.
                                 </p>
@@ -362,6 +478,37 @@ export const UserProfileView: React.FC = () => {
                 </AnimatePresence>
             </div>
         </section>
+
+        {/* THE TASTE GRAPH */}
+        <section className="space-y-12">
+            <div className="flex flex-col items-center gap-2 text-center">
+               <div className="flex items-center gap-3 text-stone-400">
+                 <Activity size={18} />
+                 <span className="font-sans text-[9px] uppercase tracking-[0.5em] font-black italic">Aesthetic Intelligence</span>
+               </div>
+               <p className="font-serif italic text-sm text-stone-500 max-w-md">
+                 Your semantic taste vector, mapped from your saved fragments and generated artifacts.
+               </p>
+            </div>
+            <div className="max-w-3xl mx-auto w-full px-4">
+                <TasteGraph tasteVector={profile?.tasteVector} variant="portrait" />
+            </div>
+        </section>
+
+        {/* SOVEREIGN IDENTITY CARD */}
+        {profile?.tasteProfile?.sovereignIdentity && (
+            <section className="space-y-12">
+                <div className="flex flex-col items-center gap-2 text-center">
+                   <div className="flex items-center gap-3 text-stone-400">
+                     <Fingerprint size={18} />
+                     <span className="font-sans text-[9px] uppercase tracking-[0.5em] font-black italic">Sovereign Identity</span>
+                   </div>
+                </div>
+                <div className="max-w-md mx-auto w-full px-4">
+                    <SovereignIdentityCardView card={profile.tasteProfile.sovereignIdentity} />
+                </div>
+            </section>
+        )}
 
         {/* SOVEREIGN MASK SLIDER */}
         <section className="space-y-12">
@@ -390,6 +537,8 @@ export const UserProfileView: React.FC = () => {
                                 window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: `Mask Alignment: ${p.name}`, icon: <Layers size={14} /> } }));
                             }}
                             onDelete={() => deletePersona(p.id)}
+                            onUpdate={updatePersona}
+                            userUid={user?.uid || 'ghost'}
                         />
                     ))}
                 </div>
@@ -434,6 +583,22 @@ export const UserProfileView: React.FC = () => {
                   </motion.div>
                )}
             </AnimatePresence>
+        </section>
+        
+        {/* ARCHETYPE INDEX */}
+        <section className="space-y-12">
+            <div className="flex flex-col items-center gap-2 text-center">
+               <div className="flex items-center gap-3 text-stone-400">
+                  <BookOpen size={18} />
+                  <h3 className="font-sans text-[9px] uppercase tracking-[0.4em] font-black">Archetype Index</h3>
+               </div>
+               <p className="font-serif italic text-lg text-stone-500 max-w-md">The compendium of detected states across the collective registry.</p>
+            </div>
+            <div className="bg-white dark:bg-stone-900/20 border border-stone-100 dark:border-stone-800 rounded-sm overflow-hidden">
+                <ArchetypeIndex onSelectZine={(zine) => {
+                    window.dispatchEvent(new CustomEvent('mimi:select_zine', { detail: { zine } }));
+                }} />
+            </div>
         </section>
 
         {/* SOCIAL GRAPH / CONNECTIONS */}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, UserPlus, UserMinus, Loader2, Eye, UserCheck, UserX } from 'lucide-react';
+import { X, UserPlus, UserMinus, Loader2, Eye, UserCheck, UserX, Handshake, Clock, Link2Off, Zap, Check } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { getUserProfile, fetchUserZines } from '../services/firebaseUtils';
 import { followUser, unfollowUser, fetchFollowers, fetchFollowing, checkConnectionStatus, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, removeFriend } from '../services/connections';
@@ -158,6 +158,14 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
     }
   };
 
+  const getStatusIcon = () => {
+    if (connectionStatus === 'friends') return <Handshake size={20} className="text-emerald-500" title="Connected" />;
+    if (connectionStatus === 'request_sent' || connectionStatus === 'request_received') return <Clock size={20} className="text-amber-500 animate-pulse" title="Pending" />;
+    if (connectionStatus === 'none') return <Link2Off size={20} className="text-stone-300" title="Disconnected" />;
+    if (isFollowing) return <Zap size={20} className="text-indigo-500" title="Resonating" />;
+    return null;
+  };
+
   const renderConnectButton = () => {
     if (connectLoading) {
       return (
@@ -170,32 +178,32 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
     switch (connectionStatus) {
       case 'friends':
         return (
-          <button onClick={handleConnectAction} className="px-8 py-3 rounded-full font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-stone-100 dark:bg-stone-900 text-stone-500 border border-stone-200 dark:border-stone-800 hover:text-red-500 hover:border-red-500/30">
-            <UserCheck size={14} /> Connected
+          <button onClick={handleConnectAction} className="px-8 py-3 rounded-full font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-stone-100 dark:bg-stone-900 text-stone-500 border border-stone-200 dark:border-stone-800 hover:text-red-500 hover:border-red-500/30" title="Disconnect">
+            <Link2Off size={14} />
           </button>
         );
       case 'request_sent':
         return (
-          <button onClick={handleConnectAction} className="px-8 py-3 rounded-full font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-stone-100 dark:bg-stone-900 text-stone-400 border border-stone-200 dark:border-stone-800 hover:text-red-500 hover:border-red-500/30">
-            Pending (Cancel)
+          <button onClick={handleConnectAction} className="px-8 py-3 rounded-full font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-stone-100 dark:bg-stone-900 text-stone-400 border border-stone-200 dark:border-stone-800 hover:text-red-500 hover:border-red-500/30" title="Cancel Request">
+            <Clock size={14} className="animate-pulse" />
           </button>
         );
       case 'request_received':
         return (
           <div className="flex gap-2">
             <button onClick={handleConnectAction} className="px-8 py-3 rounded-full font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600">
-              <UserPlus size={14} /> Accept
+              <Check size={14} /> Accept
             </button>
             <button onClick={handleRejectRequest} className="px-6 py-3 rounded-full font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 border border-stone-200 dark:border-stone-800 text-stone-500 hover:text-red-500">
-              Ignore
+              <X size={14} />
             </button>
           </div>
         );
       case 'none':
       default:
         return (
-          <button onClick={handleConnectAction} className="px-8 py-3 rounded-full font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 border border-nous-text dark:border-white text-nous-text dark:text-white hover:bg-nous-text hover:text-white dark:hover:bg-white dark:hover:text-black">
-            <UserPlus size={14} /> Connect
+          <button onClick={handleConnectAction} className="px-8 py-3 rounded-full font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 border border-nous-text dark:border-white text-nous-text dark:text-white hover:bg-nous-text hover:text-white dark:hover:bg-white dark:hover:text-black" title="Add Friend">
+            <UserPlus size={14} /> Add Friend
           </button>
         );
     }
@@ -229,7 +237,10 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
               <div className="w-24 h-24 rounded-full overflow-hidden border border-stone-200 dark:border-stone-800 mb-6 bg-stone-100 dark:bg-stone-900">
                 <img src={profile.photoURL || `https://ui-avatars.com/api/?name=${profile.handle || 'U'}&background=1c1917&color=fff`} className="w-full h-full object-cover grayscale" alt="" />
               </div>
-              <h2 className="font-serif text-4xl italic tracking-tighter text-nous-text dark:text-white mb-2">@{profile.handle}</h2>
+              <div className="flex items-center gap-3 mb-2">
+                <h2 className="font-serif text-4xl italic tracking-tighter text-nous-text dark:text-white">The Stand // @{profile.handle}</h2>
+                {getStatusIcon()}
+              </div>
               
               {profile.tailorDraft?.typographyIntent?.archetype && (
                 <div className="mt-2 px-3 py-1 bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-full inline-block">
@@ -277,7 +288,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
         
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-8 bg-stone-50 dark:bg-black/20">
-          <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] font-black text-stone-400 mb-6 text-center">Public Manifests</h3>
+          <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] font-black text-stone-400 mb-6 text-center">The Stand // Published Manifests</h3>
           
           {loading ? (
             <div className="flex justify-center py-12"><Loader2 size={24} className="animate-spin text-stone-400" /></div>

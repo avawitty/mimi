@@ -107,13 +107,30 @@ export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBy
 
              {/* The Cab (Moving Element) */}
              <motion.div 
-               className="relative z-10 w-full aspect-[2/3] border border-nous-text dark:border-white bg-white dark:bg-black shadow-xl flex items-center justify-center"
+               className={`relative z-10 w-full aspect-[2/3] border border-nous-text dark:border-white bg-white dark:bg-black shadow-xl flex items-center justify-center ${isDeep ? 'overflow-hidden' : ''}`}
                initial={{ y: "350%" }}
                animate={{ y: `${350 - (progress * 3.5)}%` }}
                transition={{ type: "tween", ease: "linear", duration: 0.1 }} // Smooth linear tracking of progress
              >
                 {/* Cab Interior Detail */}
-                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                {isDeep ? (
+                    <>
+                        <div className="absolute inset-0 bg-amber-500/10 animate-pulse" />
+                        <motion.div 
+                            className="absolute inset-0 border-[0.5px] border-amber-500/30"
+                            animate={{ rotate: 360, scale: [1, 1.1, 1] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                        />
+                        <motion.div 
+                            className="absolute inset-4 border-[0.5px] border-amber-500/50"
+                            animate={{ rotate: -360, scale: [1, 0.9, 1] }}
+                            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                        />
+                        <div className="w-2 h-2 bg-amber-500 rounded-full animate-ping z-10" />
+                    </>
+                ) : (
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                )}
                 <div className="absolute top-0 inset-x-0 h-px bg-current opacity-20" />
                 <div className="absolute bottom-0 inset-x-0 h-px bg-current opacity-20" />
              </motion.div>

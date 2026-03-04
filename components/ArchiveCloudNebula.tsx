@@ -4,9 +4,12 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { subscribeToUserZines, subscribeToCommunityZines } from '../services/firebase';
 import { getLocalZines } from '../services/localArchive';
-import { ZineMetadata, ToneTag } from '../types';
+import { fetchFollowing, Connection } from '../services/connections';
+import { getUserProfile } from '../services/firebaseUtils';
+import { ZineMetadata, ToneTag, UserProfile } from '../types';
 import { useUser } from '../contexts/UserContext';
-import { Archive, Search, Hash, X, Eye, Folder, Loader2, Radio, Zap, Wind, Ghost, Star, Info, Layers, Target, Compass, Sparkles } from 'lucide-react';
+import { Archive, Search, Hash, X, Eye, Folder, Loader2, Radio, Zap, Wind, Ghost, Star, Info, Layers, Target, Compass, Sparkles, User } from 'lucide-react';
+import { PublicProfileModal } from './PublicProfileModal';
 
 const TONE_MAP: Record<ToneTag, { bg: string, text: string, accent: string }> = {
   'Cinematic Witness': { bg: 'bg-[#F5F5F0]', text: 'text-stone-900', accent: 'border-stone-300' },
@@ -30,7 +33,9 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [nebulaMode, setNebulaMode] = useState<'strategist' | 'shadow' | 'starred'>('strategist');
+  const [nebulaMode, setNebulaMode] = useState<'strategist' | 'shadow' | 'starred' | 'network'>('strategist');
+  const [followingProfiles, setFollowingProfiles] = useState<UserProfile[]>([]);
+  const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
 
   useEffect(() => {
     // 1. Subscribe to Real-time Community Feed
@@ -49,6 +54,15 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
             setCloudZines(data.filter(z => z && z.id && z.content));
             setLoading(false);
         });
+        
+        // Load network
+        try {
+          const connections = await fetchFollowing(user.uid);
+          const profiles = await Promise.all(connections.map(c => getUserProfile(c.followingId)));
+          setFollowingProfiles(profiles.filter(Boolean) as UserProfile[]);
+        } catch (e) {
+          console.error("Failed to load network", e);
+        }
       } else {
         setLoading(false);
       }
@@ -97,9 +111,9 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
               <div className="space-y-4">
                  <div className="flex items-center gap-3 text-stone-400">
                     <Archive size={16} />
-                    <span className="font-sans text-[8px] uppercase tracking-[0.5em] font-black italic">Sovereign Registry // The Stands</span>
+                    <span className="font-sans text-[8px] uppercase tracking-[0.5em] font-black italic">Sovereign Registry // Your Public Storefront</span>
                  </div>
-                 <h2 className="font-serif text-6xl md:text-8xl italic tracking-tighter text-nous-text dark:text-white leading-none luminescent-text">The Stand.</h2>
+                 <h2 className="font-serif text-6xl md:text-8xl italic tracking-tighter text-nous-text dark:text-white leading-none luminescent-text">Your Stand.</h2>
               </div>
               <div className="flex flex-col gap-2">
                  <div className="flex items-center gap-0 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-sm overflow-hidden shadow-sm">
@@ -125,6 +139,14 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
                     >
                        <Ghost size={14} />
                        <span className="font-sans text-[8px] uppercase tracking-widest font-black">Shadow</span>
+                    </button>
+                    <div className="w-px h-8 bg-stone-200 dark:bg-stone-800" />
+                    <button 
+                      onClick={() => setNebulaMode('network')}
+                      className={`flex items-center gap-3 px-6 md:px-8 py-3 transition-all ${nebulaMode === 'network' ? 'bg-indigo-500 text-white' : 'text-stone-400 hover:text-stone-600'}`}
+                    >
+                       <Radio size={14} />
+                       <span className="font-sans text-[8px] uppercase tracking-widest font-black">Network</span>
                     </button>
                  </div>
               </div>
@@ -177,26 +199,67 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 pt-12">
-          {filteredZines.map(zine => (
-            <ZineShelfItem 
-              key={zine.id} 
-              zine={zine} 
-              onSelect={() => onSelectZine(zine)} 
-              isCloud={zine.userId && !zine.userId.startsWith('ghost')} 
-              isStarred={profile?.starredZineIds?.includes(zine.id)}
-              onToggleStar={() => toggleZineStar(zine.id)}
-            />
-          ))}
-          {filteredZines.length === 0 && (
-            <div className="col-span-full py-48 text-center opacity-30 space-y-8">
-               <Ghost size={64} className="mx-auto" />
-               <p className="font-serif italic text-3xl">“This frequency is currently void.”</p>
-               <button onClick={() => setNebulaMode('strategist')} className="font-sans text-[9px] uppercase tracking-widest font-black text-emerald-500 border-b border-emerald-500">Return to Strategist</button>
-            </div>
-          )}
-        </div>
+        {nebulaMode === 'network' ? (
+          <div className="w-full pt-12">
+            <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] font-black text-stone-400 mb-8 text-center">Your Resonating Network</h3>
+            {followingProfiles.length === 0 ? (
+              <div className="py-32 text-center opacity-30 space-y-8">
+                <Radio size={64} className="mx-auto" />
+                <p className="font-serif italic text-3xl">“No active connections.”</p>
+                <p className="font-sans text-[9px] uppercase tracking-widest text-stone-500">Find signals in the Proscenium.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {followingProfiles.map(p => (
+                  <div 
+                    key={p.uid} 
+                    onClick={() => setViewingProfileId(p.uid)}
+                    className="bg-white dark:bg-[#1C1C1C] border border-stone-200 dark:border-stone-800 p-6 flex flex-col items-center text-center cursor-pointer hover:border-indigo-500 transition-colors group"
+                  >
+                    <div className="w-16 h-16 rounded-full overflow-hidden mb-4 bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800">
+                      <img src={p.photoURL || `https://ui-avatars.com/api/?name=${p.handle || 'U'}&background=1c1917&color=fff`} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" alt="" />
+                    </div>
+                    <h4 className="font-serif text-2xl italic text-nous-text dark:text-white group-hover:text-indigo-500 transition-colors">@{p.handle}</h4>
+                    {p.tasteProfile?.definition && (
+                      <p className="mt-3 font-serif italic text-xs text-stone-500 line-clamp-2">"{p.tasteProfile.definition}"</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 pt-12">
+            {filteredZines.map(zine => (
+              <ZineShelfItem 
+                key={zine.id} 
+                zine={zine} 
+                onSelect={() => onSelectZine(zine)} 
+                isCloud={zine.userId && !zine.userId.startsWith('ghost')} 
+                isStarred={profile?.starredZineIds?.includes(zine.id)}
+                onToggleStar={() => toggleZineStar(zine.id)}
+              />
+            ))}
+            {filteredZines.length === 0 && (
+              <div className="col-span-full py-48 text-center opacity-30 space-y-8">
+                 <Ghost size={64} className="mx-auto" />
+                 <p className="font-serif italic text-3xl">“This frequency is currently void.”</p>
+                 <button onClick={() => setNebulaMode('strategist')} className="font-sans text-[9px] uppercase tracking-widest font-black text-emerald-500 border-b border-emerald-500">Return to Strategist</button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
+      <AnimatePresence>
+        {viewingProfileId && (
+          <PublicProfileModal 
+            userId={viewingProfileId} 
+            onClose={() => setViewingProfileId(null)} 
+            onSelectZine={onSelectZine}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

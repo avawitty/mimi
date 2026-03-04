@@ -76,21 +76,62 @@ export const DeveloperSettings: React.FC<{ onClose: () => void }> = ({ onClose }
                             </button>
                         </div>
 
-                        <div className="space-y-4 pt-4 border-t border-white/5">
-                            <div className="flex justify-between items-center">
-                                <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Oracle Thinking Budget</span>
-                                <span className="font-mono text-[10px] text-emerald-500">{agentConfig.thinkingBudget} Tokens</span>
+                        <div className="space-y-6 pt-4 border-t border-white/5">
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <div className="flex flex-col">
+                                        <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Curator Thinking Budget</span>
+                                        <span className="font-serif italic text-[10px] text-stone-600">Impact: Semiotic depth of shard analysis.</span>
+                                    </div>
+                                    <span className="font-mono text-[10px] text-emerald-500">{agentConfig.curatorThinkingBudget} Tokens</span>
+                                </div>
+                                <input 
+                                    type="range" 
+                                    min="0" 
+                                    max="16384" 
+                                    step="1024" 
+                                    value={agentConfig.curatorThinkingBudget} 
+                                    onChange={(e) => setAgentConfig({ ...agentConfig, curatorThinkingBudget: parseInt(e.target.value) })}
+                                    className="w-full accent-emerald-500 bg-stone-800 h-1 rounded-full cursor-pointer"
+                                />
+                                <p className="font-serif italic text-[10px] text-stone-500 leading-relaxed">
+                                    A higher budget for the Curator allows it to perform deeper cultural cross-referencing and more sophisticated semiotic decoding of your shards. 
+                                    <span className="text-amber-500/60 ml-1">Warning: High values increase analysis latency.</span>
+                                </p>
                             </div>
-                            <input 
-                                type="range" 
-                                min="0" 
-                                max="8192" 
-                                step="1024" 
-                                value={agentConfig.thinkingBudget} 
-                                onChange={(e) => setAgentConfig({ ...agentConfig, thinkingBudget: parseInt(e.target.value) })}
-                                className="w-full accent-emerald-500 bg-stone-800 h-1 rounded-full cursor-pointer"
-                            />
-                            <p className="font-serif italic text-xs text-stone-600">Higher budget allows deeper semantic cross-referencing but increases latency.</p>
+
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <div className="flex flex-col">
+                                        <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Sentinel Thinking Budget</span>
+                                        <span className="font-serif italic text-[10px] text-stone-600">Impact: Precision of aesthetic drift detection.</span>
+                                    </div>
+                                    <span className="font-mono text-[10px] text-emerald-500">{agentConfig.sentinelThinkingBudget} Tokens</span>
+                                </div>
+                                <input 
+                                    type="range" 
+                                    min="0" 
+                                    max="16384" 
+                                    step="1024" 
+                                    value={agentConfig.sentinelThinkingBudget} 
+                                    onChange={(e) => setAgentConfig({ ...agentConfig, sentinelThinkingBudget: parseInt(e.target.value) })}
+                                    className="w-full accent-emerald-500 bg-stone-800 h-1 rounded-full cursor-pointer"
+                                />
+                                <p className="font-serif italic text-[10px] text-stone-500 leading-relaxed">
+                                    The Sentinel uses this budget to audit your recent debris against your stated Manifesto. 
+                                    Higher budgets result in more nuanced detection of aesthetic drift and more insightful clinical observations.
+                                </p>
+                            </div>
+
+                            <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-sm">
+                                <p className="font-sans text-[8px] uppercase tracking-widest font-black text-emerald-500 mb-2 flex items-center gap-2">
+                                    <Activity size={10} /> Performance Note
+                                </p>
+                                <p className="font-serif italic text-[10px] text-stone-400 leading-relaxed">
+                                    Thinking budgets determine the maximum reasoning effort the model can expend. 
+                                    Increasing these values improves generation quality and reasoning depth but will result in longer "thinking" times before the agent files its report.
+                                </p>
+                            </div>
                         </div>
                     </motion.div>
                 ) : (

@@ -4,10 +4,11 @@ import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { ZineMetadata, PocketItem } from '../types';
 import { generateAudio, animateShardWithVeo, transcribeAudio } from '../services/geminiService';
 import { addToPocket } from '../services/firebase';
-import { Loader2, X, Volume2, Orbit, Eye, Target, Layers, Moon, Sparkles, Terminal, Quote, ArrowDown, Grid3X3, Printer, Bookmark, Check, Play, Pause, ExternalLink, Download, Share2, Star, FileText, Map, Compass, Zap, RefreshCw, PenTool, Save, Mic, Square, AlertCircle, StickyNote, History, MessageSquareQuote, Radar, Maximize2, Activity, Archive, FolderPlus, Compass as RoadmapIcon, Stars as CelestialIcon, ArrowRight, CornerDownRight, Image as ImageIcon, Film, MousePointer2, Briefcase, ChevronDown, Hash, Search, Menu, Plus, Radio } from 'lucide-react';
+import { Loader2, X, Volume2, Orbit, Eye, Target, Layers, Moon, Sparkles, Terminal, Quote, ArrowDown, Grid3X3, Printer, Bookmark, Check, Play, Pause, ExternalLink, Download, Share2, Star, FileText, Map, Compass, Zap, RefreshCw, PenTool, Save, Mic, Square, AlertCircle, StickyNote, History, MessageSquareQuote, Radar, Maximize2, Activity, Archive, FolderPlus, Compass as RoadmapIcon, Stars as CelestialIcon, ArrowRight, CornerDownRight, Image as ImageIcon, Film, MousePointer2, Briefcase, BookOpen, ChevronDown, Hash, Search, Menu, Plus, Radio } from 'lucide-react';
 import { Visualizer } from './Visualizer';
 import { ExportChamber } from './ExportChamber';
 import { SocialShareModal } from './SocialShareModal';
+import { ZineComments } from './ZineComments';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
 import { useRecorder } from '../hooks/useRecorder';
@@ -28,6 +29,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
   const [isVoiceLoading, setIsVoiceLoading] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isAnimatingManifest, setIsAnimatingManifest] = useState(false);
@@ -92,11 +94,18 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
         ${metadata.content?.vocal_summary_blurb || metadata.content.poetic_provocation}
       `.trim();
 
-      const bytes = await generateAudio(narrationText);
-      const dataInt16 = new Int16Array(bytes.buffer);
+      const personaKey = activePersona?.apiKey ? activePersona.apiKey : undefined;
+      const bytes = await generateAudio(narrationText, personaKey);
+      
+      // Ensure alignment and even length for Int16Array
+      const buffer = bytes.buffer;
+      const dataInt16 = new Int16Array(buffer, 0, Math.floor(buffer.byteLength / 2));
+      
       const audioBuffer = audioCtxRef.current.createBuffer(1, dataInt16.length, 24000);
       const channelData = audioBuffer.getChannelData(0);
-      for (let i = 0; i < dataInt16.length; i++) { channelData[i] = dataInt16[i] / 32768.0; }
+      for (let i = 0; i < dataInt16.length; i++) { 
+          channelData[i] = dataInt16[i] / 32768.0; 
+      }
       const source = audioCtxRef.current.createBufferSource();
       source.buffer = audioBuffer;
       source.connect(audioCtxRef.current.destination);
@@ -104,8 +113,16 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
       source.start(0);
       sourceRef.current = source;
       setIsPlaying(true);
-    } catch (e) {
+    } catch (e: any) {
       console.error("Voice synthesis failed", e);
+      if (e.message?.includes('overloaded') || e.code === 'QUOTA_EXCEEDED') {
+          window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+              detail: { 
+                  message: "Oracle Overloaded. The frequency is too high.", 
+                  icon: <AlertCircle size={14} className="text-red-500" /> 
+              } 
+          }));
+      }
     } finally { setIsVoiceLoading(false); }
   };
 
@@ -159,7 +176,8 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
               zineData: metadata
           };
           
-          await addDoc(collection(db, 'public_transmissions'), transmission);
+          const cleanTransmission = JSON.parse(JSON.stringify(transmission));
+          await addDoc(collection(db, 'public_transmissions'), cleanTransmission);
           
           setIsBroadcasted(true);
           window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Manifest Broadcasted to Proscenium.", icon: <Radio size={14} style={{ color: accentColor }} /> } }));
@@ -193,10 +211,20 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
   };
 
   return (
-    <div className="w-full h-screen flex flex-col bg-[#FDFBF7] dark:bg-[#080808] relative overflow-hidden transition-colors duration-1000 print:bg-white text-nous-text dark:text-stone-200">
+    <div className="w-full h-[100dvh] flex flex-col bg-[#FDFBF7] dark:bg-[#080808] relative overflow-hidden transition-colors duration-1000 print:bg-white text-nous-text dark:text-stone-200">
       <AnimatePresence>
           {showExport && <ExportChamber metadata={metadata} onClose={() => setShowExport(false)} />}
           {showShare && <SocialShareModal metadata={metadata} onClose={() => setShowShare(false)} />}
+          {showComments && (
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[11000] flex items-center justify-center p-6 bg-stone-950/80 backdrop-blur-xl"
+            >
+              <ZineComments zineId={metadata.id} onClose={() => setShowComments(false)} />
+            </motion.div>
+          )}
       </AnimatePresence>
 
       {/* TOP-LEFT EXIT BUTTON */}
@@ -215,7 +243,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
           <div className="flex-1 overflow-y-auto snap-y snap-mandatory no-scrollbar scroll-smooth print:overflow-visible print:snap-none">
               
               {/* 1. HEADLINES (TITLE/TONE) */}
-              <section className="min-h-screen flex flex-col justify-center px-6 md:px-24 snap-start border-b border-stone-100 dark:border-stone-900 print:min-h-0 print:py-12 bg-[#FDFBF7] dark:bg-[#080808]">
+              <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start border-b border-stone-100 dark:border-stone-900 print:min-h-0 print:py-12 bg-[#FDFBF7] dark:bg-[#080808]">
                 <div className="max-w-7xl w-full space-y-16">
                    <div className="flex items-center gap-4">
                       <span className="font-mono text-[9px] uppercase tracking-[0.5em] text-stone-400">Issue_0{Math.floor(Math.random() * 10)}</span>
@@ -244,7 +272,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
               </section>
 
               {/* 2. SUMMARY (WITH VOCAL TRANSMISSION) */}
-              <section className="min-h-screen flex flex-col justify-center px-6 md:px-24 snap-start bg-white dark:bg-[#0A0A0A] print:min-h-0 print:py-12">
+              <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-white dark:bg-[#0A0A0A] print:min-h-0 print:py-12">
                  <div className="max-w-5xl space-y-16">
                     <SectionHeader label="Executive Summary" icon={Sparkles} style={{ color: accentColor }} />
                     <p className="font-serif italic text-3xl md:text-6xl text-stone-800 dark:text-stone-200 leading-[1.1] md:leading-[1.1]">
@@ -269,7 +297,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
               </section>
 
               {/* 3. HEADER IMAGE */}
-              <section className="min-h-screen flex flex-col justify-center snap-start bg-black overflow-hidden relative group print:min-h-0 print:py-12">
+              <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-black overflow-hidden relative group print:min-h-0 print:py-12">
                  <Visualizer prompt={metadata.content.hero_image_prompt || metadata.title} defaultAspectRatio="16:9" isArtifact isLite={metadata.isLite} initialImage={metadata.coverImageUrl} />
                  <div className="absolute bottom-12 left-12 p-4 bg-white/5 backdrop-blur-md rounded-sm border border-white/10">
                     <span className="font-mono text-[7px] text-white uppercase tracking-widest">FIG_01: PRIMARY_VISUAL</span>
@@ -280,27 +308,28 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
               </section>
 
               {/* 4. THE READING (ORACULAR MIRROR) */}
-              <section className="min-h-screen flex flex-col justify-center px-6 md:px-24 snap-start bg-[#F5F5F0] dark:bg-[#0E0E0E] print:min-h-0 print:py-12">
+              <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-[#F5F5F0] dark:bg-[#0E0E0E] print:min-h-0 print:py-12">
                  <div className="max-w-4xl space-y-12">
                     <SectionHeader label="Oracular Mirror" icon={Eye} style={{ color: accentColor }} />
                     <p className="font-serif italic text-3xl md:text-5xl text-nous-text dark:text-stone-200 leading-tight">
-                       "{metadata.content.oracular_mirror}"
+                       "{metadata.content.oracular_mirror || metadata.content.the_reading || "The mirror is silent."}"
                     </p>
                  </div>
               </section>
 
               {/* 5. STRATEGIC HYPOTHESIS (VISUALIZED) */}
-              <section className="min-h-screen flex flex-col justify-center px-6 md:px-24 snap-start bg-white dark:bg-[#050505] print:min-h-0 print:py-12">
+              <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-white dark:bg-[#050505] print:min-h-0 print:py-12">
                  <div className="max-w-7xl w-full space-y-12">
                     <SectionHeader label="Strategic Hypothesis" icon={Target} style={{ color: accentColor }} />
                     <div className="grid md:grid-cols-2 gap-12 items-center">
                         <div className="aspect-square w-full relative border border-stone-100 dark:border-stone-800 shadow-2xl rounded-sm overflow-hidden bg-stone-50 dark:bg-stone-900">
                             {/* Use Visualizer to render the hypothesis visually */}
                             <Visualizer 
-                                prompt={`A minimalist, high-contrast, typographic poster design for the concept: "${metadata.content.strategic_hypothesis}". Architectural, Swiss style, brutalist, monochrome with one accent color.`} 
+                                prompt={`An abstract, conceptual, high-contrast editorial photograph representing the concept: "${metadata.content.strategic_hypothesis}". Focus on texture, lighting, and composition. No text, no typography. Cinematic, moody, architectural.`} 
                                 defaultAspectRatio="1:1" 
                                 isArtifact 
                                 isLite={metadata.isLite} 
+                                delay={400}
                             />
                             <div className="absolute bottom-4 right-4 bg-black/80 text-white px-2 py-1 text-[8px] font-mono rounded-sm">FIG 2.1 — ABSTRACT</div>
                         </div>
@@ -318,52 +347,72 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
               </section>
 
               {/* 6. SEMIOTIC SIGNALS - REDESIGNED GRID */}
-              <section className="min-h-screen flex flex-col justify-center px-6 md:px-24 snap-start bg-[#FAFAFA] dark:bg-[#080808] print:min-h-0 print:py-12">
+              <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-[#FAFAFA] dark:bg-[#080808] print:min-h-0 print:py-12">
                  <div className="max-w-7xl w-full space-y-16">
                     <SectionHeader label="Semiotics & Visual Directives" icon={Radar} style={{ color: accentColor }} />
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {metadata.content.aesthetic_touchpoints?.map((t, i) => (
-                           <div key={i} className="group relative p-8 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-sm hover:shadow-2xl transition-all flex flex-col justify-between min-h-[300px] hover:border-transparent" style={{ '--hover-accent': accentColor } as React.CSSProperties}>
-                              <div className="absolute top-4 right-4 opacity-30 font-mono text-[9px]">SIG_0{i+1}</div>
-                              
-                              <div className="space-y-4">
-                                 <h4 className="font-serif text-3xl italic tracking-tighter text-nous-text dark:text-white group-hover:text-[var(--hover-accent)] transition-colors">
-                                    {t.motif}
-                                 </h4>
-                                 <p className="font-serif italic text-sm text-stone-500 dark:text-stone-400 leading-relaxed border-l-2 border-stone-100 dark:border-stone-800 pl-4">
-                                    {t.context}
-                                 </p>
-                                 {t.visual_directive && (
-                                    <div className="mt-4 pt-4 border-t border-stone-100 dark:border-stone-800">
-                                       <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 block mb-2">Directive</span>
-                                       <p className="font-mono text-[9px] text-stone-500">{t.visual_directive}</p>
-                                    </div>
-                                 )}
-                              </div>
+                        {metadata.content.aesthetic_touchpoints?.map((t, i) => {
+                           const Icon = t.type === 'acquisition' ? Briefcase : t.type === 'lexical' ? BookOpen : Sparkles;
+                           const label = t.type === 'acquisition' ? 'Buy this' : t.type === 'lexical' ? 'Add to Lexicon' : 'Imagine this';
+                           
+                           return (
+                             <div key={i} className="group relative p-8 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-sm hover:shadow-2xl transition-all flex flex-col justify-between min-h-[300px] hover:border-transparent" style={{ '--hover-accent': accentColor } as React.CSSProperties}>
+                                <div className="absolute top-4 right-4 opacity-30 font-mono text-[9px]">SIG_0{i+1}</div>
+                                
+                                <div className="space-y-4">
+                                   <div className="flex items-center gap-2 mb-2">
+                                      <Icon size={12} className="text-stone-400 group-hover:text-[var(--hover-accent)] transition-colors" />
+                                      <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">{label}</span>
+                                   </div>
+                                   <h4 className="font-serif text-3xl italic tracking-tighter text-nous-text dark:text-white group-hover:text-[var(--hover-accent)] transition-colors">
+                                      {t.motif}
+                                   </h4>
+                                   <p className="font-serif italic text-sm text-stone-500 dark:text-stone-400 leading-relaxed border-l-2 border-stone-100 dark:border-stone-800 pl-4">
+                                      {t.context}
+                                   </p>
+                                   {t.visual_directive && (
+                                      <div className="mt-4 pt-4 border-t border-stone-100 dark:border-stone-800">
+                                         <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 block mb-2">Directive</span>
+                                         <p className="font-mono text-[9px] text-stone-500">{t.visual_directive}</p>
+                                      </div>
+                                   )}
+                                </div>
 
-                              <div className="pt-8 flex justify-between items-end">
-                                 <button
-                                    onClick={() => handleScrySignal(t.motif + (t.visual_directive ? " " + t.visual_directive : ""))} 
-                                    className="flex items-center gap-2 font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 hover:text-[var(--hover-accent)] transition-colors border-b border-transparent hover:border-current pb-0.5"
-                                 >
-                                    <Search size={10} /> Scry Signal
-                                 </button>
-                                 <a 
-                                    href={`https://www.google.com/search?q=${encodeURIComponent(t.motif + " aesthetic meaning")}`} 
-                                    target="_blank"
-                                    className="text-stone-300 hover:text-[var(--hover-accent)] transition-colors"
-                                 >
-                                    <ExternalLink size={14} />
-                                 </a>
-                              </div>
-                           </div>
-                        ))}
+                                <div className="pt-8 flex justify-between items-end">
+                                   <div className="flex gap-4">
+                                      <button
+                                         onClick={() => handleScrySignal(t.motif + (t.visual_directive ? " " + t.visual_directive : ""))} 
+                                         className="flex items-center gap-2 font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 hover:text-[var(--hover-accent)] transition-colors border-b border-transparent hover:border-current pb-0.5"
+                                      >
+                                         <Search size={10} /> Scry Signal
+                                      </button>
+                                      {t.type === 'acquisition' && t.link && (
+                                         <a 
+                                            href={t.link} 
+                                            target="_blank"
+                                            className="flex items-center gap-2 font-sans text-[8px] uppercase tracking-widest font-black text-emerald-500 hover:text-emerald-400 transition-colors border-b border-transparent hover:border-current pb-0.5"
+                                         >
+                                            <Briefcase size={10} /> Grounding
+                                         </a>
+                                      )}
+                                   </div>
+                                   <a 
+                                      href={`https://www.google.com/search?q=${encodeURIComponent(t.motif + " aesthetic meaning")}`} 
+                                      target="_blank"
+                                      className="text-stone-300 hover:text-[var(--hover-accent)] transition-colors"
+                                   >
+                                      <ExternalLink size={14} />
+                                   </a>
+                                </div>
+                             </div>
+                           );
+                        })}
                     </div>
                  </div>
               </section>
 
               {/* 7. CELESTIAL CALIBRATION */}
-              <section className="min-h-screen flex flex-col justify-center px-6 md:px-24 snap-start bg-[#050505] text-white print:min-h-0 print:py-12">
+              <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-[#050505] text-white print:min-h-0 print:py-12">
                  <div className="max-w-4xl space-y-12">
                     <SectionHeader label="Celestial Calibration" icon={Moon} color="text-white" />
                     <div className="flex flex-col items-center text-center space-y-12">
@@ -386,7 +435,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                  {metadata.content.pages?.map((page, i) => {
                     const isEven = i % 2 === 0;
                     return (
-                      <section key={i} className="min-h-screen flex flex-col justify-center snap-start px-6 md:px-12 max-w-7xl mx-auto w-full">
+                      <section key={i} className="min-h-[100dvh] flex flex-col justify-center snap-start px-6 md:px-12 max-w-7xl mx-auto w-full">
                           <div className={`flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} gap-12 md:gap-24 items-center`}>
                               
                               {/* VISUAL COMPONENT */}
@@ -398,6 +447,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                                         isArtifact 
                                         isLite={metadata.isLite} 
                                         initialImage={page.image_url} 
+                                        delay={800 + (i * 1200)}
                                       />
                                       {/* PLATE METADATA OVERLAY */}
                                       <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end pointer-events-none mix-blend-difference text-white opacity-0 group-hover:opacity-100 transition-opacity duration-700">
@@ -440,22 +490,100 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
               </div>
 
               {/* 9. THE ROADMAP (BLUEPRINT) - ARCHITECTURAL REDESIGN */}
-              <section className="min-h-screen flex flex-col justify-center px-6 md:px-24 snap-start bg-[#050505] text-white print:min-h-0 print:py-12 relative overflow-hidden">
+              <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-[#050505] text-white print:min-h-0 print:py-12 relative overflow-hidden">
                  {/* TECHNICAL GRID BACKGROUND */}
                  <div className="absolute inset-0 opacity-10 pointer-events-none" 
                       style={{ backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize: '40px 40px' }} 
                  />
                  
                  <div className="max-w-6xl w-full space-y-16 relative z-10">
-                    <SectionHeader label="Architectural Blueprint" icon={RoadmapIcon} color="text-white" />
-                    
-                    <div className="border border-stone-800 bg-[#0A0A0A]/90 p-12 relative">
+                     <SectionHeader label="Authority Roadmap" icon={RoadmapIcon} color="text-white" />
+                                        <div className="border border-stone-800 bg-[#0A0A0A]/90 p-12 relative">
                        {/* CAD MARKERS */}
                        <div className="absolute top-0 left-0 p-2 border-r border-b border-stone-800"><span className="font-mono text-[8px] text-stone-500">TL_REF_01</span></div>
                        <div className="absolute bottom-0 right-0 p-2 border-l border-t border-stone-800"><span className="font-mono text-[8px] text-stone-500">BR_REF_04</span></div>
                        
                        <div className="grid md:grid-cols-2 gap-16">
-                          {metadata.content.blueprint && Object.entries(metadata.content.blueprint).map(([key, val], i) => (
+                          {metadata.content.roadmap ? (
+                             <>
+                                <div className="space-y-4 group">
+                                   <div className="flex items-center gap-4 border-b border-stone-800 pb-2">
+                                      <span className="font-mono text-xs" style={{ color: accentColor }}>01</span>
+                                      <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400 group-hover:text-white transition-colors">Strategic Thesis</span>
+                                   </div>
+                                   <p className="font-mono text-sm text-stone-300 leading-relaxed pl-8 border-l border-white/5 transition-colors">
+                                      {metadata.content.roadmap.strategicThesis}
+                                   </p>
+                                </div>
+                                <div className="space-y-4 group">
+                                   <div className="flex items-center gap-4 border-b border-stone-800 pb-2">
+                                      <span className="font-mono text-xs" style={{ color: accentColor }}>02</span>
+                                      <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400 group-hover:text-white transition-colors">Positioning Axis</span>
+                                   </div>
+                                   <p className="font-mono text-sm text-stone-300 leading-relaxed pl-8 border-l border-white/5 transition-colors">
+                                      {metadata.content.roadmap.positioningAxis}
+                                   </p>
+                                </div>
+                                <div className="col-span-1 md:col-span-2 space-y-4 group">
+                                   <div className="flex items-center gap-4 border-b border-stone-800 pb-2">
+                                      <span className="font-mono text-xs" style={{ color: accentColor }}>03</span>
+                                      <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400 group-hover:text-white transition-colors">Authority Anchor</span>
+                                   </div>
+                                   <div className="grid md:grid-cols-3 gap-8 pl-8 border-l border-white/5">
+                                       <div>
+                                           <span className="font-mono text-[8px] text-stone-500 uppercase block mb-2">Core Claim</span>
+                                           <p className="font-mono text-sm text-stone-300">{metadata.content.roadmap.authorityAnchor?.coreClaim}</p>
+                                       </div>
+                                       <div>
+                                           <span className="font-mono text-[8px] text-stone-500 uppercase block mb-2">Repetition Vector</span>
+                                           <p className="font-mono text-sm text-stone-300">{metadata.content.roadmap.authorityAnchor?.repetitionVector}</p>
+                                       </div>
+                                       <div>
+                                           <span className="font-mono text-[8px] text-stone-500 uppercase block mb-2">Exclusion Principle</span>
+                                           <p className="font-mono text-sm text-stone-300">{metadata.content.roadmap.authorityAnchor?.exclusionPrinciple}</p>
+                                       </div>
+                                   </div>
+                                </div>
+                                
+                                {metadata.content.roadmap.phases && metadata.content.roadmap.phases.length > 0 && (
+                                   <div className="col-span-1 md:col-span-2 space-y-4 group mt-8">
+                                      <div className="flex items-center gap-4 border-b border-stone-800 pb-2">
+                                         <span className="font-mono text-xs" style={{ color: accentColor }}>04</span>
+                                         <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400 group-hover:text-white transition-colors">Authority Phases</span>
+                                      </div>
+                                      <div className="grid md:grid-cols-2 gap-8 pl-8 border-l border-white/5">
+                                         {metadata.content.roadmap.phases.map((phase, idx) => (
+                                            <div key={idx} className="space-y-2 border border-stone-800/50 p-4 bg-stone-900/20">
+                                               <span className="font-mono text-[10px] text-emerald-500 uppercase tracking-widest block mb-1">Phase: {phase.type}</span>
+                                               <p className="font-mono text-sm text-stone-300"><strong>Objective:</strong> {phase.objective}</p>
+                                               <p className="font-mono text-sm text-stone-300"><strong>Move:</strong> {phase.strategicMove}</p>
+                                               <p className="font-mono text-xs text-stone-500 mt-2"><strong>Risk:</strong> {phase.riskToIntegrity}</p>
+                                            </div>
+                                         ))}
+                                      </div>
+                                   </div>
+                                )}
+                                
+                                {metadata.content.roadmap.driftForecast && (
+                                   <div className="col-span-1 md:col-span-2 space-y-4 group mt-8">
+                                      <div className="flex items-center gap-4 border-b border-stone-800 pb-2">
+                                         <span className="font-mono text-xs" style={{ color: accentColor }}>05</span>
+                                         <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400 group-hover:text-white transition-colors">Drift Forecast</span>
+                                      </div>
+                                      <div className="grid md:grid-cols-2 gap-8 pl-8 border-l border-white/5">
+                                         <div>
+                                            <span className="font-mono text-[8px] text-stone-500 uppercase block mb-1">Predicted Shift</span>
+                                            <p className="font-mono text-sm text-stone-300">{metadata.content.roadmap.driftForecast.predictedClusterShift}</p>
+                                         </div>
+                                         <div>
+                                            <span className="font-mono text-[8px] text-stone-500 uppercase block mb-1">Refusal Point</span>
+                                            <p className="font-mono text-sm text-stone-300">{metadata.content.roadmap.driftForecast.refusalPoint}</p>
+                                         </div>
+                                      </div>
+                                   </div>
+                                )}
+                             </>
+                          ) : metadata.content.blueprint ? Object.entries(metadata.content.blueprint).map(([key, val], i) => (
                              <div key={i} className="space-y-4 group">
                                 <div className="flex items-center gap-4 border-b border-stone-800 pb-2">
                                    <span className="font-mono text-xs" style={{ color: accentColor }}>0{i+1}</span>
@@ -465,14 +593,56 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                                    {String(val)}
                                 </p>
                              </div>
-                          ))}
+                          )) : (
+                             <div className="col-span-2 space-y-4">
+                                <div className="flex items-center gap-4 border-b border-stone-800 pb-2">
+                                   <span className="font-mono text-xs" style={{ color: accentColor }}>01</span>
+                                   <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400">Roadmap</span>
+                                </div>
+                                <p className="font-mono text-sm text-stone-300 leading-relaxed pl-8 border-l border-white/5">
+                                   {metadata.content.the_roadmap || "No architectural blueprint detected."}
+                                </p>
+                             </div>
+                          )}
                        </div>
                     </div>
                  </div>
               </section>
 
-              {/* 10. ORIGINAL THOUGHT (RAW INPUT + THUMBNAILS) */}
-              <section className="min-h-screen flex flex-col justify-center px-6 md:px-24 snap-start bg-stone-100 dark:bg-black text-nous-text dark:text-white print:min-h-0 print:py-12">
+               {/* 10. SIGNAL FEED (The Cultural Air) */}
+               {metadata.transmissionsUsed && metadata.transmissionsUsed.length > 0 && (
+                  <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-white dark:bg-black text-nous-text dark:text-white print:min-h-0 print:py-12">
+                     <div className="max-w-4xl w-full space-y-16">
+                        <SectionHeader label="Signal Feed" icon={Radio} style={{ color: accentColor }} />
+                        <div className="space-y-8">
+                           <p className="font-serif italic text-2xl text-stone-400 leading-relaxed">
+                              "The manifest does not exist in a vacuum. It is a refraction of the collective frequency."
+                           </p>
+                           <div className="grid gap-6">
+                              {metadata.transmissionsUsed.map((t, idx) => (
+                                 <div key={idx} className="flex items-start gap-4 p-4 border border-stone-100 dark:border-stone-800 rounded-sm bg-stone-50/50 dark:bg-stone-900/30">
+                                    <div className="w-8 h-8 rounded-full bg-stone-200 dark:bg-stone-800 flex items-center justify-center shrink-0">
+                                       <Radio size={14} className="text-stone-400" />
+                                    </div>
+                                    <div className="space-y-1">
+                                       <div className="flex items-center gap-2">
+                                          <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-500">@{t.userHandle}</span>
+                                          <span className="font-mono text-[8px] text-stone-300">{new Date(t.timestamp).toLocaleTimeString()}</span>
+                                       </div>
+                                       <p className="font-serif italic text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
+                                          {t.content}
+                                       </p>
+                                    </div>
+                                 </div>
+                              ))}
+                           </div>
+                        </div>
+                     </div>
+                  </section>
+               )}
+
+               {/* 10. ORIGINAL THOUGHT (RAW INPUT + THUMBNAILS) */}
+              <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-stone-100 dark:bg-black text-nous-text dark:text-white print:min-h-0 print:py-12">
                  <div className="max-w-4xl space-y-16">
                     <SectionHeader label="Original Debris" icon={Zap} style={{ color: accentColor }} />
                     {originalDebris ? (
@@ -513,7 +683,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
               </section>
 
               {/* 11. PROVOCATION + CONTINUUM */}
-              <footer className="min-h-screen flex flex-col items-center justify-center p-12 snap-start print:hidden text-center space-y-16">
+              <footer className="min-h-[100dvh] flex flex-col items-center justify-center p-12 snap-start print:hidden text-center space-y-16">
                  <div className="space-y-6 max-w-2xl">
                     <span className="font-sans text-[10px] uppercase tracking-[0.5em] font-black" style={{ color: accentColor }}>Mimi's Provocation</span>
                     <p className="font-serif italic text-3xl md:text-6xl leading-tight text-balance">
@@ -691,6 +861,17 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                      <span className="bg-black/80 text-white px-2 py-1 rounded text-[9px] uppercase font-black tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Field Notes</span>
                      <div className={`w-12 h-12 bg-white dark:bg-stone-800 rounded-full shadow-lg border border-stone-200 dark:border-stone-700 flex items-center justify-center transition-colors ${showNotes ? 'text-indigo-500' : 'text-stone-500 hover:text-indigo-500'}`}>
                         <StickyNote size={18} />
+                     </div>
+                  </motion.button>
+
+                  <motion.button 
+                    initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.28 }}
+                    onClick={() => setShowComments(true)} 
+                    className="flex items-center gap-4 group"
+                  >
+                     <span className="bg-black/80 text-white px-2 py-1 rounded text-[9px] uppercase font-black tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Discourse</span>
+                     <div className={`w-12 h-12 bg-white dark:bg-stone-800 rounded-full shadow-lg border border-stone-200 dark:border-stone-700 flex items-center justify-center transition-colors text-stone-500 hover:text-emerald-500`}>
+                        <MessageSquareQuote size={18} />
                      </div>
                   </motion.button>
 

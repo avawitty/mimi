@@ -23,7 +23,8 @@ interface ZineLayoutEditorProps {
 const FONT_FAMILIES = [
   { id: 'serif', label: 'Editorial Serif', css: 'Cormorant Garamond' },
   { id: 'sans', label: 'Space Grotesk', css: 'Space Grotesk' },
-  { id: 'mono', label: 'Space Mono', css: 'Space Mono' }
+  { id: 'mono', label: 'Space Mono', css: 'Space Mono' },
+  { id: 'brutalist', label: 'Brutalist', css: 'Anton' }
 ];
 
 const COLORS = [
@@ -90,6 +91,36 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [initialStyle, setInitialStyle] = useState<EditorElementStyle | null>(null);
   const [ratioW, ratioH] = getAspectRatioForTone(tone).split(':').map(Number);
+
+  useEffect(() => {
+    setElements(prev => {
+      if (!prev.some(el => el.content === 'The Signal Is The Message')) {
+        return [...prev, {
+          id: `signal_msg_${Date.now()}`,
+          type: 'text',
+          content: 'The Signal Is The Message',
+          style: {
+            top: 40,
+            left: 10,
+            width: 80,
+            zIndex: 50,
+            fontSize: 3.5,
+            fontFamily: 'Anton',
+            color: '#10B981',
+            textAlign: 'center',
+            fontWeight: '900',
+            opacity: 0.9,
+            rotation: -2,
+            lineHeight: 1,
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            padding: 24,
+            mixBlendMode: 'normal'
+          }
+        }];
+      }
+      return prev;
+    });
+  }, []);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -375,7 +406,9 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
                                         borderColor: el.style.borderColor || 'transparent',
                                         borderRadius: `${el.style.borderRadius || 0}px`,
                                         padding: `${el.style.padding !== undefined ? el.style.padding : 8}px`,
-                                        backgroundColor: el.style.backgroundColor || 'transparent'
+                                        backgroundColor: el.style.backgroundColor || 'transparent',
+                                        backgroundImage: el.style.backgroundImage,
+                                        mixBlendMode: el.style.mixBlendMode as any
                                     }}
                                 >
                                     {el.content}

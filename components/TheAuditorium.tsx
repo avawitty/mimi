@@ -59,7 +59,6 @@ export const TheAuditorium: React.FC = () => {
 
         {/* FEATURED CINEMA SCREEN */}
         <section className="relative aspect-video w-full bg-black rounded-[2rem] overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.4)] border border-stone-800 group">
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/noise.png')] opacity-20 pointer-events-none z-10" />
             
             <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center space-y-8 z-20">
                 <motion.div 
