@@ -8,7 +8,8 @@ import { fetchFollowing, Connection } from '../services/connections';
 import { getUserProfile } from '../services/firebaseUtils';
 import { ZineMetadata, ToneTag, UserProfile } from '../types';
 import { useUser } from '../contexts/UserContext';
-import { Archive, Search, Hash, X, Eye, Folder, Loader2, Radio, Zap, Wind, Ghost, Star, Info, Layers, Target, Compass, Sparkles, User } from 'lucide-react';
+import { Archive, Search, Hash, X, Eye, Folder, Loader2, Radio, Zap, Wind, Ghost, Star, Info, Layers, Target, Compass, Sparkles, User, Network } from 'lucide-react';
+import { VibeGraph } from './VibeGraph';
 import { PublicProfileModal } from './PublicProfileModal';
 
 const TONE_MAP: Record<ToneTag, { bg: string, text: string, accent: string }> = {
@@ -33,7 +34,7 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [nebulaMode, setNebulaMode] = useState<'strategist' | 'shadow' | 'starred' | 'network'>('strategist');
+  const [nebulaMode, setNebulaMode] = useState<'strategist' | 'shadow' | 'starred' | 'network' | 'vibe'>('strategist');
   const [followingProfiles, setFollowingProfiles] = useState<UserProfile[]>([]);
   const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
 
@@ -142,6 +143,14 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
                     </button>
                     <div className="w-px h-8 bg-stone-200 dark:bg-stone-800" />
                     <button 
+                      onClick={() => setNebulaMode('vibe')}
+                      className={`flex items-center gap-3 px-6 md:px-8 py-3 transition-all ${nebulaMode === 'vibe' ? 'bg-emerald-500 text-white' : 'text-stone-400 hover:text-stone-600'}`}
+                    >
+                       <Network size={14} />
+                       <span className="font-sans text-[8px] uppercase tracking-widest font-black">Vibe</span>
+                    </button>
+                    <div className="w-px h-8 bg-stone-200 dark:bg-stone-800" />
+                    <button 
                       onClick={() => setNebulaMode('network')}
                       className={`flex items-center gap-3 px-6 md:px-8 py-3 transition-all ${nebulaMode === 'network' ? 'bg-indigo-500 text-white' : 'text-stone-400 hover:text-stone-600'}`}
                     >
@@ -227,6 +236,10 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
                 ))}
               </div>
             )}
+          </div>
+        ) : nebulaMode === 'vibe' ? (
+          <div className="w-full h-[600px] pt-12">
+            <VibeGraph />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 pt-12">

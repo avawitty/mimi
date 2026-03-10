@@ -1,8 +1,7 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ZineMetadata } from '../types';
-// Fixed: Using fetchCommunityZines from firebase service as fetchArchive is not exported.
 import { fetchCommunityZines } from '../services/firebase';
+import Fuse from 'fuse.js';
 
 interface ArchetypeIndexProps {
   onSelectZine: (zine: ZineMetadata) => void;
@@ -27,52 +26,78 @@ export const ArchetypeIndex: React.FC<ArchetypeIndexProps> = ({ onSelectZine }) 
   const [selectedColorFilter, setSelectedColorFilter] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fixed: fetchCommunityZines is used to retrieve data for the index.
     fetchCommunityZines(100).then((data) => {
       setZines(data);
       setLoading(false);
     });
   }, []);
 
-  const filtered = zines.filter(z => {
-    const term = search.toLowerCase();
-    const archetype = z.content.taste_context?.active_archetype?.toLowerCase() || '';
-    const title = z.title.toLowerCase();
-    const matchesSearch = archetype.includes(term) || title.includes(term);
+  const fuse = useMemo(() => new Fuse(zines, {
+    keys: ['title', 'content.taste_context.active_archetype', 'content.vocal_summary_blurb'],
+    threshold: 0.3,
+  }), [zines]);
 
-    // Color/Archetype Filter
-    let matchesColor = true;
-    if (selectedColorFilter) {
-       // Check if the zine's archetype contains the key associated with the color
-       const targetKey = COLOR_MAP[selectedColorFilter]?.key.toLowerCase();
-       if (targetKey) {
-          matchesColor = archetype.includes(targetKey.replace('the ', ''));
-       }
+  const filtered = useMemo(() => {
+    let result = zines;
+    
+    if (search) {
+        result = fuse.search(search).map(r => r.item);
     }
 
-    let matchesDate = true;
-    if (startDate) {
-      const [y, m, d] = startDate.split('-').map(Number);
-      const start = new Date(y, m - 1, d).getTime();
-      matchesDate = matchesDate && z.timestamp >= start;
-    }
-    if (endDate) {
-      const [y, m, d] = endDate.split('-').map(Number);
-      const end = new Date(y, m - 1, d);
-      end.setHours(23, 59, 59, 999);
-      matchesDate = matchesDate && z.timestamp <= end.getTime();
-    }
+    return result.filter(z => {
+        const archetype = z.content.taste_context?.active_archetype?.toLowerCase() || '';
 
-    return matchesSearch && matchesDate && matchesColor;
-  });
+        // Color/Archetype Filter
+        let matchesColor = true;
+        if (selectedColorFilter) {
+           const targetKey = COLOR_MAP[selectedColorFilter]?.key.toLowerCase();
+           if (targetKey) {
+              matchesColor = archetype.includes(targetKey.replace('the ', ''));
+           }
+        }
+
+        let matchesDate = true;
+        if (startDate) {
+          const [y, m, d] = startDate.split('-').map(Number);
+          const start = new Date(y, m - 1, d).getTime();
+          matchesDate = matchesDate && z.timestamp >= start;
+        }
+        if (endDate) {
+          const [y, m, d] = endDate.split('-').map(Number);
+          const end = new Date(y, m - 1, d);
+          end.setHours(23, 59, 59, 999);
+          matchesDate = matchesDate && z.timestamp <= end.getTime();
+        }
+
+        return matchesDate && matchesColor;
+    });
+  }, [zines, search, startDate, endDate, selectedColorFilter, fuse]);
+
+  const handleSynthesize = () => {
+    window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+        detail: { message: `Synthesizing ${filtered.length} archetypes...`, type: 'success' } 
+    }));
+  };
 
   return (
     <div className="w-full max-w-5xl mx-auto px-6 md:px-12 animate-fade-in pt-12 pb-24">
       <div className="mb-12 border-b border-stone-200 pb-8">
-        <h2 className="font-serif text-3xl italic text-nous-text mb-2">Archetype Index</h2>
-        <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle mb-8">
-          The compendium of detected states.
-        </p>
+        <div className="flex justify-between items-end mb-8">
+            <div>
+                <h2 className="font-serif text-3xl italic text-nous-text mb-2">Archetype Index</h2>
+                <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle">
+                The compendium of detected states.
+                </p>
+            </div>
+            {filtered.length > 0 && (
+                <button 
+                    onClick={handleSynthesize}
+                    className="px-6 py-3 bg-nous-text text-white font-sans text-[9px] uppercase tracking-widest font-black rounded-full hover:bg-emerald-600 transition-all shadow-lg"
+                >
+                    Synthesize {filtered.length}
+                </button>
+            )}
+        </div>
         
         <div className="space-y-8">
           
@@ -134,7 +159,7 @@ export const ArchetypeIndex: React.FC<ArchetypeIndexProps> = ({ onSelectZine }) 
               />
             </div>
             
-            {(startDate || endDate || selectedColorFilter) && (
+            {(startDate || endDate || selectedColorFilter || search) && (
               <button 
                 onClick={() => { setStartDate(''); setEndDate(''); setSelectedColorFilter(null); setSearch(''); }}
                 className="mb-2 font-sans text-[9px] uppercase tracking-widest text-red-400 hover:text-red-600 border-b border-transparent hover:border-red-600 transition-colors"

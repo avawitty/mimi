@@ -2,11 +2,12 @@
 // @ts-nocheck
 import React, { useMemo, useState, useEffect } from 'react';
 import { ZineMetadata, ToneTag } from '../types';
-import { Activity, Sparkles, Eye, Radio, ShieldCheck, Bookmark, Check, Hash, ArrowUpRight } from 'lucide-react';
+import { Activity, Sparkles, Eye, Radio, ShieldCheck, Bookmark, Check, Hash, ArrowUpRight, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { addToPocket } from '../services/firebase';
+import { addToPocket, db } from '../services/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
 const TONE_STYLES: Record<string, { 
   wrapper: string, border: string, text: string, accent: string, aspect: string, grainOpacity: string, overlayColor: string, dark: any
@@ -43,6 +44,7 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
   const { currentPalette } = useTheme();
   const [isHovered, setIsHovered] = useState(false);
   const [isArchived, setIsArchived] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
   
   const baseStyles = TONE_STYLES[zine.tone] || TONE_STYLES['default'];
 
@@ -55,9 +57,27 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
 
   const headlineFont = profile?.tasteProfile?.dominant_archetypes?.[0] === 'brutalist-mono' ? 'font-mono' : 'font-serif';
 
+  const handlePublishToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user || user.uid !== zine.userId) return;
+    try {
+      await updateDoc(doc(db, 'zines', zine.id), { isPublic: !zine.isPublic });
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+          detail: { 
+              message: !zine.isPublic ? "Zine Published to Press." : "Zine Unpublished.", 
+              icon: <Radio size={14} /> 
+          } 
+      }));
+      window.dispatchEvent(new CustomEvent('mimi:artifact_finalized'));
+    } catch (err) {
+      console.error("Publish Toggle Failed", err);
+    }
+  };
+
   const handleArchive = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isArchived || !user) return;
+    if (isArchived || isArchiving || !user) return;
+    setIsArchiving(true);
     try {
       await addToPocket(user.uid, 'zine_card', { 
           zineId: zine.id, 
@@ -73,6 +93,8 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
       window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Zine Anchored to Archive.", icon: <Bookmark size={14} /> } }));
     } catch (err) {
       console.error("Archive Failed", err);
+    } finally {
+      setIsArchiving(false);
     }
   };
 
@@ -85,6 +107,9 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
       className={`relative cursor-pointer transition-all duration-[0.8s] w-full ${isSocialFloor ? 'max-w-5xl' : isMasonry ? 'max-w-none' : 'max-w-[420px]'} mx-auto rounded-sm group overflow-hidden`}
     >
       <div className={`w-full flex flex-col ${isMasonry ? '' : 'min-h-[500px]'} ${isMasonry ? 'aspect-auto' : styles.aspect} ${styles.wrapper} border ${styles.border} relative transition-colors duration-1000`}>
+        
+        {/* TEXTURE LAYER */}
+        <div className={`absolute inset-0 pointer-events-none ${styles.grainOpacity} bg-[url('https://www.transparenttextures.com/patterns/noise.png')] z-0 mix-blend-overlay`} />
         
         {/* IMAGE LAYER (Masonry: Image is visible by default, not just on hover) */}
         {(zine.coverImageUrl || zine.content?.hero_image_url) && (
@@ -105,7 +130,16 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
         )}
         
         {/* ARCHIVE BUTTON OVERLAY */}
-        <div className="absolute top-3 right-3 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute top-3 right-3 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-2">
+            {user && user.uid === zine.userId && (
+                <button 
+                    onClick={handlePublishToggle}
+                    className={`p-2 rounded-full shadow-lg transition-all backdrop-blur-md ${zine.isPublic ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white hover:bg-white hover:text-black'}`}
+                    title={zine.isPublic ? "Unpublish" : "Publish"}
+                >
+                    {zine.isPublic ? <Radio size={12} /> : <EyeOff size={12} />}
+                </button>
+            )}
             <button 
                 onClick={handleArchive}
                 className={`p-2 rounded-full shadow-lg transition-all backdrop-blur-md ${isArchived ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white hover:bg-white hover:text-black'}`}
@@ -117,10 +151,15 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
 
         {/* META TAG (Masonry) */}
         {isMasonry && (
-            <div className="absolute top-3 left-3 z-30">
+            <div className="absolute top-3 left-3 z-30 flex flex-wrap gap-1">
                 <span className="bg-white/90 dark:bg-black/90 text-[6px] font-mono uppercase tracking-widest px-2 py-1 rounded-sm shadow-sm backdrop-blur-md text-black dark:text-white">
                     {zine.tone}
                 </span>
+                {zine.content?.agentEnrichment?.autoTags?.slice(0, 3).map(tag => (
+                    <span key={tag} className="bg-emerald-500/90 text-[6px] font-mono uppercase tracking-widest px-2 py-1 rounded-sm shadow-sm backdrop-blur-md text-white">
+                        #{tag}
+                    </span>
+                ))}
             </div>
         )}
         

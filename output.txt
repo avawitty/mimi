@@ -1,0 +1,274 @@
+components/Shelf.tsx:  const { user } = useUser();
+components/Shelf.tsx:        if (user && !user.isAnonymous) {
+components/Shelf.tsx:           unsubscribe = subscribeToUserZines(user.uid, (data) => {
+components/Shelf.tsx:  }, [variant, user]);
+components/Shelf.tsx:              <ZineCard key={zine.id} zine={zine} onClick={() => onSelectZine(zine)} currentUserId={user?.uid} />
+components/ProposalWorkspace.tsx:  const { profile, activePersona, user } = useUser();
+components/ProposalWorkspace.tsx:          if (user?.uid) {
+components/ProposalWorkspace.tsx:                  const allItems = await fetchPocketItems(user.uid);
+components/ProposalWorkspace.tsx:  }, [mode, proposal.sourceFolderId, proposal.sourceArtifactIds, user]);
+components/ProposalWorkspace.tsx:              userProfile: profile
+components/TheStand.tsx:            z.userHandle.toLowerCase().includes(q)
+components/ProsceniumView.tsx:  userId: string;
+components/ProsceniumView.tsx:  userHandle: string;
+components/ProsceniumView.tsx:  const { user, profile, loading } = useUser();
+components/ProsceniumView.tsx:          userId: 'ghost', 
+components/ProsceniumView.tsx:          userHandle: 'oracle', 
+components/ProsceniumView.tsx:          userId: 'user1', 
+components/ProsceniumView.tsx:          userHandle: 'velvet_void', 
+components/ProsceniumView.tsx:          userId: 'user2', 
+components/ProsceniumView.tsx:          userHandle: 'chrome_heart', 
+components/ProsceniumView.tsx:    if (!user?.uid) return;
+components/ProsceniumView.tsx:    const unsub = subscribeToFollowing(user.uid, (connections) => {
+components/ProsceniumView.tsx:  }, [user?.uid]);
+components/ProsceniumView.tsx:        data = data.filter(t => followingIds.includes(t.userId));
+components/ProsceniumView.tsx:      if (!t.zineData || !user) return;
+components/ProsceniumView.tsx:          const folderId = await absorbTransmission(user.uid, t.zineData);
+components/ProsceniumView.tsx:      if (!t.zineData || !user) return;
+components/ProsceniumView.tsx:  const handleOpenProfile = (userId: string, e?: React.MouseEvent) => {
+components/ProsceniumView.tsx:    setViewingProfileId(userId);
+components/ProsceniumView.tsx:    if (!user || !profile || !selectedArtifact || !newVibeNote.trim()) return;
+components/ProsceniumView.tsx:      userId: user.uid,
+components/ProsceniumView.tsx:      userHandle: profile.handle,
+components/ProsceniumView.tsx:            {user && (
+components/ProsceniumView.tsx:                                  onClick={(e) => handleOpenProfile(t.userId, e)}
+components/ProsceniumView.tsx:                                  {t.userHandle}
+components/ProsceniumView.tsx:                                        Origin: {t.zineData.authorship || t.userHandle} {t.zineData.lineage?.length > 0 && `(Resonated ${t.zineData.lineage.length}x)`}
+components/ProsceniumView.tsx:                                    onClick={() => handleOpenProfile(selectedArtifact.userId)}
+components/ProsceniumView.tsx:                                    {selectedArtifact.userHandle}
+components/ProsceniumView.tsx:                                                    onClick={() => handleOpenProfile(note.userId)}
+components/ProsceniumView.tsx:                                                      {note.userHandle}
+components/ProsceniumView.tsx:                              {user ? (
+components/ProsceniumView.tsx:            userId={viewingProfileId} 
+components/AboutView.tsx:  { id: 'product_proposal', label: 'Product Proposal', desc: 'Problem statement, user archetypes, solution architecture.' },
+components/AboutView.tsx:  const { user, profile } = useUser();
+components/AboutView.tsx:    if (viewState === 'ENTRY' && user?.uid) {
+components/AboutView.tsx:                const items = await fetchPocketItems(user.uid);
+components/AboutView.tsx:                const props = await fetchUserProposals(user.uid);
+components/AboutView.tsx:  }, [viewState, user]);
+components/AboutView.tsx:    if (!files || !user?.uid || !selectedFolderId) return;
+components/AboutView.tsx:        await addToPocket(user.uid, 'image', {
+components/AboutView.tsx:      const items = await fetchPocketItems(user.uid);
+components/AboutView.tsx:      if (!hasSource || !user?.uid) { console.warn("Proposal: No source data available."); return; }
+components/AboutView.tsx:              userId: user.uid,
+components/Auth.tsx:  const { login, ghostLogin, speedGhostEntrance, authError, user } = useUser();
+components/Auth.tsx:  const isPopupBlocked = displayError?.includes('popup-blocked') || displayError?.includes('cancelled-popup-request') || displayError?.includes('popup-closed-by-user');
+components/Auth.tsx:    if (user && (isAccessing === 'google' || isAccessing === 'email' || isAccessing === 'speed')) {
+components/Auth.tsx:  }, [user, isAccessing]);
+components/Auth.tsx:      if (e.code === 'auth/popup-blocked' || e.code === 'auth/cancelled-popup-request' || e.code === 'auth/popup-closed-by-user') {
+components/GlobalSearchOverlay.tsx:  const { user } = useUser();
+components/GlobalSearchOverlay.tsx:        if (user && !user.isAnonymous) {
+components/GlobalSearchOverlay.tsx:          cloudZines = await fetchUserZines(user.uid) || [];
+components/GlobalSearchOverlay.tsx:          cloudPocket = await fetchPocketItems(user.uid) || [];
+components/GlobalSearchOverlay.tsx:  }, [isOpen, user]);
+components/ScryView.tsx:  const { user, profile, activePersona } = useUser();
+components/ArchiveView.tsx:  const { user } = useUser();
+components/ArchiveView.tsx:      const cloudPocket = user && !user.isAnonymous ? await fetchPocketItems(user.uid) || [] : [];
+components/ArchiveView.tsx:  }, [user]);
+components/TheWard.tsx:CONTEXT: You are auditing the user's live aesthetic data:
+components/TheWard.tsx:GOAL: Discuss the user's aesthetic trajectory, drift, and omissions based on the provided data.
+components/TheWard.tsx:  const { user, profile, featureFlags } = useUser();
+components/TheWard.tsx:  const [userZines, setUserZines] = useState<any[]>([]);
+components/TheWard.tsx:          if (user) {
+components/TheWard.tsx:                  const items = await fetchPocketItems(user.uid);
+components/TheWard.tsx:                  const zines = await fetchUserZines(user.uid);
+components/TheWard.tsx:  }, [user, featureFlags]);
+components/TheWard.tsx:    if (!userZines.length) return [];
+components/TheWard.tsx:    userZines.forEach(zine => {
+components/TheWard.tsx:  }, [userZines]);
+components/TheWard.tsx:    if (!userZines.length) return [];
+components/TheWard.tsx:    userZines.forEach(zine => {
+components/TheWard.tsx:  }, [userZines]);
+components/DarkroomView.tsx:  const { user, profile, hasApiKey, openKeySelector } = useUser();
+components/DarkroomView.tsx:      if (user && !user.isAnonymous) cloudData = await fetchPocketItems(user.uid) || [];
+components/DarkroomView.tsx:  useEffect(() => { loadShards(); }, [user]);
+components/DarkroomView.tsx:        await addToPocket(user?.uid || 'ghost', 'image', {
+components/DarkroomView.tsx:        await addToPocket(user?.uid || 'ghost', 'image', {
+components/DarkroomView.tsx:        await addToPocket(user?.uid || 'ghost', 'image', {
+components/DarkroomView.tsx:        await addToPocket(user?.uid || 'ghost', 'image', {
+components/ArchiveCloudNebula.tsx:  const { user, profile, toggleZineStar } = useUser();
+components/ArchiveCloudNebula.tsx:      if (user && !user.isAnonymous) {
+components/ArchiveCloudNebula.tsx:        unsubUser = subscribeToUserZines(user.uid, (data) => {
+components/ArchiveCloudNebula.tsx:          const connections = await fetchFollowing(user.uid);
+components/ArchiveCloudNebula.tsx:  }, [user]);
+components/ArchiveCloudNebula.tsx:                isCloud={zine.userId && !zine.userId.startsWith('ghost')} 
+components/ArchiveCloudNebula.tsx:            userId={viewingProfileId} 
+components/ConnectionsManager.tsx:  userId: string;
+components/ConnectionsManager.tsx:const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId, onActionComplete }) => {
+components/ConnectionsManager.tsx:        const p = await getUserProfile(userId);
+components/ConnectionsManager.tsx:          const status = await checkConnectionStatus(userId);
+components/ConnectionsManager.tsx:  }, [userId, type]);
+components/ConnectionsManager.tsx:      await acceptFriendRequest(requestId, userId);
+components/ConnectionsManager.tsx:      await removeFriend(userId);
+components/ConnectionsManager.tsx:      await unfollowUser(userId);
+components/ConnectionsManager.tsx:      await sendFriendRequest(userId);
+components/ConnectionsManager.tsx:      await followUser(userId);
+components/ConnectionsManager.tsx:  const { user } = useUser();
+components/ConnectionsManager.tsx:    if (!user) return;
+components/ConnectionsManager.tsx:        fetchFriends(user.uid),
+components/ConnectionsManager.tsx:        fetchFriendRequests(user.uid),
+components/ConnectionsManager.tsx:        fetchFollowers(user.uid),
+components/ConnectionsManager.tsx:        fetchFollowing(user.uid)
+components/ConnectionsManager.tsx:  }, [user]);
+components/ConnectionsManager.tsx:          // Filter out current user
+components/ConnectionsManager.tsx:          setSearchResults(results.filter(r => r.uid !== user?.uid));
+components/ConnectionsManager.tsx:  }, [searchTerm, user]);
+components/ConnectionsManager.tsx:                friends.map(f => <ConnectionItem key={f.id} userId={f.friendId} type="friend" onActionComplete={loadData} />)
+components/ConnectionsManager.tsx:                requests.map(r => <ConnectionItem key={r.id} userId={r.senderId} type="request" requestId={r.id} onActionComplete={loadData} />)
+components/ConnectionsManager.tsx:                followers.map(f => <ConnectionItem key={f.id} userId={f.followerId} type="follower" onActionComplete={loadData} />)
+components/ConnectionsManager.tsx:                following.map(f => <ConnectionItem key={f.id} userId={f.followingId} type="following" onActionComplete={loadData} />)
+components/ConnectionsManager.tsx:                    searchResults.map(r => <ConnectionItem key={r.uid} userId={r.uid} type="search" onActionComplete={loadData} />)
+components/ConnectionsManager.tsx:                    <EmptyState message="No users found matching that handle." />
+components/ExportChamber.tsx:                            <p className="font-serif italic text-2xl text-stone-500">@{metadata.userHandle}</p>
+components/SanctuaryView.tsx:  { id: 'projection_diffuser', label: 'Projection Diffuser', icon: <ShieldAlert size={14} />, desc: 'Stop self-blame loops.' },
+components/SanctuaryView.tsx:  const { user, profile } = useUser();
+components/TreatmentPanel.tsx:  onSaveNew: (treatment: Omit<Treatment, 'id' | 'createdAt' | 'userId'>) => void;
+components/LegalPage.tsx:          Mimi uses a "Sovereign Memory" protocol. Anonymous users exist only in shadow-memory. Anchored users (Swans) sync to the Cloud Registry.
+components/Pocket.tsx:        await updatePocketItem(item.userId, item.id, updates);
+components/Pocket.tsx:            await updatePocketItem(item.userId, item.id, updates);
+components/Pocket.tsx:                                                    await addToPocket(item.userId, 'image', {
+components/Pocket.tsx:  const { user, profile, systemStatus } = useUser();
+components/Pocket.tsx:      if (user && !user.isAnonymous) cloudData = await fetchPocketItems(user.uid) || []; 
+components/Pocket.tsx:  }, [user]);
+components/Pocket.tsx:      await createMoodboard(user?.uid || 'ghost', newFolderName, Array.from(selectedIds));
+components/Pocket.tsx:        const id = await addToPocket(user?.uid || 'ghost', type, newItem);
+components/Pocket.tsx:        const fullItem: PocketItem = { id, userId: user?.uid || 'ghost', type, savedAt: Date.now(), content: newItem };
+components/Pocket.tsx:                        <div className="w-full h-full pointer-events-auto" onClick={(e) => { e.stopPropagation(); if(item.content.analysis && onSelectZine) onSelectZine({ id: item.content.zineId, title: item.content.title, content: item.content.analysis, tone: 'default', timestamp: item.timestamp, userHandle: 'Ghost' } as ZineMetadata); }}>
+components/Pocket.tsx:                                             userId: user?.uid || 'ghost',
+components/Pocket.tsx:                                             userHandle: profile?.handle || 'Ghost',
+components/TailorView.tsx:  const { profile, updateProfile, personas, activePersonaId, switchPersona, updatePersona, user, enabledAlgos, toggleAlgo } = useUser();
+components/TailorView.tsx:            if (user?.uid) {
+components/TailorView.tsx:                    const path = `shards/${user.uid}/${Date.now()}_${Math.random().toString(36).substr(2, 9)}.jpg`;
+components/TailorView.tsx:        if (user?.uid) {
+components/TailorView.tsx:                const path = `logos/${user.uid}/${Date.now()}_logo.jpg`;
+components/CliqueView.tsx:  const { user, profile } = useUser();
+components/CliqueView.tsx:        if (user && !user.isAnonymous) {
+components/CliqueView.tsx:          const userZines = await fetchUserZines(user.uid);
+components/CliqueView.tsx:          setMyPublicZines(userZines.filter(z => z.isPublic) || []);
+components/CliqueView.tsx:  }, [user]);
+components/CliqueView.tsx:               {user?.isAnonymous ? (
+components/PublicProfileModal.tsx:  userId: string;
+components/PublicProfileModal.tsx:export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, onClose, onSelectZine }) => {
+components/PublicProfileModal.tsx:  const { user } = useUser();
+components/PublicProfileModal.tsx:        // Handle mock users
+components/PublicProfileModal.tsx:        if (['ghost', 'user1', 'user2'].includes(userId)) {
+components/PublicProfileModal.tsx:            'user1': {
+components/PublicProfileModal.tsx:              uid: 'user1',
+components/PublicProfileModal.tsx:            'user2': {
+components/PublicProfileModal.tsx:              uid: 'user2',
+components/PublicProfileModal.tsx:          setProfile(mockProfiles[userId]);
+components/PublicProfileModal.tsx:          if (user) {
+components/PublicProfileModal.tsx:            const connStatus = await checkConnectionStatus(userId);
+components/PublicProfileModal.tsx:        const p = await getUserProfile(userId);
+components/PublicProfileModal.tsx:        const z = await fetchUserZines(userId);
+components/PublicProfileModal.tsx:        const followers = await fetchFollowers(userId);
+components/PublicProfileModal.tsx:        const following = await fetchFollowing(userId);
+components/PublicProfileModal.tsx:        if (user) {
+components/PublicProfileModal.tsx:          setIsFollowing(followers.some(f => f.followerId === user.uid));
+components/PublicProfileModal.tsx:          const connStatus = await checkConnectionStatus(userId);
+components/PublicProfileModal.tsx:  }, [userId, user]);
+components/PublicProfileModal.tsx:    if (!user) return;
+components/PublicProfileModal.tsx:        await unfollowUser(userId);
+components/PublicProfileModal.tsx:        await followUser(userId);
+components/PublicProfileModal.tsx:    if (!user) return;
+components/PublicProfileModal.tsx:        await sendFriendRequest(userId);
+components/PublicProfileModal.tsx:        // but it's usually `${user.uid}_${userId}`
+components/PublicProfileModal.tsx:        setRequestId(`${user.uid}_${userId}`);
+components/PublicProfileModal.tsx:        await acceptFriendRequest(requestId, userId);
+components/PublicProfileModal.tsx:        await removeFriend(userId);
+components/PublicProfileModal.tsx:              {user && user.uid !== userId && (
+components/CliqueProtocol.tsx:  const { profile, updateProfile, user } = useUser();
+components/CliqueProtocol.tsx:    if (!user?.uid) return "O2-VOID-000";
+components/CliqueProtocol.tsx:    return `O2-${user.uid.slice(0, 4).toUpperCase()}-${Math.floor(Math.random() * 999)}`;
+components/CliqueProtocol.tsx:  }, [user]);
+components/EditorialSpread.tsx:  const { user, profile } = useUser();
+components/EditorialSpread.tsx:      await addToPocket(user?.uid || 'ghost', 'script', {
+components/AnalysisDisplay.tsx:  const { user, profile, activePersona, toggleZineStar } = useUser();
+components/AnalysisDisplay.tsx:          await addToPocket(user?.uid || 'ghost', 'video', { videoUrl: res, title: `${metadata.title} // Motion`, timestamp: Date.now() });
+components/AnalysisDisplay.tsx:      await addToPocket(user?.uid || 'ghost', 'zine_card', { 
+components/AnalysisDisplay.tsx:              userId: user?.uid || 'ghost',
+components/AnalysisDisplay.tsx:              userHandle: profile?.handle || 'Ghost',
+components/AnalysisDisplay.tsx:                          <span className="font-serif italic text-3xl">@{metadata.userHandle}</span>
+components/AnalysisDisplay.tsx:                                          <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-500">@{t.userHandle}</span>
+components/UserProfileView.tsx:const MaskCard: React.FC<{ persona: Persona; isActive: boolean; onSelect: () => void; onDelete: () => void; onUpdate: (p: Persona) => void; userUid: string }> = ({ persona, isActive, onSelect, onDelete, onUpdate, userUid }) => {
+components/UserProfileView.tsx:                const url = await uploadBlob(file, `avatars/${userUid}_mask_${persona.id}_${Date.now()}`);
+components/UserProfileView.tsx:  const { user, profile, updateProfile, logout, personas, activePersonaId, switchPersona, createPersona, updatePersona, deletePersona, linkAccount, verifyIdentity, featureFlags, toggleFeature, keyRing, addKeyToRing, removeKeyFromRing, openKeySelector, signInWithGooglePopup } = useUser();
+components/UserProfileView.tsx:      const prompt = `Generate a short, poetic, and evocative description for a user profile based on their taste profile: ${JSON.stringify(profile.tasteProfile)}. The description should be in the style of a creative director or curator.`;
+components/UserProfileView.tsx:      const available = await isHandleAvailable(handle, user?.uid || '');
+components/UserProfileView.tsx:  }, [handle, user?.uid, profile?.handle]);
+components/UserProfileView.tsx:      if (user?.isAnonymous) {
+components/UserProfileView.tsx:      if (!user) return;
+components/UserProfileView.tsx:          const zines = await fetchUserZines(user.uid);
+components/UserProfileView.tsx:          const pocket = await fetchPocketItems(user.uid);
+components/UserProfileView.tsx:                                const url = await uploadBlob(file, `avatars/${user?.uid}_${Date.now()}`);
+components/UserProfileView.tsx:                                id="userHandle" 
+components/UserProfileView.tsx:                                name="userHandle" 
+components/UserProfileView.tsx:                            userUid={user?.uid || 'ghost'}
+components/ArchivalView.tsx:    const { user, profile } = useUser();
+components/ArchivalView.tsx:        if (mode === 'authored' && user?.uid) {
+components/ArchivalView.tsx:            fetchUserZines(user.uid).then(zines => {
+components/ArchivalView.tsx:    }, [mode, user]);
+components/ArchivalView.tsx:                await addToPocket(user?.uid || 'ghost', type, {
+components/ArchivalView.tsx:        if (!user?.uid) return;
+components/ArchivalView.tsx:            await addToPocket(user.uid, 'image', {
+components/ArchivalView.tsx:        if (!urlInput.trim() || !user?.uid) return;
+components/ArchivalView.tsx:            await addToPocket(user.uid, 'image', {
+components/ArchetypeIndex.tsx:                        src={zine.userAvatar || `https://ui-avatars.com/api/?name=${zine.userHandle}`}
+components/ArchetypeIndex.tsx:                        alt={zine.userHandle}
+components/ArchetypeIndex.tsx:                        {zine.userHandle}
+components/InputStudio.tsx:  const { systemStatus, user: currentUser } = useUser();
+components/InputStudio.tsx:    console.log('InputStudio: typeof user', typeof user);
+components/InputStudio.tsx:    console.log('InputStudio: user is not defined');
+components/LegalOverlay.tsx:        body: "Anonymous users exist only in shadow-memory (localStorage). Once you purge your cache, the machine forgets you. This is true digital death."
+components/ZineLayoutEditor.tsx:  const { profile, user } = useUser();
+components/ZineLayoutEditor.tsx:        if (!user) return;
+components/ZineLayoutEditor.tsx:            const items = await fetchPocketItems(user.uid);
+components/ZineLayoutEditor.tsx:  }, [user]);
+components/UseCasesCarousel.tsx:    description: "Businesses utilize Dossier stacks to architect user personas and future-state product lines, translating debris into defensible strategic vision.",
+components/PatronMintView.tsx:  const { user } = useUser();
+components/PatronMintView.tsx:    // Here we let the user perform the ritual of entering it.
+components/ZineCard.tsx:  const { profile, user } = useUser();
+components/ZineCard.tsx:    if (!user || user.uid !== zine.userId) return;
+components/ZineCard.tsx:    if (isArchived || !user) return;
+components/ZineCard.tsx:      await addToPocket(user.uid, 'zine_card', { 
+components/ZineCard.tsx:            {user && user.uid === zine.userId && (
+components/ZineCard.tsx:                       <span className="font-mono text-[8px] uppercase tracking-widest text-white/60">@{zine.userHandle}</span>
+components/ZineCard.tsx:                    @{zine.userHandle || 'Ghost'}
+components/CliqueRadar.tsx:                        <span className="font-sans text-[8px] uppercase tracking-widest text-stone-500 font-black">@{zine.userHandle}</span>
+components/Visualizer.tsx:  const { user, profile, activePersona } = useUser();
+components/Visualizer.tsx:      await addToPocket(user?.uid || 'ghost', 'text', {
+components/Visualizer.tsx:    await addToPocket(user?.uid || 'ghost', 'image', { 
+components/DossierView.tsx:  const { user, profile } = useUser();
+components/DossierView.tsx:      const data = await fetchDossierFolders(user?.uid || 'ghost');
+components/DossierView.tsx:  useEffect(() => { loadFolders(); }, [user]);
+components/DossierView.tsx:          const results = snap.docs.map(d => d.data() as UserProfile).filter(p => p.uid !== user?.uid);
+components/DossierView.tsx:      await createDossierFolder(user?.uid || 'ghost', newFolderName);
+components/DossierView.tsx:      await createDossierArtifactFromImage(user?.uid || 'ghost', activeFolder.id, file.name, base64);
+components/DossierView.tsx:      await createDossierArtifactFromText(user?.uid || 'ghost', activeFolder.id, title, noteContent);
+components/DossierView.tsx:      const items = await fetchPocketItems(user?.uid || 'ghost');
+components/DossierView.tsx:        await createDossierArtifactFromImage(user?.uid || 'ghost', activeFolder.id, item.content.prompt || item.content.title || 'Imported Shard', item.content.imageUrl);
+components/DossierView.tsx:        await createDossierArtifactFromText(user?.uid || 'ghost', activeFolder.id, item.content.prompt || 'Sonic Shard', `Audio Source: ${item.content.audioUrl}`);
+components/ThePress.tsx:       bodyText: "A Mimi Zine user—working across creative strategy, design, and digital publishing—entered the platform with a familiar problem: too much material, no unifying structure. Using Mimi, the workflow unfolded in three phases: Selection, Synthesis, and Integration."
+components/ThePress.tsx:  const { user } = useUser();
+components/ThePress.tsx:    if (user && filter === 'My Editions') {
+components/ThePress.tsx:      fetchUserZines(user.uid).then(zines => {
+components/ThePress.tsx:  }, [user, filter]);
+components/ThePress.tsx:    if (!user) return;
+components/Diagnostics.tsx:    const user = auth.currentUser;
+components/Diagnostics.tsx:      status: user ? 'success' : 'failure', 
+components/Diagnostics.tsx:      message: user ? `Anchored: ${user.uid.slice(0, 6)}...` : 'No active session found.' 
+components/MesopicLens.tsx:You are currently seeing through the user's camera in real-time.
+components/MesopicLens.tsx:Encourage the user to find better light or angles.
+components/MesopicLens.tsx:  const { user, profile } = useUser();
+components/MesopicLens.tsx:      const imageId = await addToPocket(user?.uid || 'ghost', 'image', { 
+components/MesopicLens.tsx:        await addToPocket(user?.uid || 'ghost', 'analysis_report', {
+components/ObsidianMirror.tsx:  const { user, profile } = useUser();
+components/ObsidianMirror.tsx:      const targetUid = user?.uid || (profile?.uid) || 'ghost_temporary';
+components/ZineComments.tsx:  userId: string;
+components/ZineComments.tsx:  userHandle: string;
+components/ZineComments.tsx:  const { user, profile } = useUser();
+components/ZineComments.tsx:    if (!newComment.trim() || !user) return;
+components/ZineComments.tsx:        userId: user.uid,
+components/ZineComments.tsx:        userHandle: profile?.handle || 'Anonymous',
+components/ZineComments.tsx:                      @{comment.userHandle}
+components/ZineComments.tsx:        {user ? (

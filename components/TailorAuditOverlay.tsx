@@ -11,7 +11,7 @@ interface TailorAuditOverlayProps {
   onApplyToGeneration?: (manifestoText: string) => void;
 }
 
-export const TailorAuditOverlay: React.FC<TailorAuditOverlayProps> = ({ auditReport, onClose, onApplyToGeneration }) => {
+export const TailorAuditOverlay: React.FC<TailorAuditOverlayProps> = ({ auditReport, onClose = () => {}, onApplyToGeneration }) => {
   const [isCopied, setIsCopied] = useState(false);
 
   const handleManifest = () => {

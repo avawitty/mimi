@@ -30,7 +30,10 @@ export const ZineComments: React.FC<{ zineId: string; onClose?: () => void }> = 
       orderBy('timestamp', 'asc')
     );
 
+    console.log("MIMI // Fetching comments for zineId:", zineId);
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      console.log("MIMI // Snapshot received, docs:", snapshot.docs.length);
       const fetchedComments = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
@@ -38,7 +41,7 @@ export const ZineComments: React.FC<{ zineId: string; onClose?: () => void }> = 
       setComments(fetchedComments);
       setIsLoading(false);
     }, (error) => {
-      console.error("Error fetching comments:", error);
+      console.error("MIMI // Error fetching comments:", error);
       setIsLoading(false);
     });
 

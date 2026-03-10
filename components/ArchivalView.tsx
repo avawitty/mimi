@@ -3,12 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { Shelf } from './Shelf';
 import { Pocket } from './Pocket';
+import { ArchiveListView } from './ArchiveListView';
 import { ZineMetadata, PocketItem } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Upload, ImageIcon, FileText, X, Loader2, Search, ArrowRight, Check } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { addToPocket, fetchUserZines, fetchPocketItems } from '../services/firebase';
 import { compressImage } from '../services/geminiService';
+import { getLocalPocket } from '../services/localArchive';
+import { fetchCommunityZines } from '../services/firebaseUtils';
 
 const InjectShardModal: React.FC<{ onClose: () => void, onInjected: () => void }> = ({ onClose, onInjected }) => {
     const { user, profile } = useUser();
@@ -202,8 +205,27 @@ const InjectShardModal: React.FC<{ onClose: () => void, onInjected: () => void }
 };
 
 export const ArchivalView: React.FC<ArchivalViewProps> = ({ onSelectZine }) => {
-  const [activeTab, setActiveTab] = useState<'issues' | 'pocket'>('issues');
+  const [activeTab, setActiveTab] = useState<'issues' | 'pocket' | 'list'>('issues');
   const [showInjectModal, setShowInjectModal] = useState(false);
+  const [items, setItems] = useState<PocketItem[]>([]);
+  const [zines, setZines] = useState<ZineMetadata[]>([]);
+  const { user } = useUser();
+
+  const loadData = async () => {
+    const localPocket = await getLocalPocket() || [];
+    const cloudPocket = user && !user.isAnonymous ? await fetchPocketItems(user.uid) || [] : [];
+    const registry = new Map<string, PocketItem>();
+    localPocket.forEach(item => { if (item && item.id) registry.set(item.id, item); });
+    cloudPocket.forEach(item => { if (item && item.id) registry.set(item.id, item); });
+    setItems(Array.from(registry.values()));
+
+    const zines = await fetchCommunityZines(100);
+    setZines(zines || []);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, [user]);
 
   // Listen for navigation requests to specific tabs
   useEffect(() => {
@@ -223,7 +245,7 @@ export const ArchivalView: React.FC<ArchivalViewProps> = ({ onSelectZine }) => {
            <div className="space-y-4">
                <h2 className="font-[Cormorant] font-light text-7xl md:text-9xl italic text-nous-text dark:text-white tracking-tighter luminescent-text leading-none">The Archive.</h2>
                <p className="font-sans text-[10px] uppercase tracking-[1em] text-stone-400 font-black">
-                 {activeTab === 'issues' ? 'Manifestations of Form' : 'Curated Physical Debris'}
+                 {activeTab === 'issues' ? 'Manifestations of Form' : activeTab === 'pocket' ? 'Curated Physical Debris' : 'List View'}
                </p>
            </div>
 
@@ -247,14 +269,20 @@ export const ArchivalView: React.FC<ArchivalViewProps> = ({ onSelectZine }) => {
                    >
                       Curated
                    </button>
+                   <button 
+                     onClick={() => setActiveTab('list')}
+                     className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'list' ? 'text-nous-text dark:text-white border-nous-text dark:border-white' : 'text-stone-300 border-transparent hover:text-stone-500'}`}
+                   >
+                      List
+                   </button>
                </div>
            </div>
        </div>
 
        <AnimatePresence>
            {showInjectModal && <InjectShardModal onClose={() => setShowInjectModal(false)} onInjected={() => {
-               // Trigger refresh in child components if needed
                window.dispatchEvent(new CustomEvent('mimi:pocket_updated'));
+               loadData();
            }} />}
        </AnimatePresence>
 
@@ -264,10 +292,14 @@ export const ArchivalView: React.FC<ArchivalViewProps> = ({ onSelectZine }) => {
                <motion.div key="issues" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.8 }}>
                  <Shelf variant="personal" onSelectZine={onSelectZine} />
                </motion.div>
-            ) : (
+            ) : activeTab === 'pocket' ? (
                <motion.div key="pocket" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.8 }}>
                  <Pocket onSelectZine={onSelectZine} />
                </motion.div>
+            ) : (
+                <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <ArchiveListView items={items} zines={zines} onDelete={loadData} />
+                </motion.div>
             )}
           </AnimatePresence>
        </div>

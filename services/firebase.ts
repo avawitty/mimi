@@ -1,6 +1,7 @@
 
 import { setPersistence, indexedDBLocalPersistence, onAuthStateChanged, User } from "firebase/auth";
 import { auth, db, storage } from "./firebaseInit";
+import { PocketItem, Stack } from "../types";
 
 export { auth, db, storage };
 
@@ -66,6 +67,39 @@ export const ensureAuth = async () => {
 
 export const ensureDb = async () => db;
 export const ensureStorage = async () => storage;
+
+export const fetchFragmentsByStackId = async (stackId: string) => {
+    try {
+        const { collection, query, where, getDocs } = await import('firebase/firestore');
+        const q = query(collection(db, "pocket"), where("stackIds", "array-contains", stackId));
+        const snap = await getDocs(q);
+        return snap.docs.map(d => d.data() as PocketItem);
+    } catch (e: any) {
+        console.warn("MIMI // Stack Fragments Fetch Error:", e.code);
+        return [];
+    }
+};
+
+export const fetchStackById = async (stackId: string) => {
+    try {
+        const { doc, getDoc } = await import('firebase/firestore');
+        const snap = await getDoc(doc(db, "stacks", stackId));
+        if (snap.exists()) return snap.data() as Stack;
+        return null;
+    } catch (e: any) {
+        console.warn("MIMI // Stack Fetch Error:", e.code);
+        return null;
+    }
+};
+
+export const saveStack = async (stack: Stack) => {
+    try {
+        const { doc, setDoc } = await import('firebase/firestore');
+        await setDoc(doc(db, "stacks", stack.id), stack);
+    } catch (e: any) {
+        console.warn("MIMI // Stack Save Error:", e.code);
+    }
+};
 
 // Export all utilities to prevent missing export errors
 export * from './firebaseUtils';

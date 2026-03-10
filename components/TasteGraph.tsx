@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Activity, Radar, Pin, Flame } from 'lucide-react';
+import { generateTags } from '../services/geminiService';
 
 interface TasteGraphProps {
   tasteVector?: Record<string, number>;
@@ -9,6 +10,13 @@ interface TasteGraphProps {
 
 export const TasteGraph: React.FC<TasteGraphProps> = ({ tasteVector, variant = 'diagnostic' }) => {
   const [pinnedTags, setPinnedTags] = useState<Set<string>>(new Set());
+  const [inferredTags, setInferredTags] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (tasteVector) {
+        generateTags(Object.keys(tasteVector).join(', ')).then(setInferredTags);
+    }
+  }, [tasteVector]);
 
   const sortedTags = useMemo(() => {
     if (!tasteVector) return [];
@@ -131,6 +139,15 @@ export const TasteGraph: React.FC<TasteGraphProps> = ({ tasteVector, variant = '
       </div>
 
       <div className="pt-4 border-t border-stone-200 dark:border-stone-800 flex flex-col gap-2">
+        {inferredTags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {inferredTags.map(tag => (
+              <span key={tag} className="px-2 py-1 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 font-mono text-[9px] uppercase tracking-widest rounded-full">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
         <p className="font-serif italic text-[11px] text-stone-500 leading-relaxed">
           This vector map evolves dynamically as you save fragments to your Pocket. It forms the foundation of your proprietary aesthetic intelligence dataset.
         </p>

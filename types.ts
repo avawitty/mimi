@@ -6,6 +6,8 @@ export interface MediaFile {
   url: string;
   data: string; // base64
   mimeType: string;
+  name?: string;
+  tags?: string[];
 }
 
 export interface ColorShard {
@@ -22,16 +24,32 @@ export interface AgentEnrichment {
   lastAgentUpdate?: number;
 }
 
+export interface Stack {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  fragmentIds: string[];
+  createdAt: number;
+}
+
 export interface PocketItem {
   id: string;
   userId: string;
+  title: string;
+  source: string;
+  timestamp: number;
+  embedding?: number[];
+  price?: number;
+  tags?: string[];
+  stackIds?: string[]; // NEW: Reference to stacks
   type: 'image' | 'video' | 'zine_card' | 'omen' | 'voicenote' | 'moodboard' | 'roadmap' | 'script' | 'analysis_report' | 'link';
   savedAt: number;
-  content: any; // Can include url, price, imageUrl, prompt, etc.
+  content: any;
   notes?: string;
   treatmentApplied?: string;
   parentShardId?: string;
-  agentEnrichment?: AgentEnrichment; // NEW: Invisible Agent Data
+  agentEnrichment?: AgentEnrichment;
 }
 
 export interface TailorLogicDraft {
@@ -41,6 +59,7 @@ export interface TailorLogicDraft {
       ideologicalBias?: string[];
       culturalSynthesis?: string[];
       trendClusters?: string[];
+      scryLinks?: string[];
     };
     aestheticCore: {
       silhouettes: string[];
@@ -233,6 +252,10 @@ export interface ZineContent extends ZineSpec {
 
 export interface ZineMetadata {
   id: string;
+  fragmentsUsed: string[];
+  createdAt: number;
+  theme: string;
+  aestheticVector: Record<string, number>;
   userId: string;
   userHandle: string;
   userAvatar?: string | null;
@@ -244,6 +267,7 @@ export interface ZineMetadata {
   coverImageUrl?: string | null;
   isDeepThinking?: boolean;
   isLite?: boolean;
+  isHighFidelity?: boolean;
   isPublic?: boolean;
   isLocked?: boolean;
   authorship?: string;
@@ -267,7 +291,7 @@ export interface FruitionTrajectory {
   end_product_spec: string;
 }
 
-export type ToneTag = 'chic' | 'nostalgia' | 'dream' | 'unhinged' | 'panic' | 'editorial' | 'research' | 'Cinematic Witness' | 'Editorial Stillness' | 'Romantic Interior' | 'Structured Desire' | 'Documentary B&W';
+export type ToneTag = 'chic' | 'nostalgia' | 'dream' | 'unhinged' | 'panic' | 'editorial' | 'research' | 'Cinematic Witness' | 'Editorial Stillness' | 'Romantic Interior' | 'Structured Desire' | 'Documentary B&W' | 'CONTENT' | 'SHADOW' | 'SIGNAL' | 'ECHO' | 'MANIFESTO' | 'SHARD' | 'DOSSIER' | 'PROMPT' | 'RAW' | 'VINTAGE' | 'CONTRARY';
 export type AspectRatio = '1:1' | '2:3' | '3:2' | '3:4' | '4:3' | '9:16' | '16:9' | '21:9';
 export type ImageSize = '1K' | '2K' | '4K';
 
@@ -497,6 +521,9 @@ export interface DossierArtifact {
   createdAt: number;
   elements: DossierElement[];
   report?: TasteAuditReport;
+  tags?: string[];
+  stackIds?: string[]; // NEW: For clustering
+  status?: 'active' | 'dormant'; // NEW: For Dormant Vision System
 }
 
 export interface SlideBlock {
@@ -631,4 +658,16 @@ export interface ContextEntry {
   text: string;
   type: 'note' | 'link';
   timestamp: number;
+}
+
+export interface Fragment {
+  id: string;
+  userId: string;
+  type: 'image' | 'text' | 'audio' | 'link' | 'zine_card';
+  content: any; // Raw content
+  tags: string[]; // AI generated tags
+  aestheticVector: Record<string, number>; // For aesthetic tracking
+  createdAt: number;
+  sourceId?: string; // Reference to parent or source
+  status: 'active' | 'dormant'; // NEW: For Dormant Vision System
 }

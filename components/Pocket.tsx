@@ -217,14 +217,14 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
             </button>
             
             {/* VISUAL SIDE */}
-            <div className="flex-1 bg-stone-100 dark:bg-stone-900 flex items-center justify-center p-12 relative overflow-hidden">
+            <div className="flex-1 bg-stone-100 dark:bg-stone-900 flex items-center justify-center p-6 md:p-12 relative overflow-hidden">
                 <div className="absolute inset-0 opacity-20 pointer-events-none">
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-stone-400/20 via-transparent to-transparent" />
                 </div>
                 <div className="relative z-10 max-w-full max-h-full shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]">
                     {item.type === 'image' && (
                         <div className="relative group space-y-8">
-                            <img src={item.content.imageUrl} className="max-w-full max-h-[80vh] object-contain shadow-2xl" />
+                            <img src={item.content.imageUrl} className="max-w-full max-h-[60vh] object-contain shadow-2xl" />
                             
                             {/* Expanded Metadata */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -266,7 +266,7 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
                         </div>
                     )}
                     {item.type === 'zine_card' && (
-                        <div className="w-full max-w-2xl bg-white dark:bg-stone-900 p-12 space-y-8 overflow-y-auto max-h-[80vh] border border-stone-100 dark:border-stone-800">
+                        <div className="w-full max-w-2xl bg-white dark:bg-stone-900 p-6 md:p-12 space-y-8 overflow-y-auto max-h-[80vh] border border-stone-100 dark:border-stone-800">
                             <div className="space-y-2 border-b border-stone-100 dark:border-stone-800 pb-6">
                                 <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-emerald-500 font-black">Zine Inspection</span>
                                 <h2 className="font-serif text-4xl italic text-nous-text dark:text-white">{item.content.title}</h2>
@@ -304,7 +304,7 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
                     )}
                     {(item.type === 'voicenote' || item.type === 'audio') && <SonicShardPlayer url={item.content.audioUrl} />}
                     {item.type === 'analysis_report' && (
-                        <div className="w-full max-w-2xl bg-stone-900 text-white p-12 space-y-8 overflow-y-auto max-h-[80vh]">
+                        <div className="w-full max-w-2xl bg-stone-900 text-white p-6 md:p-12 space-y-8 overflow-y-auto max-h-[80vh]">
                             <div className="space-y-2 border-b border-white/10 pb-6">
                                 <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-emerald-500 font-black">Mesopic Analysis</span>
                                 <h2 className="font-serif text-4xl italic">{item.content.title}</h2>
@@ -355,7 +355,7 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
             </div>
             
             {/* DATA SIDE */}
-            <div className="w-full md:w-[450px] bg-white dark:bg-stone-950 border-l border-stone-100 dark:border-stone-800 p-12 flex flex-col gap-12 overflow-y-auto">
+            <div className="w-full md:w-[450px] bg-white dark:bg-stone-950 border-l border-stone-100 dark:border-stone-800 p-6 md:p-12 flex flex-col gap-12 overflow-y-auto">
                 <div className="space-y-8">
                     <div className="flex justify-between items-center border-b border-stone-100 dark:border-stone-800 pb-2">
                         <span className="font-sans text-[10px] uppercase tracking-[0.5em] text-stone-400 font-black italic">Shard Metadata</span>

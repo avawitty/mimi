@@ -8,7 +8,6 @@ import { scryWebSignals, generateScribeReading, generateRawImage } from '../serv
 import { useUser } from '../contexts/UserContext';
 import { useRecorder } from '../hooks/useRecorder';
 import { PocketItem, ZineMetadata } from '../types';
-import { OracleResearchView } from './OracleResearchView';
 
 export const ScryView: React.FC = () => {
   const { user, profile, activePersona } = useUser();
@@ -20,7 +19,6 @@ export const ScryView: React.FC = () => {
   const [isWebScrying, setIsWebScrying] = useState(false);
   const [visualState, setVisualState] = useState<'void' | 'image' | 'loading'>('void');
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<'scry' | 'oracle'>('scry');
 
   const { isRecording, startRecording, stopRecording, audioBlob } = useRecorder();
 
@@ -98,18 +96,10 @@ export const ScryView: React.FC = () => {
                 <div className="flex flex-col gap-8 [writing-mode:vertical-rl] rotate-180 items-center">
                     <button className="text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400 hover:text-stone-800 transition-colors">Archive</button>
                     <button 
-                        onClick={() => setActiveView('scry')}
-                        className={`text-[10px] uppercase tracking-[0.2em] font-bold relative ${activeView === 'scry' ? 'text-stone-900' : 'text-stone-400 hover:text-stone-800'}`}
+                        className="text-[10px] uppercase tracking-[0.2em] font-bold text-stone-900 relative"
                     >
                         Scry
-                        {activeView === 'scry' && <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-1 h-1 bg-black rounded-full" />}
-                    </button>
-                    <button 
-                        onClick={() => setActiveView('oracle')}
-                        className={`text-[10px] uppercase tracking-[0.2em] font-bold relative ${activeView === 'oracle' ? 'text-stone-900' : 'text-stone-400 hover:text-stone-800'}`}
-                    >
-                        Oracle
-                        {activeView === 'oracle' && <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-1 h-1 bg-black rounded-full" />}
+                        <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-1 h-1 bg-black rounded-full" />
                     </button>
                     <button className="text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400 hover:text-stone-800 transition-colors">Signals</button>
                 </div>
@@ -122,8 +112,6 @@ export const ScryView: React.FC = () => {
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col items-center relative overflow-y-auto scrollbar-hide">
-            {activeView === 'scry' ? (
-              <>
               <div className="w-full max-w-5xl flex flex-col items-center pt-16 px-8 min-h-screen pb-32">
                 
                 {/* The Void / Scry Circle */}
@@ -293,10 +281,6 @@ export const ScryView: React.FC = () => {
                 </div>
 
             </div>
-              </>
-            ) : (
-              <OracleResearchView />
-            )}
         </main>
     </div>
   );

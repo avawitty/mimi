@@ -3,7 +3,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { PocketItem, UserProfile, AgentEnrichment } from "../types";
 import { updatePocketItem } from "./firebaseUtils";
-import { withResilience } from "./geminiService";
+import { withResilience, ORACLE_PERSONA } from "./geminiService";
 
 export interface AgentConfig {
   curatorEnabled: boolean;
@@ -41,7 +41,7 @@ export const runCuratorAgent = async (item: PocketItem, profile: UserProfile | n
             contents: { parts: promptParts },
             config: {
                 systemInstruction: `
-                    IDENTITY: You are "The Curator", a background agent for Mimi Zine.
+                    ${ORACLE_PERSONA}
                     MANDATE: Analyze the input shard (image or text). Determine its specific aesthetic era, cultural provenance, and semiotic weight.
                     THINKING PROCESS:
                     1. Observe the visual/textual data.
@@ -101,7 +101,7 @@ export const runSentinelAgent = async (recentItems: PocketItem[], profile: UserP
             },
             config: {
                 systemInstruction: `
-                    IDENTITY: You are "The Sentinel", a background auditor for Mimi Zine.
+                    ${ORACLE_PERSONA}
                     MANDATE: Compare the user's recent behavior (Debris) against their stated intent (Manifesto).
                     GOAL: Detect "Drift". Are they accumulating debris that contradicts their aesthetic core?
                     OUTPUT: A silent report. If drift is high, provide a warning and explanation.

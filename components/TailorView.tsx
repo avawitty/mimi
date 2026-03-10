@@ -10,11 +10,13 @@ import {
 } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { ColorShard, TailorAuditReport, ZodiacSign, TailorLogicDraft } from '../types';
-import { analyzeTailorDraft, compressImage, getClient } from '../services/geminiService';
+import { analyzeTailorDraft, compressImage, getClient, generateZineImage } from '../services/geminiService';
 import { addToPocket, uploadBlob } from '../services/firebase';
 import { useTasteLogging } from '../hooks/useTasteLogging';
 import { TailorAuditOverlay } from './TailorAuditOverlay';
+import { TailorPreview } from './TailorPreview';
 import { ShardAnalyzer } from './ShardAnalyzer';
+import { ScryLinkInput } from './ScryLinkInput';
 
 // Helper for Blob conversion
 const dataURLtoBlob = (dataurl: string) => {
@@ -32,9 +34,9 @@ const dataURLtoBlob = (dataurl: string) => {
 const SILHOUETTE_OPTIONS = ['Architectural', 'Oversized', 'Fluid', 'Minimal', 'Sharp', 'Cinematic', 'Biomorphic', 'Brutalist', 'Deconstructed', 'Tailored'];
 const TEXTURE_OPTIONS = ['Raw Silk', 'Cold Concrete', 'Brushed Aluminum', 'Matte Ceramic', 'Heavy Wool', 'Distressed Leather', 'Paper Grain', 'Latex', 'Velvet', 'Glass'];
 const ERA_OPTIONS = ['90s Minimal', 'Y2K Cyber', '80s Power', 'Retro-Futurist', 'Post-Digital', 'Old Money Noir', 'Industrial', 'Romantic Goth', 'Bauhaus'];
-const VOICE_REGISTERS = ['EDITORIAL', 'DIARY', 'MANIFESTO', 'ARCHIVE', 'TECHNICAL', 'POETIC', 'JOURNAL', 'BRIEF', 'NOIR', 'HIGH-FASHION'];
-const SENTENCE_STRUCTURES = ['CONCISE', 'FLOWING', 'CONTINUOUS', 'FRAGMENTED', 'STACCATO', 'ACADEMIC'];
-const EMOTIONAL_TEMPERATURES = ['DETACHED', 'CLINICAL', 'RESTRAINED', 'OBSERVATIONAL', 'INTIMATE', 'VISCERAL'];
+const VOICE_REGISTERS = ['EDITORIAL', 'DIARY', 'MANIFESTO', 'ARCHIVE', 'TECHNICAL', 'POETIC', 'JOURNAL', 'BRIEF', 'NOIR', 'HIGH-FASHION', 'CYNICAL', 'OPTIMISTIC', 'MYSTERIOUS', 'AUTHORITATIVE'];
+const SENTENCE_STRUCTURES = ['CONCISE', 'FLOWING', 'CONTINUOUS', 'FRAGMENTED', 'STACCATO', 'ACADEMIC', 'MINIMAL', 'VERBOSE'];
+const EMOTIONAL_TEMPERATURES = ['DETACHED', 'CLINICAL', 'RESTRAINED', 'OBSERVATIONAL', 'INTIMATE', 'VISCERAL', 'WARM', 'PASSIONATE', 'COLD'];
 const ZODIAC_SIGNS: ZodiacSign[] = ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'];
 const PRICE_POINTS = ['DIY ($0)', 'Micro ($100-500)', 'Studio ($1k-5k)', 'Agency ($10k+)', 'Enterprise (Unlimited)'];
 
@@ -192,8 +194,111 @@ const VISUAL_PRESETS = [
         saturationAwareness: { oversaturatedClusters: [], fragileDifferentiators: [] }
       }
     }
+  },
+  {
+    name: 'Zen',
+    icon: <Wind size={14} />,
+    config: {
+      positioningCore: {
+        anchors: { culturalReferences: ['Wabi-Sabi', 'Kengo Kuma', 'Minimalism'], ideologicalBias: ['Mindfulness'] },
+        aestheticCore: { silhouettes: ['Fluid'], materiality: ['Paper Grain'], eraBias: 'Bauhaus', density: 2, entropy: 2, tags: [] },
+        positioningAxis: 'Clarity vs Chaos',
+        authorityClaim: 'Peace and refinement.',
+        exclusionPrinciples: ['Avoid clutter', 'No noise']
+      },
+      expressionEngine: {
+        chromaticRegistry: { baseNeutral: '#FDFBF7', accentSignal: '#A8A29E', primaryPalette: [{ name: 'Stone', hex: '#D6D3D1', descriptor: 'Preset' }] },
+        typographyIntent: { styleDescription: 'Inter', weightPreference: 'Light' },
+        narrativeVoice: { emotionalTemperature: 'OBSERVATIONAL', structureBias: 'FLOWING', lexicalDensity: 3, restraintLevel: 8, voiceNotes: '' }
+      },
+      strategicVectors: {
+        expansionTolerance: 3,
+        fiscalVelocity: 'measured',
+        desireVectors: { deepen: ['Clarity', 'peace', 'refinement'], reduce: ['Clutter', 'noise'], experiment: ['Texture'], refuse: ['Chaos'] },
+        saturationAwareness: { oversaturatedClusters: [], fragileDifferentiators: [] }
+      }
+    }
+  },
+  {
+    name: 'Urban Decay',
+    icon: <Box size={14} />,
+    config: {
+      positioningCore: {
+        anchors: { culturalReferences: ['Blade Runner', 'Abandoned Buildings', 'Street Art'], ideologicalBias: ['Realism'] },
+        aestheticCore: { silhouettes: ['Deconstructed'], materiality: ['Distressed Leather'], eraBias: 'Industrial', density: 7, entropy: 6, tags: [] },
+        positioningAxis: 'Raw vs Polished',
+        authorityClaim: 'Authenticity in decay.',
+        exclusionPrinciples: ['Avoid perfection', 'No artificiality']
+      },
+      expressionEngine: {
+        chromaticRegistry: { baseNeutral: '#262626', accentSignal: '#EF4444', primaryPalette: [{ name: 'Rust', hex: '#78350F', descriptor: 'Preset' }] },
+        typographyIntent: { styleDescription: 'Space Mono', weightPreference: 'Regular' },
+        narrativeVoice: { emotionalTemperature: 'VISCERAL', structureBias: 'FRAGMENTED', lexicalDensity: 7, restraintLevel: 3, voiceNotes: '' }
+      },
+      strategicVectors: {
+        expansionTolerance: 5,
+        fiscalVelocity: 'measured',
+        desireVectors: { deepen: ['Authenticity', 'decay'], reduce: ['Perfection', 'artificiality'], experiment: ['Distressed textures'], refuse: ['Polished aesthetics'] },
+        saturationAwareness: { oversaturatedClusters: [], fragileDifferentiators: [] }
+      }
+    }
+  },
+  {
+    name: 'Cybernetic',
+    icon: <Zap size={14} />,
+    config: {
+      positioningCore: {
+        anchors: { culturalReferences: ['Neuromancer', 'Ghost in the Shell', 'Synthwave'], ideologicalBias: ['Techno-Optimism'] },
+        aestheticCore: { silhouettes: ['Sharp'], materiality: ['Latex'], eraBias: 'Y2K Cyber', density: 8, entropy: 7, tags: [] },
+        positioningAxis: 'Digital vs Physical',
+        authorityClaim: 'Technological integration.',
+        exclusionPrinciples: ['Avoid nature', 'No analog']
+      },
+      expressionEngine: {
+        chromaticRegistry: { baseNeutral: '#050505', accentSignal: '#38BDF8', primaryPalette: [{ name: 'Neon', hex: '#34D399', descriptor: 'Preset' }] },
+        typographyIntent: { styleDescription: 'Space Grotesk', weightPreference: 'Bold' },
+        narrativeVoice: { emotionalTemperature: 'DETACHED', structureBias: 'STACCATO', lexicalDensity: 8, restraintLevel: 5, voiceNotes: '' }
+      },
+      strategicVectors: {
+        expansionTolerance: 7,
+        fiscalVelocity: 'accelerated',
+        desireVectors: { deepen: ['Technology', 'integration'], reduce: ['Nature', 'analog'], experiment: ['Digital aesthetics'], refuse: ['Organic'] },
+        saturationAwareness: { oversaturatedClusters: [], fragileDifferentiators: [] }
+      }
+    }
+  },
+  {
+    name: 'Noir',
+    icon: <History size={14} />,
+    config: {
+      positioningCore: {
+        anchors: { culturalReferences: ['Film Noir', 'Raymond Chandler', 'Shadows'], ideologicalBias: ['Mystery'] },
+        aestheticCore: { silhouettes: ['Cinematic'], materiality: ['Velvet'], eraBias: 'Old Money Noir', density: 6, entropy: 4, tags: [] },
+        positioningAxis: 'Light vs Shadow',
+        authorityClaim: 'Atmospheric storytelling.',
+        exclusionPrinciples: ['Avoid clarity', 'No brightness']
+      },
+      expressionEngine: {
+        chromaticRegistry: { baseNeutral: '#000000', accentSignal: '#FFFFFF', primaryPalette: [{ name: 'Shadow', hex: '#1F2937', descriptor: 'Preset' }] },
+        typographyIntent: { styleDescription: 'Cormorant Garamond', weightPreference: 'Bold' },
+        narrativeVoice: { emotionalTemperature: 'INTIMATE', structureBias: 'FLOWING', lexicalDensity: 8, restraintLevel: 6, voiceNotes: '' }
+      },
+      strategicVectors: {
+        expansionTolerance: 4,
+        fiscalVelocity: 'conservative',
+        desireVectors: { deepen: ['Atmosphere', 'mystery'], reduce: ['Clarity', 'brightness'], experiment: ['Dramatic lighting'], refuse: ['Optimism'] },
+        saturationAwareness: { oversaturatedClusters: [], fragileDifferentiators: [] }
+      }
+    }
   }
 ];
+
+const CATEGORIZED_VISUAL_PRESETS = {
+  'Minimalist/Clean': ['Minimalist', 'Zen'],
+  'Raw/Industrial': ['Industrial', 'Brutalist', 'Urban Decay'],
+  'Futuristic/Tech': ['Neo-Futurist', 'Cybernetic', 'Superintelligence'],
+  'Editorial/Classic': ['Vintage', 'Noir']
+};
 
 const DEFAULT_FONTS = [
   { name: 'Cormorant Garamond', type: 'Serif', label: 'Editorial' },
@@ -326,7 +431,8 @@ const PresetStrip: React.FC<{ options: string[], current: string | string[], onS
 );
 
 const FieldGroup: React.FC<{ label: string; description?: string; children: React.ReactNode }> = ({ label, description, children }) => (
-  <div className="space-y-4 pb-12 border-b border-black/5 dark:border-white/5 last:border-b-0">
+  <div className="space-y-4 pb-12 border-b border-black/5 dark:border-white/5 last:border-b-0 relative">
+    <div className="tape-top"></div>
     <div className="space-y-1">
       <label className="font-sans text-[9px] uppercase tracking-[0.4em] font-black text-stone-400">{label}</label>
       {description && <p className="font-serif italic text-base text-stone-500 dark:text-stone-400 leading-tight">{description}</p>}
@@ -367,7 +473,7 @@ const BlueprintCard: React.FC<{ label: string; subLabel?: string; onClick: () =>
 // --- MAIN COMPONENT ---
 
 export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverrides }) => {
-  const { profile, updateProfile, personas, activePersonaId, switchPersona, updatePersona, user, enabledAlgos, toggleAlgo } = useUser();
+  const { profile, updateProfile, personas, activePersonaId, switchPersona, updatePersona, user, enabledAlgos, toggleAlgo, deletePersona } = useUser();
   const activePersona = personas.find(p => p.id === activePersonaId);
   const [draft, setDraft] = useState<TailorLogicDraft | null>(null);
   
@@ -379,6 +485,34 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
   const [auditReport, setAuditReport] = useState<TailorAuditReport | null>(null);
   const [showAuditOverlay, setShowAuditOverlay] = useState(false);
   
+  // --- AUTO-SAVE LOGIC ---
+  const saveDraftToLocalStorage = useCallback((draftToSave: TailorLogicDraft) => {
+      if (!activePersonaId) return;
+      setIsSaving(true);
+      localStorage.setItem(`mimi_tailor_draft_${activePersonaId}`, JSON.stringify(draftToSave));
+      setTimeout(() => setIsSaving(false), 1000);
+  }, [activePersonaId]);
+
+  // Auto-save interval
+  useEffect(() => {
+      if (!draft) return;
+      const interval = setInterval(() => {
+          saveDraftToLocalStorage(draft);
+      }, 30000);
+      return () => clearInterval(interval);
+  }, [draft, saveDraftToLocalStorage]);
+
+  // Save on navigate away
+  useEffect(() => {
+      const handleBeforeUnload = () => {
+          if (draft) saveDraftToLocalStorage(draft);
+      };
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [draft, saveDraftToLocalStorage]);
+  
+  // --- END AUTO-SAVE LOGIC ---
+
   // Font Engine State
   const [customFontInput, setCustomFontInput] = useState('');
   const [availableFonts, setAvailableFonts] = useState(DEFAULT_FONTS);
@@ -423,7 +557,18 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
 
   useEffect(() => {
       // Defensive Initialization: Ensure draft structure is complete
-      const source = activePersona?.tailorDraft || profile?.tailorDraft || DEFAULT_DRAFT_FALLBACK;
+      const localDraft = activePersonaId ? localStorage.getItem(`mimi_tailor_draft_${activePersonaId}`) : null;
+      let source;
+      if (localDraft) {
+          try {
+              source = JSON.parse(localDraft);
+          } catch (e) {
+              source = activePersona?.tailorDraft || profile?.tailorDraft || DEFAULT_DRAFT_FALLBACK;
+          }
+      } else {
+          source = activePersona?.tailorDraft || profile?.tailorDraft || DEFAULT_DRAFT_FALLBACK;
+      }
+      
       const mergedDraft = {
           ...DEFAULT_DRAFT_FALLBACK,
           ...source,
@@ -464,9 +609,10 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
       if (!document.getElementById(linkId)) {
           const link = document.createElement('link');
           link.id = linkId;
-          link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s+/g, '+')}:wght@300;400;500;600&display=swap`;
+          link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/\s+/g, '+')}:wght@300;400;500;600;700&display=swap`;
           link.rel = 'stylesheet';
           document.head.appendChild(link);
+          window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: `Fetching ${fontName}...`, icon: <Download size={14} /> } }));
           return true;
       }
       return false;
@@ -509,18 +655,18 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
     }
   }, [initialOverrides]);
 
-  const updateDraft = (patch: any) => { if (draft) setDraft(prev => ({ ...prev!, ...patch })); };
+  const updateDraft = (patch: any) => { if (draft) setDraft(prev => ({ ...prev!, ...patch, draftStatus: 'provisional' })); };
   
   const updatePositioning = (field: string, val: any) => {
-      if (draft) setDraft(prev => prev ? ({ ...prev, positioningCore: { ...prev.positioningCore, [field]: val } }) : null);
+      if (draft) setDraft(prev => prev ? ({ ...prev, draftStatus: 'provisional', positioningCore: { ...prev.positioningCore, [field]: val } }) : null);
   };
   
   const updateExpression = (field: string, val: any) => {
-      if (draft) setDraft(prev => prev ? ({ ...prev, expressionEngine: { ...prev.expressionEngine, [field]: val } }) : null);
+      if (draft) setDraft(prev => prev ? ({ ...prev, draftStatus: 'provisional', expressionEngine: { ...prev.expressionEngine, [field]: val } }) : null);
   };
   
   const updateStrategic = (field: string, val: any) => {
-      if (draft) setDraft(prev => prev ? ({ ...prev, strategicVectors: { ...prev.strategicVectors, [field]: val } }) : null);
+      if (draft) setDraft(prev => prev ? ({ ...prev, draftStatus: 'provisional', strategicVectors: { ...prev.strategicVectors, [field]: val } }) : null);
   };
 
   const updateAnchor = (field: string, val: string) => { 
@@ -628,13 +774,18 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
     window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: `${preset.name} Preset Applied.`, icon: preset.icon } }));
   };
 
+
+
   const handleAlign = async () => {
     if (!profile || !activePersona || !draft) return;
     setIsSaving(true);
     try {
       const finalDraft = { ...draft, draftStatus: 'aligned', lastTailored: Date.now() };
       await updatePersona({ ...activePersona, tailorDraft: finalDraft });
+      saveDraftToLocalStorage(finalDraft);
+      setDraft(finalDraft);
       window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Logic Aligned to Mask.", icon: <Ruler size={14} /> } }));
+      setViewMode('blueprint');
     } catch (e) { 
       window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Alignment Error.", type: 'error' } }));
     } finally { setIsSaving(false); }
@@ -645,6 +796,7 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
       setIsSaving(true);
       try {
           await updatePersona({ ...activePersona, name: personaName, apiKey: personaKey, tailorDraft: draft });
+          saveDraftToLocalStorage(draft);
           window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Mask Protocols Updated.", icon: <CheckCircle size={14} /> } }));
       } catch(e) {
           window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Update Failed.", type: 'error' } }));
@@ -758,8 +910,24 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
   }
 
   return (
-    <div className="flex-1 w-full h-full overflow-y-auto no-scrollbar pb-[40vh] px-4 md:px-16 pt-12 md:pt-20 bg-nous-base dark:bg-[#050505] text-nous-text dark:text-white transition-all duration-1000 relative">
+    <div className="flex-1 w-full h-full overflow-y-auto no-scrollbar pb-[40vh] px-4 md:px-16 pt-12 md:pt-20 bg-nous-base dark:bg-[#050505] text-nous-text dark:text-white transition-all duration-1000 relative paper-texture">
       
+      {/* Auto-save Indicator */}
+      <div className="absolute top-4 right-4 z-50">
+          <AnimatePresence>
+              {isSaving && (
+                  <motion.div 
+                      initial={{ opacity: 0, y: -10 }} 
+                      animate={{ opacity: 1, y: 0 }} 
+                      exit={{ opacity: 0, y: -10 }}
+                      className="px-3 py-1 bg-emerald-500 text-white rounded-full font-sans text-[8px] uppercase tracking-widest font-black shadow-lg"
+                  >
+                      Draft Saved
+                  </motion.div>
+              )}
+          </AnimatePresence>
+      </div>
+
       {/* BACKGROUND DOT GRID TEXTURE */}
       <div 
         className="absolute inset-0 pointer-events-none opacity-[0.05]" 
@@ -773,8 +941,8 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
              <div className="space-y-4">
                 <div className="flex items-center gap-3 text-stone-400">
-                   <Scissors size={18} className="text-emerald-500" />
-                   <span className="font-sans text-[10px] uppercase tracking-[0.5em] font-black italic">Aesthetic Logic Engine v2.0</span>
+                   <Scissors size={14} className="text-nous-accent" />
+                   <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-medium italic">Aesthetic Logic Engine v2.0</span>
                 </div>
                 <h2 className="font-serif text-5xl md:text-7xl italic tracking-tighter text-nous-text dark:text-white leading-none">The Tailor.</h2>
                 <p className="font-serif italic text-lg text-stone-500 max-w-xl">
@@ -978,12 +1146,27 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
 
                     {/* RIGHT COL: THE AUDIT */}
                     <div className="md:col-span-4 flex flex-col gap-6">
+                        {/* Visual Manifest Preview */}
+                        <div className="bg-white dark:bg-[#0A0A0A] border border-stone-200 dark:border-stone-800 p-6 rounded-sm shadow-sm space-y-4">
+                            <div className="flex items-center justify-between border-b border-dashed border-stone-100 dark:border-stone-800 pb-2">
+                                <span className="font-sans text-[7px] uppercase tracking-[0.3em] font-black text-stone-400">Visual Manifest</span>
+                                <span className="font-mono text-[7px] text-stone-300">REF: VIZ-01</span>
+                            </div>
+                            <TailorPreview draft={draft} activePersonaId={activePersonaId!} apiKey={activePersona?.apiKey} />
+                            <p className="font-serif italic text-[10px] text-stone-400 leading-tight">
+                                A synthetic representation of your current aesthetic DNA.
+                            </p>
+                        </div>
+
                         <div className="bg-stone-50 dark:bg-[#080808] border border-stone-200 dark:border-stone-800 p-8 h-full flex flex-col justify-between rounded-sm">
                             <div className="space-y-6">
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-3 text-emerald-500">
                                         <ShieldCheck size={24} />
                                         <span className="font-sans text-[9px] uppercase tracking-[0.4em] font-black">Alignment Protocol</span>
+                                        {draft.draftStatus === 'provisional' && (
+                                            <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full font-mono text-[8px] uppercase tracking-widest ml-auto">Unaligned</span>
+                                        )}
                                     </div>
                                     <p className="font-serif italic text-sm text-stone-500 leading-relaxed">
                                         Changes are local until aligned. Committing writes this logic to your active mask.
@@ -1051,23 +1234,30 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                     <>
                                         <p className="font-serif italic text-stone-500 mb-8">Ground your mask's logic in the physical world.</p>
                                         
-                                        <FieldGroup label="Visual Presets" description="Apply a foundational aesthetic archetype.">
-                                          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-                                            {VISUAL_PRESETS.map(p => {
-                                              const isActive = draft.positioningCore.aestheticCore.silhouettes.join(',') === p.config.positioningCore.aestheticCore.silhouettes.join(',') && 
-                                                               draft.positioningCore.aestheticCore.eraBias === p.config.positioningCore.aestheticCore.eraBias;
-                                              return (
-                                                <button 
-                                                  key={p.name} 
-                                                  onClick={() => applyVisualPreset(p)} 
-                                                  className={`p-4 border rounded-sm transition-all group flex flex-col items-center gap-3 bg-white dark:bg-stone-900 shadow-sm ${isActive ? 'border-emerald-500 ring-1 ring-emerald-500/20' : 'border-stone-200 dark:border-stone-800 hover:border-emerald-500'}`}
-                                                >
-                                                  <div className={`${isActive ? 'text-emerald-500' : 'text-stone-400 group-hover:text-emerald-500'} transition-colors`}>{p.icon}</div>
-                                                  <span className={`font-sans text-[8px] uppercase tracking-widest font-black ${isActive ? 'text-emerald-500' : 'text-stone-400 group-hover:text-emerald-500'}`}>{p.name}</span>
-                                                </button>
-                                              );
-                                            })}
-                                          </div>
+                                        <FieldGroup label="Brand Templates" description="Apply a foundational aesthetic archetype.">
+                                          {Object.entries(CATEGORIZED_VISUAL_PRESETS).map(([category, presetNames]) => (
+                                            <div key={category} className="mb-6">
+                                              <h4 className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-500 mb-3">{category}</h4>
+                                              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                                                {presetNames.map(name => {
+                                                  const p = VISUAL_PRESETS.find(pr => pr.name === name);
+                                                  if (!p) return null;
+                                                  const isActive = draft.positioningCore.aestheticCore.silhouettes.join(',') === p.config.positioningCore.aestheticCore.silhouettes.join(',') && 
+                                                                   draft.positioningCore.aestheticCore.eraBias === p.config.positioningCore.aestheticCore.eraBias;
+                                                  return (
+                                                    <button 
+                                                      key={p.name} 
+                                                      onClick={() => applyVisualPreset(p)} 
+                                                      className={`p-4 border rounded-sm transition-all group flex flex-col items-center gap-3 bg-white dark:bg-stone-900 shadow-sm ${isActive ? 'border-emerald-500 ring-1 ring-emerald-500/20' : 'border-stone-200 dark:border-stone-800 hover:border-emerald-500'}`}
+                                                    >
+                                                      <div className={`${isActive ? 'text-emerald-500' : 'text-stone-400 group-hover:text-emerald-500'} transition-colors`}>{p.icon}</div>
+                                                      <span className={`font-sans text-[8px] uppercase tracking-widest font-black ${isActive ? 'text-emerald-500' : 'text-stone-400 group-hover:text-emerald-500'}`}>{p.name}</span>
+                                                    </button>
+                                                  );
+                                                })}
+                                              </div>
+                                            </div>
+                                          ))}
                                         </FieldGroup>
 
                                         {primaryAnchorsMap.map(field => {
@@ -1472,30 +1662,60 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                             <div className="grid grid-cols-1 gap-6">
                                                 <div className="space-y-2">
                                                     <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Primary Serif (Headlines)</label>
-                                                    <input 
-                                                        value={draft.expressionEngine.brandIdentity?.fonts.serif || ''} 
-                                                        onChange={e => updateExpression('brandIdentity', { ...draft.expressionEngine.brandIdentity!, fonts: { ...draft.expressionEngine.brandIdentity!.fonts, serif: e.target.value } })}
-                                                        className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-xl focus:outline-none focus:border-emerald-500"
-                                                        placeholder="e.g. Cormorant Garamond"
-                                                    />
+                                                    <div className="flex items-center gap-2 border-b border-stone-200 dark:border-stone-800 focus-within:border-emerald-500 transition-colors">
+                                                        <input 
+                                                            value={draft.expressionEngine.brandIdentity?.fonts.serif || ''} 
+                                                            onChange={e => updateExpression('brandIdentity', { ...draft.expressionEngine.brandIdentity!, fonts: { ...draft.expressionEngine.brandIdentity!.fonts, serif: e.target.value } })}
+                                                            className="w-full bg-transparent py-2 font-serif italic text-xl focus:outline-none"
+                                                            placeholder="e.g. Cormorant Garamond"
+                                                            style={{ fontFamily: draft.expressionEngine.brandIdentity?.fonts.serif }}
+                                                        />
+                                                        <button 
+                                                            onClick={() => injectGoogleFont(draft.expressionEngine.brandIdentity?.fonts.serif || '')}
+                                                            className="p-2 text-stone-400 hover:text-emerald-500 transition-colors"
+                                                            title="Fetch from Google Fonts"
+                                                        >
+                                                            <Download size={16} />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Secondary Sans (Body)</label>
-                                                    <input 
-                                                        value={draft.expressionEngine.brandIdentity?.fonts.sans || ''} 
-                                                        onChange={e => updateExpression('brandIdentity', { ...draft.expressionEngine.brandIdentity!, fonts: { ...draft.expressionEngine.brandIdentity!.fonts, sans: e.target.value } })}
-                                                        className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-sans text-lg focus:outline-none focus:border-emerald-500"
-                                                        placeholder="e.g. Inter"
-                                                    />
+                                                    <div className="flex items-center gap-2 border-b border-stone-200 dark:border-stone-800 focus-within:border-emerald-500 transition-colors">
+                                                        <input 
+                                                            value={draft.expressionEngine.brandIdentity?.fonts.sans || ''} 
+                                                            onChange={e => updateExpression('brandIdentity', { ...draft.expressionEngine.brandIdentity!, fonts: { ...draft.expressionEngine.brandIdentity!.fonts, sans: e.target.value } })}
+                                                            className="w-full bg-transparent py-2 font-sans text-lg focus:outline-none"
+                                                            placeholder="e.g. Inter"
+                                                            style={{ fontFamily: draft.expressionEngine.brandIdentity?.fonts.sans }}
+                                                        />
+                                                        <button 
+                                                            onClick={() => injectGoogleFont(draft.expressionEngine.brandIdentity?.fonts.sans || '')}
+                                                            className="p-2 text-stone-400 hover:text-emerald-500 transition-colors"
+                                                            title="Fetch from Google Fonts"
+                                                        >
+                                                            <Download size={16} />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Tertiary Mono (Data)</label>
-                                                    <input 
-                                                        value={draft.expressionEngine.brandIdentity?.fonts.mono || ''} 
-                                                        onChange={e => updateExpression('brandIdentity', { ...draft.expressionEngine.brandIdentity!, fonts: { ...draft.expressionEngine.brandIdentity!.fonts, mono: e.target.value } })}
-                                                        className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-mono text-sm focus:outline-none focus:border-emerald-500"
-                                                        placeholder="e.g. Space Mono"
-                                                    />
+                                                    <div className="flex items-center gap-2 border-b border-stone-200 dark:border-stone-800 focus-within:border-emerald-500 transition-colors">
+                                                        <input 
+                                                            value={draft.expressionEngine.brandIdentity?.fonts.mono || ''} 
+                                                            onChange={e => updateExpression('brandIdentity', { ...draft.expressionEngine.brandIdentity!, fonts: { ...draft.expressionEngine.brandIdentity!.fonts, mono: e.target.value } })}
+                                                            className="w-full bg-transparent py-2 font-mono text-sm focus:outline-none"
+                                                            placeholder="e.g. Space Mono"
+                                                            style={{ fontFamily: draft.expressionEngine.brandIdentity?.fonts.mono }}
+                                                        />
+                                                        <button 
+                                                            onClick={() => injectGoogleFont(draft.expressionEngine.brandIdentity?.fonts.mono || '')}
+                                                            className="p-2 text-stone-400 hover:text-emerald-500 transition-colors"
+                                                            title="Fetch from Google Fonts"
+                                                        >
+                                                            <Download size={16} />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </FieldGroup>
@@ -1585,6 +1805,27 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                                     {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
                                                     Update Protocols
                                                 </button>
+                                                
+                                                <div className="pt-8 border-t border-stone-200 dark:border-stone-800">
+                                                    <button 
+                                                        onClick={async () => {
+                                                            if (personas.length <= 1) {
+                                                                window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Cannot burn the final mask.", type: 'error' } }));
+                                                                return;
+                                                            }
+                                                            if (window.confirm("Are you sure you want to burn this mask? This action is irreversible and will delete all associated drafts and shards.")) {
+                                                                await deletePersona(activePersonaId!);
+                                                                window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Mask Burned.", icon: <Trash2 size={14} /> } }));
+                                                                setViewMode('blueprint');
+                                                            }
+                                                        }}
+                                                        disabled={personas.length <= 1}
+                                                        className={`px-6 py-2 bg-transparent border rounded-full font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 ${personas.length <= 1 ? 'text-stone-400 border-stone-400 cursor-not-allowed opacity-50' : 'text-red-500 border-red-500 hover:bg-red-500 hover:text-white'}`}
+                                                    >
+                                                        <Trash2 size={12} />
+                                                        Burn Mask
+                                                    </button>
+                                                </div>
                                             </div>
                                         </FieldGroup>
 
@@ -1625,17 +1866,37 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                     </div>
 
                     {/* ALIGN FOOTER */}
-                    <div className="p-8 border-t md:border-t-0 md:border-l border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-black/20 flex flex-col justify-between shrink-0 md:w-64">
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-3 text-emerald-500">
-                                <Target size={18} className="animate-pulse" />
-                                <span className="font-sans text-[9px] uppercase tracking-[0.4em] font-black italic">Alignment Protocol</span>
+                    <div className="p-8 border-t md:border-t-0 md:border-l border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-black/20 flex flex-col shrink-0 md:w-64 overflow-y-auto no-scrollbar">
+                        <div className="space-y-8">
+                            {/* Aesthetic Preview */}
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <span className="font-sans text-[7px] uppercase tracking-[0.4em] font-black text-stone-400">Aesthetic Preview</span>
+                                    <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                                </div>
+                                {draft && activePersonaId && (
+                                    <TailorPreview draft={draft} activePersonaId={activePersonaId} apiKey={activePersona?.apiKey} />
+                                )}
+                                <p className="font-serif italic text-[10px] text-stone-400 leading-tight">
+                                    Real-time synthesis of your current aesthetic DNA.
+                                </p>
                             </div>
-                            <p className="font-serif italic text-xs text-stone-500 leading-relaxed">
-                                Changes are local until aligned. Committing writes this logic to your active mask.
-                            </p>
+
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-3 text-emerald-500">
+                                    <Target size={18} className="animate-pulse" />
+                                    <span className="font-sans text-[9px] uppercase tracking-[0.4em] font-black italic">Alignment Protocol</span>
+                                    {draft.draftStatus === 'provisional' && (
+                                        <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full font-mono text-[8px] uppercase tracking-widest ml-auto">Unaligned</span>
+                                    )}
+                                </div>
+                                <p className="font-serif italic text-xs text-stone-500 leading-relaxed">
+                                    Changes are local until aligned. Committing writes this logic to your active mask.
+                                </p>
+                            </div>
                         </div>
-                        <div className="space-y-4 mt-8 md:mt-0">
+
+                        <div className="space-y-4 mt-12">
                             <button onClick={handleAlign} disabled={isSaving} className="w-full py-4 bg-nous-text dark:bg-white text-white dark:text-black rounded-full font-sans text-[9px] uppercase tracking-[0.4em] font-black shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3">
                                 {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Align Logic
                             </button>

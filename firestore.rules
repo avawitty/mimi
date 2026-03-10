@@ -21,6 +21,14 @@ service cloud.firestore {
       match /memory/{memoryId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
+      
+      match /themes/{themeId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      match /threads/{threadId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
     }
     
     // ZINES (Read: Public, Write: Authenticated or Collaborator)
@@ -92,6 +100,13 @@ service cloud.firestore {
       allow read: if request.auth != null && (resource.data.user1 == request.auth.uid || resource.data.user2 == request.auth.uid);
       allow create: if request.auth != null && (request.resource.data.user1 == request.auth.uid || request.resource.data.user2 == request.auth.uid);
       allow update, delete: if request.auth != null && (resource.data.user1 == request.auth.uid || resource.data.user2 == request.auth.uid);
+    }
+
+    // ZINE COMMENTS
+    match /zine_comments/{commentId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
     }
 
     // STATS (Publicly readable)

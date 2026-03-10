@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { ZineMetadata, PocketItem } from '../types';
 import { generateAudio, animateShardWithVeo, transcribeAudio } from '../services/geminiService';
-import { addToPocket } from '../services/firebase';
+import { addToPocket, subscribeToPocketItems } from '../services/firebase';
 import { Loader2, X, Volume2, Orbit, Eye, Target, Layers, Moon, Sparkles, Terminal, Quote, ArrowDown, Grid3X3, Printer, Bookmark, Check, Play, Pause, ExternalLink, Download, Share2, Star, FileText, Map, Compass, Zap, RefreshCw, PenTool, Save, Mic, Square, AlertCircle, StickyNote, History, MessageSquareQuote, Radar, Maximize2, Activity, Archive, FolderPlus, Compass as RoadmapIcon, Stars as CelestialIcon, ArrowRight, CornerDownRight, Image as ImageIcon, Film, MousePointer2, Briefcase, BookOpen, ChevronDown, Hash, Search, Menu, Plus, Radio } from 'lucide-react';
 import { Visualizer } from './Visualizer';
 import { ExportChamber } from './ExportChamber';
@@ -23,7 +23,7 @@ const SectionHeader: React.FC<{ label: string; icon: any; color?: string; style?
   </div>
 );
 
-export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => void }> = ({ metadata, onReset }) => {
+export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => void, onUpdateMetadata: (updatedMetadata: ZineMetadata) => void }> = ({ metadata, onReset, onUpdateMetadata }) => {
   const { user, profile, activePersona, toggleZineStar } = useUser();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isVoiceLoading, setIsVoiceLoading] = useState(false);
@@ -37,6 +37,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
   const [dialOpen, setDialOpen] = useState(false);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [isBroadcasted, setIsBroadcasted] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   
   // TAILOR INTEGRATION: Fetch styling from the active persona's draft
   const tailor = activePersona?.tailorDraft || profile?.tailorDraft;
@@ -54,9 +55,23 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
   // Field Notes State - Fallback logic for Debris
   const originalDebris = metadata.originalInput || metadata.content.meta?.intent || '';
   const [noteContent, setNoteContent] = useState(originalDebris);
+  const [vocalSummary, setVocalSummary] = useState(metadata.content.vocal_summary_blurb || '');
+  const [poeticInterpretation, setPoeticInterpretation] = useState(metadata.content.poetic_interpretation || '');
   
-  const audioCtxRef = useRef<AudioContext | null>(null);
+  const handleSaveMetadata = () => {
+      const updatedMetadata = {
+          ...metadata,
+          content: {
+              ...metadata.content,
+              vocal_summary_blurb: vocalSummary,
+              poetic_interpretation: poeticInterpretation
+          }
+      };
+      onUpdateMetadata(updatedMetadata);
+      setIsEditing(false);
+  };
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
   const { isRecording, startRecording, stopRecording, audioBlob } = useRecorder();
 
   // Handle Voice Transcription for Notes
@@ -81,31 +96,57 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
         processAudio();
     }
   }, [audioBlob]);
+
+  // Check if zine is already saved
+  useEffect(() => {
+    if (!user?.uid) return;
+    
+    const unsubscribe = subscribeToPocketItems(user.uid, (items) => {
+        const isAlreadySaved = items.some(item => item.content?.zineId === metadata.id);
+        setIsSaved(isAlreadySaved);
+    });
+    
+    return () => unsubscribe();
+  }, [user?.uid, metadata.id]);
   
   const handleVoiceToggle = async () => {
-    if (isPlaying) { sourceRef.current?.stop(); setIsPlaying(false); return; }
+    if (isPlaying) { 
+      if (sourceRef.current) { try { sourceRef.current.stop(); } catch(e) {} }
+      setIsPlaying(false); 
+      return; 
+    }
+    
     setIsVoiceLoading(true);
     try {
-      const AudioContextClass = (window.AudioContext || window.webkitAudioContext);
-      if (!audioCtxRef.current) audioCtxRef.current = new AudioContextClass({ sampleRate: 24000 });
-      if (audioCtxRef.current.state === 'suspended') await audioCtxRef.current.resume();
+      const AudioContextClass = (window.AudioContext || (window as any).webkitAudioContext);
+      if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+        audioCtxRef.current = new AudioContextClass();
+      }
       
-      const narrationText = `
-        ${metadata.content?.vocal_summary_blurb || metadata.content.poetic_provocation}
-      `.trim();
-
+      if (audioCtxRef.current.state === 'suspended') {
+        await audioCtxRef.current.resume();
+      }
+      
+      const narrationText = (vocalSummary || poeticInterpretation || metadata.title).trim();
       const personaKey = activePersona?.apiKey ? activePersona.apiKey : undefined;
       const bytes = await generateAudio(narrationText, personaKey);
       
-      // Ensure alignment and even length for Int16Array
-      const buffer = bytes.buffer;
-      const dataInt16 = new Int16Array(buffer, 0, Math.floor(buffer.byteLength / 2));
+      let audioBuffer: AudioBuffer;
       
-      const audioBuffer = audioCtxRef.current.createBuffer(1, dataInt16.length, 24000);
-      const channelData = audioBuffer.getChannelData(0);
-      for (let i = 0; i < dataInt16.length; i++) { 
+      // Check for RIFF header (WAV)
+      if (bytes[0] === 82 && bytes[1] === 73 && bytes[2] === 70 && bytes[3] === 70) {
+        audioBuffer = await audioCtxRef.current.decodeAudioData(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
+      } else {
+        // Fallback to raw 16-bit PCM 24kHz
+        const length = Math.floor(bytes.byteLength / 2);
+        const dataInt16 = new Int16Array(bytes.buffer, bytes.byteOffset, length);
+        audioBuffer = audioCtxRef.current.createBuffer(1, length, 24000);
+        const channelData = audioBuffer.getChannelData(0);
+        for (let i = 0; i < length; i++) { 
           channelData[i] = dataInt16[i] / 32768.0; 
+        }
       }
+
       const source = audioCtxRef.current.createBufferSource();
       source.buffer = audioBuffer;
       source.connect(audioCtxRef.current.destination);
@@ -114,7 +155,8 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
       sourceRef.current = source;
       setIsPlaying(true);
     } catch (e: any) {
-      console.error("Voice synthesis failed", e);
+      console.error("MIMI // Voice synthesis failed:", e);
+      setIsPlaying(false);
       if (e.message?.includes('overloaded') || e.code === 'QUOTA_EXCEEDED') {
           window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
               detail: { 
@@ -139,6 +181,10 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
 
   const handleSaveToPocket = async () => {
     if (isSaved) return;
+    
+    // Optimistic update
+    setIsSaved(true);
+    
     try {
       await addToPocket(user?.uid || 'ghost', 'zine_card', { 
           zineId: metadata.id, 
@@ -152,9 +198,13 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
           imageUrl: metadata.coverImageUrl,
           originalInput: originalDebris // Explicitly save original debris again
       });
-      setIsSaved(true);
       window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Manifest Anchored with Field Notes.", icon: <Bookmark size={14} style={{ color: accentColor }} /> } }));
-    } catch (e) {}
+    } catch (e) {
+      // Revert on error
+      setIsSaved(false);
+      console.error("Failed to save to pocket", e);
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Failed to anchor manifest.", icon: <AlertCircle size={14} className="text-red-500" /> } }));
+    }
   };
 
   const handleBroadcast = async () => {
@@ -275,9 +325,20 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
               <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-white dark:bg-[#0A0A0A] print:min-h-0 print:py-12">
                  <div className="max-w-5xl space-y-16">
                     <SectionHeader label="Executive Summary" icon={Sparkles} style={{ color: accentColor }} />
-                    <p className="font-serif italic text-3xl md:text-6xl text-stone-800 dark:text-stone-200 leading-[1.1] md:leading-[1.1]">
-                       "{metadata.content.vocal_summary_blurb || metadata.content.poetic_interpretation}"
-                    </p>
+                    <button onClick={() => setIsEditing(!isEditing)} className="text-[8px] uppercase tracking-widest font-black text-stone-400 hover:text-emerald-500 transition-colors">
+                        {isEditing ? 'Cancel Edit' : 'Edit Summary'}
+                    </button>
+                    {isEditing ? (
+                        <div className="space-y-4">
+                            <textarea value={vocalSummary} onChange={e => setVocalSummary(e.target.value)} className="w-full p-4 bg-stone-100 dark:bg-stone-900 rounded-sm" placeholder="Vocal Summary Blurb" />
+                            <textarea value={poeticInterpretation} onChange={e => setPoeticInterpretation(e.target.value)} className="w-full p-4 bg-stone-100 dark:bg-stone-900 rounded-sm" placeholder="Poetic Interpretation" />
+                            <button onClick={handleSaveMetadata} className="px-4 py-2 bg-emerald-500 text-white rounded-sm font-sans text-[8px] uppercase tracking-widest font-black">Save Changes</button>
+                        </div>
+                    ) : (
+                        <p className="font-serif italic text-3xl md:text-6xl text-stone-800 dark:text-stone-200 leading-[1.1] md:leading-[1.1]">
+                           "{vocalSummary || poeticInterpretation}"
+                        </p>
+                    )}
                     
                     <button 
                         onClick={handleVoiceToggle} 
@@ -298,7 +359,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
 
               {/* 3. HEADER IMAGE */}
               <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-black overflow-hidden relative group print:min-h-0 print:py-12">
-                 <Visualizer prompt={metadata.content.hero_image_prompt || metadata.title} defaultAspectRatio="16:9" isArtifact isLite={metadata.isLite} initialImage={metadata.coverImageUrl} />
+                 <Visualizer prompt={metadata.content.hero_image_prompt || metadata.title} defaultAspectRatio="16:9" defaultImageSize={metadata.isHighFidelity ? '2K' : '1K'} isArtifact isLite={metadata.isLite} initialImage={metadata.coverImageUrl} artifacts={metadata.artifacts} />
                  <div className="absolute bottom-12 left-12 p-4 bg-white/5 backdrop-blur-md rounded-sm border border-white/10">
                     <span className="font-mono text-[7px] text-white uppercase tracking-widest">FIG_01: PRIMARY_VISUAL</span>
                  </div>
@@ -327,9 +388,11 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                             <Visualizer 
                                 prompt={`An abstract, conceptual, high-contrast editorial photograph representing the concept: "${metadata.content.strategic_hypothesis}". Focus on texture, lighting, and composition. No text, no typography. Cinematic, moody, architectural.`} 
                                 defaultAspectRatio="1:1" 
+                                defaultImageSize={metadata.isHighFidelity ? '2K' : '1K'}
                                 isArtifact 
                                 isLite={metadata.isLite} 
                                 delay={400}
+                                artifacts={metadata.artifacts}
                             />
                             <div className="absolute bottom-4 right-4 bg-black/80 text-white px-2 py-1 text-[8px] font-mono rounded-sm">FIG 2.1 — ABSTRACT</div>
                         </div>
@@ -444,10 +507,12 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                                       <Visualizer 
                                         prompt={page.imagePrompt} 
                                         defaultAspectRatio="3:4" 
+                                        defaultImageSize={metadata.isHighFidelity ? '2K' : '1K'}
                                         isArtifact 
                                         isLite={metadata.isLite} 
                                         initialImage={page.image_url} 
                                         delay={800 + (i * 1200)}
+                                        artifacts={metadata.artifacts}
                                       />
                                       {/* PLATE METADATA OVERLAY */}
                                       <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end pointer-events-none mix-blend-difference text-white opacity-0 group-hover:opacity-100 transition-opacity duration-700">

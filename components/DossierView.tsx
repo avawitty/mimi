@@ -6,6 +6,7 @@ import { fetchDossierFolders, fetchDossierArtifacts, createDossierFolder, create
 import { DossierFolder, DossierArtifact, FruitionTrajectory, Task, UserProfile } from '../types';
 import { Briefcase, Folder, Plus, ChevronRight, FileText, Share2, Layout, ArrowRight, Loader2, X, Archive, Eye, Trash2, Globe, ExternalLink, Upload, ImageIcon, HeartHandshake, FolderOpen, LayoutGrid, FolderPlus, PenTool, Save, Quote, Info, StickyNote, Compass, Map, Terminal, Check, Calendar, AlertTriangle, ListChecks, Sparkles, Clock, Target, CalendarDays, GripVertical, Users, UserPlus, Search, Cpu, Activity, Lock } from 'lucide-react';
 import { DossierArtifactView } from './DossierArtifactView';
+import { MoodboardComposer } from './MoodboardComposer';
 import { generateStrategicBlueprint, generateProjectTasks } from '../services/geminiService';
 import { db } from '../services/firebaseInit';
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -321,6 +322,34 @@ export const DossierView: React.FC = () => {
     window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'sanctuary' }));
   };
 
+  const handleGenerateFinalZine = () => {
+    if (!activeFolder) return;
+    
+    const textContext = artifacts
+      .filter(a => a.type === 'text')
+      .map(a => `[${a.title}]: ${a.content}`)
+      .join('\n\n');
+      
+    const fullContext = `PROJECT: ${activeFolder.name}\nMEMO: ${folderMemo}\n\nARTIFACTS:\n${textContext}`;
+    
+    const initialMedia = artifacts
+      .filter(a => a.type === 'image' && a.content)
+      .map(a => ({
+        type: 'image',
+        data: a.content,
+        mimeType: 'image/jpeg'
+      }));
+
+    window.dispatchEvent(new CustomEvent('mimi:change_view', { 
+      detail: 'studio', 
+      detail_data: { 
+        context: fullContext, 
+        initialMedia: initialMedia,
+        isHighFidelity: true 
+      } 
+    }));
+  };
+
   const filteredFolders = folders.filter(f => f.name.toLowerCase().includes(folderSearchTerm.toLowerCase()));
 
   const handleExportFolder = () => {
@@ -513,8 +542,11 @@ export const DossierView: React.FC = () => {
                       <button onClick={() => setShowNoteModal(true)} className="p-3 border border-stone-800 rounded-full hover:border-emerald-500 hover:text-emerald-500 text-stone-500 transition-all" title="Add Note">
                          <StickyNote size={16} />
                       </button>
-                      <button onClick={() => fileInputRef.current?.click()} className="px-6 py-3 bg-emerald-500 text-black rounded-full font-mono text-[9px] uppercase tracking-widest font-bold shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:scale-105 transition-all flex items-center gap-2">
+                      <button onClick={() => fileInputRef.current?.click()} className="px-6 py-3 border border-stone-800 text-stone-300 rounded-full font-mono text-[9px] uppercase tracking-widest font-bold hover:border-emerald-500 hover:text-emerald-500 transition-all flex items-center gap-2">
                          <Upload size={12} /> Add Artifact
+                      </button>
+                      <button onClick={handleGenerateFinalZine} className="px-6 py-3 bg-emerald-500 text-black rounded-full font-mono text-[9px] uppercase tracking-widest font-bold shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:scale-105 transition-all flex items-center gap-2">
+                         <Sparkles size={12} /> Compile to Studio
                       </button>
                    </div>
                 </header>
@@ -680,37 +712,11 @@ export const DossierView: React.FC = () => {
                            )}
                         </div>
                       ) : (
-                        <div className="relative w-full aspect-video bg-stone-900/20 rounded-sm border border-stone-800 overflow-hidden p-8">
-                           <div className="absolute inset-0 opacity-5 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/graphy.png')]" />
-                           <div className="relative w-full h-full flex flex-wrap gap-8 items-start justify-center overflow-y-auto no-scrollbar">
-                              {artifacts.map((art, idx) => (
-                                <motion.div
-                                  key={art.id}
-                                  drag
-                                  dragMomentum={false}
-                                  initial={{ opacity: 0, scale: 0.8, rotate: (idx % 2 === 0 ? 2 : -2) }}
-                                  animate={{ opacity: 1, scale: 1 }}
-                                  whileDrag={{ scale: 1.05, zIndex: 50, rotate: 0 }}
-                                  onClick={() => setActiveArtifact(art)}
-                                  className="w-48 aspect-[3/4] bg-stone-900 shadow-xl border border-stone-700 p-1 cursor-grab active:cursor-grabbing shrink-0 hover:border-emerald-500/50 transition-colors"
-                                >
-                                   {art.elements[0].type === 'image' ? (
-                                      <img src={art.elements[0].content} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all" />
-                                   ) : (
-                                      <div className="w-full h-full p-4 flex flex-col justify-center bg-stone-900">
-                                         <p className="font-serif italic text-[10px] text-stone-400 line-clamp-6">"{art.elements[0].content}"</p>
-                                      </div>
-                                   )}
-                                </motion.div>
-                              ))}
-                              {artifacts.length === 0 && (
-                                <div className="flex flex-col items-center justify-center h-full text-stone-600 gap-4">
-                                   <Layout size={48} strokeWidth={1} />
-                                   <p className="font-serif italic">Moodboard Empty.</p>
-                                </div>
-                              )}
-                           </div>
-                        </div>
+                        <MoodboardComposer 
+                            selectedItems={artifacts.flatMap(a => a.elements.map(e => ({ id: a.id, type: e.type, content: { imageUrl: e.content, prompt: e.content, name: e.content, omenText: e.content }, notes: e.notes })))} 
+                            onCancel={() => setViewMode('grid')}
+                            onFinalize={(elements, config) => { console.log('Finalized', elements, config); setViewMode('grid'); }}
+                        />
                       )}
                    </div>
                 </div>

@@ -3,7 +3,7 @@
 import { auth, db } from "./firebaseInit";
 import { signInAnonymously } from "firebase/auth";
 import { collection, doc, setDoc, getDocs, deleteDoc, getDoc, query, where } from "firebase/firestore";
-import { getClient } from "./geminiService";
+import { getClient, getEmbedding } from "./geminiService";
 
 const getAiClient = () => {
     try {
@@ -54,12 +54,7 @@ export const syncToShadowMemory = async (item: any) => {
     // 2000 chars is safe for almost all embedding models
     if (textToEmbed.length > 2000) textToEmbed = textToEmbed.slice(0, 2000);
 
-    const response = await ai.models.embedContent({
-      model: "text-embedding-004",
-      contents: [{ parts: [{ text: textToEmbed }] }]
-    });
-
-    const embedding = response.embeddings?.[0]?.values;
+    const embedding = await getEmbedding([{ text: textToEmbed }]);
     if (embedding) {
       await setDoc(doc(db, `users/${uid}/memory`, item.id), {
         originalId: item.id,
@@ -85,6 +80,18 @@ export const deleteFromShadowMemory = async (itemId: string) => {
   }
 };
 
+export const getAllShadowMemory = async () => {
+  try {
+    const uid = await ensureAnonymousAuth();
+    const memoryCollection = collection(db, `users/${uid}/memory`);
+    const snapshot = await getDocs(memoryCollection);
+    return snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
+  } catch (e) {
+    console.warn("MIMI // Shadow Fetch Failed:", e.message);
+    return [];
+  }
+};
+
 export const scryShadowMemory = async (userQuery: string, options: { filterType?: string, timeRange?: string } = {}) => {
   try {
     const ai = getAiClient();
@@ -93,11 +100,7 @@ export const scryShadowMemory = async (userQuery: string, options: { filterType?
     const uid = await ensureAnonymousAuth();
     
     // Generate embedding for the query
-    const response = await ai.models.embedContent({
-      model: "text-embedding-004",
-      contents: [{ parts: [{ text: userQuery.slice(0, 2000) }] }]
-    });
-    const queryVector = response.embeddings?.[0]?.values;
+    const queryVector = await getEmbedding([{ text: userQuery.slice(0, 2000) }]);
     if (!queryVector) return [];
 
     // Fetch memory collection
@@ -118,7 +121,7 @@ export const scryShadowMemory = async (userQuery: string, options: { filterType?
     })
     .filter(r => {
         // 1. Minimum relevance threshold
-        if (r.similarity < 0.4) return false;
+        if (r.similarity < 0.3) return false;
 
         // 2. Type filtering
         if (options.filterType && options.filterType !== 'all') {
@@ -135,7 +138,7 @@ export const scryShadowMemory = async (userQuery: string, options: { filterType?
         return true;
     })
     .sort((a, b) => b.similarity - a.similarity)
-    .slice(0, 15);
+    .slice(0, 30);
 
     return results;
   } catch (error) {

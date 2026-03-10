@@ -114,7 +114,7 @@ const MaskCard: React.FC<{ persona: Persona; isActive: boolean; onSelect: () => 
 };
 
 export const UserProfileView: React.FC = () => {
-  const { user, profile, updateProfile, logout, personas, activePersonaId, switchPersona, createPersona, updatePersona, deletePersona, linkAccount, verifyIdentity, featureFlags, toggleFeature, keyRing, addKeyToRing, removeKeyFromRing, openKeySelector } = useUser();
+  const { user, profile, updateProfile, logout, personas, activePersonaId, switchPersona, createPersona, updatePersona, deletePersona, linkAccount, verifyIdentity, featureFlags, toggleFeature, keyRing, addKeyToRing, removeKeyFromRing, openKeySelector, signInWithGooglePopup } = useUser();
   const { currentPalette } = useTheme();
   
   const [handle, setHandle] = useState('');
@@ -122,11 +122,39 @@ export const UserProfileView: React.FC = () => {
   const [handleAvailable, setHandleAvailable] = useState<boolean | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
   const [showHandleConfirm, setShowHandleConfirm] = useState(false);
   
   const [archetype, setArchetype] = useState<TypographicArchetype>('minimalist-sans');
   const [tasteDefinition, setTasteDefinition] = useState('');
+  
+  const handleGenerateDescription = async () => {
+    if (!profile) return;
+    setIsGeneratingDescription(true);
+    try {
+      const { GoogleGenAI } = await import("@google/genai");
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      
+      const prompt = `Generate a short, poetic, and evocative description for a user profile based on their taste profile: ${JSON.stringify(profile.tasteProfile)}. The description should be in the style of a creative director or curator.`;
+      
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt,
+      });
+      
+      if (response.text) {
+        await updateProfile({ ...profile, bio: response.text });
+        setMessage({ text: "Description generated and anchored.", type: 'success' });
+        setTimeout(() => setMessage(null), 3000);
+      }
+    } catch (e) {
+      console.error(e);
+      setMessage({ text: "Generation failed.", type: 'error' });
+    } finally {
+      setIsGeneratingDescription(false);
+    }
+  };
   
   const [isAddingPersona, setIsAddingPersona] = useState(false);
   const [newPersonaName, setNewPersonaName] = useState('');
@@ -360,6 +388,15 @@ export const UserProfileView: React.FC = () => {
                             />
                         </div>
                         
+                        <button 
+                            onClick={handleGenerateDescription}
+                            disabled={isGeneratingDescription}
+                            className="mt-2 text-[8px] uppercase tracking-widest font-black text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition-colors flex items-center gap-2"
+                        >
+                            {isGeneratingDescription ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                            {isGeneratingDescription ? 'Generating...' : 'Generate Description'}
+                        </button>
+                        
                         {showHandleConfirm && (
                             <motion.div 
                                 initial={{ opacity: 0, scale: 0.9 }} 
@@ -389,39 +426,32 @@ export const UserProfileView: React.FC = () => {
                 {/* DISCRETE GOOGLE ANCHOR / AGENT PROTOCOLS / SOVEREIGN KEY */}
                 <div className="flex flex-col items-center gap-4">
                     <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 w-full max-w-4xl">
-                        {user?.isAnonymous ? (
-                            <>
-                                <button 
-                                  onClick={() => handleGoogleLink(false)} 
-                                  className="h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black text-stone-500 hover:text-emerald-600 hover:border-emerald-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap"
-                                >
-                                   <Link size={10} /> Anchor Identity
-                                </button>
-                                <button 
-                                  onClick={() => handleGoogleLink(true)} 
-                                  className="h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 hover:text-amber-600 hover:border-amber-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap"
-                                  title="Use this if the standard login fails"
-                                >
-                                   <RefreshCw size={10} /> Force Redirect
-                                </button>
-                                <button 
-                                  onClick={verifyIdentity} 
-                                  className="h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 hover:text-emerald-600 hover:border-emerald-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap"
-                                  title="Manually verify identity if state is stuck"
-                                >
-                                   <ShieldCheck size={10} /> Verify Handshake
-                                </button>
-                            </>
-                        ) : (
-                            <div className="h-9 flex items-center gap-3 px-4 bg-emerald-500/10 rounded-full border border-emerald-500/20">
-                                <span className="inline-flex items-center gap-2 font-sans text-[7px] uppercase tracking-widest font-black text-emerald-600 dark:text-emerald-400 cursor-default">
-                                   <Shield size={10} /> Identity Anchored
-                                </span>
-                                {user?.email && (
-                                    <span className="font-serif italic text-[9px] text-stone-400 hidden md:inline border-l border-emerald-500/20 pl-3">{user.email}</span>
-                                )}
-                            </div>
-                        )}
+                        <button 
+                          onClick={signInWithGooglePopup} 
+                          className="h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black text-stone-500 hover:text-emerald-600 hover:border-emerald-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap"
+                        >
+                           <Link size={10} /> Sign in with Google
+                        </button>
+                        <button 
+                          onClick={() => handleGoogleLink(false)} 
+                          className="h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black text-stone-500 hover:text-emerald-600 hover:border-emerald-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap"
+                        >
+                           <Link size={10} /> Anchor Identity (Legacy)
+                        </button>
+                        <button 
+                          onClick={() => handleGoogleLink(true)} 
+                          className="h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 hover:text-amber-600 hover:border-amber-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap"
+                          title="Use this if the standard login fails"
+                        >
+                           <RefreshCw size={10} /> Force Redirect
+                        </button>
+                        <button 
+                          onClick={verifyIdentity} 
+                          className="h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 hover:text-emerald-600 hover:border-emerald-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap"
+                          title="Manually verify identity if state is stuck"
+                        >
+                           <ShieldCheck size={10} /> Verify Handshake
+                        </button>
                         
                         <button 
                           onClick={() => setShowDevSettings(true)}

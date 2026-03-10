@@ -22,7 +22,8 @@ export const MoodboardComposer: React.FC<MoodboardComposerProps> = ({ selectedIt
   const [elements, setElements] = useState<DossierElement[]>([]);
   
   useEffect(() => {
-    const initialElements: DossierElement[] = selectedItems.map((item, idx) => {
+    const items = selectedItems || [];
+    const initialElements: DossierElement[] = items.map((item, idx) => {
       let content = "";
       let type: 'image' | 'text' | 'analysis_pin' = 'text';
 
@@ -67,7 +68,7 @@ export const MoodboardComposer: React.FC<MoodboardComposerProps> = ({ selectedIt
     }
 
     setElements(initialElements);
-  }, [selectedItems, report]);
+  }, [JSON.stringify(selectedItems), report]);
 
   const removeElement = (id: string) => {
     setElements(prev => prev.filter(el => el.id !== id));

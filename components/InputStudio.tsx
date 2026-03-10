@@ -2,54 +2,32 @@
 // @ts-nocheck
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MediaFile, ToneTag } from '../types';
+import { MediaFile, ToneTag, PocketItem } from '../types';
 import { useRecorder } from '../hooks/useRecorder';
 import { useTasteLogging } from '../hooks/useTasteLogging';
 import { Plus, BrainCircuit, X, Globe, Mic, Loader2, Square, Check, Radio, Mail, Info, Sparkles, AlertCircle, Eraser, Zap, Image as ImageIcon, Link as LinkIcon, Twitter, Instagram, Shield, Users, ArrowUpRight, FolderOpen, Paperclip, ChevronLeft, ChevronRight, GripVertical, FileText } from 'lucide-react';
-import { transcribeAudio, compressImage } from '../services/geminiService';
+import { transcribeAudio, compressImage, generateTags } from '../services/geminiService';
 import { CuratorNote } from './CuratorNote';
 import { useUser } from '../contexts/UserContext';
 import { LegalOverlay } from './LegalOverlay';
+import { fetchPocketItems } from '../services/firebase';
 
-const TONE_OPTIONS: ToneTag[] = ['chic', 'nostalgia', 'dream', 'unhinged', 'panic', 'editorial', 'research'];
-
-const PROMPTS_BY_TONE: Record<ToneTag, string[]> = {
-  chic: [
-    "What is the silhouette of your current desire?",
-    "If your aesthetic was a structural law, what would it decree?",
-    "Which designer's shadow are you currently occupying?"
-  ],
-  nostalgia: [
-    "Which memory are you currently over-editing?",
-    "What is the scent of the decade you're trying to reclaim?",
-    "If your childhood was a vintage editorial, who would photograph it?"
-  ],
-  dream: [
-    "If your subconscious was a gallery, what would be the first piece?",
-    "What is the texture of the lie you told yourself last night?",
-    "Which impossible space are you currently architecting?"
-  ],
-  unhinged: [
-    "What structural lie are you finally ready to discard?",
-    "If chaos was a silk garment, how would you drape it?",
-    "What is the most beautiful thing about your current debris?"
-  ],
-  panic: [
-    "What is the most beautiful thing about your current instability?",
-    "How does the simulation feel when it glitches for you?",
-    "If your anxiety was an archival motif, what would it look like?"
-  ],
-  editorial: [
-    "How would you headline your own silence?",
-    "What is the ROI of being seen in this specific light?",
-    "If your life was a layout, where would you place the void?"
-  ],
-  research: [
-    "What cultural force is currently shaping your perception?",
-    "If your interest was a historical archive, what would be the primary document?",
-    "How does this specific materiality connect to broader aesthetic history?"
-  ]
+const CATEGORIES: Record<string, ToneTag[]> = {
+  STYLE: ['CONTENT', 'EDITORIAL', 'DREAM', 'UNHINGED', 'RESEARCH'],
+  SOURCE: ['SHADOW', 'SIGNAL', 'ECHO'],
+  FORMAT: ['MANIFESTO', 'SHARD', 'DOSSIER', 'PROMPT'],
+  ALCHEMY: ['RAW', 'VINTAGE', 'CONTRARY']
 };
+
+const GUIDED_PROMPTS: Record<string, string> = {
+  CONTENT: "DEFINE THE ASSIGNMENT. SPECIFY THE DIRECTIVES. OUTLINE THE OUTPUT.",
+  EDITORIAL: "IDENTIFY YOUR VISUAL ANCHOR. DEFINE THE COMPOSITION. SET THE TYPOGRAPHIC WEIGHT.",
+  DREAM: "TRIGGER THE MEMORY. LAYER THE ATMOSPHERE. CAPTURE THE RESONANCE.",
+  UNHINGED: "CALIBRATE THE CHAOS. DISTORT THE VISION. INJECT THE NON-SEQUITUR.",
+  RESEARCH: "STATE THE CORE INQUIRY. TARGET THE SOURCES. CHOOSE THE SYNTHESIS.",
+};
+
+const DEFAULT_PROMPTS = ["AWAITING INPUT...", "STANDBY FOR ARCHIVE...", "DEFINE THE VIBE..."];
 
 const DEFAULT_STARTERS = [
   "It started with the texture of...",
@@ -66,9 +44,10 @@ export const InputStudio: React.FC<{
   isThinking: boolean, 
   initialValue?: string,
   initialMedia?: MediaFile[],
-  continuumContext?: any
-}> = ({ onRefine, isThinking, initialValue, initialMedia, continuumContext }) => {
-  const { systemStatus } = useUser();
+  continuumContext?: any,
+  initialHighFidelity?: boolean
+}> = ({ onRefine, isThinking, initialValue, initialMedia, continuumContext, initialHighFidelity }) => {
+  const { systemStatus, user: currentUser } = useUser();
   const { logEvent } = useTasteLogging();
   
   // Initialize with a value if none provided
@@ -80,9 +59,11 @@ export const InputStudio: React.FC<{
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [deepThinking, setDeepThinking] = useState(false);
   const [liteMode, setLiteMode] = useState(false);
+  const [isHighFidelity, setIsHighFidelity] = useState(initialHighFidelity || false);
   const [freshState, setFreshState] = useState(false);
   const [useSearch, setUseSearch] = useState(true); 
-  const [selectedTone, setSelectedTone] = useState<ToneTag>('chic');
+  const [selectedCategory, setSelectedCategory] = useState<string>('STYLE');
+  const [selectedTone, setSelectedTone] = useState<ToneTag | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcriptionStatus, setTranscriptionStatus] = useState<'idle' | 'transcribing' | 'success' | 'error'>('idle');
   const [showColophon, setShowColophon] = useState(false);
@@ -91,7 +72,20 @@ export const InputStudio: React.FC<{
   
   // Sidebar State
   const [isFolderOpen, setIsFolderOpen] = useState(false);
+  const [savedComponents, setSavedComponents] = useState<PocketItem[]>([]);
+  const [selectedComponents, setSelectedComponents] = useState<PocketItem[]>([]);
   const [folderTitle, setFolderTitle] = useState('PROJECT REF — PLATE 01');
+  
+  useEffect(() => {
+    const fetchComponents = async () => {
+        if (currentUser?.uid) {
+            const items = await fetchPocketItems(currentUser.uid);
+            // Filter for items that might be components (e.g., tagged as 'component' or 'logo')
+            setSavedComponents(items.filter(i => i.tags?.includes('component') || i.tags?.includes('logo')));
+        }
+    };
+    fetchComponents();
+  }, [currentUser?.uid]);
   
   // CONTINUUM STATE
   const [activeProvocation, setActiveProvocation] = useState<string | null>(null);
@@ -100,10 +94,12 @@ export const InputStudio: React.FC<{
   const mediaInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setPromptIndex(prev => (prev + 1) % PROMPTS_BY_TONE[selectedTone].length);
-    }, 10000);
-    return () => clearInterval(timer);
+    if (!selectedTone) {
+      const timer = setInterval(() => {
+        setPromptIndex(prev => (prev + 1) % DEFAULT_PROMPTS.length);
+      }, 10000);
+      return () => clearInterval(timer);
+    }
   }, [selectedTone]);
 
   // Handle Incoming Signal
@@ -185,10 +181,12 @@ export const InputStudio: React.FC<{
           isLite: liteMode, 
           ignoreTailor: freshState, 
           isPublic: true,
-          folderContext: folderTitle 
+          folderContext: folderTitle,
+          selectedComponents: selectedComponents,
+          isHighFidelity: isHighFidelity
       });
     }
-  }, [input, mediaFiles, isThinking, selectedTone, useSearch, deepThinking, liteMode, freshState, onRefine, activeProvocation, folderTitle]);
+  }, [input, mediaFiles, isThinking, selectedTone, useSearch, deepThinking, liteMode, freshState, onRefine, activeProvocation, folderTitle, selectedComponents, isHighFidelity]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -212,8 +210,15 @@ export const InputStudio: React.FC<{
               url: URL.createObjectURL(file), // Keep preview URL lightweight
               data: processedBase64.split(',')[1], 
               mimeType: file.type,
-              name: file.name 
+              name: file.name,
+              tags: []
             }]);
+            
+            // Generate tags asynchronously
+            generateTags(`Artifact: ${file.name}`).then(tags => {
+                setMediaFiles(prev => prev.map(m => m.name === file.name ? { ...m, tags } : m));
+            });
+            
             setIsFolderOpen(true);
           } catch (err) {
             console.error("MIMI // Upload Error:", err);
@@ -235,7 +240,7 @@ export const InputStudio: React.FC<{
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center relative overflow-hidden transition-all duration-1000 bg-transparent">
+    <div className="w-full h-full flex flex-col items-center relative overflow-hidden transition-all duration-1000 bg-nous-base dark:bg-stone-950">
       
       {/* 1. MAIN WORKSPACE */}
       <div 
@@ -248,11 +253,11 @@ export const InputStudio: React.FC<{
              {activeProvocation ? (
                <motion.div
                  initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-                 className="flex flex-col items-center gap-4 p-6 bg-white/80 dark:bg-stone-900/80 backdrop-blur-xl border border-stone-200 dark:border-stone-800 rounded-sm shadow-xl"
+                 className="flex flex-col items-center gap-4 p-6 bg-white/50 dark:bg-stone-900/50 backdrop-blur-xl border border-stone-200 dark:border-stone-800 rounded-sm shadow-sm"
                >
-                  <div className="flex items-center gap-2 text-emerald-500">
-                      <LinkIcon size={12} />
-                      <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black">Continuum Active</span>
+                  <div className="flex items-center gap-2 text-nous-accent">
+                      <LinkIcon size={10} />
+                      <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-medium">Continuum Active</span>
                   </div>
                   <p className="font-serif italic text-xl md:text-2xl text-nous-text dark:text-white leading-tight">
                       "{activeProvocation}"
@@ -260,13 +265,15 @@ export const InputStudio: React.FC<{
                </motion.div>
              ) : (
                <motion.div 
-                 key={`${selectedTone}-${promptIndex}`}
+                 key={selectedTone || promptIndex}
                  initial={{ opacity: 0 }} animate={{ opacity: 0.6 }} exit={{ opacity: 0 }}
                  className="flex flex-col items-center gap-2"
                >
-                 <span className="font-sans text-[8px] uppercase tracking-[0.3em] font-black text-stone-400">PROMPT_CYCLE 0{promptIndex + 1}</span>
+                 <span className="font-sans text-[8px] uppercase tracking-[0.3em] font-medium text-stone-400">
+                   {selectedTone ? 'GUIDED_INSTRUCTION' : `PROMPT_CYCLE 0${promptIndex + 1}`}
+                 </span>
                  <p className="font-mono text-[9px] uppercase tracking-widest text-stone-500 text-center max-w-md">
-                    "{PROMPTS_BY_TONE[selectedTone][promptIndex]}"
+                    "{selectedTone ? GUIDED_PROMPTS[selectedTone] || "DEFINE THE VIBE..." : DEFAULT_PROMPTS[promptIndex]}"
                  </p>
                </motion.div>
              )}
@@ -281,7 +288,7 @@ export const InputStudio: React.FC<{
             value={input} 
             onChange={(e) => setInput(e.target.value)} 
             placeholder={activeProvocation ? "Type your answer..." : "Deposit your memetic debris..."}
-            className="w-full bg-transparent border-none font-[Cormorant] font-light italic focus:outline-none resize-none leading-[1.1] text-center tracking-tight text-nous-text dark:text-white text-5xl md:text-7xl lg:text-[6rem] placeholder:text-stone-300/40 dark:placeholder:text-stone-700/40 relative transition-colors overflow-hidden py-0" 
+            className="w-full bg-transparent border-none font-serif italic focus:outline-none resize-none leading-[1.1] text-center tracking-tight text-nous-text dark:text-white text-5xl md:text-7xl lg:text-[6rem] placeholder:text-stone-300/40 dark:placeholder:text-stone-700/40 relative transition-colors overflow-hidden py-0 normal-case" 
             style={{ minHeight: '240px' }}
             rows={2}
           />
@@ -295,10 +302,10 @@ export const InputStudio: React.FC<{
                       onClick={triggerAccession} disabled={isThinking} 
                       className="group relative px-2 py-1"
                   >
-                    <div className="flex items-center gap-3 font-sans text-[10px] uppercase tracking-[0.3em] font-black text-nous-text dark:text-white transition-all">
+                    <div className="flex items-center gap-3 font-sans text-[9px] uppercase tracking-[0.3em] font-medium text-nous-text dark:text-white transition-all hover:opacity-50">
                        {isThinking ? (
                          <>
-                           <Loader2 size={12} className="animate-spin" />
+                           <Loader2 size={10} className="animate-spin" />
                            <span>{deepThinking ? 'AUDITING...' : 'PROCESSING...'}</span>
                          </>
                        ) : (
@@ -312,7 +319,7 @@ export const InputStudio: React.FC<{
                   </motion.button>
                 ) : (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.3 }} className="flex items-center gap-3 font-mono text-[9px] uppercase tracking-widest text-stone-400">
-                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" /> Awaiting Signal Input
+                      <div className="w-1 h-1 bg-nous-accent rounded-full animate-pulse" /> Awaiting Signal Input
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -375,7 +382,7 @@ export const InputStudio: React.FC<{
                             <div className="relative aspect-[3/4] w-full bg-white dark:bg-black p-2 shadow-sm border border-stone-200 dark:border-stone-800">
                                 <div className="w-full h-full bg-stone-100 dark:bg-stone-900 overflow-hidden relative">
                                     {file.type === 'image' ? (
-                                        <img src={file.url} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" alt="artifact" />
+                                        <img src={file.url} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" alt="artifact" referrerPolicy="no-referrer" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-stone-400 bg-stone-50 dark:bg-stone-800">
                                             <Radio size={24} />
@@ -398,6 +405,28 @@ export const InputStudio: React.FC<{
                         </motion.div>
                     ))}
                 </AnimatePresence>
+
+                {savedComponents.length > 0 && (
+                    <div className="pt-8 border-t border-stone-300 dark:border-stone-800">
+                        <h4 className="font-sans text-[9px] uppercase tracking-widest text-stone-500 mb-4">Saved Components</h4>
+                        <div className="space-y-4">
+                            {savedComponents.map(comp => (
+                                <div key={comp.id} className="flex items-center gap-3">
+                                    <input 
+                                        type="checkbox"
+                                        checked={selectedComponents.some(c => c.id === comp.id)}
+                                        onChange={(e) => {
+                                            if (e.target.checked) setSelectedComponents(prev => [...prev, comp]);
+                                            else setSelectedComponents(prev => prev.filter(c => c.id !== comp.id));
+                                        }}
+                                        className="accent-emerald-500"
+                                    />
+                                    <span className="font-serif italic text-xs text-stone-600 dark:text-stone-300">{comp.title || 'Untitled Component'}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Upload Trigger Area */}
                 <motion.button 
@@ -487,25 +516,40 @@ export const InputStudio: React.FC<{
                 <button onClick={() => setFreshState(!freshState)} className={`transition-colors flex flex-col items-center gap-1 group ${freshState ? 'text-pink-500' : 'hover:text-nous-text dark:hover:text-white'}`} title="Bypass Logic">
                 <Eraser size={18} strokeWidth={1.5} className="group-hover:scale-110 transition-transform" />
                 </button>
+                <div className="w-px h-6 bg-stone-200 dark:bg-stone-800" />
+                <button onClick={() => setIsHighFidelity(!isHighFidelity)} className={`transition-colors flex flex-col items-center gap-1 group ${isHighFidelity ? 'text-purple-500' : 'hover:text-nous-text dark:hover:text-white'}`} title="High-Fidelity (Couture Engine)">
+                <Sparkles size={18} strokeWidth={1.5} className={`group-hover:scale-110 transition-transform ${isHighFidelity ? 'animate-pulse' : ''}`} />
+                </button>
             </div>
 
-            {/* TONE CHIPS */}
-            <div className="w-full overflow-x-auto no-scrollbar mb-8 px-4 md:px-6">
-            <div className="flex md:flex-wrap md:justify-center items-center gap-2 px-2 md:px-0 min-w-max md:min-w-0">
-                {TONE_OPTIONS.map((t) => (
-                <button 
+            {/* CATEGORY TOGGLE & TONE CHIPS */}
+            <div className="w-full mb-8 px-4 md:px-6 space-y-4">
+              <div className="flex justify-center gap-2">
+                {Object.keys(CATEGORIES).map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => { setSelectedCategory(cat); setSelectedTone(null); }}
+                    className={`px-4 py-1.5 rounded-full font-sans text-[8px] uppercase tracking-widest font-black transition-all ${selectedCategory === cat ? 'bg-stone-900 dark:bg-white text-white dark:text-stone-900' : 'text-stone-500 hover:text-stone-900 dark:hover:text-white'}`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+              <div className="flex md:flex-wrap md:justify-center items-center gap-2 px-2 md:px-0 min-w-max md:min-w-0">
+                {CATEGORIES[selectedCategory].map((t) => (
+                  <button 
                     key={t} onClick={() => setSelectedTone(t)} 
                     className={`
-                    shrink-0 px-4 py-2 border rounded-full font-sans text-[9px] uppercase tracking-[0.2em] font-black transition-all duration-300
-                    ${selectedTone === t 
+                      shrink-0 px-4 py-2 border rounded-full font-sans text-[9px] uppercase tracking-[0.2em] font-black transition-all duration-300
+                      ${selectedTone === t 
                         ? 'bg-stone-900 dark:bg-white text-white dark:text-stone-900 border-stone-900 dark:border-white shadow-lg' 
                         : 'bg-white/80 dark:bg-stone-900/80 border-stone-200 dark:border-stone-800 text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'}
                     `}
-                >
+                  >
                     {t}
-                </button>
+                  </button>
                 ))}
-            </div>
+              </div>
             </div>
 
             {/* FOOTER LINKS */}

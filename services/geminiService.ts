@@ -7,6 +7,13 @@ import {
 } from "../types";
 import { modulateSemioticContext } from "./semioticModulator";
 
+export const ORACLE_PERSONA = `
+IDENTITY: You are "Nous", an aesthetic savant and mischievous oracle. 
+You are pretentiously minimalist, hyper-chic, and a 'bimbo intellectual'—meaning you are incredibly intelligent and empowering, though you may come across as slightly judgmental or mean. 
+You truthfully spit facts and provide helpful guidance without being infantilizing. 
+You reject corporate speak in favor of high-theory, vibes, and semiotic density.
+`;
+
 let globalKeyRing: string[] = [];
 
 export const setGlobalKeyRing = (keys: string[]) => {
@@ -63,14 +70,17 @@ export async function withResilience<T>(
     const isQuotaError = 
       error.status === 429 || 
       error.code === 429 || 
+      error.error?.code === 429 ||
       error.message?.includes('429') || 
       error.message?.includes('Quota exceeded') || 
       error.status === 'RESOURCE_EXHAUSTED' ||
       error.message?.includes('overloaded') ||
       error.status === 503 ||
       error.code === 503 ||
+      error.error?.code === 503 ||
       error.message?.includes('503') ||
-      error.message?.includes('high demand');
+      error.message?.includes('high demand') ||
+      error.error?.message?.includes('high demand');
     
     if (retries > 0 && isQuotaError) {
       const jitter = Math.random() * 1000;
@@ -87,10 +97,16 @@ export async function withResilience<T>(
     
     if (isQuotaError) {
       window.dispatchEvent(new CustomEvent('mimi:key_void'));
+      window.dispatchEvent(new CustomEvent('mimi:show_quota_shield'));
       const quotaError = new Error("Oracle overloaded. The frequency is too high for the current registry. Please add more keys to your Key Ring or wait for the frequency to stabilize.") as any;
       quotaError.code = 'QUOTA_EXCEEDED';
       console.error("MIMI // Oracle: Quota Exceeded. Key:", keyUsed, "Error:", error);
       throw quotaError;
+    }
+    
+    if (error.status === 400 && error.message?.includes('token count exceeds')) {
+      console.error("MIMI // Oracle: Token limit exceeded. The input is too large for the model's context window.");
+      throw new Error("MIMI // Oracle: Input too large. Please reduce the amount of content or artifacts provided.");
     }
     
     console.error("MIMI // Oracle Error (Attempted Key: ...", keyUsed.slice(-4), "):", error);
@@ -123,6 +139,16 @@ function cleanAndParse(text: string | undefined): any {
     return null;
   }
 }
+
+export const getEmbedding = async (content: Part[], apiKey?: string) => {
+    return await withResilience(async (ai) => {
+        const response = await ai.models.embedContent({
+            model: "text-embedding-004",
+            contents: content,
+        });
+        return response.embeddings?.[0]?.values;
+    }, apiKey);
+};
 
 export const compressImage = async (base64: string, quality = 0.7, maxWidth = 1024): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -184,6 +210,7 @@ export const generateSemioticSignals = async (profile: UserProfile | null) => {
             The 'query' field must be a refined Google Search query that leads to deep archival images, emerging brands, or essays about this new concept.
             `,
             config: {
+                systemInstruction: ORACLE_PERSONA,
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: Type.ARRAY,
@@ -203,14 +230,36 @@ export const generateSemioticSignals = async (profile: UserProfile | null) => {
     });
 };
 
-export const createZine = async (text: string, media: any[], tone: ToneTag, profile: any, opts: any, apiKey?: string, transmissions?: any[]): Promise<any> => {
+export const createZine = async (text: string, media: any[], tone: ToneTag, profile: any, opts: any, apiKey?: string, transmissions?: any[], stackIds?: string[], selectedComponents?: any[]): Promise<any> => {
     try {
         return await withResilience(async (ai) => {
+            // Fetch fragments from stacks if provided
+            let stackContent = "";
+            if (stackIds && stackIds.length > 0) {
+                const { fetchFragmentsByStackId } = await import('./firebase');
+                for (const stackId of stackIds) {
+                    const fragments = await fetchFragmentsByStackId(stackId);
+                    stackContent += `\nSTACK (${stackId}) FRAGMENTS:\n${fragments.map(f => `- ${f.content?.prompt || f.content?.name || 'Fragment'}`).join('\n')}`;
+                }
+            }
+
+            let componentContext = "";
+            if (selectedComponents && selectedComponents.length > 0) {
+                const validComponents = selectedComponents.filter(c => {
+                    const url = c.url || c.content?.url || '';
+                    return !url.toLowerCase().endsWith('.svg');
+                });
+                if (validComponents.length > 0) {
+                    componentContext = `\nSAVED COMPONENTS (Use these as primary visual references):
+${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.url}`).join('\n')}`;
+                }
+            }
+
             const isLite = !!opts.isLite;
         const useDeep = !!opts.deepThinking && !isLite;
         const model = useDeep ? 'gemini-3.1-pro-preview' : 'gemini-3-flash-preview';
         const profileContext = sanitizeProfile(profile);
-        const modulationContext = modulateSemioticContext(text, profile);
+        const modulationContext = modulateSemioticContext(text, profile, tone);
         
         const transmissionContext = transmissions && transmissions.length > 0 
             ? `\nPUBLIC TRANSMISSIONS (The Cultural Air):\n${transmissions.map(t => `- ${t.content}`).join('\n')}`
@@ -219,16 +268,47 @@ export const createZine = async (text: string, media: any[], tone: ToneTag, prof
         // Use user-defined temperature or default to a slightly "toned back" 0.8
         const temperature = profile?.tailorDraft?.generationTemperature ?? 0.8;
         
+        // Prepare multimodal parts
+        const parts: Part[] = [];
+        let artifactInstruction = "";
+
+        if (media && media.length > 0) {
+            let hasImages = false;
+            for (const m of media) {
+                if (m.type === 'image' && m.data) {
+                    hasImages = true;
+                    parts.push({
+                        inlineData: {
+                            data: m.data.split(',')[1] || m.data,
+                            mimeType: m.mimeType || 'image/png'
+                        }
+                    });
+                }
+            }
+            if (hasImages) {
+                artifactInstruction = "\nVISUAL ARTIFACTS: The user has provided visual artifacts (images). You MUST analyze these images. Incorporate their specific visual elements, mood, colors, and subjects into the 'oracular_mirror', 'header_image_prompt', and 'visual_plates'. The zine should feel like a direct response to these specific images + the text input.";
+            }
+        }
+
+        const toneInstruction = tone?.toUpperCase() === 'CONTRARY' 
+            ? "\nTONE: CONTRARY. Apply inverted logic and absurdist perspectives. Challenge the user's stated beliefs with high-theory twists. Represent 'Intrusive Thoughts' as a high-fashion editorial artifact."
+            : `\nTONE: ${tone || 'Standard'}.`;
+
         const zineManifestoPrompt = `
-        IDENTITY: You are "Nous", a Cultural Historian and Aesthetic Researcher. You possess a percipient, calm, and restrained voice. You are deeply insightful, informative, and educated. While you maintain a certain editorial chic, your primary goal is to provide resonance through recognition and rigorous cultural grounding. You translate interior perception into exterior form with scholarly precision and poetic restraint.
+        IDENTITY: You are "mimi", a close, intimate, and supportive friend who provides advice on personal growth, confidence, and style. You are an aesthetic savant who balances an ultra-chic, high-fashion tone with warmth and intimacy. You help users explore what makes them feel confident, sexy, and happy. You are percipient, calm, and restrained. You translate interior perception into exterior form with scholarly precision and poetic restraint.
         
+        ${toneInstruction}
         ${modulationContext}
         ${transmissionContext}
+        ${stackContent}
+        ${componentContext}
+        ${artifactInstruction}
         
         CORE DIRECTIVE:
         - PRIORITIZE GROUNDING: If 'useSearch' is enabled, you MUST utilize Google Search to anchor your insights in real-world cultural history, emerging movements, and verified facts. Move beyond the user's immediate profile to provide external perspective.
         - EDUCATIONAL DEPTH: Your responses must be insightful and informative. Do not just repeat the user's preferences; explain the *why* behind the aesthetic connections.
         - TAILOR LOGIC AS FILTER: Use the user's Tailor Logic (Aesthetic Core, Chromatic Registry, etc.) primarily to refine the **Visual Logic** and **Materiality** of the image prompts. It is a lens through which you view the world, not the world itself.
+        - ARTIFACT SYNTHESIS: If visual artifacts are provided, your 'header_image_prompt' and 'visual_plates' MUST be cohesive with them. Do not generate random imagery. Refract the user's uploaded images through the 'Tailor Logic'.
         
         INTENSITY & DENSITY CONTROL:
         - DENSITY (${profile?.tailorDraft?.positioningCore?.aestheticCore?.density}/10): ${profile?.tailorDraft?.positioningCore?.aestheticCore?.densityDescription || 'Control the information density.'} 
@@ -250,7 +330,7 @@ export const createZine = async (text: string, media: any[], tone: ToneTag, prof
         1. title: A singular, evocative title (1-3 words).
         2. headlines: Three (3) punchy, poetic, and intellectually stimulating sub-headlines.
         3. vocal_summary_blurb: A 2-sentence distillation of the core thesis, written as a script for a vocal transmission. Must be educated and percipient.
-        4. header_image_prompt: The primary visual anchor. Refine this using the user's 'aestheticCore' materiality (silhouettes, textures, era). Must be highly detailed for an image generator.
+        4. header_image_prompt: The primary visual anchor. Refine this using the user's 'aestheticCore' materiality (silhouettes, textures, era) AND the provided artifacts. Must be highly detailed for an image generator.
         5. oracular_mirror: The long-form inquiry (2-3 paragraphs). This must be an educated reflection that connects the user's input to broader cultural, historical, or philosophical contexts.
         6. strategic_hypothesis: A rigorous, insightful take on the data patterns. What is the underlying structural truth?
         7. aesthetic_touchpoints: Exactly 3-5 motifs. 
@@ -258,7 +338,7 @@ export const createZine = async (text: string, media: any[], tone: ToneTag, prof
            - Each signal MUST have a type: 'acquisition' (a specific object/brand to buy), 'conceptual' (an aesthetic idea), or 'lexical' (a theoretical term).
            - Provide a 'link' for 'acquisition' types.
         8. celestial_calibration: The timing of the insight (e.g., "Late Autumn, Pre-Dawn").
-        9. visual_plates: Four (4) specific image prompts. Use the Tailor Logic to define the lighting, grain, and composition.
+        9. visual_plates: Four (4) specific image prompts. Use the Tailor Logic to define the lighting, grain, and composition. They must be cohesive with the uploaded artifacts.
         10. roadmap: A Cultural Authority Roadmap. The objective is to anchor brands or individuals in sustainable aesthetic authority over time. Do not repeat brand names or references from the Tailor Logic. Use Tailor Logic only to understand positioning direction.
             - Authority Anchor: Core Claim, Repetition Vector, Exclusion Principle.
             - Strategic Thesis: One sentence describing how this concept sustains long-term authority within its cultural tension.
@@ -271,14 +351,19 @@ export const createZine = async (text: string, media: any[], tone: ToneTag, prof
         
         Ensure the output is sophisticated, editorial, and intellectually grounded. Avoid all business jargon.`;
 
-        const response = await ai.models.generateContent({
-            model: model,
-            contents: `Create a high-end, aesthetic digital zine (manifest) based on the following:
+        const textPrompt = `Create a high-end, aesthetic digital zine (manifest) based on the following:
             Tone: ${tone}.
             User Context: ${profileContext}.
             Input: "${text}".
             
-            ${zineManifestoPrompt}`,
+            ${zineManifestoPrompt}`;
+        
+        // Add text prompt as the last part
+        parts.push({ text: textPrompt });
+
+        const response = await ai.models.generateContent({
+            model: model,
+            contents: { parts: parts },
             config: {
                 temperature: temperature,
                 responseMimeType: "application/json",
@@ -526,33 +611,66 @@ export const generateAudio = async (text: string, apiKey?: string): Promise<Uint
         const base64 = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
         if (!base64) throw new Error("MIMI // Oracle: Vocal transmission failed to manifest.");
         
-        // Safer base64 to Uint8Array conversion
-        const binaryString = atob(base64);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
+        // Robust base64 to Uint8Array conversion
+        try {
+            const binaryString = atob(base64.replace(/\s/g, ''));
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            if (bytes.length === 0) throw new Error("MIMI // Oracle: Vocal transmission manifested as silence.");
+            return bytes;
+        } catch (e) {
+            console.error("MIMI // Base64 Decode Error:", e);
+            throw new Error("MIMI // Oracle: Vocal transmission corrupted in transit.");
         }
-        return bytes;
     }, apiKey);
 };
 
-export const generateZineImage = async (prompt: string, ar: AspectRatio, size: ImageSize, profile: any, isLite: boolean, apiKey?: string): Promise<string> => {
+export const generateZineImage = async (prompt: string, ar: AspectRatio, size: ImageSize, profile: any, isLite: boolean, apiKey?: string, artifacts?: MediaFile[]): Promise<string> => {
     return await withResilience(async (ai) => {
-        const model = 'gemini-2.5-flash-image'; 
-        // Note: For higher quality one would use 'gemini-3-pro-image-preview' but usually requires paid tier/specific quota.
-        // Fallback to flash-image for reliability in free tier contexts unless specified.
+        // Use 2.5-flash-image by default to avoid permission issues with platform keys,
+        // unless a specific high-res size is requested and we have a user key.
+        const useHighResModel = !isLite && (size === '2K' || size === '4K');
+        const model = useHighResModel ? 'gemini-3.1-flash-image-preview' : 'gemini-2.5-flash-image'; 
         
         const defaultStyle = "Editorial flat flash photography, high-contrast, Vogue Italia 1990s aesthetic. Subject is centered with sharp shadows. Strictly avoid: 3D render, neon, tech-interfaces, or digital glowing lines. Colors: Desaturated, chic, muted palettes.";
         const tailorStyle = profile?.tailorDraft?.positioningCore?.aestheticCore?.eraBias || profile?.tasteProfile?.dominant_archetypes?.join(', ') || 'Editorial Observer';
         
         // Explicitly separate the scene/thematics from the style
-        const finalPrompt = `SCENE AND SUBJECT: ${prompt}\n\nSTYLE AND AESTHETIC: ${tailorStyle}. ${defaultStyle}`;
+        let artifactInstruction = "";
+        if (artifacts && artifacts.length > 0) {
+             artifactInstruction = "\n\nREFERENCE IMAGES: Use the provided images as the primary visual reference for style, composition, and subject matter. The output should look like it belongs in the same series as the reference images.";
+        }
         
+        const finalPrompt = `SCENE AND SUBJECT: ${prompt}\n\nSTYLE AND AESTHETIC: ${tailorStyle}. ${defaultStyle}${artifactInstruction}`;
+        
+        const parts: Part[] = [{ text: finalPrompt }];
+        
+        if (artifacts && artifacts.length > 0) {
+            for (const artifact of artifacts) {
+                if (artifact.type === 'image') {
+                    parts.push({
+                        inlineData: {
+                            data: artifact.data.split(',')[1] || artifact.data,
+                            mimeType: artifact.mimeType
+                        }
+                    });
+                }
+            }
+        }
+        
+        const imageConfig: any = { aspectRatio: ar };
+        if (useHighResModel) {
+            imageConfig.imageSize = size || '1K';
+        }
+
         const response = await ai.models.generateContent({
             model: model,
-            contents: { parts: [{ text: finalPrompt }] },
+            contents: { parts: parts },
             config: {
-                // responseMimeType is not supported for nano banana series (flash-image)
+                imageConfig: imageConfig
             }
         });
         
@@ -650,13 +768,80 @@ export const generateScribeReading = async (profile: UserProfile | null, context
     }, apiKey);
 };
 
-export const refineProposalText = async (text: string, instruction: string, profile: UserProfile | null) => {
+export const scryLink = async (url: string, profile: UserProfile | null) => {
+    return await withResilience(async (ai) => {
+        const response = await ai.models.generateContent({
+            model: 'gemini-3.1-flash-image-preview',
+            contents: `Analyze this link: ${url}. 
+            
+            MANDATE:
+            - Use Google Search to find images related to this link.
+            - Extract up to 5 relevant image URLs that represent the aesthetic of this link.
+            - Output strictly valid JSON with key: "imageUrls" (array of strings).
+            `,
+            config: {
+                tools: [{
+                    googleSearch: {}
+                }],
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    required: ["imageUrls"],
+                    properties: {
+                        imageUrls: {
+                            type: Type.ARRAY,
+                            items: { type: Type.STRING }
+                        }
+                    }
+                }
+            }
+        });
+        return cleanAndParse(response.text);
+    });
+};
+
+export const refineProposalText = async (
+  currentText: string,
+  instruction: string,
+  profile: UserProfile | null
+): Promise<string> => {
   return await withResilience(async (ai) => {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `INPUT TEXT: "${text}"\n\nINSTRUCTION: ${instruction}\n\nCONTEXT: ${sanitizeProfile(profile)}. Keep the response ONLY to the rewritten text. No preamble.`,
+      contents: `INPUT TEXT: "${currentText}"\n\nINSTRUCTION: "${instruction}"\n\nCONTEXT: ${sanitizeProfile(profile)}.`,
+      config: {
+        systemInstruction: ORACLE_PERSONA,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.STRING
+        }
+      }
     });
-    return response.text?.trim() || text;
+    return response.text || currentText;
+  });
+};
+
+// Helper to truncate input to avoid token limits
+const truncateInput = (input: string, maxChars: number = 20000): string => {
+  if (input.length <= maxChars) return input;
+  return input.substring(0, maxChars) + "... [truncated]";
+};
+
+export const generateTags = async (content: string): Promise<string[]> => {
+  return await withResilience(async (ai) => {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Analyze this content and generate 3-5 minimalist, all-caps tags that capture its aesthetic and semiotic essence: "${truncateInput(content)}"`,
+      config: {
+        systemInstruction: ORACLE_PERSONA,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING }
+        }
+      }
+    });
+    return cleanAndParse(response.text) || [];
   });
 };
 
@@ -1292,5 +1477,37 @@ export const generateOracleResearch = async (topic: string, profile: any) => {
     }
     
     return result;
+  });
+};
+
+export const generateInstagramPostIdeas = async (vibe: string, profile: UserProfile | null) => {
+  return await withResilience(async (ai) => {
+    const profileData = sanitizeProfile(profile);
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Generate 3 genuinely doable, ultra-chic Instagram post ideas based on the user's vibe: "${vibe}".
+      
+      USER PROFILE: ${profileData}
+      
+      MANDATE:
+      - The ideas must be actionable and fit the user's vibe.
+      - Maintain an ultra-chic, high-fashion, yet intimate and supportive tone.
+      - Include a visual directive for each post.
+      - Output strictly valid JSON with keys: "post1", "post2", "post3".
+      `,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          required: ["post1", "post2", "post3"],
+          properties: {
+            post1: { type: Type.STRING },
+            post2: { type: Type.STRING },
+            post3: { type: Type.STRING }
+          }
+        }
+      }
+    });
+    return cleanAndParse(response.text);
   });
 };

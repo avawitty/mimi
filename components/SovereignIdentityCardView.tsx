@@ -10,7 +10,7 @@ export const SovereignIdentityCardView: React.FC<{ card: SovereignIdentityCard }
         dangerouslySetInnerHTML={{ __html: card.svgVisual }}
       />
       <div className="grid grid-cols-1 gap-4 w-full">
-        {card.aestheticCoordinates.map((coord, i) => (
+        {card.aestheticCoordinates?.map((coord, i) => (
           <div key={i} className="border-b border-stone-800 pb-2">
             <h3 className="font-sans text-xs uppercase tracking-widest font-bold text-stone-400">{coord.name}</h3>
             <p className="font-serif italic text-sm text-stone-200">{coord.description}</p>
@@ -18,7 +18,7 @@ export const SovereignIdentityCardView: React.FC<{ card: SovereignIdentityCard }
         ))}
       </div>
       <div className="text-xs font-mono text-stone-500">
-        Taste Drift: {card.tasteDriftPercentage.toFixed(2)}%
+        Taste Drift: {card.tasteDriftPercentage?.toFixed(2) || '0.00'}%
       </div>
     </div>
   );

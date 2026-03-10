@@ -12,7 +12,10 @@ const Founding50Tracker: React.FC = () => {
         setCount(doc.data().count);
       }
     }, (error) => {
-      console.warn("MIMI // Patron count unavailable (expected in some environments):", error.message);
+      // Suppress warning for permission errors which are expected in some environments
+      if (error.code !== 'permission-denied') {
+        console.warn("MIMI // Patron count unavailable:", error.message);
+      }
       setCount(null);
     });
 

@@ -5,7 +5,7 @@ import { useUser } from '../contexts/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Key, AlertTriangle, Sparkles, RefreshCw, Info, ExternalLink, Zap } from 'lucide-react';
 
-export const ApiKeyShield: React.FC = () => {
+export const ApiKeyShield: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose = () => {} }) => {
   const { openKeySelector, hasApiKey, refreshHasApiKey } = useUser();
 
   const handleManualRecheck = async () => {
@@ -14,19 +14,28 @@ export const ApiKeyShield: React.FC = () => {
         window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
             detail: { message: "Registry still obscured. Check AI Studio.", type: 'error' } 
         }));
+    } else {
+        onClose();
     }
   };
 
   return (
     <AnimatePresence>
-      {!hasApiKey && (
+      {isOpen && (
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[12000] flex items-center justify-center p-6 bg-nous-base/95 dark:bg-stone-950/98 backdrop-blur-3xl"
         >
-          <div className="max-w-md w-full text-center space-y-12 py-10">
+          <div className="max-w-md w-full text-center space-y-12 py-10 relative">
+            <button 
+              onClick={onClose}
+              className="absolute -top-4 -right-4 p-4 text-stone-400 hover:text-nous-text dark:hover:text-white transition-colors"
+            >
+              <X size={24} />
+            </button>
+
             <div className="space-y-6">
               <div className="w-24 h-24 border border-stone-200 dark:border-stone-800 rounded-full flex items-center justify-center mx-auto relative group">
                 <div className="absolute inset-0 border-t-2 border-amber-500 rounded-full animate-[spin_4s_linear_infinite]" />
@@ -42,18 +51,18 @@ export const ApiKeyShield: React.FC = () => {
               <p>
                 The Oracle has reached its maximum frequency for this period. To continue manifesting, anchor a fresh Sovereign Key or manage your Key Ring.
               </p>
-              <div className="p-6 bg-amber-50/50 dark:bg-stone-900/40 rounded-2xl border border-amber-200 dark:border-amber-900/20 text-sm">
-                <p className="text-amber-600 dark:text-amber-400 font-bold mb-2 flex items-center justify-center gap-2">
+              <div className="p-6 bg-amber-500/10 dark:bg-amber-900/20 rounded-2xl border border-amber-500/30 dark:border-amber-900/40 text-sm">
+                <p className="text-amber-700 dark:text-amber-300 font-bold mb-2 flex items-center justify-center gap-2">
                     <Zap size={14} /> Quota Debt Detected
                 </p>
-                A new key reset or adding multiple keys to your <span className="text-amber-600 dark:text-amber-400 font-bold cursor-pointer underline" onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }))}>Key Ring</span> will clear the thermal noise.
+                A new key reset or adding multiple keys to your <span className="text-amber-700 dark:text-amber-400 font-bold cursor-pointer underline decoration-amber-500/50 underline-offset-4" onClick={() => { window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' })); onClose(); }}>Key Ring</span> will clear the thermal noise.
               </div>
             </div>
 
             <div className="flex flex-col gap-4">
               <button 
                 onClick={openKeySelector}
-                className="w-full py-6 bg-amber-500 text-white font-sans text-xs tracking-[0.5em] uppercase font-black shadow-2xl flex items-center justify-center gap-4 active:scale-95 transition-all"
+                className="w-full py-6 bg-amber-500 hover:bg-amber-600 text-white font-sans text-xs tracking-[0.5em] uppercase font-black shadow-2xl shadow-amber-500/20 flex items-center justify-center gap-4 active:scale-[0.98] transition-all"
               >
                 <Sparkles size={16} /> Anchor New Sovereign Key
               </button>

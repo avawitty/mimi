@@ -14,11 +14,13 @@ const SUPPORTED_SIZES: ImageSize[] = ['1K', '2K', '4K'];
 export const Visualizer: React.FC<{ 
   prompt: string; 
   defaultAspectRatio?: AspectRatio; 
+  defaultImageSize?: ImageSize;
   initialImage?: string; 
   isArtifact?: boolean;
   isLite?: boolean; 
   delay?: number;
-}> = ({ prompt, defaultAspectRatio = '1:1', initialImage, isArtifact, isLite, delay = 0 }) => {
+  artifacts?: any[];
+}> = ({ prompt, defaultAspectRatio = '1:1', defaultImageSize = '1K', initialImage, isArtifact, isLite, delay = 0, artifacts }) => {
   const { user, profile, activePersona } = useUser();
   const [variants, setVariants] = useState<string[]>(initialImage ? [initialImage] : []);
   const [selectedIdx, setSelectedIdx] = useState(0);
@@ -29,7 +31,7 @@ export const Visualizer: React.FC<{
   const [isEditing, setIsEditing] = useState(false);
   const [refinementText, setRefinementText] = useState('');
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>(defaultAspectRatio);
-  const [imageSize, setImageSize] = useState<ImageSize>('1K');
+  const [imageSize, setImageSize] = useState<ImageSize>(defaultImageSize);
   const [imgLoaded, setImgLoaded] = useState(false);
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export const Visualizer: React.FC<{
     setIsEditing(false);
     try {
       const personaKey = activePersona?.apiKey ? activePersona.apiKey : undefined;
-      const result = await generateZineImage(prompt, aspectRatio, imageSize, profile, isLite, personaKey);
+      const result = await generateZineImage(prompt, aspectRatio, imageSize, profile, isLite, personaKey, artifacts);
       setVariants(prev => {
           const next = [...prev, result];
           const limited = next.slice(-3); // Keep only 3 most recent

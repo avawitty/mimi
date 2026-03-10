@@ -1,6 +1,8 @@
 
 // @ts-nocheck
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { PublicSharePage } from './components/PublicSharePage';
+import { StackView } from './components/StackView';
 import { AppState, ToneTag, ZineMetadata, DriftEvent, MediaFile } from './types';
 import { createZine } from './services/geminiService';
 import { saveZineToProfile, fetchZineById, auth, isCaptiveInWebview } from './services/firebase';
@@ -24,16 +26,16 @@ import { ApiKeyShield } from './components/ApiKeyShield';
 import { ProsceniumView } from './components/ProsceniumView'; 
 import { AmbientSoundscape } from './components/AmbientSoundscape';
 import { CaptiveSentinel } from './components/CaptiveSentinel';
-import { SovereignEntrance } from './components/SovereignEntrance';
 import { TheWard } from './components/TheWard'; 
 import { PatronMintView } from './components/PatronMintView';
 import { DossierView } from './components/DossierView';
+import { MoodboardComposer } from './components/MoodboardComposer';
 import { HelpView } from './components/HelpView';
 import { RegistryAlert } from './components/RegistryAlert';
 import { ImperialPatronageModal } from './components/ImperialPatronageModal';
 import Founding50Tracker from './components/Founding50Tracker';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, LayoutGrid, User, Menu, X, Newspaper, LogOut, ShieldAlert, Zap, Camera, Key, Radio, Activity as ActivityIcon, Archive, Moon, Sun, Scissors, FlaskConical, Eye, Radar, Compass, Info, Cpu, ShieldCheck, Briefcase, BookOpen, Volume2, VolumeX } from 'lucide-react';
+import { Sparkles, LayoutGrid, User, Menu, X, Newspaper, LogOut, ShieldAlert, Zap, Camera, Key, Radio, Activity as ActivityIcon, Archive, Moon, Sun, Scissors, FlaskConical, Eye, Radar, Compass, Info, Cpu, ShieldCheck, Briefcase, BookOpen, Volume2, VolumeX, Target } from 'lucide-react';
 
 // ... (Rest of existing subcomponents: BinderRing, SidebarBtn, MobileMenu, DatabaseVoid) ...
 // BINDER RING COMPONENT
@@ -43,7 +45,7 @@ const BinderRing = ({ className }: { className?: string }) => (
   </div>
 );
 
-const SidebarBtn: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; label: string }> = ({ active, onClick, icon, label }) => (
+const SidebarBtn: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; label: string; note?: string }> = ({ active, onClick, icon, label, note }) => (
   <button 
     onClick={onClick}
     className={`w-full flex items-center gap-5 px-6 py-3 transition-all duration-300 group/btn relative overflow-hidden ${active ? 'text-white dark:text-white' : 'text-stone-500 dark:text-stone-500 hover:text-white dark:hover:text-stone-300'}`}
@@ -54,9 +56,16 @@ const SidebarBtn: React.FC<{ active: boolean; onClick: () => void; icon: React.R
       {React.cloneElement(icon as React.ReactElement, { strokeWidth: 1.5, size: 18 })}
     </div>
     
-    <span className={`font-sans text-[9px] uppercase tracking-[0.25em] font-bold opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 whitespace-nowrap delay-75 ${active ? 'text-white dark:text-white' : 'text-white/40'}`}>
-      {label}
-    </span>
+    <div className="flex flex-col items-start opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-300 whitespace-nowrap delay-75">
+      <span className={`font-sans text-[9px] uppercase tracking-[0.3em] font-medium ${active ? 'text-white dark:text-white' : 'text-stone-500 dark:text-stone-400'}`}>
+        {label}
+      </span>
+      {note && (
+        <span className="font-serif italic text-[8px] text-stone-500 lowercase tracking-tight leading-none mt-0.5 max-w-[160px] truncate">
+          {note}
+        </span>
+      )}
+    </div>
   </button>
 );
 
@@ -78,7 +87,7 @@ const MobileMenu: React.FC<{
           <div className="flex justify-between items-center mb-12">
              <div className="flex items-center gap-3">
                 <div className="w-1 h-8 bg-white" />
-                <h2 className="font-header italic text-4xl">Mimi.</h2>
+                <h2 className="font-header italic text-4xl">mimi.</h2>
              </div>
              <button onClick={onClose} className="p-2 text-stone-400"><X size={24}/></button>
           </div>
@@ -141,16 +150,18 @@ const DatabaseVoid: React.FC = () => (
 );
 
 const AppContent: React.FC = () => {
-  const { user, profile, updateProfile, loading: authLoading, logout, setOracleStatus, systemStatus, activePersona, isDatabaseMissing, isOnboardingComplete, canGenerate, incrementGeneration, recordSession, generationsRemaining } = useUser();
+  const { user, profile, keyRing, updateProfile, loading: authLoading, logout, setOracleStatus, systemStatus, activePersona, isDatabaseMissing, isOnboardingComplete, canGenerate, incrementGeneration, recordSession, generationsRemaining } = useUser();
   const { currentPalette, toggleMode } = useTheme();
   const { activeAgents } = useAgents();
-  
+
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [viewMode, setViewMode] = useState<string>('studio');
+  const [showQuotaShield, setShowQuotaShield] = useState(false);
   const [zineMetadata, setZineMetadata] = useState<ZineMetadata | null>(null);
   const [isDeepRefraction, setIsDeepRefraction] = useState(false);
   const [threadValue, setThreadValue] = useState<string>('');
   const [threadMedia, setThreadMedia] = useState<MediaFile[]>([]); 
+  const [threadHighFidelity, setThreadHighFidelity] = useState(false);
   const [showCaptiveSentinel, setShowCaptiveSentinel] = useState(false);
   const [isHeaderTranslucent, setIsHeaderTranslucent] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -219,6 +230,11 @@ const AppContent: React.FC = () => {
             if (e.detail_data.initialMedia) {
                 setThreadMedia(e.detail_data.initialMedia);
             }
+            if (e.detail_data.isHighFidelity) {
+                setThreadHighFidelity(true);
+            } else {
+                setThreadHighFidelity(false);
+            }
         }
         if (e.detail === 'about' && e.detail_data?.folder) {
             setProposalContext(e.detail_data.folder);
@@ -231,12 +247,15 @@ const AppContent: React.FC = () => {
         setAppState(AppState.REVEALED);
       }
     };
+    const handleShowQuota = () => setShowQuotaShield(true);
 
     window.addEventListener('mimi:change_view', handleChangeView);
     window.addEventListener('mimi:select_zine', handleSelectZine);
+    window.addEventListener('mimi:show_quota_shield', handleShowQuota);
     return () => {
       window.removeEventListener('mimi:change_view', handleChangeView);
       window.removeEventListener('mimi:select_zine', handleSelectZine);
+      window.removeEventListener('mimi:show_quota_shield', handleShowQuota);
     };
   }, []);
 
@@ -262,15 +281,16 @@ const AppContent: React.FC = () => {
           transmissions = snapshot.docs.map(doc => doc.data());
       } catch (e) { console.warn("MIMI // Transmission context failed to load."); }
 
-      const result = await createZine(text, media, tone, profile, opts, personaKey, transmissions);
+      const result = await createZine(text, media, tone, profile, opts, personaKey, transmissions, undefined, opts.selectedComponents);
       await incrementGeneration();
       const targetUid = profile?.uid || user?.uid || 'ghost';
-      const id = await saveZineToProfile(targetUid, profile?.handle || 'Ghost', profile?.photoURL, result.content, tone, undefined, opts.deepThinking, opts.isPublic, opts.isLite, media, text, transmissions);
+      const id = await saveZineToProfile(targetUid, profile?.handle || 'Ghost', profile?.photoURL, result.content, tone, undefined, opts.deepThinking, opts.isPublic, opts.isLite, media, text, transmissions, opts.isHighFidelity);
       setZineMetadata({ 
           id, userId: targetUid, userHandle: profile?.handle || 'Ghost', title: result.content.title, tone, timestamp: Date.now(), likes: 0, content: result.content,
           artifacts: media, 
           originalInput: text,
-          transmissionsUsed: transmissions
+          transmissionsUsed: transmissions,
+          isHighFidelity: opts.isHighFidelity
       });
       window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'success' } }));
       setAppState(AppState.REVEALED);
@@ -286,8 +306,13 @@ const AppContent: React.FC = () => {
   if (isDatabaseMissing) return <DatabaseVoid />;
   if (authLoading) return <ElevatorLoader />;
 
-  if (!isOnboardingComplete) {
-    return <SovereignEntrance />;
+  if (window.location.pathname.startsWith('/@')) {
+      return <PublicSharePage />;
+  }
+
+  if (window.location.pathname.startsWith('/stacks/')) {
+      const stackId = window.location.pathname.split('/stacks/')[1];
+      return <StackView stackId={stackId} />;
   }
 
   if (isPatronMint) {
@@ -295,7 +320,10 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="h-full w-full bg-transparent dark:bg-stone-950 transition-colors duration-500 flex">
+    <div className="h-full w-full bg-transparent dark:bg-stone-950 transition-colors duration-500 flex relative">
+      {/* Subtle Texture Overlay */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03] z-0" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/paper-fibers.png')" }} />
+      
       <AmbientSoundscape enabled={soundEnabled} volume={volume} />
       <AnimatePresence>{showCaptiveSentinel && <CaptiveSentinel onClose={() => setShowCaptiveSentinel(false)} />}</AnimatePresence>
       
@@ -303,52 +331,75 @@ const AppContent: React.FC = () => {
       <ImperialPatronageModal isOpen={showPatronModal} onClose={() => setShowPatronModal(false)} isLimitReached={!canGenerate} />
       
       {!zineMetadata && (
-        <aside className="hidden md:flex flex-col h-full shrink-0 z-[2000] relative group/sidebar w-[88px] hover:w-72 transition-all duration-500 bg-[#121212] dark:bg-[#121212] border-r border-stone-200/10 dark:border-transparent shadow-2xl">
+        <aside className="hidden md:flex flex-col h-full shrink-0 z-[2000] relative group/sidebar w-[88px] hover:w-72 transition-all duration-500 bg-black border-r border-stone-800">
             <BinderRing className="top-[15%]" />
             <BinderRing className="top-[50%]" />
             <BinderRing className="top-[85%]" />
 
             <div className="flex-1 flex flex-col pt-12 overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-[88px] flex items-center justify-center pointer-events-none group-hover/sidebar:opacity-0 transition-opacity duration-300">
-                    <h1 className="text-white/20 dark:text-white/20 font-[Cormorant] font-light italic text-4xl tracking-widest whitespace-nowrap transform -rotate-90 origin-center">
+                <div className="absolute left-0 top-0 bottom-0 w-[88px] flex items-end justify-center pb-24 pointer-events-none group-hover/sidebar:opacity-0 transition-opacity duration-300">
+                    <h1 className="text-stone-600 font-serif font-light italic text-4xl tracking-widest whitespace-nowrap transform -rotate-90 origin-center">
                         Mimi Zine
                     </h1>
                 </div>
 
                 <div className="flex-1 flex flex-col opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-500 delay-100 w-72 px-4 pb-8 overflow-y-auto no-scrollbar">
                     <div className="mb-10 pl-6 pt-2">
-                        <h1 className="text-white dark:text-white font-[Cormorant] font-light italic text-4xl tracking-tighter">Mimi.</h1>
-                        <p className="text-stone-500 dark:text-stone-500 font-sans text-[9px] uppercase tracking-widest font-black mt-1">Sovereign Registry</p>
+                        <h1 className="text-white font-serif font-light italic text-4xl tracking-tighter">Mimi.</h1>
+                        <p className="text-stone-500 font-sans text-[8px] uppercase tracking-[0.3em] font-medium mt-1">Sovereign Registry</p>
                     </div>
 
                     <div className="space-y-8">
                         <div className="space-y-1">
-                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-600">Creation</span></div>
+                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-[0.3em] font-medium text-stone-500">Creation</span></div>
                             <SidebarBtn active={viewMode === 'studio'} onClick={() => setViewMode('studio')} icon={<Sparkles />} label="Studio" />
-                            <SidebarBtn active={viewMode === 'dossier'} onClick={() => setViewMode('dossier')} icon={<Briefcase />} label="Projects" />
                             <SidebarBtn active={viewMode === 'nebula'} onClick={() => setViewMode('nebula')} icon={<LayoutGrid />} label="Stand" />
                             <SidebarBtn active={viewMode === 'scry'} onClick={() => setViewMode('scry')} icon={<Compass />} label="Scry" />
                         </div>
 
                         <div className="space-y-1">
-                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-600">Archive</span></div>
+                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-[0.3em] font-medium text-stone-500">Archive</span></div>
                             <SidebarBtn active={viewMode === 'archival'} onClick={() => setViewMode('archival')} icon={<Archive />} label="Archive" />
                             <SidebarBtn active={viewMode === 'mesopic'} onClick={() => setViewMode('mesopic')} icon={<Camera />} label="Mesopic" />
                             <SidebarBtn active={viewMode === 'darkroom'} onClick={() => setViewMode('darkroom')} icon={<FlaskConical />} label="Darkroom" />
                         </div>
 
                         <div className="space-y-1">
-                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-600">Alchemy</span></div>
+                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-[0.3em] font-medium text-stone-500">Alchemy</span></div>
                             <SidebarBtn active={viewMode === 'tailor'} onClick={() => setViewMode('tailor')} icon={<Scissors />} label="Tailor" />
                             <SidebarBtn active={viewMode === 'ward'} onClick={() => setViewMode('ward')} icon={<ShieldCheck />} label="The Ward" />
                             <SidebarBtn active={viewMode === 'profile'} onClick={() => setViewMode('profile')} icon={<User />} label="Profile" />
                         </div>
 
                         <div className="space-y-1">
-                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-600">Discover</span></div>
-                            <SidebarBtn active={viewMode === 'proscenium'} onClick={() => setViewMode('proscenium')} icon={<Radio />} label="Proscenium" />
+                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-[0.3em] font-medium text-stone-500">Discover</span></div>
                             <SidebarBtn active={viewMode === 'press'} onClick={() => setViewMode('press')} icon={<Newspaper />} label="Press" />
                             <SidebarBtn active={viewMode === 'help'} onClick={() => setViewMode('help')} icon={<BookOpen />} label="Codex" />
+                        </div>
+
+                        <div className="space-y-1">
+                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-600">Work in Progress</span></div>
+                            <SidebarBtn 
+                                active={viewMode === 'dossier'} 
+                                onClick={() => setViewMode('dossier')} 
+                                icon={<Briefcase />} 
+                                label="Projects" 
+                                note="Consolidating creative artifacts into dossiers."
+                            />
+                            <SidebarBtn 
+                                active={viewMode === 'proscenium'} 
+                                onClick={() => setViewMode('proscenium')} 
+                                icon={<Radio />} 
+                                label="Proscenium" 
+                                note="The stage for manifested visions."
+                            />
+                            <SidebarBtn 
+                                active={viewMode === 'proposal'} 
+                                onClick={() => setViewMode('proposal')} 
+                                icon={<Target />} 
+                                label="Proposals" 
+                                note="Strategic conceptual architecture."
+                            />
                         </div>
                     </div>
 
@@ -381,7 +432,7 @@ const AppContent: React.FC = () => {
       <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-nous-base dark:bg-stone-950 transition-colors duration-500">
         <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-black/10 to-transparent pointer-events-none z-20 mix-blend-multiply dark:mix-blend-overlay" />
 
-        <ApiKeyShield />
+        <ApiKeyShield isOpen={showQuotaShield} onClose={() => setShowQuotaShield(false)} />
         <div className="fixed top-6 right-6 md:right-12 z-[5000] flex items-center gap-3 group/audio">
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
@@ -419,6 +470,7 @@ const AppContent: React.FC = () => {
               transition={{ duration: 0.8, ease: "easeInOut" }}
               className={`fixed top-0 right-0 left-0 md:left-[88px] h-20 md:h-24 z-[50] flex items-center justify-center px-8 transition-all duration-1000 pt-safe overflow-hidden border-b border-black/5 dark:border-white/10 bg-nous-base dark:bg-[#1C1C1C] backdrop-blur-xl`}
             >
+                <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-multiply dark:mix-blend-overlay" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/noise.png')" }} />
                 <div onClick={() => { setViewMode('studio'); setZineMetadata(null); setAppState(AppState.IDLE); }} className="cursor-pointer flex flex-col items-center group relative z-10">
                   <h1 className="text-3xl md:text-6xl tracking-[-0.08em] font-[Cormorant] font-light italic text-nous-text dark:text-white opacity-95 transition-all luminescent-text">Mimi</h1>
                   <div className="w-12 h-px bg-nous-text dark:bg-white opacity-20 mt-1 group-hover:w-24 transition-all duration-700" />
@@ -432,7 +484,7 @@ const AppContent: React.FC = () => {
             {appState === AppState.THINKING ? (
               <ElevatorLoader key="thinking" isDeep={isDeepRefraction} onBypass={(r) => { setAppState(AppState.IDLE); setThreadValue(r || ''); }} />
             ) : zineMetadata ? (
-              <AnalysisDisplay key="reveal" metadata={zineMetadata} onReset={() => { setZineMetadata(null); setAppState(AppState.IDLE); }} />
+              <AnalysisDisplay key="reveal" metadata={zineMetadata} onReset={() => { setZineMetadata(null); setAppState(AppState.IDLE); }} onUpdateMetadata={(updated) => setZineMetadata(updated)} />
             ) : (
               <motion.div 
                 key={viewMode} 
@@ -441,7 +493,7 @@ const AppContent: React.FC = () => {
                 animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} 
                 transition={{ duration: 0.6, ease: "easeOut" }}
               >
-                {viewMode === 'studio' && <InputStudio onRefine={handleRefine} isThinking={appState === AppState.THINKING} initialValue={threadValue} initialMedia={threadMedia} />}
+                {viewMode === 'studio' && <InputStudio onRefine={handleRefine} isThinking={appState === AppState.THINKING} initialValue={threadValue} initialMedia={threadMedia} initialHighFidelity={threadHighFidelity} />}
                 {viewMode === 'nebula' && <ArchiveCloudNebula onSelectZine={(z) => { setZineMetadata(z); setAppState(AppState.REVEALED); }} />}
                 {viewMode === 'mesopic' && <MesopicLens />}
                 {viewMode === 'archival' && <ArchivalView onSelectZine={(z) => { setZineMetadata(z); setAppState(AppState.REVEALED); }} />}

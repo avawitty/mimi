@@ -1,6 +1,7 @@
 
 // @ts-nocheck
 import React, { useState } from 'react';
+import { AestheticDNA } from './AestheticDNA';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft, Bookmark, Check, Circle, Zap, Lock } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
@@ -241,6 +242,13 @@ export const EditorialSpread: React.FC<EditorialSpreadProps> = ({ article, onClo
                         <div>Proprietary Aesthetic Engine</div>
                     </div>
                 </footer>
+                <section className="max-w-7xl mx-auto px-12 md:px-24 mb-24">
+                   <AestheticDNA 
+                      report={article.content} 
+                      palette={article.content.palette} 
+                      title={article.brand} 
+                    />
+                </section>
              </>
          )}
       </main>

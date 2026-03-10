@@ -34,6 +34,8 @@ interface ControlsContentProps {
   setUseFlatFlash: (val: boolean) => void;
   exposure: number;
   setExposure: (val: number) => void;
+  grainAmount: number;
+  setGrainAmount: (val: number) => void;
   semioticTension: number;
   setSemioticTension: (val: number) => void;
 }
@@ -54,6 +56,8 @@ const ControlsContent: React.FC<ControlsContentProps> = ({
   setUseFlatFlash,
   exposure,
   setExposure,
+  grainAmount,
+  setGrainAmount,
   semioticTension,
   setSemioticTension
 }) => (
@@ -86,6 +90,14 @@ const ControlsContent: React.FC<ControlsContentProps> = ({
                         <span className="font-mono text-[8px] text-emerald-500">{exposure > 0 ? '+' : ''}{exposure}</span>
                     </div>
                     <input type="range" min="-100" max="100" value={exposure} onChange={(e) => setExposure(parseInt(e.target.value))} className="w-full accent-emerald-500 bg-stone-800 h-1 rounded-full cursor-pointer" />
+                </div>
+
+                <div className="space-y-2 p-4 bg-stone-900 border border-white/5 rounded-sm">
+                    <div className="flex justify-between items-center">
+                        <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-500">Grain Amount</span>
+                        <span className="font-mono text-[8px] text-emerald-500">{grainAmount}%</span>
+                    </div>
+                    <input type="range" min="0" max="100" value={grainAmount} onChange={(e) => setGrainAmount(parseInt(e.target.value))} className="w-full accent-emerald-500 bg-stone-800 h-1 rounded-full cursor-pointer" />
                 </div>
 
                 <div className="space-y-2 p-4 bg-stone-900 border border-white/5 rounded-sm">
@@ -353,6 +365,7 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
   const [useFlatFlash, setUseFlatFlash] = useState(false);
   const [exposure, setExposure] = useState(0);
   const [semioticTension, setSemioticTension] = useState(50);
+  const [grainAmount, setGrainAmount] = useState(0);
 
   const [isEditingMetadata, setIsEditingMetadata] = useState(false);
   const [editTitle, setEditTitle] = useState('');

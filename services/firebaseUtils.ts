@@ -9,6 +9,57 @@ import { saveZineLocally, savePocketItemLocally, getLocalProfile, getLocalPocket
 import { syncToShadowMemory, deleteFromShadowMemory } from "./vectorSearch";
 import { extractTasteVector } from "./geminiService";
 
+export enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+export interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId: string | undefined;
+    email: string | undefined;
+    emailVerified: boolean | undefined;
+    isAnonymous: boolean | undefined;
+    tenantId: string | undefined;
+    providerInfo: {
+      providerId: string;
+      displayName: string | null;
+      email: string | null;
+      photoUrl: string | null;
+    }[];
+  }
+}
+
+export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email || undefined,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId || undefined,
+      providerInfo: auth.currentUser?.providerData.map(provider => ({
+        providerId: provider.providerId,
+        displayName: provider.displayName,
+        email: provider.email,
+        photoUrl: provider.photoURL
+      })) || []
+    },
+    operationType,
+    path
+  }
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
+
 export const isCaptiveInWebview = () => {
   if (typeof window === 'undefined' || !navigator) return false;
   const ua = (navigator.userAgent || navigator.vendor || (window as any).opera || '').toLowerCase();
@@ -27,6 +78,34 @@ export const searchUsers = async (searchTerm: string): Promise<UserProfile[]> =>
   );
   const snap = await getDocs(q);
   return snap.docs.map(d => d.data() as UserProfile);
+};
+
+export const createStack = async (uid: string, title: string, description: string) => {
+  const id = `stack_${Date.now()}`;
+  const stack: Stack = { id, userId: uid, title, description, fragmentIds: [], createdAt: Date.now() };
+  await setDoc(doc(db, "stacks", id), stack);
+  return id;
+};
+
+export const addFragmentToStack = async (stackId: string, fragmentId: string) => {
+  await updateDoc(doc(db, "stacks", stackId), {
+    fragmentIds: arrayUnion(fragmentId)
+  });
+  await updateDoc(doc(db, "dossier_artifacts", fragmentId), {
+    stackIds: arrayUnion(stackId)
+  });
+};
+
+export const getStacks = async (uid: string) => {
+  const q = query(collection(db, "stacks"), where("userId", "==", uid));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => doc.data() as Stack);
+};
+
+
+export const signInWithGooglePopup = async (): Promise<void> => {
+  const provider = new GoogleAuthProvider();
+  await signInWithPopup(auth, provider);
 };
 
 export const anchorIdentity = async (forceRedirect = false): Promise<void> => {
@@ -55,7 +134,7 @@ export const linkIdentity = async (forceRedirect = false): Promise<void> => {
   }
 };
 
-export const saveZineToProfile = async (uid: string, handle: string, avatar: string | undefined, zine: ZineContent, tone: ToneTag, coverUrl?: string, deep?: boolean, isPublic?: boolean, isLite?: boolean, artifacts?: MediaFile[], originalInput?: string, transmissionsUsed?: any[]): Promise<string> => {
+export const saveZineToProfile = async (uid: string, handle: string, avatar: string | undefined, zine: ZineContent, tone: ToneTag, coverUrl?: string, deep?: boolean, isPublic?: boolean, isLite?: boolean, artifacts?: MediaFile[], originalInput?: string, transmissionsUsed?: any[], isHighFidelity?: boolean): Promise<string> => {
   const targetId = `zine_${uid}_${Date.now()}`;
   
   // Ensure we capture the original thought properly, falling back to metadata if arg is missing
@@ -64,7 +143,7 @@ export const saveZineToProfile = async (uid: string, handle: string, avatar: str
   const meta: ZineMetadata = {
     id: targetId, userId: uid, userHandle: handle, userAvatar: avatar || null,
     title: zine.title, tone, coverImageUrl: coverUrl || null, timestamp: Date.now(), likes: 0,
-    content: zine, isDeepThinking: !!deep, isPublic: !!isPublic, isLite: !!isLite,
+    content: zine, isDeepThinking: !!deep, isPublic: !!isPublic, isLite: !!isLite, isHighFidelity: !!isHighFidelity,
     artifacts: artifacts || [],
     originalInput: rawInput,
     transmissionsUsed: transmissionsUsed || []
@@ -130,7 +209,7 @@ export const updateTasteGraph = async (uid: string, type: PocketItem['type'], co
     if (!newVector || Object.keys(newVector).length === 0) return;
 
     // Fetch current profile
-    const userRef = doc(db, "users", uid);
+    const userRef = doc(db, "profiles", uid);
     const userSnap = await getDoc(userRef);
     if (!userSnap.exists()) return;
 
@@ -138,12 +217,28 @@ export const updateTasteGraph = async (uid: string, type: PocketItem['type'], co
     const currentVector = profile.tasteVector || {};
     const updatedVector = { ...currentVector };
 
-    // Blend vectors (simple moving average or additive with decay)
-    // For now, we'll do an additive approach with a cap of 1.0
+    // Blend vectors with normalization
+    // We use a weighted average approach to keep the sum around 1.0
+    const learningRate = 0.2;
+    const decayRate = 0.95;
+
+    // 1. Apply decay to all existing tags
+    for (const tag of Object.keys(updatedVector)) {
+      updatedVector[tag] *= decayRate;
+    }
+
+    // 2. Blend in new intensities
     for (const [tag, intensity] of Object.entries(newVector)) {
        const currentVal = updatedVector[tag] || 0;
-       // Add 20% of the new intensity to the current value, capping at 1.0
-       updatedVector[tag] = Math.min(1.0, currentVal + (intensity * 0.2));
+       updatedVector[tag] = (currentVal * (1 - learningRate)) + (intensity * learningRate);
+    }
+
+    // 3. Normalize so sum ≈ 1.0
+    const sum = Object.values(updatedVector).reduce((a, b) => a + b, 0);
+    if (sum > 0) {
+       for (const tag of Object.keys(updatedVector)) {
+          updatedVector[tag] = updatedVector[tag] / sum;
+       }
     }
 
     await updateDoc(userRef, { tasteVector: updatedVector });
@@ -153,9 +248,15 @@ export const updateTasteGraph = async (uid: string, type: PocketItem['type'], co
   }
 };
 
+import { generateTags } from "./geminiService";
+
 export const addToPocket = async (uid: string, type: PocketItem['type'], content: any): Promise<void> => {
   const itemId = `item_${Date.now()}`;
-  const item: PocketItem = { id: itemId, userId: uid, type, savedAt: Date.now(), content, notes: content.notes || "" };
+  
+  // Generate tags automatically
+  const tags = await generateTags(JSON.stringify(content));
+  
+  const item: PocketItem = { id: itemId, userId: uid, type, savedAt: Date.now(), content, notes: content.notes || "", tags };
   await savePocketItemLocally(item);
   if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
     try {
@@ -399,30 +500,48 @@ export const fetchDossierFolders = async (uid: string) => {
 
 export const createDossierArtifactFromImage = async (uid: string, folderId: string, title: string, imageUrl: string) => {
   const id = `artifact_${Date.now()}`;
+  
+  // Generate tags automatically
+  const tags = await generateTags(`Image artifact: ${title}`);
+  
   const artifact: DossierArtifact = {
     id, userId: uid, folderId, type: 'moodboard', title, createdAt: Date.now(),
-    elements: [{ id: 'el_0', type: 'image', content: imageUrl }]
+    elements: [{ id: 'el_0', type: 'image', content: imageUrl }],
+    tags, // Add tags
+    status: 'active'
   };
   
   await saveArtifactLocally(artifact);
   
   if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
-    try { await setDoc(doc(db, "dossier_artifacts", id), artifact); } catch (e) {}
+    try { 
+      await setDoc(doc(db, "dossier_artifacts", id), artifact); 
+      updateTasteGraph(uid, 'image', { imageUrl });
+    } catch (e) {}
   }
   return id;
 };
 
 export const createDossierArtifactFromText = async (uid: string, folderId: string, title: string, text: string) => {
   const id = `artifact_${Date.now()}`;
+  
+  // Generate tags automatically
+  const tags = await generateTags(`Text artifact: ${title} - ${text}`);
+  
   const artifact: DossierArtifact = {
     id, userId: uid, folderId, type: 'brief', title, createdAt: Date.now(),
-    elements: [{ id: 'el_0', type: 'text', content: text }]
+    elements: [{ id: 'el_0', type: 'text', content: text }],
+    tags, // Add tags
+    status: 'active'
   };
   
   await saveArtifactLocally(artifact);
   
   if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
-    try { await setDoc(doc(db, "dossier_artifacts", id), artifact); } catch (e) {}
+    try { 
+      await setDoc(doc(db, "dossier_artifacts", id), artifact); 
+      updateTasteGraph(uid, 'text', { content: text });
+    } catch (e) {}
   }
   return id;
 };
@@ -624,6 +743,13 @@ export const isHandleAvailable = async (handle: string, excludeUid?: string): Pr
   if (snap.empty) return true;
   if (excludeUid && snap.docs.length === 1 && snap.docs[0].data().uid === excludeUid) return true;
   return false;
+};
+
+export const getUserByHandle = async (handle: string): Promise<UserProfile | null> => {
+  const q = query(collection(db, "profiles"), where("handle", "==", handle.toLowerCase()));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  return snap.docs[0].data() as UserProfile;
 };
 
 export const uploadBlob = async (blob: Blob, path: string): Promise<string> => {

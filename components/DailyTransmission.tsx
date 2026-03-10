@@ -42,10 +42,14 @@ export const DailyTransmission: React.FC = () => {
   }, []);
 
   const decodePCM = (ctx: AudioContext, data: Uint8Array): AudioBuffer => {
-    const dataInt16 = new Int16Array(data.buffer, data.byteOffset, data.byteLength / 2);
-    const audioBuffer = ctx.createBuffer(1, dataInt16.length, 24000);
+    // Ensure we have an even number of bytes for 16-bit PCM
+    const length = Math.floor(data.byteLength / 2);
+    const dataInt16 = new Int16Array(data.buffer, data.byteOffset, length);
+    const audioBuffer = ctx.createBuffer(1, length, 24000);
     const channelData = audioBuffer.getChannelData(0);
-    for (let i = 0; i < dataInt16.length; i++) { channelData[i] = dataInt16[i] / 32768.0; }
+    for (let i = 0; i < length; i++) { 
+      channelData[i] = dataInt16[i] / 32768.0; 
+    }
     return audioBuffer;
   };
 
@@ -62,8 +66,10 @@ export const DailyTransmission: React.FC = () => {
     
     try {
       const AudioContextClass = (window.AudioContext || (window as any).webkitAudioContext);
-      if (!audioCtxRef.current) {
-        audioCtxRef.current = new AudioContextClass({ sampleRate: 24000 });
+      
+      // Recreate context if it's closed or not present
+      if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+        audioCtxRef.current = new AudioContextClass();
       }
       
       if (audioCtxRef.current.state === 'suspended') {
@@ -73,7 +79,17 @@ export const DailyTransmission: React.FC = () => {
       const baseText = overrideText || activeEdict?.message || FALLBACK_EDICTS[Math.floor(Math.random() * FALLBACK_EDICTS.length)];
       const bytes = await generateAudio(baseText);
 
-      const buffer = decodePCM(audioCtxRef.current, bytes);
+      // Check if it's a standard format (WAV/MP3) or raw PCM
+      let buffer: AudioBuffer;
+      
+      // Simple check for RIFF header (WAV)
+      if (bytes[0] === 82 && bytes[1] === 73 && bytes[2] === 70 && bytes[3] === 70) {
+        buffer = await audioCtxRef.current.decodeAudioData(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
+      } else {
+        // Fallback to raw 16-bit PCM 24kHz
+        buffer = decodePCM(audioCtxRef.current, bytes);
+      }
+
       const source = audioCtxRef.current.createBufferSource();
       source.buffer = buffer;
       source.connect(audioCtxRef.current.destination);
@@ -83,6 +99,7 @@ export const DailyTransmission: React.FC = () => {
       setIsPlaying(true);
     } catch (err: any) { 
       console.error("MIMI // Signal Drift:", err);
+      setIsPlaying(false);
       setIsTired(true);
       setLastTrace({ code: err.code || 'SIGNAL_DRIFT', message: err.message });
       

@@ -1,10 +1,11 @@
 
 // @ts-nocheck
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useUser } from '../contexts/UserContext';
 import { useAgents } from '../contexts/AgentContext';
-import { ShieldCheck, Activity, BrainCircuit, AlertTriangle, Fingerprint, Layers, Clock, Zap, Target } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ShieldCheck, Activity, BrainCircuit, AlertTriangle, Fingerprint, Layers, Clock, Zap, Target, Mic } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { TheWard } from './TheWard';
 
 const IntegrityMeter: React.FC<{ score: number }> = ({ score }) => (
   <div className="space-y-2">
@@ -45,6 +46,7 @@ const ArchetypeBar: React.FC<{ label: string, count: number, total: number }> = 
 export const SentinelView: React.FC = () => {
   const { profile } = useUser();
   const { agentLogs } = useAgents();
+  const [isWardOpen, setIsWardOpen] = useState(false);
 
   const archetypes = profile?.tasteProfile?.archetype_weights || {};
   const totalWeight = Object.values(archetypes).reduce((a, b) => a + b, 0);
@@ -59,8 +61,16 @@ export const SentinelView: React.FC = () => {
 
   const recentDrifts = profile?.tasteProfile?.audit_history || [];
 
+  const driftScore = useMemo(() => {
+    return Math.min(100, recentDrifts.length * 15 + (100 - integrityScore) * 0.5);
+  }, [recentDrifts, integrityScore]);
+
+  const omissionIndex = useMemo(() => {
+    return Math.max(0, 100 - (Object.keys(archetypes).length * 10));
+  }, [archetypes]);
+
   return (
-    <div className="flex-1 w-full h-full overflow-y-auto no-scrollbar pb-64 px-6 md:px-16 pt-12 md:pt-20 bg-nous-base dark:bg-[#050505] text-nous-text dark:text-white transition-all duration-1000 relative">
+    <div className="flex-1 w-full h-full overflow-y-auto no-scrollbar pb-64 px-6 md:px-16 pt-12 md:pt-20 bg-nous-base dark:bg-[#050505] text-white dark:text-white transition-all duration-1000 relative">
       <div className="max-w-6xl mx-auto space-y-16 relative z-10">
         
         {/* HEADER */}
@@ -142,14 +152,44 @@ export const SentinelView: React.FC = () => {
                
                {/* DRIFT ALERT CARD */}
                <div className="p-8 bg-stone-50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 rounded-sm space-y-6">
-                  <div className="flex items-center gap-3 text-amber-500">
-                     <AlertTriangle size={16} />
-                     <span className="font-sans text-[8px] uppercase tracking-widest font-black">Drift Detection</span>
+                  <div className="flex items-center justify-between">
+                     <div className="flex items-center gap-3 text-amber-500">
+                        <AlertTriangle size={16} />
+                        <span className="font-sans text-[8px] uppercase tracking-widest font-black">Drift Detection</span>
+                     </div>
+                     <button 
+                        onClick={() => setIsWardOpen(true)}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-full hover:bg-red-500 hover:text-white transition-all group"
+                     >
+                        <Mic size={12} className="group-hover:animate-pulse" />
+                        <span className="font-sans text-[8px] uppercase tracking-widest font-black">Enter The Ward</span>
+                     </button>
                   </div>
                   <p className="font-serif italic text-lg text-stone-500 leading-relaxed text-balance">
                      The Sentinel monitors deviations from your stated "Tailor" manifesto. High drift indicates an evolving aesthetic or a loss of coherence.
                   </p>
                   
+                  <div className="grid grid-cols-2 gap-4 pt-2">
+                     <div className="p-4 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-sm">
+                        <div className="flex justify-between items-end mb-2">
+                           <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Drift Score</span>
+                           <span className={`font-mono text-lg font-black ${driftScore > 50 ? 'text-red-500' : 'text-emerald-500'}`}>{Math.round(driftScore)}</span>
+                        </div>
+                        <div className="h-1 w-full bg-stone-50 dark:bg-stone-950 rounded-full overflow-hidden">
+                           <motion.div initial={{ width: 0 }} animate={{ width: `${driftScore}%` }} className={`h-full ${driftScore > 50 ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                        </div>
+                     </div>
+                     <div className="p-4 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-sm">
+                        <div className="flex justify-between items-end mb-2">
+                           <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Omission Index</span>
+                           <span className={`font-mono text-lg font-black ${omissionIndex > 50 ? 'text-amber-500' : 'text-emerald-500'}`}>{Math.round(omissionIndex)}</span>
+                        </div>
+                        <div className="h-1 w-full bg-stone-50 dark:bg-stone-950 rounded-full overflow-hidden">
+                           <motion.div initial={{ width: 0 }} animate={{ width: `${omissionIndex}%` }} className={`h-full ${omissionIndex > 50 ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                        </div>
+                     </div>
+                  </div>
+
                   <div className="space-y-4 pt-4">
                      {recentDrifts.length > 0 ? recentDrifts.slice().reverse().slice(0, 3).map((drift, i) => (
                         <div key={i} className="flex items-start gap-4 p-4 bg-white dark:bg-stone-900 rounded-sm shadow-sm border border-black/5 dark:border-white/5">
@@ -193,6 +233,9 @@ export const SentinelView: React.FC = () => {
             </div>
         </div>
       </div>
+      <AnimatePresence>
+        {isWardOpen && <TheWard onClose={() => setIsWardOpen(false)} />}
+      </AnimatePresence>
     </div>
   );
 };

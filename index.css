@@ -1,15 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap');
 @import "tailwindcss";
 @config "./tailwind.config.js";
 
 @layer base {
   :root {
-    /* Archival Grid Palette - Deepened Ink Tone */
-    --nous-base: #FDFBF7;
+    /* Editorial Palette */
+    --nous-base: #F5F2ED; /* Warm off-white */
     --nous-text: #0C0C0C; 
     --nous-subtle: #404040;
-    --nous-accent: #000000;
-    --nous-border: #E5E5E5;
-    --nous-silver: #D4D4D4;
+    --nous-accent: #10B981; /* Desaturated emerald */
+    --nous-olive: #5A5A40;
+    --nous-charcoal: #262626;
   }
   
   html, body {
@@ -22,18 +23,16 @@
     color: var(--nous-text);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    font-family: "Cormorant Garamond", serif;
+    font-family: "Inter", sans-serif;
     font-weight: 300;
+    line-height: 1; /* Tightened line height */
     overscroll-behavior-y: none;
-  }
-
-  h1, h2, h3, h4, h5, h6, .font-serif, * {
-    font-weight: 300 !important;
   }
 
   /* Dark mode */
   .dark body {
-    background-color: #050505;
+    background-color: #000000; /* Pure black */
+    color: #ffffff;
   }
 }
 

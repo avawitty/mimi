@@ -37,6 +37,7 @@ interface UserContextType {
   toggleZineStar: (zineId: string) => Promise<void>;
   isOnboardingComplete: boolean;
   login: (forceRedirect?: boolean) => Promise<void>;
+  signInWithGooglePopup: () => Promise<void>;
   ghostLogin: () => Promise<void>;
   speedGhostEntrance: () => Promise<void>;
   linkAccount: (forceRedirect?: boolean) => Promise<void>;
@@ -208,6 +209,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshHasApiKey = useCallback(async () => {
     if (keyRing.length > 0) { setHasApiKey(true); return; }
+    
+    // If we have an environment key, we are technically "ready" for basic models
+    if (process.env.API_KEY || (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_GEMINI_API_KEY)) {
+        setHasApiKey(true);
+        return;
+    }
+
     try {
       const aistudio = (window as any).aistudio;
       if (aistudio?.hasSelectedApiKey) {
@@ -224,10 +232,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     refreshHasApiKey();
     const handleKeyVoid = () => {
-      if (keyRing.length === 0) {
-          setHasApiKey(false);
-          setOracleStatus('unavailable');
-      }
+      setOracleStatus('unavailable');
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+          detail: { 
+              message: "Oracle frequency saturated. Add keys to Ring or wait.", 
+              type: 'error' 
+          } 
+      }));
     };
     window.addEventListener('mimi:key_void', handleKeyVoid);
     return () => window.removeEventListener('mimi:key_void', handleKeyVoid);
@@ -594,6 +605,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try { await anchorIdentity(forceRedirect); } catch (e: any) { setAuthError(e.code || e.message); throw e; }
   };
 
+  const signInWithGooglePopup = async () => {
+    setAuthError(null);
+    try { await import('../services/firebaseUtils').then(m => m.signInWithGooglePopup()); } catch (e: any) { setAuthError(e.code || e.message); throw e; }
+  };
+
   const linkAccount = async (forceRedirect = false) => {
     setAuthError(null);
     try { 
@@ -700,7 +716,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const activatePatron = async (key: string) => {
     if (!profile) return;
-    await updateProfile({ ...profile, isPatron: true, patronActivatedAt: Date.now(), patronKey: key });
+    const isUniversal = key.trim().toLowerCase() === 'mimimuse';
+    if (isUniversal) {
+        await updateProfile({ ...profile, isPatron: true, patronActivatedAt: Date.now(), patronKey: key });
+    } else {
+        throw new Error("Invalid access code");
+    }
   };
 
   const incrementGeneration = async () => {
@@ -716,7 +737,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <UserContext.Provider value={{ 
       user, profile, loading, updateProfile, toggleZineStar, isOnboardingComplete: !!profile?.onboardingComplete, 
-      login, ghostLogin, speedGhostEntrance, linkAccount, keyLogin, verifyIdentity, isEnvironmentRestricted, isDatabaseMissing, authError,
+      login, signInWithGooglePopup, ghostLogin, speedGhostEntrance, linkAccount, keyLogin, verifyIdentity, isEnvironmentRestricted, isDatabaseMissing, authError,
       hasApiKey, openKeySelector, logout, refreshHasApiKey, systemStatus, setOracleStatus,
       keyRing, addKeyToRing, removeKeyFromRing,
       featureFlags, toggleFeature,

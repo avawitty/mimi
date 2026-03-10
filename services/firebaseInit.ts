@@ -2,7 +2,7 @@
 
 import { FirebaseApp, initializeApp, getApps } from "firebase/app";
 import { Auth, getAuth } from "firebase/auth";
-import { Firestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore } from "firebase/firestore";
+import { Firestore, initializeFirestore, getFirestore } from "firebase/firestore";
 import { FirebaseStorage, getStorage } from "firebase/storage";
 import { getAnalytics, Analytics, isSupported } from "firebase/analytics";
 
@@ -53,43 +53,21 @@ if (typeof window !== 'undefined') {
 export const auth: Auth = getAuth(app);
 
 // Modern Firestore Initialization
-let dbInstance: Firestore;
+const isIframe = typeof window !== 'undefined' && window.self !== window.top;
 
+let dbInstance: Firestore;
 try {
-  // Attempt to initialize with specific settings and specific Database ID
+  dbInstance = getFirestore(app, TARGET_DB_ID);
+} catch (e) {
   dbInstance = initializeFirestore(app, {
-    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
-  }, "mimizinemongo");
-  
-} catch (e: any) {
-  // If we get "failed-precondition", it means Firestore was already initialized.
-  // We must retrieve the existing instance specifically for our named DB.
-  if (e.code === 'failed-precondition') {
-     console.warn(`MIMI // Firestore pre-initialized. Attaching to '${TARGET_DB_ID}'...`);
-     // CRITICAL: Must pass TARGET_DB_ID here too, or it defaults to '(default)'
-     try {
-        dbInstance = getFirestore(app, "mimizinemongo");
-     } catch (innerE) {
-        console.error("MIMI // Critical Registry Failure (Recovery):", innerE);
-        // Fallback to default DB if named DB fails completely, to prevent crash
-        dbInstance = getFirestore(app);
-     }
-  } else {
-     // If it fails for another reason, log it but DO NOT fallback to default (it doesn't exist)
-     console.error("MIMI // Critical Registry Failure:", e);
-     // Fallback to default to prevent app crash, even if data is missing
-     try {
-        dbInstance = getFirestore(app);
-     } catch (finalE) {
-        console.error("MIMI // Fatal DB Error:", finalE);
-        // Mock DB to prevent crash? No, Firestore object is needed.
-        // We let it throw if even default fails, but usually default works.
-        throw e;
-     }
-  }
+    experimentalForceLongPolling: true,
+    experimentalAutoDetectLongPolling: false,
+    ignoreUndefinedProperties: true,
+  }, TARGET_DB_ID);
 }
 
 export const db = dbInstance;
+
 export const storage: FirebaseStorage = getStorage(app);
 
 // Sovereign Analytics Implementation

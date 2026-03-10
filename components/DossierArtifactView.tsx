@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { DossierArtifact } from '../types';
 import { X, Share2, Download, ExternalLink, Activity, Info, Briefcase, FileText, Check, Copy, Globe, Pin, LayoutGrid, Quote, Terminal, Cpu, ScanLine } from 'lucide-react';
+import { AestheticDNA } from './AestheticDNA';
 
 export const DossierArtifactView: React.FC<{ artifact: DossierArtifact; onClose: () => void }> = ({ artifact, onClose }) => {
   const [copied, setCopied] = useState(false);
@@ -147,6 +148,14 @@ export const DossierArtifactView: React.FC<{ artifact: DossierArtifact; onClose:
                </aside>
             </section>
           )}
+
+          <section className="pt-24 border-t border-stone-800">
+             <AestheticDNA 
+                report={artifact.report} 
+                palette={artifact.report?.colorStory} 
+                title={artifact.title} 
+              />
+          </section>
 
           <footer className="pt-32 pb-48 text-center space-y-12 border-t border-stone-800 print:hidden">
              <div className="opacity-10 pointer-events-none select-none">
