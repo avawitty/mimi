@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { getAllShadowMemory } from '../services/vectorSearch';
 import { getClusterAnchors, generateClusterAnchors, ThemeNode } from '../services/clusteringService';
-import { findThread, Thread } from '../services/threadService';
+import { findThread, Thread, ThreadMode } from '../services/threadService';
 import { Loader2, Sparkles, X } from 'lucide-react';
 
 interface Node extends d3.SimulationNodeDatum {
@@ -26,7 +26,11 @@ interface MemoryItem {
   content_preview: string;
 }
 
-export const VibeGraph: React.FC = () => {
+interface VibeGraphProps {
+  onGenerateZine?: (thread: Thread) => void;
+}
+
+export const VibeGraph: React.FC<VibeGraphProps> = ({ onGenerateZine }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [themes, setThemes] = useState<ThemeNode[]>([]);
@@ -35,6 +39,7 @@ export const VibeGraph: React.FC = () => {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [activeThread, setActiveThread] = useState<Thread | null>(null);
   const [isThreading, setIsThreading] = useState(false);
+  const [threadMode, setThreadMode] = useState<ThreadMode>('emotion');
 
   const loadData = async () => {
     const mems = await getAllShadowMemory() as MemoryItem[];
@@ -227,7 +232,7 @@ export const VibeGraph: React.FC = () => {
   const handleFindThread = async () => {
     if (!selectedNode) return;
     setIsThreading(true);
-    const thread = await findThread(selectedNode.id, memories, themes);
+    const thread = await findThread(selectedNode.id, memories, themes, threadMode);
     if (thread) {
       setActiveThread(thread);
     } else {
@@ -240,7 +245,7 @@ export const VibeGraph: React.FC = () => {
 
   return (
     <div className="relative w-full h-full bg-stone-50 dark:bg-[#111] rounded-lg border border-stone-200 dark:border-stone-800 overflow-hidden">
-      <div className="absolute top-4 right-4 z-10">
+      <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
         <button
           onClick={handleGenerateClusters}
           disabled={isGenerating || memories.length < 5}
@@ -251,6 +256,18 @@ export const VibeGraph: React.FC = () => {
             {isGenerating ? 'Synthesizing...' : 'Generate Cluster Anchors'}
           </span>
         </button>
+        
+        <div className="flex bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-full p-1 shadow-sm">
+          {(['biographical', 'influence', 'emotion', 'time'] as ThreadMode[]).map(mode => (
+            <button
+              key={mode}
+              onClick={() => setThreadMode(mode)}
+              className={`px-3 py-1 rounded-full font-sans text-[9px] uppercase tracking-widest font-black transition-all ${threadMode === mode ? 'bg-emerald-500 text-white' : 'text-stone-500 hover:text-stone-800 dark:text-stone-400'}`}
+            >
+              {mode}
+            </button>
+          ))}
+        </div>
       </div>
 
       {selectedNode && !activeThread && (
@@ -273,9 +290,19 @@ export const VibeGraph: React.FC = () => {
                <Sparkles size={16} />
                <span className="font-sans text-[10px] uppercase tracking-widest font-black">Semantic Thread</span>
              </div>
-             <button onClick={() => setActiveThread(null)} className="text-stone-500 hover:text-stone-900 dark:hover:text-white transition-colors">
-               <X size={16} />
-             </button>
+             <div className="flex items-center gap-4">
+               {onGenerateZine && (
+                 <button 
+                   onClick={() => onGenerateZine(activeThread)}
+                   className="px-4 py-1.5 bg-stone-900 dark:bg-white text-white dark:text-stone-900 rounded-full font-sans text-[10px] uppercase tracking-widest font-bold hover:bg-stone-800 dark:hover:bg-stone-100 transition-colors"
+                 >
+                   Weave into Zine
+                 </button>
+               )}
+               <button onClick={() => setActiveThread(null)} className="text-stone-500 hover:text-stone-900 dark:hover:text-white transition-colors">
+                 <X size={16} />
+               </button>
+             </div>
            </div>
            <p className="font-serif text-lg text-stone-800 dark:text-stone-200 leading-relaxed">
              {activeThread.narrative}

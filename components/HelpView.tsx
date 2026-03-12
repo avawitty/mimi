@@ -50,12 +50,12 @@ export const HelpView: React.FC = () => {
           </div>
         </section>
 
-        {/* Creation Modules */}
+        {/* The 5 Pillars */}
         <section className="mb-32 relative">
           <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 dark:bg-white/10" />
           <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
             <div className="md:col-span-3">
-              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">02. Creation Modules</h2>
+              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">02. The Five Pillars</h2>
             </div>
             <div className="md:col-span-9">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
@@ -63,30 +63,75 @@ export const HelpView: React.FC = () => {
                 <div className="group">
                   <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 dark:border-white/5">
                     <Sparkles size={18} className="text-stone-400 group-hover:text-emerald-500 transition-colors" />
-                    <h3 className="font-serif text-3xl italic tracking-tight">Studio</h3>
+                    <h3 className="font-serif text-3xl italic tracking-tight">1. Studio</h3>
                   </div>
                   <p className="font-sans text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
-                    The primary input terminal. Submit text, images, or voice notes. Use <span className="text-stone-800 dark:text-stone-200 font-medium">Deep Refraction</span> for high-level, complex processing, or <span className="text-stone-800 dark:text-stone-200 font-medium">Lite Protocol</span> for rapid, unopinionated formatting.
+                    <span className="font-bold text-stone-800 dark:text-stone-200">The Artifact Engine.</span> Where you act. The primary workspace for assembling artifacts, adjusting materiality via Tailor Tools, and utilizing historical presets.
                   </p>
                 </div>
 
+                <div className="group">
+                  <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 dark:border-white/5">
+                    <ShieldCheck size={18} className="text-stone-400 group-hover:text-indigo-500 transition-colors" />
+                    <h3 className="font-serif text-3xl italic tracking-tight">2. Signature</h3>
+                  </div>
+                  <p className="font-sans text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
+                    <span className="font-bold text-stone-800 dark:text-stone-200">The Identity Dashboard.</span> Where you define who you are. The analytical backbone providing your Aesthetic Genome, Taste Graph, and the Calibration Ritual (The Ward).
+                  </p>
+                </div>
+
+                <div className="group">
+                  <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 dark:border-white/5">
+                    <Archive size={18} className="text-stone-400 group-hover:text-amber-500 transition-colors" />
+                    <h3 className="font-serif text-3xl italic tracking-tight">3. Archive</h3>
+                  </div>
+                  <p className="font-sans text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
+                    <span className="font-bold text-stone-800 dark:text-stone-200">The Creative Memory.</span> Where you remember. A living map of your raw fragments, indexed by motif, including the Temporal Nebula and the Darkroom for unprocessed thoughts.
+                  </p>
+                </div>
+
+                <div className="group">
+                  <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 dark:border-white/5">
+                    <Compass size={18} className="text-stone-400 group-hover:text-rose-500 transition-colors" />
+                    <h3 className="font-serif text-3xl italic tracking-tight">4. Threads</h3>
+                  </div>
+                  <p className="font-sans text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
+                    <span className="font-bold text-stone-800 dark:text-stone-200">The Narrative Engine.</span> Where you connect. Visualizes semantic paths through your history (Biographical, Influence, Emotional) and predicts aesthetic drift via Trace & Scry.
+                  </p>
+                </div>
+
+                <div className="group">
+                  <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 dark:border-white/5">
+                    <LayoutGrid size={18} className="text-stone-400 group-hover:text-cyan-500 transition-colors" />
+                    <h3 className="font-serif text-3xl italic tracking-tight">5. Floor</h3>
+                  </div>
+                  <p className="font-sans text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
+                    <span className="font-bold text-stone-800 dark:text-stone-200">The Cultural Intelligence Layer.</span> Where you observe. The external view connecting you to the wider world via the Resonance Feed and Trend Trajectories.
+                  </p>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Deep Systems */}
+        <section className="mb-32 relative">
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 dark:bg-white/10" />
+          <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
+            <div className="md:col-span-3">
+              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">03. Deep Systems</h2>
+            </div>
+            <div className="md:col-span-9">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
+                
                 <div className="group">
                   <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 dark:border-white/5">
                     <Briefcase size={18} className="text-stone-400 group-hover:text-emerald-500 transition-colors" />
                     <h3 className="font-serif text-3xl italic tracking-tight">Projects</h3>
                   </div>
                   <p className="font-sans text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
-                    Organize your manifests into strategic folders. Generate <span className="text-stone-800 dark:text-stone-200 font-medium">Strategic Memos</span> to synthesize the contents of a folder into actionable creative direction.
-                  </p>
-                </div>
-
-                <div className="group">
-                  <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 dark:border-white/5">
-                    <LayoutGrid size={18} className="text-stone-400 group-hover:text-emerald-500 transition-colors" />
-                    <h3 className="font-serif text-3xl italic tracking-tight">The Stand</h3>
-                  </div>
-                  <p className="font-sans text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
-                    A spatial, non-linear view of your entire archive. Discover unexpected connections between disparate thoughts and visual fragments.
+                    Organize your manifests into strategic folders within the Archive. Generate <span className="text-stone-800 dark:text-stone-200 font-medium">Strategic Memos</span> to synthesize the contents of a folder into actionable creative direction.
                   </p>
                 </div>
 
@@ -96,32 +141,7 @@ export const HelpView: React.FC = () => {
                     <h3 className="font-serif text-3xl italic tracking-tight">Scry</h3>
                   </div>
                   <p className="font-sans text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
-                    Query your archive using natural language. The Oracle will synthesize an answer based entirely on your past manifests and curated knowledge.
-                  </p>
-                </div>
-
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Alchemy & Governance */}
-        <section className="mb-32 relative">
-          <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 dark:bg-white/10" />
-          <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
-            <div className="md:col-span-3">
-              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">03. Alchemy & Governance</h2>
-            </div>
-            <div className="md:col-span-9">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
-                
-                <div className="group">
-                  <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 dark:border-white/5">
-                    <Scissors size={18} className="text-stone-400 group-hover:text-emerald-500 transition-colors" />
-                    <h3 className="font-serif text-3xl italic tracking-tight">Tailor</h3>
-                  </div>
-                  <p className="font-sans text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
-                    Define your "Mask"—your stated aesthetic intent. Set your core silhouettes, textures, chromatic registry, and narrative voice. This acts as the baseline for all future generation.
+                    Located in Threads. Query your archive using natural language. The Oracle will synthesize an answer based entirely on your past manifests and curated knowledge.
                   </p>
                 </div>
 
@@ -131,17 +151,7 @@ export const HelpView: React.FC = () => {
                     <h3 className="font-serif text-3xl italic tracking-tight">The Ward</h3>
                   </div>
                   <p className="font-sans text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
-                    The autonomous governance module. <span className="text-stone-800 dark:text-stone-200 font-medium">Curator</span> analyzes your actual output, while <span className="text-stone-800 dark:text-stone-200 font-medium">Sentinel</span> compares it against your Tailor settings to detect "Aesthetic Drift".
-                  </p>
-                </div>
-
-                <div className="group">
-                  <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 dark:border-white/5">
-                    <Camera size={18} className="text-stone-400 group-hover:text-emerald-500 transition-colors" />
-                    <h3 className="font-serif text-3xl italic tracking-tight">Mesopic Lens</h3>
-                  </div>
-                  <p className="font-sans text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
-                    Upload raw images for deep semiotic analysis. The engine will extract latent themes, lighting profiles, and cultural parallels, allowing you to anchor them as new manifests.
+                    The autonomous governance module within your Signature. <span className="text-stone-800 dark:text-stone-200 font-medium">Curator</span> analyzes your actual output, while <span className="text-stone-800 dark:text-stone-200 font-medium">Sentinel</span> compares it against your Tailor settings to detect "Aesthetic Drift".
                   </p>
                 </div>
 
@@ -151,7 +161,7 @@ export const HelpView: React.FC = () => {
                     <h3 className="font-serif text-3xl italic tracking-tight">Darkroom</h3>
                   </div>
                   <p className="font-sans text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
-                    An experimental space for visual synthesis. Combine multiple image shards to generate entirely new, cohesive visual concepts based on your archive's DNA.
+                    An experimental space in the Archive for visual synthesis. Combine multiple image shards to generate entirely new, cohesive visual concepts based on your archive's DNA.
                   </p>
                 </div>
 
@@ -173,7 +183,7 @@ export const HelpView: React.FC = () => {
                 <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-emerald-500/30" />
                 <h4 className="font-serif italic text-2xl text-[#1A1A1A] dark:text-white mb-3">Deep Refraction</h4>
                 <p className="font-sans text-sm text-stone-600 dark:text-stone-400 leading-relaxed max-w-2xl">
-                  When enabled in the Studio, the engine spends significantly more time analyzing your input against your Tailor profile. It produces highly structured, multi-section editorial layouts with profound semiotic depth. Use this for major conceptual pieces.
+                  When enabled in the Studio, the engine spends significantly more time analyzing your input against your Signature profile. It produces highly structured, multi-section editorial layouts with profound semiotic depth. Use this for major conceptual pieces.
                 </p>
               </div>
 
@@ -192,7 +202,31 @@ export const HelpView: React.FC = () => {
                 <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-indigo-500/30" />
                 <h4 className="font-serif italic text-2xl text-[#1A1A1A] dark:text-white mb-3">Voice Consultation</h4>
                 <p className="font-sans text-sm text-stone-600 dark:text-stone-400 leading-relaxed max-w-2xl">
-                  Available within The Ward. Initiate a live, real-time voice session with the system's persona. It will interrogate your aesthetic choices and discuss your recent drift in a highly editorial, conversational format.
+                  Available within The Ward (Signature). Initiate a live, real-time voice session with the system's persona. It will interrogate your aesthetic choices and discuss your recent drift in a highly editorial, conversational format.
+                </p>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        {/* The Taste Graph */}
+        <section className="mb-32 relative">
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 dark:bg-white/10" />
+          <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
+            <div className="md:col-span-3">
+              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">05. The Taste Graph</h2>
+            </div>
+            <div className="md:col-span-9 space-y-12">
+              
+              <div className="relative pl-8 md:pl-12">
+                <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-stone-500/30" />
+                <div className="flex items-center gap-3 mb-3">
+                  <h4 className="font-serif italic text-2xl text-[#1A1A1A] dark:text-white">Aesthetic Embeddings</h4>
+                  <span className="px-2 py-0.5 border border-stone-500/30 text-stone-600 dark:text-stone-400 text-[9px] font-sans uppercase tracking-widest rounded-full">Infrastructure</span>
+                </div>
+                <p className="font-sans text-sm text-stone-600 dark:text-stone-400 leading-relaxed max-w-2xl">
+                  Every interaction you have with Mimi—fragments saved, references input, visual styles liked—is converted into structured data via semantic embeddings. Over time, the system learns your <span className="text-stone-800 dark:text-stone-200 font-medium">Aesthetic Profile</span> as an evolving vector, enabling deep personalization, trend detection, and creative matching across all pillars.
                 </p>
               </div>
 
@@ -205,7 +239,7 @@ export const HelpView: React.FC = () => {
           <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 dark:bg-white/10" />
           <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
             <div className="md:col-span-3">
-              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">05. System Status</h2>
+              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">06. System Status</h2>
             </div>
             <div className="md:col-span-9">
               <Diagnostics />

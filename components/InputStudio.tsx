@@ -2,12 +2,13 @@
 // @ts-nocheck
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MediaFile, ToneTag, PocketItem } from '../types';
+import { MediaFile, ToneTag, PocketItem, ZineGenerationOptions } from '../types';
 import { useRecorder } from '../hooks/useRecorder';
 import { useTasteLogging } from '../hooks/useTasteLogging';
 import { Plus, BrainCircuit, X, Globe, Mic, Loader2, Square, Check, Radio, Mail, Info, Sparkles, AlertCircle, Eraser, Zap, Image as ImageIcon, Link as LinkIcon, Twitter, Instagram, Shield, Users, ArrowUpRight, FolderOpen, Paperclip, ChevronLeft, ChevronRight, GripVertical, FileText } from 'lucide-react';
 import { transcribeAudio, compressImage, generateTags } from '../services/geminiService';
 import { CuratorNote } from './CuratorNote';
+import { ZineConfiguration } from './ZineConfiguration';
 import { useUser } from '../contexts/UserContext';
 import { LegalOverlay } from './LegalOverlay';
 import { fetchPocketItems } from '../services/firebase';
@@ -60,6 +61,14 @@ export const InputStudio: React.FC<{
   const [deepThinking, setDeepThinking] = useState(false);
   const [liteMode, setLiteMode] = useState(false);
   const [isHighFidelity, setIsHighFidelity] = useState(initialHighFidelity || false);
+  const [zineOptions, setZineOptions] = useState<ZineGenerationOptions>({
+    style: 'balanced',
+    theme: 'vibrant',
+    contentFocus: 'balanced',
+    artStyle: '',
+    aestheticTone: undefined,
+    goals: ''
+  });
   const [freshState, setFreshState] = useState(false);
   const [useSearch, setUseSearch] = useState(true); 
   const [selectedCategory, setSelectedCategory] = useState<string>('STYLE');
@@ -183,7 +192,8 @@ export const InputStudio: React.FC<{
           isPublic: true,
           folderContext: folderTitle,
           selectedComponents: selectedComponents,
-          isHighFidelity: isHighFidelity
+          isHighFidelity: isHighFidelity,
+          zineOptions: zineOptions
       });
     }
   }, [input, mediaFiles, isThinking, selectedTone, useSearch, deepThinking, liteMode, freshState, onRefine, activeProvocation, folderTitle, selectedComponents, isHighFidelity]);
@@ -239,6 +249,15 @@ export const InputStudio: React.FC<{
       setMediaFiles(prev => prev.filter((_, i) => i !== idx));
   };
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [input]);
+
   return (
     <div className="w-full h-full flex flex-col items-center relative overflow-hidden transition-all duration-1000 bg-nous-base dark:bg-stone-950">
       
@@ -247,6 +266,11 @@ export const InputStudio: React.FC<{
         className={`w-full max-w-7xl flex-1 flex flex-col items-center justify-center relative min-h-[70vh] pb-64 px-4 md:px-0 z-10 transition-all duration-300 ease-out mt-20 ${isFolderOpen ? 'md:pr-[320px]' : ''}`}
       >
         
+        {/* ZINE CONFIG */}
+        <div className="mb-8">
+          <ZineConfiguration zineOptions={zineOptions} setZineOptions={setZineOptions} />
+        </div>
+
         {/* PROMPT HEADER */}
         <div className="relative z-20 mb-8 md:mb-12 text-center max-w-xl">
            <AnimatePresence mode="wait">
@@ -285,16 +309,20 @@ export const InputStudio: React.FC<{
           <textarea 
             id="mimi-input"
             name="input"
+            ref={textareaRef}
             value={input} 
             onChange={(e) => setInput(e.target.value)} 
-            placeholder={activeProvocation ? "Type your answer..." : "Deposit your memetic debris..."}
+            placeholder="Describe the aesthetic you want to capture or input your fragments here..."
             className="w-full bg-transparent border-none font-serif italic focus:outline-none resize-none leading-[1.1] text-center tracking-tight text-nous-text dark:text-white text-5xl md:text-7xl lg:text-[6rem] placeholder:text-stone-300/40 dark:placeholder:text-stone-700/40 relative transition-colors overflow-hidden py-0 normal-case" 
             style={{ minHeight: '240px' }}
             rows={2}
           />
+          <div className="text-right font-sans text-[10px] text-stone-400 mt-2">
+            {input.length} characters
+          </div>
           
           {/* EDITORIAL SUBMIT LINK */}
-          <div className="mt-16 flex justify-center">
+          <div className="mt-24 flex justify-center">
               <AnimatePresence mode="wait">
                 {(input.trim() || mediaFiles.length > 0) ? (
                   <motion.button 
@@ -464,7 +492,7 @@ export const InputStudio: React.FC<{
       >
         <div className="pointer-events-auto w-full flex flex-col items-center">
             {/* TOOLS */}
-            <div className="relative flex items-center justify-center gap-8 md:gap-12 mb-8 px-4 text-stone-400">
+            <div className="relative flex items-center justify-center flex-wrap gap-4 md:gap-8 mb-8 px-4 text-stone-400">
                 {/* TRANSCRIPTION INDICATOR - UPDATED POSITIONING */}
                 <AnimatePresence>
                   {transcriptionStatus !== 'idle' && (

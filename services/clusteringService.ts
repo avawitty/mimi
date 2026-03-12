@@ -1,4 +1,4 @@
-import { collection, doc, setDoc, getDocs, query, where, deleteDoc } from "firebase/firestore";
+import { collection, doc, setDoc, getDocs, query, where, deleteDoc, writeBatch } from "firebase/firestore";
 import { db, auth } from "./firebaseInit";
 import { getClient } from "./geminiService";
 import { getAllShadowMemory } from "./vectorSearch";
@@ -161,22 +161,26 @@ Provide ONLY a short, poetic, 2-4 word label for this cluster (e.g., "Late Night
 
     // Save themes to Firestore
     const themesCollection = collection(db, `users/${uid}/themes`);
+    const batch = writeBatch(db);
     
-    // Clear old themes first (simple replacement strategy for now)
+    // Clear old themes first
     try {
       const oldThemesSnap = await getDocs(themesCollection);
-      const deletePromises = oldThemesSnap.docs.map(d => deleteDoc(d.ref));
-      await Promise.all(deletePromises);
+      oldThemesSnap.docs.forEach(d => batch.delete(d.ref));
     } catch (e) {
       handleFirestoreError(e, OperationType.DELETE, `users/${uid}/themes`);
     }
 
-    // Save new themes
+    // Prepare new themes
+    newThemes.forEach(t => {
+      batch.set(doc(themesCollection, t.id), t);
+    });
+
+    // Commit batch
     try {
-      const savePromises = newThemes.map(t => setDoc(doc(themesCollection, t.id), t));
-      await Promise.all(savePromises);
+      await batch.commit();
     } catch (e) {
-      handleFirestoreError(e, OperationType.CREATE, `users/${uid}/themes`);
+      handleFirestoreError(e, OperationType.WRITE, `users/${uid}/themes`);
     }
 
     console.log(`MIMI // Generated ${newThemes.length} Cluster Anchors.`);

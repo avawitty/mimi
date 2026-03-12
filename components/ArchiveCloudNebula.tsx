@@ -26,7 +26,7 @@ const TONE_MAP: Record<ToneTag, { bg: string, text: string, accent: string }> = 
   'editorial': { bg: 'bg-white', text: 'text-black', accent: 'border-stone-100' }
 };
 
-export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = ({ onSelectZine }) => {
+export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) => void, onGenerateThreadZine?: (thread: any) => void }> = ({ onSelectZine, onGenerateThreadZine }) => {
   const { user, profile, toggleZineStar } = useUser();
   const [localZines, setLocalZines] = useState<ZineMetadata[]>([]);
   const [cloudZines, setCloudZines] = useState<ZineMetadata[]>([]);
@@ -83,12 +83,6 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
     
     const baseSet = uniquePersonal;
 
-    if (nebulaMode === 'shadow') {
-       return baseSet.filter(z => z.tone === 'Structured Desire' || z.tone === 'Documentary B&W' || !z.isPublic);
-    }
-    if (nebulaMode === 'starred') {
-       return baseSet.filter(z => profile?.starredZineIds?.includes(z.id));
-    }
     return baseSet;
   }, [localZines, cloudZines, nebulaMode, profile?.starredZineIds]);
 
@@ -124,22 +118,6 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
                     >
                        <Wind size={14} />
                        <span className="font-sans text-[8px] uppercase tracking-widest font-black">Strategist</span>
-                    </button>
-                    <div className="w-px h-8 bg-stone-200 dark:bg-stone-800" />
-                    <button 
-                      onClick={() => setNebulaMode('starred')}
-                      className={`flex items-center gap-3 px-6 md:px-8 py-3 transition-all ${nebulaMode === 'starred' ? 'bg-amber-500 text-white' : 'text-stone-400 hover:text-stone-600'}`}
-                    >
-                       <Star size={14} fill={nebulaMode === 'starred' ? 'white' : 'none'} />
-                       <span className="font-sans text-[8px] uppercase tracking-widest font-black">Favorites</span>
-                    </button>
-                    <div className="w-px h-8 bg-stone-200 dark:bg-stone-800" />
-                    <button 
-                      onClick={() => setNebulaMode('shadow')}
-                      className={`flex items-center gap-3 px-6 md:px-8 py-3 transition-all ${nebulaMode === 'shadow' ? 'bg-stone-950 text-white' : 'text-stone-400 hover:text-stone-600'}`}
-                    >
-                       <Ghost size={14} />
-                       <span className="font-sans text-[8px] uppercase tracking-widest font-black">Shadow</span>
                     </button>
                     <div className="w-px h-8 bg-stone-200 dark:bg-stone-800" />
                     <button 
@@ -239,7 +217,7 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
           </div>
         ) : nebulaMode === 'vibe' ? (
           <div className="w-full h-[600px] pt-12">
-            <VibeGraph />
+            <VibeGraph onGenerateZine={onGenerateThreadZine} />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 pt-12">

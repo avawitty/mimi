@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 import { doc, setDoc, getDoc, collection, query, where, getDocs, orderBy, limit, deleteDoc, addDoc, updateDoc, arrayUnion, increment, onSnapshot } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -60,6 +59,23 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   throw new Error(JSON.stringify(errInfo));
 }
 
+export const sanitizeFirestoreData = (data: any): any => {
+  if (data === undefined) return null;
+  if (data === null) return null;
+  if (data instanceof Date) return data;
+  if (Array.isArray(data)) return data.map(sanitizeFirestoreData);
+  if (typeof data === 'object') {
+    const sanitized: any = {};
+    for (const key in data) {
+      if (data[key] !== undefined) {
+        sanitized[key] = sanitizeFirestoreData(data[key]);
+      }
+    }
+    return sanitized;
+  }
+  return data;
+};
+
 export const isCaptiveInWebview = () => {
   if (typeof window === 'undefined' || !navigator) return false;
   const ua = (navigator.userAgent || navigator.vendor || (window as any).opera || '').toLowerCase();
@@ -81,6 +97,7 @@ export const searchUsers = async (searchTerm: string): Promise<UserProfile[]> =>
 };
 
 export const createStack = async (uid: string, title: string, description: string) => {
+  if (!uid || uid === 'ghost' || !auth.currentUser) return '';
   const id = `stack_${Date.now()}`;
   const stack: Stack = { id, userId: uid, title, description, fragmentIds: [], createdAt: Date.now() };
   await setDoc(doc(db, "stacks", id), stack);
@@ -97,44 +114,105 @@ export const addFragmentToStack = async (stackId: string, fragmentId: string) =>
 };
 
 export const getStacks = async (uid: string) => {
+  if (!uid || uid === 'ghost' || !auth.currentUser) return [];
   const q = query(collection(db, "stacks"), where("userId", "==", uid));
   const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map(doc => doc.data() as Stack);
 };
 
 
-export const signInWithGooglePopup = async (): Promise<void> => {
+export const signInWithGoogleRedirect = async (): Promise<void> => {
   const provider = new GoogleAuthProvider();
-  await signInWithPopup(auth, provider);
+  try {
+    await signInWithRedirect(auth, provider);
+  } catch (e: any) {
+    console.error("Redirect failed:", e);
+    throw e;
+  }
 };
 
 export const anchorIdentity = async (forceRedirect = false): Promise<void> => {
   const provider = new GoogleAuthProvider();
-  if (isCaptiveInWebview() || forceRedirect) return signInWithRedirect(auth, provider);
-  try { await signInWithPopup(auth, provider); } catch (e) { await signInWithRedirect(auth, provider); }
+  provider.addScope('email');
+  provider.addScope('profile');
+
+  if (forceRedirect) {
+    try {
+      await signInWithRedirect(auth, provider);
+    } catch (e: any) {
+      console.error("MIMI // Redirect anchor failed:", e);
+      throw e;
+    }
+    return;
+  }
+
+  // Popup-first — falls back to redirect if blocked
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (e: any) {
+    if (
+      e.code === 'auth/popup-blocked' ||
+      e.code === 'auth/cancelled-popup-request' ||
+      e.code === 'auth/popup-closed-by-user'
+    ) {
+      console.warn("MIMI // Popup obstructed — switching to redirect:", e.code);
+      await signInWithRedirect(auth, provider);
+    } else {
+      console.error("MIMI // Popup anchor failed:", e);
+      throw e;
+    }
+  }
 };
 
 export const linkIdentity = async (forceRedirect = false): Promise<void> => {
   if (!auth.currentUser) throw new Error("No active session to link.");
   const provider = new GoogleAuthProvider();
+  provider.addScope('email');
+  provider.addScope('profile');
   
-  if (isCaptiveInWebview() || forceRedirect) {
-    return linkWithRedirect(auth.currentUser, provider);
+  if (forceRedirect) {
+    try {
+      await linkWithRedirect(auth.currentUser, provider);
+    } catch (e: any) {
+      if (e.code === 'auth/credential-already-in-use') {
+         throw new Error("This Google frequency is already occupied by another registry.");
+      }
+      console.error("Link redirect failed:", e);
+      throw e;
+    }
+    return;
   }
 
+  // Popup-first — falls back to redirect if blocked
   try {
     await linkWithPopup(auth.currentUser, provider);
   } catch (e: any) {
-    if (e.code === 'auth/credential-already-in-use') {
-       throw new Error("This Google frequency is already occupied by another registry.");
+    if (
+      e.code === 'auth/popup-blocked' ||
+      e.code === 'auth/cancelled-popup-request' ||
+      e.code === 'auth/popup-closed-by-user'
+    ) {
+      console.warn("MIMI // Popup obstructed — switching to redirect:", e.code);
+      try {
+        await linkWithRedirect(auth.currentUser, provider);
+      } catch (redirectError: any) {
+        if (redirectError.code === 'auth/credential-already-in-use') {
+           throw new Error("This Google frequency is already occupied by another registry.");
+        }
+        throw redirectError;
+      }
+    } else {
+      if (e.code === 'auth/credential-already-in-use') {
+         throw new Error("This Google frequency is already occupied by another registry.");
+      }
+      console.error("Link popup failed:", e);
+      throw e;
     }
-    // Fallback to redirect for internal errors or blocked popups
-    console.warn("MIMI // Popup Link failed, falling back to redirect:", e.code);
-    await linkWithRedirect(auth.currentUser, provider);
   }
 };
 
 export const saveZineToProfile = async (uid: string, handle: string, avatar: string | undefined, zine: ZineContent, tone: ToneTag, coverUrl?: string, deep?: boolean, isPublic?: boolean, isLite?: boolean, artifacts?: MediaFile[], originalInput?: string, transmissionsUsed?: any[], isHighFidelity?: boolean): Promise<string> => {
+  if (!uid || uid === 'ghost' || !auth.currentUser) return '';
   const targetId = `zine_${uid}_${Date.now()}`;
   
   // Ensure we capture the original thought properly, falling back to metadata if arg is missing
@@ -150,7 +228,7 @@ export const saveZineToProfile = async (uid: string, handle: string, avatar: str
   };
   
   await saveZineLocally(meta);
-  if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+  if (uid && auth.currentUser && navigator.onLine) {
     try {
       await setDoc(doc(db, "zines", targetId), meta);
       syncToShadowMemory(meta);
@@ -178,6 +256,7 @@ export const saveZineToProfile = async (uid: string, handle: string, avatar: str
 };
 
 export const updateTasteGraph = async (uid: string, type: PocketItem['type'], content: any) => {
+  if (!uid || uid === 'ghost' || !auth.currentUser) return;
   try {
     let textToAnalyze = '';
     let isImage = false;
@@ -211,9 +290,8 @@ export const updateTasteGraph = async (uid: string, type: PocketItem['type'], co
     // Fetch current profile
     const userRef = doc(db, "profiles", uid);
     const userSnap = await getDoc(userRef);
-    if (!userSnap.exists()) return;
+    const profile = userSnap.exists() ? userSnap.data() as UserProfile : {} as UserProfile;
 
-    const profile = userSnap.data() as UserProfile;
     const currentVector = profile.tasteVector || {};
     const updatedVector = { ...currentVector };
 
@@ -241,7 +319,7 @@ export const updateTasteGraph = async (uid: string, type: PocketItem['type'], co
        }
     }
 
-    await updateDoc(userRef, { tasteVector: updatedVector });
+    await setDoc(userRef, { tasteVector: updatedVector }, { merge: true });
     console.info("MIMI // Taste Graph Updated");
   } catch (e) {
     console.warn("MIMI // Taste Graph Update Failed:", e);
@@ -251,6 +329,7 @@ export const updateTasteGraph = async (uid: string, type: PocketItem['type'], co
 import { generateTags } from "./geminiService";
 
 export const addToPocket = async (uid: string, type: PocketItem['type'], content: any): Promise<void> => {
+  if (!uid || uid === 'ghost' || !auth.currentUser) return;
   const itemId = `item_${Date.now()}`;
   
   // Generate tags automatically
@@ -258,9 +337,9 @@ export const addToPocket = async (uid: string, type: PocketItem['type'], content
   
   const item: PocketItem = { id: itemId, userId: uid, type, savedAt: Date.now(), content, notes: content.notes || "", tags };
   await savePocketItemLocally(item);
-  if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+  if (uid && auth.currentUser && navigator.onLine) {
     try {
-      await setDoc(doc(db, "pocket", itemId), item);
+      await setDoc(doc(db, "pocket", itemId), sanitizeFirestoreData(item));
       syncToShadowMemory(item);
       // Asynchronously update the taste graph
       updateTasteGraph(uid, type, content);
@@ -271,7 +350,7 @@ export const addToPocket = async (uid: string, type: PocketItem['type'], content
 
 export const deleteFromPocket = async (itemId: string): Promise<void> => {
   await deleteLocalPocketItem(itemId);
-  if (auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+  if (auth.currentUser && navigator.onLine) {
     try {
       await deleteDoc(doc(db, "pocket", itemId));
       deleteFromShadowMemory(itemId);
@@ -280,6 +359,7 @@ export const deleteFromPocket = async (itemId: string): Promise<void> => {
 };
 
 export const createMoodboard = async (uid: string, name: string, itemIds: string[]): Promise<string> => {
+  if (!uid || uid === 'ghost' || !auth.currentUser) return '';
   const boardId = `moodboard_${Date.now()}`;
   const item: PocketItem = { 
     id: boardId, 
@@ -289,7 +369,7 @@ export const createMoodboard = async (uid: string, name: string, itemIds: string
     content: { name, itemIds } 
   };
   await savePocketItemLocally(item);
-  if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+  if (uid && auth.currentUser && navigator.onLine) {
     try {
       await setDoc(doc(db, "pocket", boardId), item);
       syncToShadowMemory(item);
@@ -305,7 +385,7 @@ export const updatePocketItem = async (itemId: string, patch: Partial<PocketItem
     const updated = { ...localPocket[index], ...patch };
     await savePocketItemLocally(updated);
   }
-  if (auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+  if (auth.currentUser && navigator.onLine) {
     try {
       await updateDoc(doc(db, "pocket", itemId), patch);
     } catch (e) { console.warn("MIMI // Pocket Update Skipped:", e.code); }
@@ -313,6 +393,7 @@ export const updatePocketItem = async (itemId: string, patch: Partial<PocketItem
 };
 
 export const fetchPocketItems = async (uid: string) => {
+    if (!uid || uid === 'ghost' || !auth.currentUser) return [];
     try {
       const q = query(collection(db, "pocket"), where("userId", "==", uid));
       const docs = (await getDocs(q)).docs.map(d => d.data() as PocketItem);
@@ -324,6 +405,10 @@ export const fetchPocketItems = async (uid: string) => {
 };
 
 export const subscribeToPocketItems = (uid: string, callback: (data: PocketItem[]) => void) => {
+  if (!uid || uid === 'ghost' || !auth.currentUser) {
+    callback([]);
+    return () => {};
+  }
   const q = query(collection(db, "pocket"), where("userId", "==", uid));
   return onSnapshot(q, (snapshot) => {
     const docs = snapshot.docs.map(d => d.data() as PocketItem);
@@ -332,6 +417,7 @@ export const subscribeToPocketItems = (uid: string, callback: (data: PocketItem[
 };
 
 export const fetchUserZines = async (uid: string) => {
+    if (!uid || uid === 'ghost' || !auth.currentUser) return [];
     try {
       const q = query(collection(db, "zines"), where("userId", "==", uid));
       const docs = (await getDocs(q)).docs.map(d => d.data() as ZineMetadata);
@@ -343,6 +429,10 @@ export const fetchUserZines = async (uid: string) => {
 };
 
 export const subscribeToUserZines = (uid: string, callback: (data: ZineMetadata[]) => void) => {
+  if (!uid || uid === 'ghost' || !auth.currentUser) {
+    callback([]);
+    return () => {};
+  }
   const q = query(collection(db, "zines"), where("userId", "==", uid));
   return onSnapshot(q, (snapshot) => {
     const docs = snapshot.docs.map(d => d.data() as ZineMetadata);
@@ -383,14 +473,14 @@ export const createDossierFolder = async (uid: string, name: string): Promise<st
   // Always save locally
   await saveFolderLocally(folder);
   
-  if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+  if (uid && uid !== 'ghost' && auth.currentUser && navigator.onLine) {
     try { await setDoc(doc(db, "dossier_folders", id), folder); } catch (e) {}
   }
   return id;
 };
 
 export const absorbTransmission = async (uid: string, zineData: ZineMetadata): Promise<string> => {
-  if (!uid || !auth.currentUser || auth.currentUser.isAnonymous || !navigator.onLine) return '';
+  if (!uid || uid === 'ghost' || !auth.currentUser || !navigator.onLine) return '';
   
   try {
     // 1. Create a new Dossier Folder for the absorbed zine
@@ -465,7 +555,7 @@ HYPOTHESIS: ${zineData.content.strategic_hypothesis || ''}
 };
 
 export const updateDossierFolder = async (folderId: string, patch: Partial<DossierFolder>) => {
-  if (auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+  if (auth.currentUser && navigator.onLine) {
     try { await updateDoc(doc(db, "dossier_folders", folderId), patch); } catch (e) {}
   }
 };
@@ -473,7 +563,7 @@ export const updateDossierFolder = async (folderId: string, patch: Partial<Dossi
 export const fetchDossierFolders = async (uid: string) => {
   const localFolders = await getLocalFolders();
   
-  if (!uid || !auth.currentUser || auth.currentUser.isAnonymous || !navigator.onLine) {
+  if (!uid || uid === 'ghost' || !auth.currentUser || !navigator.onLine) {
     return localFolders.sort((a, b) => b.createdAt - a.createdAt);
   }
 
@@ -499,6 +589,7 @@ export const fetchDossierFolders = async (uid: string) => {
 };
 
 export const createDossierArtifactFromImage = async (uid: string, folderId: string, title: string, imageUrl: string) => {
+  if (!uid || uid === 'ghost' || !auth.currentUser) return '';
   const id = `artifact_${Date.now()}`;
   
   // Generate tags automatically
@@ -513,7 +604,7 @@ export const createDossierArtifactFromImage = async (uid: string, folderId: stri
   
   await saveArtifactLocally(artifact);
   
-  if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+  if (uid && auth.currentUser && navigator.onLine) {
     try { 
       await setDoc(doc(db, "dossier_artifacts", id), artifact); 
       updateTasteGraph(uid, 'image', { imageUrl });
@@ -523,6 +614,7 @@ export const createDossierArtifactFromImage = async (uid: string, folderId: stri
 };
 
 export const createDossierArtifactFromText = async (uid: string, folderId: string, title: string, text: string) => {
+  if (!uid || uid === 'ghost' || !auth.currentUser) return '';
   const id = `artifact_${Date.now()}`;
   
   // Generate tags automatically
@@ -537,7 +629,7 @@ export const createDossierArtifactFromText = async (uid: string, folderId: strin
   
   await saveArtifactLocally(artifact);
   
-  if (uid && auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+  if (uid && auth.currentUser && navigator.onLine) {
     try { 
       await setDoc(doc(db, "dossier_artifacts", id), artifact); 
       updateTasteGraph(uid, 'text', { content: text });
@@ -549,7 +641,7 @@ export const createDossierArtifactFromText = async (uid: string, folderId: strin
 export const fetchDossierArtifacts = async (folderId: string) => {
   const localArtifacts = await getLocalArtifacts(folderId);
   
-  if (!auth.currentUser || auth.currentUser.isAnonymous || !navigator.onLine) {
+  if (!auth.currentUser || !navigator.onLine) {
     return localArtifacts.sort((a, b) => b.createdAt - a.createdAt);
   }
 
@@ -572,12 +664,13 @@ export const fetchDossierArtifacts = async (folderId: string) => {
 // -- PROPOSAL SYSTEM CRUD -- //
 
 export const saveProposal = async (proposal: Proposal): Promise<void> => {
-  if (auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+  if (auth.currentUser && navigator.onLine) {
     try { await setDoc(doc(db, "proposals", proposal.id), proposal); } catch (e) {}
   }
 };
 
 export const fetchUserProposals = async (uid: string) => {
+  if (!uid || uid === 'ghost' || !auth.currentUser) return [];
   try {
     const q = query(collection(db, "proposals"), where("userId", "==", uid));
     const docs = (await getDocs(q)).docs.map(d => d.data() as Proposal);
@@ -595,7 +688,7 @@ export const getProposalById = async (id: string) => {
 // -- SHARED CONTEXT SYSTEM -- //
 
 export const addContextEntry = async (uid: string, text: string, type: 'note' | 'link' = 'note'): Promise<string> => {
-  if (!uid || !text) throw new Error("Invalid Context Input");
+  if (!uid || uid === 'ghost' || !auth.currentUser || !text) throw new Error("Invalid Context Input");
   const id = `ctx_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
   const entry: ContextEntry = {
     id,
@@ -605,22 +698,28 @@ export const addContextEntry = async (uid: string, text: string, type: 'note' | 
     timestamp: Date.now()
   };
   
-  if (navigator.onLine && auth.currentUser && !auth.currentUser.isAnonymous) {
+  if (navigator.onLine && auth.currentUser) {
     try { await setDoc(doc(db, "context", id), entry); } catch (e) {}
   }
   return id;
 };
 
 export const fetchContextEntries = async (limitCount: number = 50) => {
+  if (!auth.currentUser) return [];
   try {
-    const q = query(collection(db, "context"), orderBy("timestamp", "desc"), limit(limitCount));
+    const q = query(
+      collection(db, "context"), 
+      where("userId", "==", auth.currentUser.uid),
+      orderBy("timestamp", "desc"), 
+      limit(limitCount)
+    );
     const snap = await getDocs(q);
     return snap.docs.map(d => d.data() as ContextEntry);
   } catch (e) { return []; }
 };
 
 export const deleteContextEntry = async (id: string) => {
-  if (auth.currentUser && !auth.currentUser.isAnonymous && navigator.onLine) {
+  if (auth.currentUser && navigator.onLine) {
     try { await deleteDoc(doc(db, "context", id)); } catch (e) {}
   }
 };
@@ -629,6 +728,7 @@ export const deleteContextEntry = async (id: string) => {
 
 // Updated: 'profiles' collection for Identity
 export const getUserProfile = async (uid: string) => {
+  if (!uid || uid === 'ghost' || !auth.currentUser) return null;
   try {
     const d = await getDoc(doc(db, "profiles", uid));
     return d.exists() ? d.data() as UserProfile : null;
@@ -639,8 +739,9 @@ export const getUserProfile = async (uid: string) => {
 };
 
 export const saveUserProfile = async (p: UserProfile) => {
+  if (!p.uid || p.uid === 'ghost' || !auth.currentUser) return;
   try {
-    await setDoc(doc(db, "profiles", p.uid), p, { merge: true });
+    await setDoc(doc(db, "profiles", p.uid), sanitizeFirestoreData(p), { merge: true });
   } catch (e: any) {
     console.warn("MIMI // Profile Write Blocked:", e.code);
   }
@@ -648,6 +749,7 @@ export const saveUserProfile = async (p: UserProfile) => {
 
 // Updated: 'userPreferences' collection for private data (drafts, personas, etc)
 export const getUserPreferences = async (uid: string) => {
+  if (!uid || uid === 'ghost' || !auth.currentUser) return null;
   try {
     const d = await getDoc(doc(db, "userPreferences", uid));
     return d.exists() ? d.data() as UserPreferences : null;
@@ -658,8 +760,9 @@ export const getUserPreferences = async (uid: string) => {
 };
 
 export const saveUserPreferences = async (uid: string, p: UserPreferences) => {
+  if (!uid || uid === 'ghost' || !auth.currentUser) return;
   try {
-    await setDoc(doc(db, "userPreferences", uid), p, { merge: true });
+    await setDoc(doc(db, "userPreferences", uid), sanitizeFirestoreData(p), { merge: true });
   } catch (e: any) {
     console.warn("MIMI // Prefs Write Blocked:", e.code);
   }
@@ -667,6 +770,10 @@ export const saveUserPreferences = async (uid: string, p: UserPreferences) => {
 
 // REAL-TIME SUBSCRIPTIONS
 export const subscribeToUserProfile = (uid: string, callback: (p: UserProfile | null) => void) => {
+  if (!uid || uid === 'ghost' || !auth.currentUser) {
+    callback(null);
+    return () => {};
+  }
   return onSnapshot(doc(db, "profiles", uid), 
     (doc) => callback(doc.exists() ? doc.data() as UserProfile : null),
     (error) => console.warn("MIMI // Profile Sub Blocked:", error.code)
@@ -674,6 +781,10 @@ export const subscribeToUserProfile = (uid: string, callback: (p: UserProfile | 
 };
 
 export const subscribeToUserPreferences = (uid: string, callback: (p: UserPreferences | null) => void) => {
+  if (!uid || uid === 'ghost' || !auth.currentUser) {
+    callback(null);
+    return () => {};
+  }
   return onSnapshot(doc(db, "userPreferences", uid), 
     (doc) => callback(doc.exists() ? doc.data() as UserPreferences : null),
     (error) => console.warn("MIMI // Prefs Sub Blocked:", error.code)
@@ -682,7 +793,7 @@ export const subscribeToUserPreferences = (uid: string, callback: (p: UserPrefer
 
 // MIGRATION LOGIC
 export const migrateLocalToCloud = async (uid: string, localProfile: UserProfile) => {
-  if (!uid || !localProfile) return;
+  if (!uid || uid === 'ghost' || !auth.currentUser || !localProfile) return;
   
   // 1. Prepare Identity Data (Public/Shared)
   const profileData: Partial<UserProfile> = { ...localProfile, uid };
@@ -706,8 +817,8 @@ export const migrateLocalToCloud = async (uid: string, localProfile: UserProfile
   // 3. Parallel Write
   try {
     await Promise.all([
-      setDoc(doc(db, "profiles", uid), profileData, { merge: true }),
-      setDoc(doc(db, "userPreferences", uid), preferencesData, { merge: true })
+      setDoc(doc(db, "profiles", uid), sanitizeFirestoreData(profileData), { merge: true }),
+      setDoc(doc(db, "userPreferences", uid), sanitizeFirestoreData(preferencesData), { merge: true })
     ]);
   } catch (e: any) {
     console.warn("MIMI // Migration Partial/Blocked:", e.code);
@@ -726,10 +837,14 @@ export const handleAuthRedirect = async () => {
     return result;
   } catch(e: any) {
     console.warn("MIMI // Redirect Handshake Error:", e.code, e.message);
-    // If it's a link error, we might want to notify the user via a global event
+    // Notify the user via a global event
     if (e.code === 'auth/credential-already-in-use') {
         window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
             detail: { message: "This Google frequency is already occupied by another registry.", type: 'error' } 
+        }));
+    } else {
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+            detail: { message: `Identity Anchor Failed: ${e.message}`, type: 'error' } 
         }));
     }
     return null;

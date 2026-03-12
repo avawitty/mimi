@@ -8,11 +8,14 @@ import { Loader2, Camera, Check, Type, PenTool, Layers, Moon, Orbit, ShieldCheck
 import { useTheme, PALETTES } from '../contexts/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DeveloperSettings } from './DeveloperSettings';
+import { TheWard } from './TheWard';
 import { ImperialPatronageModal } from './ImperialPatronageModal';
 import { ConnectionsManager } from './ConnectionsManager';
 import { ArchetypeIndex } from './ArchetypeIndex';
 import { TasteGraph } from './TasteGraph';
+import { AestheticGenomeCard } from './AestheticGenomeCard';
 import { SovereignIdentityCardView } from './SovereignIdentityCardView'; // NEW
+import { generateSignature } from '../services/signatureService';
 
 const DNAButton: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; label: string }> = ({ active, onClick, icon, label }) => (
   <button 
@@ -113,10 +116,26 @@ const MaskCard: React.FC<{ persona: Persona; isActive: boolean; onSelect: () => 
     );
 };
 
+// Detects cross-origin iframes (AI Studio, social webviews) where Google OAuth is
+// blocked by Google's own policy
+const detectIframeContext = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  try {
+    if (window.self !== window.top) return true;
+  } catch {
+    return true; // cross-origin access throws — definitely an iframe
+  }
+  const ua = (navigator.userAgent || '').toLowerCase();
+  const isSocial = /instagram|fb_iab|fban|fbav|tiktok|threads|wv\b|webview/i.test(ua);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+  return isSocial && !isStandalone;
+};
+
 export const UserProfileView: React.FC = () => {
-  const { user, profile, updateProfile, logout, personas, activePersonaId, switchPersona, createPersona, updatePersona, deletePersona, linkAccount, verifyIdentity, featureFlags, toggleFeature, keyRing, addKeyToRing, removeKeyFromRing, openKeySelector, signInWithGooglePopup } = useUser();
+  const { user, profile, updateProfile, logout, personas, activePersonaId, switchPersona, createPersona, updatePersona, deletePersona, linkAccount, verifyIdentity, featureFlags, toggleFeature, keyRing, addKeyToRing, removeKeyFromRing, openKeySelector, signInWithGoogleRedirect, login } = useUser();
   const { currentPalette } = useTheme();
   
+  const [isIframe, setIsIframe] = useState(false);
   const [handle, setHandle] = useState('');
   const [isCheckingHandle, setIsCheckingHandle] = useState(false);
   const [handleAvailable, setHandleAvailable] = useState<boolean | null>(null);
@@ -125,26 +144,32 @@ export const UserProfileView: React.FC = () => {
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
   const [showHandleConfirm, setShowHandleConfirm] = useState(false);
+
+  useEffect(() => {
+    setIsIframe(detectIframeContext());
+  }, []);
   
   const [archetype, setArchetype] = useState<TypographicArchetype>('minimalist-sans');
   const [tasteDefinition, setTasteDefinition] = useState('');
-  
+
   const handleGenerateDescription = async () => {
     if (!profile) return;
     setIsGeneratingDescription(true);
     try {
-      const { GoogleGenAI } = await import("@google/genai");
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      const { withResilience } = await import("../services/geminiService");
       
       const prompt = `Generate a short, poetic, and evocative description for a user profile based on their taste profile: ${JSON.stringify(profile.tasteProfile)}. The description should be in the style of a creative director or curator.`;
       
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: prompt,
+      const text = await withResilience(async (ai) => {
+        const response = await ai.models.generateContent({
+          model: "gemini-3-flash-preview",
+          contents: prompt,
+        });
+        return response.text;
       });
       
-      if (response.text) {
-        await updateProfile({ ...profile, bio: response.text });
+      if (text) {
+        await updateProfile({ ...profile, bio: text });
         setMessage({ text: "Description generated and anchored.", type: 'success' });
         setTimeout(() => setMessage(null), 3000);
       }
@@ -157,6 +182,7 @@ export const UserProfileView: React.FC = () => {
   };
   
   const [isAddingPersona, setIsAddingPersona] = useState(false);
+  const [showWard, setShowWard] = useState(false);
   const [newPersonaName, setNewPersonaName] = useState('');
   const [newPersonaKey, setNewPersonaKey] = useState('');
   const [showDevSettings, setShowDevSettings] = useState(false);
@@ -256,16 +282,16 @@ export const UserProfileView: React.FC = () => {
       setTimeout(() => setMessage(null), 3000);
   };
 
-  const handleGoogleLink = async (forceRedirect = false) => {
+  const handleGoogleLink = async (forceRedirect = true) => {
       if (user?.isAnonymous) {
           try {
               if (forceRedirect) {
                   await linkAccount(true);
                   return;
               }
-              await linkAccount();
+              await linkAccount(true);
               setMessage({ text: "Identity Anchored to Google.", type: 'success' });
-          } catch(e) {
+          } catch(e: any) {
               console.error("Link Error:", e);
               setMessage({ text: e.message || "Link Failed.", type: 'error' });
               // If it's an internal error, show troubleshooting
@@ -333,6 +359,7 @@ export const UserProfileView: React.FC = () => {
           </motion.div>
         )}
         {showDevSettings && <DeveloperSettings onClose={() => setShowDevSettings(false)} />}
+        {showWard && <TheWard onClose={() => setShowWard(false)} />}
         {showPatronageModal && <ImperialPatronageModal isOpen={showPatronageModal} onClose={() => setShowPatronageModal(false)} prefillKey={patronagePrefill} />}
       </AnimatePresence>
 
@@ -426,31 +453,20 @@ export const UserProfileView: React.FC = () => {
                 {/* DISCRETE GOOGLE ANCHOR / AGENT PROTOCOLS / SOVEREIGN KEY */}
                 <div className="flex flex-col items-center gap-4">
                     <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 w-full max-w-4xl">
+                        {!isIframe && (
+                          <button 
+                            onClick={() => !user || user.isAnonymous ? linkAccount(false) : null} 
+                            className={`h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap ${!user || user.isAnonymous ? 'text-stone-500 hover:text-emerald-600 hover:border-emerald-500/50' : 'text-emerald-500 border-emerald-500/50 cursor-default'}`}
+                          >
+                             <Link size={10} /> {!user || user.isAnonymous ? 'Sign in with Google' : 'Swan Signed On'}
+                          </button>
+                        )}
+                        
                         <button 
-                          onClick={signInWithGooglePopup} 
-                          className="h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black text-stone-500 hover:text-emerald-600 hover:border-emerald-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap"
+                          onClick={() => setShowWard(true)}
+                          className="h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black text-stone-500 hover:text-emerald-500 hover:border-emerald-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap"
                         >
-                           <Link size={10} /> Sign in with Google
-                        </button>
-                        <button 
-                          onClick={() => handleGoogleLink(false)} 
-                          className="h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black text-stone-500 hover:text-emerald-600 hover:border-emerald-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap"
-                        >
-                           <Link size={10} /> Anchor Identity (Legacy)
-                        </button>
-                        <button 
-                          onClick={() => handleGoogleLink(true)} 
-                          className="h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 hover:text-amber-600 hover:border-amber-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap"
-                          title="Use this if the standard login fails"
-                        >
-                           <RefreshCw size={10} /> Force Redirect
-                        </button>
-                        <button 
-                          onClick={verifyIdentity} 
-                          className="h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 hover:text-emerald-600 hover:border-emerald-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap"
-                          title="Manually verify identity if state is stuck"
-                        >
-                           <ShieldCheck size={10} /> Verify Handshake
+                           <Activity size={10} /> The Ward
                         </button>
                         
                         <button 
@@ -522,6 +538,47 @@ export const UserProfileView: React.FC = () => {
             </div>
             <div className="max-w-3xl mx-auto w-full px-4">
                 <TasteGraph tasteVector={profile?.tasteVector} variant="portrait" />
+            </div>
+        </section>
+
+        {/* AESTHETIC SIGNATURE */}
+        <section className="space-y-12">
+            <div className="flex flex-col items-center gap-2 text-center">
+               <div className="flex items-center gap-3 text-stone-400">
+                 <Fingerprint size={18} />
+                 <span className="font-sans text-[9px] uppercase tracking-[0.5em] font-black italic">Aesthetic Signature</span>
+               </div>
+            </div>
+            <div className="max-w-md mx-auto w-full px-4">
+              {profile?.tasteProfile?.aestheticSignature ? (
+                <button 
+                  onClick={() => {
+                    const event = new CustomEvent('mimi:change_view', { detail: 'signature' });
+                    window.dispatchEvent(event);
+                  }}
+                  className="w-full py-4 bg-stone-800 text-stone-100 rounded-full font-sans text-[10px] uppercase tracking-widest font-black hover:bg-stone-700 transition-all"
+                >
+                  View Aesthetic Dashboard
+                </button>
+              ) : (
+                <button 
+                  onClick={async () => {
+                    if (!user) return;
+                    const zines = await fetchUserZines(user.uid);
+                    const sig = await generateSignature(zines);
+                    await updateProfile({
+                      ...profile!,
+                      tasteProfile: {
+                        ...profile!.tasteProfile!,
+                        aestheticSignature: sig
+                      }
+                    });
+                  }}
+                  className="w-full py-4 bg-emerald-500 text-white rounded-full font-sans text-[10px] uppercase tracking-widest font-black"
+                >
+                  Generate Aesthetic Signature
+                </button>
+              )}
             </div>
         </section>
 

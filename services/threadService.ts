@@ -9,6 +9,8 @@ export interface ThreadNode {
   id: string;
 }
 
+export type ThreadMode = 'biographical' | 'influence' | 'emotion' | 'time';
+
 export interface Thread {
   id: string;
   startArtifactId: string;
@@ -17,6 +19,7 @@ export interface Thread {
   themes: ThemeNode[];
   narrative: string;
   created_at: number;
+  mode: ThreadMode;
 }
 
 function cosineSimilarity(vecA: number[], vecB: number[]): number {
@@ -36,6 +39,7 @@ export const findThread = async (
   startArtifactId: string,
   memories: any[],
   themes: ThemeNode[],
+  mode: ThreadMode = 'emotion',
   maxSteps = 6
 ): Promise<Thread | null> => {
   const startArtifact = memories.find(m => m.id === startArtifactId);
@@ -52,6 +56,15 @@ export const findThread = async (
   visited.add(currentArt.id);
 
   const weekMs = 7 * 24 * 60 * 60 * 1000;
+
+  let simWeight, timeWeight, themeWeight;
+  switch (mode) {
+    case 'biographical': simWeight = 0.3; timeWeight = 0.6; themeWeight = 0.1; break;
+    case 'influence': simWeight = 0.5; timeWeight = 0.1; themeWeight = 0.4; break;
+    case 'emotion': simWeight = 0.8; timeWeight = 0.1; themeWeight = 0.1; break;
+    case 'time': simWeight = 0.1; timeWeight = 0.8; themeWeight = 0.1; break;
+    default: simWeight = 0.8; timeWeight = 0.1; themeWeight = 0.1;
+  }
 
   for (let step = 0; step < maxSteps / 2; step++) {
     // 1. Find closest theme
@@ -85,7 +98,7 @@ export const findThread = async (
       const timeScore = Math.exp(-timeDiff / weekMs);
       const themeMembership = bestTheme.artifact_ids.includes(m.id) ? 1 : 0;
 
-      const score = (sim * 0.7) + (timeScore * 0.2) + (themeMembership * 0.1);
+      const score = (sim * simWeight) + (timeScore * timeWeight) + (themeMembership * themeWeight);
 
       if (score > bestArtScore) {
         bestArtScore = score;
@@ -113,15 +126,15 @@ export const findThread = async (
     const themeLabels = threadThemes.map(t => t.label).join('\n- ');
 
     const prompt = `You are Mimi, an aesthetic editor.
-The user's artifacts form this thread:
-
+The user's artifacts form a ${mode} thread:
+ 
 Artifact summaries:
 - ${artSummaries}
 
 Theme labels:
 - ${themeLabels}
 
-Explain the emotional or aesthetic thread connecting them.
+Explain the ${mode} thread connecting them.
 Use 2-4 sentences.
 Tone: reflective, observant, poetic.
 Do not use quotes or introductory phrases. Speak directly to the user.`;
@@ -147,7 +160,8 @@ Do not use quotes or introductory phrases. Speak directly to the user.`;
     artifacts: threadArtifacts,
     themes: threadThemes,
     narrative,
-    created_at: Date.now()
+    created_at: Date.now(),
+    mode
   };
 
   try {

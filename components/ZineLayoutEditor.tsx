@@ -2,7 +2,8 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ZinePage, EditorElement, EditorElementStyle, ToneTag, Treatment } from '../types';
+import { ZinePage, EditorElement, EditorElementStyle, ToneTag, Treatment, MaterialityConfig } from '../types';
+import { MaterialityPanel } from './MaterialityPanel';
 import { Type, Box, X, Check, Trash2, Plus, Image as ImageIcon, RotateCw, AlignLeft, AlignCenter, AlignRight, Italic, ChevronsUp, ChevronsDown, Bold, SlidersHorizontal, History, Maximize, Move, Layers, Type as FontIcon, ChevronUp, ChevronDown, Palette, Sparkles, Wand2, Info, Volume2, Loader2, AlertCircle, EyeOff, Crown, Link as LinkIcon, Radar, Fingerprint, Droplet, Hash, ExternalLink, Download, FileImage, FileText, Save, FolderOpen, Ratio, Crop, ScanLine } from 'lucide-react';
 import { getAspectRatioForTone, generateAudio, generateSemioticSignals, analyzeMiseEnScene } from '../services/geminiService';
 import { fetchPocketItems } from '../services/firebase';
@@ -51,14 +52,41 @@ const initializeElements = (page: ZinePage): EditorElement[] => {
   }
   const els: EditorElement[] = [];
   const getId = (prefix: string) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  if (page.pageType === 'thread_timeline' && page.threadData) {
+    // Layout for thread timeline
+    if (page.headline) {
+      els.push({ id: getId('headline'), type: 'text', content: page.headline, style: { top: 5, left: 10, width: 80, zIndex: 10, fontSize: 2.2, fontFamily: 'serif', color: 'inherit', textAlign: 'left', fontStyle: 'italic', fontWeight: '900', opacity: 1, rotation: 0, lineHeight: 1.1 } });
+    }
+    if (page.threadData.commentary) {
+      els.push({ id: getId('commentary'), type: 'text', content: page.threadData.commentary, style: { top: 15, left: 10, width: 80, zIndex: 8, fontSize: 1.1, fontFamily: 'serif', color: 'inherit', textAlign: 'left', fontStyle: 'normal', fontWeight: '400', opacity: 1, rotation: 0, lineHeight: 1.4 } });
+    }
+    
+    // Layout artifacts in a grid/timeline
+    const artifacts = page.threadData.artifacts || [];
+    const maxArtifacts = Math.min(artifacts.length, 4);
+    for (let i = 0; i < maxArtifacts; i++) {
+      const art = artifacts[i];
+      const topOffset = 35 + (i * 15);
+      
+      if (art.type === 'image' && art.media_url) {
+        els.push({ id: getId(`art_img_${i}`), type: 'image', content: art.media_url, style: { top: topOffset, left: 10, width: 20, height: 12, zIndex: 5, opacity: 1, objectFit: 'cover', filter: 'none', rotation: 0 } });
+        els.push({ id: getId(`art_txt_${i}`), type: 'text', content: art.content_preview || '', style: { top: topOffset, left: 35, width: 55, zIndex: 6, fontSize: 0.8, fontFamily: 'sans', color: 'inherit', textAlign: 'left', fontStyle: 'normal', fontWeight: '400', opacity: 0.7, rotation: 0, lineHeight: 1.2 } });
+      } else {
+        els.push({ id: getId(`art_txt_${i}`), type: 'text', content: art.content_preview || art.content || '', style: { top: topOffset, left: 10, width: 80, zIndex: 6, fontSize: 0.9, fontFamily: 'serif', color: 'inherit', textAlign: 'left', fontStyle: 'italic', fontWeight: '400', opacity: 0.8, rotation: 0, lineHeight: 1.3 } });
+      }
+    }
+    return els;
+  }
+
   if (page.originalMediaUrl) {
     els.push({ id: getId('img'), type: 'image', content: page.originalMediaUrl, negativePrompt: page.negativePrompt, style: { top: 10, left: 10, width: 80, height: 80, zIndex: 0, opacity: 1, objectFit: 'cover', filter: 'none', rotation: 0 } });
   }
   if (page.headline) {
-    els.push({ id: getId('headline'), type: 'text', content: page.headline, style: { top: 10, left: 10, width: 80, zIndex: 10, fontSize: 2.2, fontFamily: 'serif', color: 'inherit', textAlign: 'left', fontStyle: 'italic', fontWeight: '900', opacity: 1, rotation: 0, lineHeight: 1.1 } });
+    els.push({ id: getId('headline'), type: 'text', content: page.headline, style: { top: 15, left: 15, width: 70, zIndex: 10, fontSize: 3.0, fontFamily: 'serif', color: 'inherit', textAlign: 'left', fontStyle: 'italic', fontWeight: '900', opacity: 1, rotation: 0, lineHeight: 1.0 } });
   }
   if (page.bodyCopy) {
-    els.push({ id: getId('body'), type: 'text', content: page.bodyCopy, style: { top: 40, left: 10, width: 80, zIndex: 8, fontSize: 1.1, fontFamily: 'serif', color: 'inherit', textAlign: 'left', fontStyle: 'normal', fontWeight: '400', opacity: 1, rotation: 0, lineHeight: 1.4 } });
+    els.push({ id: getId('body'), type: 'text', content: page.bodyCopy, style: { top: 50, left: 15, width: 50, zIndex: 8, fontSize: 1.0, fontFamily: 'sans', color: 'inherit', textAlign: 'left', fontStyle: 'normal', fontWeight: '400', opacity: 0.8, rotation: 0, lineHeight: 1.6 } });
   }
   return els;
 };
@@ -69,11 +97,19 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
   const [zineTitle, setZineTitle] = useState(initialTitle);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [trace, setTrace] = useState(() => (page.customLayout?.editTrace || []));
-  const [activeTab, setActiveTab] = useState<'fragments' | 'style' | 'trace'>('fragments');
+  const [activeTab, setActiveTab] = useState<'fragments' | 'style' | 'trace' | 'materiality'>('fragments');
+  const [materialityConfig, setMaterialityConfig] = useState<MaterialityConfig>(() => {
+    return profile?.tailorDraft?.materialityConfig || {
+      paperStock: 'newsprint',
+      typographyLineage: 'editorial-serif',
+      negativeSpaceDensity: 5
+    };
+  });
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isGeneratingSignals, setIsGeneratingSignals] = useState(false);
   const [sovereignTreatments, setSovereignTreatments] = useState<Treatment[]>([]);
+  const [suggestedThread, setSuggestedThread] = useState<any | null>(null);
   
   // Analysis State
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
@@ -140,10 +176,26 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
   useEffect(() => {
       setImageAnalysis(null);
       setIsAnalyzingImage(false);
-  }, [selectedId]);
+      
+      // Simulate finding a thread when an image is selected
+      if (selectedId) {
+        const el = elements.find(e => e.id === selectedId);
+        if (el && el.type === 'image' && Math.random() > 0.5) {
+          setSuggestedThread({
+            id: `thread_${Date.now()}`,
+            narrative: "This artifact resonates with a deeper pattern in your archive.",
+            artifacts: []
+          });
+        } else {
+          setSuggestedThread(null);
+        }
+      } else {
+        setSuggestedThread(null);
+      }
+  }, [selectedId, elements]);
 
   const addTrace = useCallback((note: string) => { setTrace(prev => [...prev, { timestamp: Date.now(), note }]); }, []);
-  const handleCommit = () => { const imgEl = elements.find(el => el.type === 'image'); onSave(elements, trace, { negativePrompt: imgEl?.negativePrompt, title: zineTitle }); };
+  const handleCommit = () => { const imgEl = elements.find(el => el.type === 'image'); onSave(elements, trace, { negativePrompt: imgEl?.negativePrompt, title: zineTitle, materialityConfig }); };
   
   const handleGenerateSignals = async () => { 
     if (isGeneratingSignals) return; 
@@ -428,9 +480,9 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
         <motion.div initial={false} animate={{ y: isMobile ? (drawerOpen ? 0 : '100%') : 0, x: isMobile ? 0 : (selectedId ? 0 : 480) }} className={`fixed bottom-0 left-0 right-0 lg:relative lg:flex lg:w-[480px] bg-white dark:bg-stone-900 border-t lg:border-t-0 lg:border-l border-stone-200 dark:border-stone-800 flex-col pt-4 lg:pt-20 shadow-2xl z-[2050] transition-all duration-500 ${isMobile ? 'h-[45vh] rounded-t-3xl overflow-hidden' : 'h-full'}`}>
             <div className="flex lg:hidden justify-center pb-2" onClick={() => setDrawerOpen(false)}><div className="w-12 h-1 bg-stone-200 dark:bg-stone-800 rounded-full" /></div>
             <div className="flex border-b border-stone-100 dark:border-stone-800 h-14 lg:h-20 shrink-0 px-4"> 
-                {['fragments', 'style', 'trace'].map((tab) => (
+                {['fragments', 'style', 'trace', 'materiality'].map((tab) => (
                     <button key={tab} onClick={() => setActiveTab(tab as any)} className={`flex-1 flex flex-col items-center justify-center gap-1 font-sans text-[7px] lg:text-[9px] uppercase tracking-widest transition-all ${activeTab === tab ? 'text-nous-text dark:text-white font-black' : 'text-stone-300 dark:text-stone-700 hover:text-stone-500'}`}> 
-                        {tab === 'fragments' && <Plus size={16}/>}{tab === 'style' && <SlidersHorizontal size={16}/>}{tab === 'trace' && <History size={16}/>}<span className="font-black">{tab}</span>
+                        {tab === 'fragments' && <Plus size={16}/>}{tab === 'style' && <SlidersHorizontal size={16}/>}{tab === 'trace' && <History size={16}/>}{tab === 'materiality' && <Layers size={16}/>}<span className="font-black">{tab}</span>
                     </button> 
                 ))}
             </div>
@@ -440,6 +492,7 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
                         <button onClick={() => addElement('text', 'A new thought...')} className="flex flex-col items-center justify-center gap-2 aspect-square border border-stone-50 dark:border-stone-800 rounded-xl bg-stone-50/50 dark:bg-stone-950/50 active:scale-95"><FontIcon size={18} className="text-stone-300" /><span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-stone-400">Type</span></button> 
                         <button onClick={() => addElement('box', '')} className="flex flex-col items-center justify-center gap-2 aspect-square border border-stone-50 dark:border-stone-800 rounded-xl bg-stone-50/50 dark:bg-stone-950/50 active:scale-95"><Box size={18} className="text-stone-300" /><span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-stone-400">Void</span></button> 
                         <button onClick={() => imageUploadRef.current?.click()} className="flex flex-col items-center justify-center gap-2 aspect-square border border-stone-50 dark:border-stone-800 rounded-xl bg-stone-50/50 dark:bg-stone-950/50 active:scale-95"><ImageIcon size={18} className="text-stone-300" /><span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-stone-400">Image</span></button> 
+                        <button onClick={() => addElement('text', 'THREAD NOTE\n──────────────\nThis artifact echoes a recurring theme in your archive.')} className="flex flex-col items-center justify-center gap-2 aspect-square border border-stone-50 dark:border-stone-800 rounded-xl bg-stone-50/50 dark:bg-stone-950/50 active:scale-95"><Sparkles size={18} className="text-stone-300" /><span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-stone-400">Thread</span></button> 
                         <button onClick={handleGenerateSignals} disabled={isGeneratingSignals} className="flex flex-col items-center justify-center gap-2 aspect-square border border-emerald-500/20 rounded-xl bg-emerald-500/5 active:scale-95 group">
                           {isGeneratingSignals ? <Loader2 size={18} className="text-emerald-500 animate-spin" /> : <Radar size={18} className="text-emerald-500 group-hover:scale-110 transition-transform" />}
                           <span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-emerald-500">Scry</span>
@@ -448,6 +501,26 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
                 )}
                 {activeTab === 'style' && selectedElement && (
                     <div className="space-y-8 lg:space-y-10 animate-fade-in pb-12">
+                        {suggestedThread && selectedElement.type === 'image' && (
+                          <div className="bg-emerald-500/5 border border-emerald-500/20 p-4 rounded-xl space-y-3">
+                            <div className="flex items-center gap-2 text-emerald-500">
+                              <Sparkles size={14} />
+                              <span className="font-sans text-[8px] uppercase tracking-widest font-black">Thread Discovered</span>
+                            </div>
+                            <p className="font-serif text-sm text-stone-600 dark:text-stone-300">
+                              We found a thread connected to this page.
+                            </p>
+                            <button 
+                              onClick={() => {
+                                addElement('text', `THREAD NOTE\n──────────────\n${suggestedThread.narrative}`);
+                                setSuggestedThread(null);
+                              }}
+                              className="w-full py-2 bg-emerald-500 text-white rounded-lg font-sans text-[8px] uppercase tracking-widest font-black hover:bg-emerald-600 transition-colors"
+                            >
+                              Add to this zine?
+                            </button>
+                          </div>
+                        )}
                         <div className="flex justify-between items-center border-b pb-4"><div className="flex flex-col"><span className="font-sans text-[6px] uppercase tracking-[0.3em] text-stone-400 font-black">Calibration</span><span className="font-serif italic text-xl lg:text-2xl uppercase">{selectedElement.type}</span></div><button onClick={() => { setElements(p => p.filter(e => e.id !== selectedId)); setSelectedId(null); if(isMobile) setDrawerOpen(false); }} className="p-2 text-red-500"><Trash2 size={16}/></button></div>
                         {selectedElement.type === 'text' && (
                             <section className="space-y-6 lg:space-y-8">
@@ -531,7 +604,7 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
                                 </div>
                                 <div className="space-y-3">
                                     <span className="font-sans text-[7px] uppercase tracking-widest font-black text-emerald-500 flex items-center gap-2">
-                                        <Sparkles size={12} /> AI Insight
+                                        <Sparkles size={12} /> Insight
                                     </span>
                                     {!imageAnalysis ? (
                                         <button 
@@ -569,7 +642,10 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
                         )}
                     </div>
                 )}
-                {!selectedId && (
+                {activeTab === 'materiality' && (
+                    <MaterialityPanel config={materialityConfig} onChange={setMaterialityConfig} />
+                )}
+                {!selectedId && activeTab !== 'materiality' && (
                     <div className="flex flex-col items-center justify-center py-20 opacity-20 text-center"><Move size={32} strokeWidth={1} /><p className="font-serif italic text-lg mt-4">Select a fragment to calibrate.</p></div>
                 )}
             </div>

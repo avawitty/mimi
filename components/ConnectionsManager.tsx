@@ -237,14 +237,21 @@ export const ConnectionsManager: React.FC = () => {
 
   const loadData = async () => {
     if (!user) return;
+    
+    // Check if user is a local ghost (no Firebase Auth session)
+    const { auth } = await import('../services/firebaseInit');
+    if (!auth.currentUser) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
-      const [f, r, fl, fg] = await Promise.all([
-        fetchFriends(user.uid),
-        fetchFriendRequests(user.uid),
-        fetchFollowers(user.uid),
-        fetchFollowing(user.uid)
-      ]);
+      const f = await fetchFriends(user.uid).catch(e => { console.error("fetchFriends failed", e); throw e; });
+      const r = await fetchFriendRequests(user.uid).catch(e => { console.error("fetchFriendRequests failed", e); throw e; });
+      const fl = await fetchFollowers(user.uid).catch(e => { console.error("fetchFollowers failed", e); throw e; });
+      const fg = await fetchFollowing(user.uid).catch(e => { console.error("fetchFollowing failed", e); throw e; });
+      
       setFriends(f);
       setRequests(r);
       setFollowers(fl);

@@ -1,0 +1,10 @@
+{
+  "projectId": "mimi-zine-sovereign",
+  "appId": "1:268506207063:web:00b5993368effb29e1a412",
+  "apiKey": "AIzaSyAsGYSKsnlyX0lpjg0cXIdYTjtaK3ZRIDo",
+  "authDomain": "mimi-zine-sovereign.firebaseapp.com",
+  "firestoreDatabaseId": "mimizinemongo",
+  "storageBucket": "mimi-zine-sovereign.firebasestorage.app",
+  "messagingSenderId": "268506207063",
+  "measurementId": "G-WYRMV06EBS"
+}

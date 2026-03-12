@@ -1,4 +1,49 @@
 
+export interface AestheticSignature {
+  primaryAxis: string;
+  secondaryAxis: string;
+  motifs: string[];
+  moodCluster: string;
+  generatedAt: number;
+  influenceLineage: InfluenceLineageItem[];
+  creativeCycles: CreativeCycle[];
+  motifEvolution: MotifFrequency[];
+}
+
+export interface InfluenceLineageItem {
+  artist: string;
+  movement: string;
+  connectionStrength: number; // 0-1
+}
+
+export interface CreativeCycle {
+  period: string; // e.g., "2026-03"
+  mood: string;
+  motifSpikes: string[];
+  outputCount: number;
+}
+
+export interface MotifFrequency {
+  motif: string;
+  frequency: number;
+  date: number; // timestamp
+}
+
+export interface MaterialityConfig {
+  paperStock: 'newsprint' | 'cold-press' | 'vellum' | 'raw-cardboard';
+  typographyLineage: 'brutalist' | 'editorial-serif' | 'technical-mono';
+  negativeSpaceDensity: number; // 1-10
+}
+
+export interface ZineGenerationOptions {
+  style: 'minimalist' | 'maximalist' | 'experimental' | 'balanced';
+  theme: 'dark' | 'light' | 'vibrant' | 'muted';
+  contentFocus: 'visual-heavy' | 'text-heavy' | 'balanced';
+  artStyle?: string;
+  aestheticTone?: 'Cinematic' | 'Editorial' | 'Dreamy' | 'Industrial' | 'Noir';
+  goals?: string;
+}
+
 export type ZodiacSign = 'aries' | 'taurus' | 'gemini' | 'cancer' | 'leo' | 'virgo' | 'libra' | 'scorpio' | 'sagittarius' | 'capricorn' | 'aquarius' | 'pisces';
 
 export interface MediaFile {
@@ -81,9 +126,24 @@ export interface TailorLogicDraft {
       baseNeutral: string;
       accentSignal: string;
     };
+    colorPalette: {
+      primary: string;
+      accent: string;
+      preset?: string;
+    };
     typographyIntent: {
       styleDescription: string;
       weightPreference: string;
+    };
+    typography: {
+      serif: string;
+      sans: string;
+      mono: string;
+    };
+    visualPresets: {
+      silhouette: string;
+      texture: string;
+      era: string;
     };
     narrativeVoice: {
       emotionalTemperature: string;
@@ -143,6 +203,8 @@ export interface TailorLogicDraft {
     astrologicalLineage?: string;
     seasonalAlignment?: string;
   };
+
+  materialityConfig?: MaterialityConfig;
 
   generationTemperature?: number; 
   draftStatus: 'provisional' | 'aligned' | 'evolving';
@@ -244,6 +306,11 @@ export interface ZinePageSpec {
   headline: string;
   bodyCopy: string;
   imagePrompt: string;
+  pageType?: 'standard' | 'thread_timeline';
+  threadData?: {
+    artifacts: any[]; // Will be PocketItem[]
+    commentary: string;
+  };
 }
 
 export interface ZineContent extends ZineSpec {
@@ -328,6 +395,7 @@ export interface TasteProfile {
   color_frequency: Record<string, number>;
   audit_history?: DriftEvent[];
   semantic_signature?: string;
+  aestheticSignature?: AestheticSignature; // NEW
   dominant_archetypes?: TypographicArchetype[];
   inspirations?: string;
   sovereignIdentity?: SovereignIdentityCard; // NEW
@@ -547,6 +615,7 @@ export interface UserPreferences {
   starredZineIds?: string[];
   lastAuditReport?: TailorAuditReport;
   enabledAlgos?: string[]; // NEW: User-defined firewalls for specific functions
+  zineOptions?: ZineGenerationOptions;
 }
 
 export interface UserProfile extends UserPreferences {
@@ -588,7 +657,7 @@ export interface BrandKit {
 }
 
 export interface LayoutConfig {
-  template: "editorial" | "presentation" | "portfolio";
+  template: "editorial" | "presentation" | "portfolio" | "bimbo-intellectual";
   fontSet: string[];
   colorSet: string[];
   spacingScale: number;

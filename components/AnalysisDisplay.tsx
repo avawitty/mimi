@@ -5,6 +5,7 @@ import { ZineMetadata, PocketItem } from '../types';
 import { generateAudio, animateShardWithVeo, transcribeAudio } from '../services/geminiService';
 import { addToPocket, subscribeToPocketItems } from '../services/firebase';
 import { Loader2, X, Volume2, Orbit, Eye, Target, Layers, Moon, Sparkles, Terminal, Quote, ArrowDown, Grid3X3, Printer, Bookmark, Check, Play, Pause, ExternalLink, Download, Share2, Star, FileText, Map, Compass, Zap, RefreshCw, PenTool, Save, Mic, Square, AlertCircle, StickyNote, History, MessageSquareQuote, Radar, Maximize2, Activity, Archive, FolderPlus, Compass as RoadmapIcon, Stars as CelestialIcon, ArrowRight, CornerDownRight, Image as ImageIcon, Film, MousePointer2, Briefcase, BookOpen, ChevronDown, Hash, Search, Menu, Plus, Radio } from 'lucide-react';
+import { VisualLanguageReflection } from './VisualLanguageReflection';
 import { Visualizer } from './Visualizer';
 import { ExportChamber } from './ExportChamber';
 import { SocialShareModal } from './SocialShareModal';
@@ -31,6 +32,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
   const [showShare, setShowShare] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  const [showReflection, setShowReflection] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
   const [isAnimatingManifest, setIsAnimatingManifest] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -275,6 +277,14 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
               <ZineComments zineId={metadata.id} onClose={() => setShowComments(false)} />
             </motion.div>
           )}
+          {/* Visual Language Reflection Modal */}
+          {showReflection && (
+            <VisualLanguageReflection 
+              onClose={() => setShowReflection(false)} 
+              resonanceScore={metadata.content.resonance_score || "N/A"}
+              reflection={metadata.content.strategic_hypothesis || "No reflection available."}
+            />
+          )}
       </AnimatePresence>
 
       {/* TOP-LEFT EXIT BUTTON */}
@@ -403,6 +413,8 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                             <div className="mt-8 flex items-center gap-4 text-stone-400">
                                 <Layers size={16} />
                                 <span className="font-sans text-[9px] uppercase tracking-widest font-black">Visual Perception Generated</span>
+                            </div>
+                            <div className="mt-12">
                             </div>
                         </div>
                     </div>

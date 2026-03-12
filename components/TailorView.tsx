@@ -665,6 +665,10 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
       if (draft) setDraft(prev => prev ? ({ ...prev, draftStatus: 'provisional', expressionEngine: { ...prev.expressionEngine, [field]: val } }) : null);
   };
   
+  const updateAesthetic = (field: string, val: any) => {
+      if (draft) setDraft(prev => prev ? ({ ...prev, draftStatus: 'provisional', expressionEngine: { ...prev.expressionEngine, [field]: val } }) : null);
+  };
+
   const updateStrategic = (field: string, val: any) => {
       if (draft) setDraft(prev => prev ? ({ ...prev, draftStatus: 'provisional', strategicVectors: { ...prev.strategicVectors, [field]: val } }) : null);
   };
@@ -1309,6 +1313,17 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                     <>
                                         <p className="font-serif italic text-stone-500 mb-8">Define the physics of your visual world.</p>
                                         
+                                        <FieldGroup label="Visual Presets" description="Apply a combination of stylistic elements.">
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                                                {VISUAL_PRESETS.map(p => (
+                                                    <button key={p.name} onClick={() => applyVisualPreset(p)} className="p-4 border border-stone-200 dark:border-stone-800 rounded-sm hover:border-emerald-500 transition-all group flex flex-col items-center gap-3">
+                                                        <div className="text-stone-400 group-hover:text-emerald-500 transition-colors">{p.icon}</div>
+                                                        <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 group-hover:text-emerald-500">{p.name}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </FieldGroup>
+
                                         <FieldGroup label="Typographic DNA" description="Import from Google Fonts. Type specific font name to fetch and preview.">
                                             <div className="grid grid-cols-2 gap-4 mb-4">
                                                 {availableFonts.map(f => (
@@ -1374,6 +1389,43 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                                 <span className="font-mono text-xs">WILD</span>
                                             </div>
                                             <p className="font-mono text-[8px] text-stone-400 uppercase tracking-widest mt-2">Current Resonance: {((draft.generationTemperature ?? 0.8) * 100).toFixed(0)}%</p>
+                                        </FieldGroup>
+
+                                        <FieldGroup label="Default Materiality" description="The physical properties of your generated zines.">
+                                            <div className="space-y-6">
+                                                <div className="space-y-2">
+                                                    <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Paper Stock</label>
+                                                    <PresetStrip 
+                                                        options={['newsprint', 'cold-press', 'vellum', 'raw-cardboard']} 
+                                                        current={draft.materialityConfig?.paperStock || 'newsprint'} 
+                                                        onSelect={(v) => updateDraft({ materialityConfig: { ...draft.materialityConfig, paperStock: v as any } })} 
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Typography Lineage</label>
+                                                    <PresetStrip 
+                                                        options={['brutalist', 'editorial-serif', 'technical-mono']} 
+                                                        current={draft.materialityConfig?.typographyLineage || 'editorial-serif'} 
+                                                        onSelect={(v) => updateDraft({ materialityConfig: { ...draft.materialityConfig, typographyLineage: v as any } })} 
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Negative Space Density (1-10)</label>
+                                                    <div className="flex items-center gap-4">
+                                                        <span className="font-mono text-xs">TIGHT</span>
+                                                        <input 
+                                                            type="range" 
+                                                            min="1" 
+                                                            max="10" 
+                                                            value={draft.materialityConfig?.negativeSpaceDensity || 5} 
+                                                            onChange={e => updateDraft({ materialityConfig: { ...draft.materialityConfig, negativeSpaceDensity: parseInt(e.target.value) } })} 
+                                                            className="flex-1 h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-emerald-500" 
+                                                        />
+                                                        <span className="font-mono text-xs">AIRY</span>
+                                                    </div>
+                                                    <span className="font-mono text-xs text-emerald-500">{draft.materialityConfig?.negativeSpaceDensity || 5} / 10</span>
+                                                </div>
+                                            </div>
                                         </FieldGroup>
                                     </>
                                 )}

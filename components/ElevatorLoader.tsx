@@ -32,9 +32,10 @@ interface ElevatorLoaderProps {
   onComplete?: () => void;
   onBypass?: (lastPrompt?: string) => void;
   isDeep?: boolean;
+  loadingMessage?: string;
 }
 
-export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBypass, isDeep }) => {
+export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBypass, isDeep, loadingMessage }) => {
   const phases = isDeep ? DEEP_PHASES : STANDARD_PHASES;
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -153,6 +154,7 @@ export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBy
                 <h1 className="font-serif text-4xl md:text-5xl italic tracking-tighter leading-none">
                    Manifesting.
                 </h1>
+                {loadingMessage && <p className="font-mono text-[10px] uppercase tracking-widest text-stone-500">{loadingMessage}</p>}
              </div>
 
              {/* Phase Indicator */}

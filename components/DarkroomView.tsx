@@ -6,8 +6,8 @@ import { useUser } from '../contexts/UserContext';
 import { fetchPocketItems, updatePocketItem, addToPocket, createMoodboard, deleteFromPocket } from '../services/firebase';
 import { getLocalPocket } from '../services/localArchive';
 import { PocketItem, Treatment, AspectRatio, DarkroomLayer } from '../types';
-import { FlaskConical, Image as ImageIcon, Zap, Sparkles, Loader2, X, Plus, Check, Wand2, Sliders, Layers, Trash2, Camera, Info, ShieldCheck, Maximize2, Download, Eye, ArrowRight, Save, Copy, Filter, Target, Briefcase, FolderPlus, Activity, Scissors, Eraser, PenTool, Upload, ChevronUp, ChevronDown, Monitor, GripVertical, EyeOff, Crop } from 'lucide-react';
-import { applyTreatment, compressImage, generateRawImage, cropImage } from '../services/geminiService';
+import { FlaskConical, Image as ImageIcon, Zap, Sparkles, Loader2, X, Plus, Check, Wand2, Sliders, Layers, Trash2, Camera, Info, ShieldCheck, Maximize2, Download, Eye, ArrowRight, Save, Copy, Filter, Target, Briefcase, FolderPlus, Activity, Scissors, Eraser, PenTool, Upload, ChevronUp, ChevronDown, Monitor, GripVertical, EyeOff, Crop, BrainCircuit } from 'lucide-react';
+import { applyTreatment, compressImage, generateRawImage, cropImage, analyzeMiseEnScene, generateTreatmentFromAesthetic } from '../services/geminiService';
 import { Visualizer } from './Visualizer';
 
 const PRESET_TREATMENTS: Treatment[] = [
@@ -38,6 +38,9 @@ interface ControlsContentProps {
   setGrainAmount: (val: number) => void;
   semioticTension: number;
   setSemioticTension: (val: number) => void;
+  onExtractTreatment: () => void;
+  onApplyAestheticRefraction: () => void;
+  activeShard: PocketItem | null;
 }
 
 const ControlsContent: React.FC<ControlsContentProps> = ({
@@ -59,51 +62,85 @@ const ControlsContent: React.FC<ControlsContentProps> = ({
   grainAmount,
   setGrainAmount,
   semioticTension,
-  setSemioticTension
+  setSemioticTension,
+  onExtractTreatment,
+  onApplyAestheticRefraction,
+  activeShard
 }) => (
     <div className="flex flex-col h-full bg-[#080808]">
-      <div className="p-8 space-y-10 flex-1 overflow-y-auto no-scrollbar">
+      <div className="p-4 space-y-4 flex-1 overflow-y-auto no-scrollbar">
          
+         {/* AESTHETIC INTELLIGENCE */}
+         <div className="space-y-2">
+            <span className="font-sans text-[8px] uppercase tracking-widest font-black text-emerald-500 flex items-center gap-2">
+               <Sparkles size={12} /> Aesthetic Intelligence
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+                <button onClick={onExtractTreatment} className="p-2 bg-stone-900 border border-white/10 rounded-sm font-sans text-[7px] uppercase tracking-widest font-black text-white hover:bg-emerald-500/20 transition-all">Extract Treatment</button>
+                <button onClick={onApplyAestheticRefraction} className="p-2 bg-stone-900 border border-white/10 rounded-sm font-sans text-[7px] uppercase tracking-widest font-black text-white hover:bg-emerald-500/20 transition-all">Apply Refraction</button>
+            </div>
+         </div>
+
          {/* NANO BANANA PRO 2 CONTROLS */}
-         <div className="space-y-6">
-            <span className="font-sans text-[9px] uppercase tracking-widest font-black text-emerald-500 flex items-center gap-2">
-               <Sliders size={14} /> Global Adjustments
+         <div className="space-y-2">
+            <span className="font-sans text-[8px] uppercase tracking-widest font-black text-emerald-500 flex items-center gap-2">
+               <Sliders size={12} /> Global Adjustments
             </span>
             
-            <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-stone-900 border border-white/5 rounded-sm">
+            <div className="space-y-2">
+                <button 
+                  onClick={async () => {
+                    if (!activeShard) return;
+                    setIsProcessing(true);
+                    try {
+                      const analysis = await analyzeMiseEnScene(activeShard.content.imageUrl.split(',')[1], 'image/jpeg', profile);
+                      setEditDescription(JSON.stringify(analysis, null, 2));
+                      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Mise-en-scene analyzed.", icon: <BrainCircuit size={12} /> } }));
+                    } catch (e) {
+                      console.error(e);
+                      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Analysis failed.", type: 'error' } }));
+                    } finally {
+                      setIsProcessing(false);
+                    }
+                  }}
+                  className="w-full p-2 bg-stone-900 border border-emerald-500/30 rounded-sm font-sans text-[8px] uppercase tracking-widest font-black text-emerald-500 hover:bg-emerald-500/10 transition-all flex items-center justify-center gap-2"
+                >
+                  <BrainCircuit size={12} /> Analyze Mise en Scene
+                </button>
+
+                <div className="flex items-center justify-between p-2 bg-stone-900 border border-white/5 rounded-sm">
                     <div className="flex flex-col">
-                        <span className="font-sans text-[9px] uppercase font-black text-white">Vogue Italia Filter</span>
-                        <span className="font-mono text-[7px] text-stone-500 uppercase tracking-widest">Flat Flash & High Contrast</span>
+                        <span className="font-sans text-[8px] uppercase font-black text-white">Vogue Italia Filter</span>
+                        <span className="font-mono text-[6px] text-stone-500 uppercase tracking-widest">Flat Flash & High Contrast</span>
                     </div>
                     <button 
                         onClick={() => setUseFlatFlash(!useFlatFlash)}
-                        className={`w-10 h-5 rounded-full relative transition-colors ${useFlatFlash ? 'bg-emerald-500' : 'bg-stone-700'}`}
+                        className={`w-8 h-4 rounded-full relative transition-colors ${useFlatFlash ? 'bg-emerald-500' : 'bg-stone-700'}`}
                     >
-                        <div className={`w-3 h-3 bg-white rounded-full absolute top-1 transition-transform ${useFlatFlash ? 'translate-x-6' : 'translate-x-1'}`} />
+                        <div className={`w-2 h-2 bg-white rounded-full absolute top-1 transition-transform ${useFlatFlash ? 'translate-x-5' : 'translate-x-1'}`} />
                     </button>
                 </div>
 
-                <div className="space-y-2 p-4 bg-stone-900 border border-white/5 rounded-sm">
+                <div className="space-y-1 p-2 bg-stone-900 border border-white/5 rounded-sm">
                     <div className="flex justify-between items-center">
-                        <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-500">Exposure</span>
-                        <span className="font-mono text-[8px] text-emerald-500">{exposure > 0 ? '+' : ''}{exposure}</span>
+                        <span className="font-sans text-[6px] uppercase tracking-widest font-black text-stone-500">Exposure</span>
+                        <span className="font-mono text-[7px] text-emerald-500">{exposure > 0 ? '+' : ''}{exposure}</span>
                     </div>
                     <input type="range" min="-100" max="100" value={exposure} onChange={(e) => setExposure(parseInt(e.target.value))} className="w-full accent-emerald-500 bg-stone-800 h-1 rounded-full cursor-pointer" />
                 </div>
 
-                <div className="space-y-2 p-4 bg-stone-900 border border-white/5 rounded-sm">
+                <div className="space-y-1 p-2 bg-stone-900 border border-white/5 rounded-sm">
                     <div className="flex justify-between items-center">
-                        <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-500">Grain Amount</span>
-                        <span className="font-mono text-[8px] text-emerald-500">{grainAmount}%</span>
+                        <span className="font-sans text-[6px] uppercase tracking-widest font-black text-stone-500">Grain Amount</span>
+                        <span className="font-mono text-[7px] text-emerald-500">{grainAmount}%</span>
                     </div>
                     <input type="range" min="0" max="100" value={grainAmount} onChange={(e) => setGrainAmount(parseInt(e.target.value))} className="w-full accent-emerald-500 bg-stone-800 h-1 rounded-full cursor-pointer" />
                 </div>
 
-                <div className="space-y-2 p-4 bg-stone-900 border border-white/5 rounded-sm">
+                <div className="space-y-1 p-2 bg-stone-900 border border-white/5 rounded-sm">
                     <div className="flex justify-between items-center">
-                        <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-500">Semiotic Tension</span>
-                        <span className="font-mono text-[8px] text-emerald-500">{semioticTension}%</span>
+                        <span className="font-sans text-[6px] uppercase tracking-widest font-black text-stone-500">Semiotic Tension</span>
+                        <span className="font-mono text-[7px] text-emerald-500">{semioticTension}%</span>
                     </div>
                     <input type="range" min="0" max="100" value={semioticTension} onChange={(e) => setSemioticTension(parseInt(e.target.value))} className="w-full accent-emerald-500 bg-stone-800 h-1 rounded-full cursor-pointer" />
                 </div>
@@ -111,50 +148,50 @@ const ControlsContent: React.FC<ControlsContentProps> = ({
          </div>
 
          {/* LAYER STACK */}
-         <div className="space-y-6">
+         <div className="space-y-2">
             <div className="flex justify-between items-center">
-                <span className="font-sans text-[9px] uppercase tracking-widest font-black text-emerald-500 flex items-center gap-2">
-                   <Layers size={14} /> Active Layers
+                <span className="font-sans text-[8px] uppercase tracking-widest font-black text-emerald-500 flex items-center gap-2">
+                   <Layers size={12} /> Active Layers
                 </span>
-                <span className="font-mono text-[8px] text-stone-600 uppercase tracking-tighter">Stack_Order_v1.2</span>
+                <span className="font-mono text-[7px] text-stone-600 uppercase tracking-tighter">Stack_Order_v1.2</span>
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-1">
                <AnimatePresence>
                   {layerStack.map((l, i) => (
                     <motion.div 
                       key={l.layerId} 
                       layout
-                      initial={{ opacity: 0, y: 10 }} 
+                      initial={{ opacity: 0, y: 5 }} 
                       animate={{ opacity: 1, y: 0 }} 
                       exit={{ opacity: 0, scale: 0.95 }}
-                      className={`flex flex-col p-4 bg-stone-900 border transition-all rounded-sm ${l.isVisible ? 'border-emerald-500/30' : 'border-white/5 opacity-50'}`}
+                      className={`flex flex-col p-2 bg-stone-900 border transition-all rounded-sm ${l.isVisible ? 'border-emerald-500/30' : 'border-white/5 opacity-50'}`}
                     >
-                       <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                             <div className="flex flex-col gap-1">
-                                <button onClick={() => moveLayer(i, 'up')} disabled={i === 0} className="p-1 hover:text-emerald-400 disabled:opacity-20 transition-colors"><ChevronUp size={12}/></button>
-                                <button onClick={() => moveLayer(i, 'down')} disabled={i === layerStack.length - 1} className="p-1 hover:text-emerald-400 disabled:opacity-20 transition-colors"><ChevronDown size={12}/></button>
+                       <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                             <div className="flex flex-col gap-0.5">
+                                <button onClick={() => moveLayer(i, 'up')} disabled={i === 0} className="hover:text-emerald-400 disabled:opacity-20 transition-colors"><ChevronUp size={10}/></button>
+                                <button onClick={() => moveLayer(i, 'down')} disabled={i === layerStack.length - 1} className="hover:text-emerald-400 disabled:opacity-20 transition-colors"><ChevronDown size={10}/></button>
                              </div>
                              <div className="flex flex-col">
-                                <span className="font-sans text-[9px] uppercase font-black text-white">{l.name}</span>
-                                <span className="font-mono text-[7px] text-stone-500 uppercase tracking-widest">L_0{i+1}</span>
+                                <span className="font-sans text-[7px] uppercase font-black text-white">{l.name}</span>
+                                <span className="font-mono text-[6px] text-stone-500 uppercase tracking-widest">L_0{i+1}</span>
                              </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                             <button onClick={() => updateLayer(l.layerId, { isVisible: !l.isVisible })} className="p-2 text-stone-500 hover:text-emerald-400 transition-colors">
-                                {l.isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
+                          <div className="flex items-center gap-1">
+                             <button onClick={() => updateLayer(l.layerId, { isVisible: !l.isVisible })} className="p-1 text-stone-500 hover:text-emerald-400 transition-colors">
+                                {l.isVisible ? <Eye size={12} /> : <EyeOff size={12} />}
                              </button>
-                             <button onClick={() => removeLayer(l.layerId)} className="p-2 text-stone-500 hover:text-red-400 transition-colors">
-                                <Trash2 size={14} />
+                             <button onClick={() => removeLayer(l.layerId)} className="p-1 text-stone-500 hover:text-red-400 transition-colors">
+                                <Trash2 size={12} />
                              </button>
                           </div>
                        </div>
 
-                       <div className="space-y-2">
+                       <div className="space-y-1">
                           <div className="flex justify-between items-center">
-                             <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-500">Opacity</span>
-                             <span className="font-mono text-[8px] text-emerald-500">{l.opacity}%</span>
+                             <span className="font-sans text-[6px] uppercase tracking-widest font-black text-stone-500">Opacity</span>
+                             <span className="font-mono text-[7px] text-emerald-500">{l.opacity}%</span>
                           </div>
                           <input 
                             type="range" 
@@ -164,53 +201,53 @@ const ControlsContent: React.FC<ControlsContentProps> = ({
                             max="100" 
                             value={l.opacity} 
                             onChange={(e) => updateLayer(l.layerId, { opacity: parseInt(e.target.value) })}
-                            className="w-full accent-emerald-500 bg-stone-800 h-1 rounded-full cursor-pointer"
+                            className="w-full accent-emerald-500 bg-stone-800 h-0.5 rounded-full cursor-pointer"
                           />
                        </div>
                     </motion.div>
                   ))}
                </AnimatePresence>
                {layerStack.length === 0 && (
-                 <div className="py-12 flex flex-col items-center justify-center border-2 border-dashed border-white/5 rounded-sm opacity-30 gap-3">
-                    <Layers size={24} />
-                    <p className="font-serif italic text-xs">“Stack is currently void.”</p>
+                 <div className="py-4 flex flex-col items-center justify-center border border-dashed border-white/5 rounded-sm opacity-30 gap-1">
+                    <Layers size={16} />
+                    <p className="font-serif italic text-[8px]">“Stack is void.”</p>
                  </div>
                )}
             </div>
          </div>
 
-         <div className="space-y-4">
-            <span className="font-sans text-[9px] uppercase tracking-widest font-black text-emerald-500 flex items-center gap-2">
-               <PenTool size={14} /> Final Pass Mandate
+         <div className="space-y-2">
+            <span className="font-sans text-[8px] uppercase tracking-widest font-black text-emerald-500 flex items-center gap-2">
+               <PenTool size={12} /> Final Pass Mandate
             </span>
-            <div className="space-y-3">
+            <div className="space-y-1">
                <textarea 
                   id="customInstruction"
                   name="customInstruction"
                   value={customInstruction}
                   onChange={e => setCustomInstruction(e.target.value)}
-                  placeholder="Global phantom logic applied atop stack (e.g. Add film grain)..."
-                  className="w-full bg-black/40 border border-white/10 p-4 font-serif italic text-base text-stone-300 focus:outline-none focus:border-emerald-500/50 resize-none h-24 rounded-sm placeholder:text-stone-700"
+                  placeholder="Global phantom logic..."
+                  className="w-full bg-black/40 border border-white/10 p-2 font-serif italic text-[10px] text-stone-300 focus:outline-none focus:border-emerald-500/50 resize-none h-16 rounded-sm placeholder:text-stone-700"
                />
             </div>
          </div>
 
-         <div className="space-y-4 pb-20">
-            <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-500 flex items-center gap-2">
-               <Zap size={12} /> Logic Registry
+         <div className="space-y-2 pb-4">
+            <span className="font-sans text-[6px] uppercase tracking-widest font-black text-stone-500 flex items-center gap-2">
+               <Zap size={10} /> Logic Registry
             </span>
-            <div className="grid grid-cols-1 gap-2">
+            <div className="grid grid-cols-2 gap-1">
                {PRESET_TREATMENTS.map(t => (
                   <button 
                     key={t.id} 
                     onClick={() => addLayerFromPreset(t)}
-                    className="text-left p-4 rounded-sm border border-white/5 bg-black/40 text-stone-500 hover:border-emerald-500/30 hover:text-white transition-all flex items-center justify-between group"
+                    className="text-left p-2 rounded-sm border border-white/5 bg-black/40 text-stone-500 hover:border-emerald-500/30 hover:text-white transition-all flex items-center justify-between group"
                   >
-                     <div className="flex items-center gap-3">
-                        {t.id === 'object_purge' ? <Eraser size={14} /> : <Zap size={14} />}
-                        <span className="font-sans text-[9px] uppercase tracking-widest font-black">{t.name}</span>
+                     <div className="flex items-center gap-1">
+                        {t.id === 'object_purge' ? <Eraser size={10} /> : <Zap size={10} />}
+                        <span className="font-sans text-[7px] uppercase tracking-widest font-black">{t.name}</span>
                      </div>
-                     <Plus size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                     <Plus size={8} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
                ))}
             </div>
@@ -662,6 +699,42 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
     document.body.removeChild(link);
   };
 
+  const handleExtractTreatment = async () => {
+    if (!activeShard) return;
+    setIsProcessing(true);
+    try {
+        const treatment = await generateTreatmentFromAesthetic(activeShard.content.imageUrl, profile);
+        addLayerFromPreset(treatment);
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: `Treatment Extracted: ${treatment.name}`, icon: <Sparkles size={14} /> } }));
+    } catch (e) {
+        console.error("Extraction Failed:", e);
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Extraction Failed.", type: 'error' } }));
+    } finally {
+        setIsProcessing(false);
+    }
+  };
+
+  const handleApplyAestheticRefraction = async () => {
+    if (!activeShard) return;
+    setIsProcessing(true);
+    try {
+        const manifestedUrl = await applyTreatment(activeShard.content.imageUrl, "Apply the aesthetic refraction of this image to the target.", profile);
+        await addToPocket(user?.uid || 'ghost', 'image', {
+            imageUrl: manifestedUrl,
+            prompt: "Aesthetic Refraction",
+            timestamp: Date.now(),
+            origin: 'Darkroom_Refraction'
+        });
+        await loadShards(true);
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Refraction Applied.", icon: <Wand2 size={14} /> } }));
+    } catch (e) {
+        console.error("Refraction Failed:", e);
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Refraction Failed.", type: 'error' } }));
+    } finally {
+        setIsProcessing(false);
+    }
+  };
+
   const controlsProps = {
     customInstruction,
     setCustomInstruction,
@@ -681,7 +754,10 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
     exposure,
     setExposure,
     semioticTension,
-    setSemioticTension
+    setSemioticTension,
+    onExtractTreatment: handleExtractTreatment,
+    onApplyAestheticRefraction: handleApplyAestheticRefraction,
+    activeShard
   };
 
   return (
@@ -782,7 +858,7 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
         {activeShard && !isSelectionMode && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[7000] flex items-center justify-center p-4 md:p-12 bg-black/98 backdrop-blur-2xl">
              <button onClick={() => { setActiveShard(null); setIsCropping(false); }} className="absolute top-10 right-10 p-4 text-white/40 hover:text-red-500 transition-all z-[6001]"><X size={32} /></button>
-             <div className="w-full max-w-7xl h-full flex flex-col md:flex-row items-center gap-12 pt-12">
+             <div className="w-full max-w-7xl h-full flex flex-col md:flex-row items-center gap-4 pt-4">
                 <div className="flex-1 w-full h-full flex items-center justify-center overflow-hidden">
                    {isCropping ? (
                        <CropEditor imageUrl={activeShard.content.imageUrl} onCancel={() => setIsCropping(false)} onSave={handleCropSave} />
@@ -790,7 +866,7 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
                        <Visualizer prompt={activeShard.content.prompt || "Lab Shard"} initialImage={activeShard.content.imageUrl} defaultAspectRatio={activeShard.content.aspectRatio || '3:4'} isArtifact />
                    )}
                 </div>
-                <div className="hidden md:flex md:w-[320px] flex-col gap-10 shrink-0">
+                <div className="hidden md:flex md:w-[280px] flex-col gap-4 shrink-0 h-full">
                    <div className="space-y-4">
                       <div className="flex justify-between items-center">
                           <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-emerald-500 font-black">Archive Manifest</span>

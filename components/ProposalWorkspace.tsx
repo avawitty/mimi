@@ -20,6 +20,13 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
 // --- CONFIG CONSTANTS ---
+const TEMPLATES = [
+  { label: 'Editorial', value: 'editorial' },
+  { label: 'Presentation', value: 'presentation' },
+  { label: 'Portfolio', value: 'portfolio' },
+  { label: 'Bimbo Intellectual', value: 'bimbo-intellectual' }
+];
+
 const FONTS = [
   { label: 'Editorial Serif', value: 'Cormorant Garamond' },
   { label: 'Minimal Sans', value: 'Space Grotesk' },

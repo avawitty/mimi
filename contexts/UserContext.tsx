@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { UserProfile, UserPreferences, Persona, TailorLogicDraft } from '../types';
@@ -37,7 +36,7 @@ interface UserContextType {
   toggleZineStar: (zineId: string) => Promise<void>;
   isOnboardingComplete: boolean;
   login: (forceRedirect?: boolean) => Promise<void>;
-  signInWithGooglePopup: () => Promise<void>;
+  signInWithGoogleRedirect: () => Promise<void>;
   ghostLogin: () => Promise<void>;
   speedGhostEntrance: () => Promise<void>;
   linkAccount: (forceRedirect?: boolean) => Promise<void>;
@@ -290,108 +289,87 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const currentLocal = await getLocalProfile();
       let initialProfile = currentLocal;
 
-      if (!fbUser.isAnonymous) {
-          // SWAN PATH (Authenticated)
-          
-          // 1. Initial Cloud Check & potential Migration
-          let cloudProfileSnap = null;
-          let cloudPrefsSnap = null;
-          
-          // Retry logic for "permission-denied" which often happens during the auth-to-firestore propagation window
-          let retries = 3;
-          while (retries > 0) {
-              try {
-                  [cloudProfileSnap, cloudPrefsSnap] = await Promise.all([
-                      getUserProfile(fbUser.uid),
-                      getUserPreferences(fbUser.uid)
-                  ]);
-                  break; 
-              } catch (err: any) {
-                  if (err.code === 'permission-denied' && retries > 1) {
-                      console.warn(`MIMI // Permission Denied. Retrying in 500ms... (${retries} left)`);
-                      await new Promise(r => setTimeout(r, 500));
-                      retries--;
-                  } else {
-                      throw err;
-                  }
+      // 1. Initial Cloud Check & potential Migration
+      let cloudProfileSnap = null;
+      let cloudPrefsSnap = null;
+      
+      // Retry logic for "permission-denied" which often happens during the auth-to-firestore propagation window
+      let retries = 3;
+      while (retries > 0) {
+          try {
+              [cloudProfileSnap, cloudPrefsSnap] = await Promise.all([
+                  getUserProfile(fbUser.uid),
+                  getUserPreferences(fbUser.uid)
+              ]);
+              break; 
+          } catch (err: any) {
+              if (err.code === 'permission-denied' && retries > 1) {
+                  console.warn(`MIMI // Permission Denied. Retrying in 500ms... (${retries} left)`);
+                  await new Promise(r => setTimeout(r, 500));
+                  retries--;
+              } else {
+                  throw err;
               }
           }
-          
-          // If no cloud data exists, but we have local data (fresh sign-up or first sync)
-          if (!cloudProfileSnap && !cloudPrefsSnap && currentLocal) {
-              await migrateLocalToCloud(fbUser.uid, currentLocal);
-          }
-          
-          // 2. Setup Real-time Listeners
-          unsubscribeProfile.current = subscribeToUserProfile(fbUser.uid, (pData) => {
-             setProfile(prev => {
-                 const merged = { ...(prev || {}), ...pData, uid: fbUser.uid } as UserProfile;
-                 return ensurePersonas(merged);
-             });
-          });
+      }
+      
+      // If no cloud data exists, but we have local data (fresh sign-up or first sync)
+      if (!cloudProfileSnap && !cloudPrefsSnap && currentLocal) {
+          await migrateLocalToCloud(fbUser.uid, currentLocal);
+      }
+      
+      // 2. Setup Real-time Listeners
+      unsubscribeProfile.current = subscribeToUserProfile(fbUser.uid, (pData) => {
+         setProfile(prev => {
+             const merged = { ...(prev || {}), ...pData, uid: fbUser.uid } as UserProfile;
+             return ensurePersonas(merged);
+         });
+      });
 
-          unsubscribePrefs.current = subscribeToUserPreferences(fbUser.uid, (prefsData) => {
-             setProfile(prev => {
-                 const merged = { ...(prev || {}), ...prefsData } as UserProfile;
-                 return ensurePersonas(merged);
-             });
-          });
-          
-          // Construct initial state from one-time fetch to unblock UI immediately
-          // (Listeners will follow up with updates)
-          const mergedCloud = { 
-              ...(cloudProfileSnap || {}), 
-              ...(cloudPrefsSnap || {}),
-              uid: fbUser.uid,
-              isSwan: true,
-              email: fbUser.email,
-              photoURL: (cloudProfileSnap?.photoURL) || fbUser.photoURL || null
-          } as UserProfile;
+      unsubscribePrefs.current = subscribeToUserPreferences(fbUser.uid, (prefsData) => {
+         setProfile(prev => {
+             const merged = { ...(prev || {}), ...prefsData } as UserProfile;
+             return ensurePersonas(merged);
+         });
+      });
+      
+      // Construct initial state from one-time fetch to unblock UI immediately
+      // (Listeners will follow up with updates)
+      const mergedCloud = { 
+          ...(cloudProfileSnap || {}), 
+          ...(cloudPrefsSnap || {}),
+          uid: fbUser.uid,
+          isSwan: !fbUser.isAnonymous,
+          email: fbUser.email,
+          photoURL: (cloudProfileSnap?.photoURL) || fbUser.photoURL || null
+      } as UserProfile;
 
-          // If migration happened, local is the best source until listeners fire
-          // If cloud data existed, use that.
-          if (cloudProfileSnap || cloudPrefsSnap) {
-              initialProfile = mergedCloud;
-          } else if (currentLocal) {
-              initialProfile = { 
-                ...currentLocal, 
-                uid: fbUser.uid, 
-                isSwan: true, 
-                email: fbUser.email,
-                photoURL: currentLocal.photoURL || fbUser.photoURL || null
-              };
-          } else {
-              // Brand new user, no local data either
-              initialProfile = {
-                  uid: fbUser.uid,
-                  handle: 'Swan_' + fbUser.uid.slice(-4),
-                  isSwan: true,
-                  email: fbUser.email,
-                  photoURL: fbUser.photoURL || null,
-                  createdAt: Date.now(),
-                  lastActive: Date.now(),
-                  onboardingComplete: false,
-                  tasteProfile: { archetype_weights: {}, color_frequency: {} },
-                  starredZineIds: []
-              };
-          }
-
+      // If migration happened, local is the best source until listeners fire
+      // If cloud data existed, use that.
+      if (cloudProfileSnap || cloudPrefsSnap) {
+          initialProfile = mergedCloud;
+      } else if (currentLocal) {
+          initialProfile = { 
+            ...currentLocal, 
+            uid: fbUser.uid, 
+            isSwan: !fbUser.isAnonymous, 
+            email: fbUser.email,
+            photoURL: currentLocal.photoURL || fbUser.photoURL || null
+          };
       } else {
-          // GHOST PATH (Local Only)
-          if (currentLocal && currentLocal.uid === fbUser.uid) {
-             initialProfile = currentLocal;
-          } else {
-             initialProfile = {
-                uid: fbUser.uid,
-                handle: 'Ghost_' + fbUser.uid.slice(-4),
-                isSwan: false,
-                createdAt: Date.now(),
-                lastActive: Date.now(),
-                onboardingComplete: false,
-                tasteProfile: { archetype_weights: {}, color_frequency: {} },
-                starredZineIds: []
-             };
-          }
+          // Brand new user, no local data either
+          initialProfile = {
+              uid: fbUser.uid,
+              handle: (fbUser.isAnonymous ? 'Ghost_' : 'Swan_') + fbUser.uid.slice(-4),
+              isSwan: !fbUser.isAnonymous,
+              email: fbUser.email,
+              photoURL: fbUser.photoURL || null,
+              createdAt: Date.now(),
+              lastActive: Date.now(),
+              onboardingComplete: false,
+              tasteProfile: { archetype_weights: {}, color_frequency: {} },
+              starredZineIds: []
+          };
       }
 
       const safeProfile = ensurePersonas(initialProfile);
@@ -402,6 +380,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Save local backup for offline resilience
       await saveProfileLocally(safeProfile);
+      
+      // Ensure profile exists in cloud
+      if (!cloudProfileSnap && navigator.onLine) {
+          try {
+              await saveUserProfile(safeProfile);
+          } catch (e) {
+              console.warn("MIMI // Failed to save initial profile to cloud", e);
+          }
+      }
 
     } catch (e: any) {
       console.error("Reconciliation Failed", e);
@@ -482,6 +469,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (rResult && rResult.user) {
            console.info("MIMI // Redirect Result Detected:", rResult.user.email);
            await reconcileProfile(rResult.user);
+           
+           // Notify user and switch to profile view
+           setTimeout(() => {
+             window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+                 detail: { message: "Identity Anchored Successfully.", type: 'success' } 
+             }));
+             window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }));
+           }, 1000);
         }
 
         // 2. Setup Observer
@@ -535,7 +530,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(updated);
       await saveProfileLocally(updated);
       
-      if (navigator.onLine && user && !user.isAnonymous && !currentUid.startsWith('local_')) {
+      if (navigator.onLine && user && !currentUid.startsWith('local_')) {
         // Split data into Identity (Public) and Preferences (Private)
         const { tailorDraft, personas, activePersonaId, tasteProfile, starredZineIds, lastAuditReport, ...identity } = updated;
         const preferences: UserPreferences = {
@@ -544,7 +539,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             starredZineIds,
             lastAuditReport,
             personas,
-            activePersonaId
+            activePersonaId,
+            zineOptions: updated.zineOptions
         };
         
         await Promise.all([
@@ -602,29 +598,45 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (forceRedirect = false) => {
     setAuthError(null);
-    try { await anchorIdentity(forceRedirect); } catch (e: any) { setAuthError(e.code || e.message); throw e; }
+    try { 
+      await anchorIdentity(forceRedirect); 
+      // For popup flow, auth state change fires immediately — navigate to profile
+      if (!forceRedirect) {
+        window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }));
+      }
+      // For redirect flow, page reloads — handleAuthRedirect in performRitual catches the result
+    } catch (e: any) { setAuthError(e.code || e.message); throw e; }
   };
 
-  const signInWithGooglePopup = async () => {
+  const signInWithGoogleRedirect = async () => {
     setAuthError(null);
-    try { await import('../services/firebaseUtils').then(m => m.signInWithGooglePopup()); } catch (e: any) { setAuthError(e.code || e.message); throw e; }
+    try { 
+      await import('../services/firebaseUtils').then(m => m.signInWithGoogleRedirect()); 
+      window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }));
+    } catch (e: any) { setAuthError(e.code || e.message); throw e; }
   };
 
   const linkAccount = async (forceRedirect = false) => {
     setAuthError(null);
     try { 
+        const authInstance = await ensureAuth();
         if (user?.isAnonymous) {
+            if (!authInstance.currentUser) {
+                // User is a Speed Ghost (local only), no Firebase Auth session to link.
+                // Just sign in, and reconcileProfile will migrate local data.
+                await signInWithGoogleRedirect();
+                return;
+            }
             await linkIdentity(forceRedirect);
             // If it was a popup, we need to manually reconcile to propagate the "Swan" state
             if (!forceRedirect && !isCaptiveInWebview()) {
-                const authInstance = await ensureAuth();
                 if (authInstance.currentUser) {
                     await reconcileProfile(authInstance.currentUser);
                 }
             }
         } else {
             // Already anchored, or switching
-            await anchorIdentity(forceRedirect); 
+            await signInWithGoogleRedirect(); 
         }
     } catch (e: any) { 
         setAuthError(e.code || e.message); 
@@ -730,14 +742,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const recordSession = async () => {
-    if (!user || user.isAnonymous) return;
+    if (!user || user.uid.startsWith('local_')) return;
     await recordSessionService(user.uid);
   };
 
   return (
     <UserContext.Provider value={{ 
       user, profile, loading, updateProfile, toggleZineStar, isOnboardingComplete: !!profile?.onboardingComplete, 
-      login, signInWithGooglePopup, ghostLogin, speedGhostEntrance, linkAccount, keyLogin, verifyIdentity, isEnvironmentRestricted, isDatabaseMissing, authError,
+      login, signInWithGoogleRedirect, ghostLogin, speedGhostEntrance, linkAccount, keyLogin, verifyIdentity, isEnvironmentRestricted, isDatabaseMissing, authError,
       hasApiKey, openKeySelector, logout, refreshHasApiKey, systemStatus, setOracleStatus,
       keyRing, addKeyToRing, removeKeyFromRing,
       featureFlags, toggleFeature,

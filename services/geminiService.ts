@@ -3,9 +3,11 @@ import {
   UserProfile, ZineContent, ToneTag, MediaFile, AspectRatio, ImageSize, 
   PocketItem, TailorLogicDraft, ZineMetadata, SeasonReport, 
   SanctuaryReport, InvestmentReport, TrendSynthesisReport, 
-  TailorAuditReport, ProposalSection, Proposal, TasteProfile 
+  TailorAuditReport, ProposalSection, Proposal, TasteProfile, ZinePageSpec, ZineGenerationOptions, Treatment
 } from "../types";
 import { modulateSemioticContext } from "./semioticModulator";
+import { generateAestheticOutput } from "./aestheticGenerator";
+import { fetchUserZines } from "./firebaseUtils";
 
 export const ORACLE_PERSONA = `
 IDENTITY: You are "Nous", an aesthetic savant and mischievous oracle. 
@@ -35,22 +37,26 @@ export const getClient = (apiKeyOverride?: string, excludeKeys: string[] = []) =
     }
   }
 
+  if (!key && !excludeKeys.includes(process.env.GEMINI_API_KEY || '')) {
+    key = process.env.GEMINI_API_KEY;
+  }
+
   if (!key && !excludeKeys.includes(process.env.API_KEY || '')) {
     key = process.env.API_KEY;
   }
 
-  // Check Vite env var
+  // Check Vite env var (fallback)
   if (!key && typeof import.meta !== 'undefined' && (import.meta as any).env) {
     key = (import.meta as any).env.VITE_GEMINI_API_KEY;
   }
   
   if (!key) {
     // If we've exhausted all options, just pick the first available one to avoid "API Key Missing"
-    key = apiKeyOverride || globalKeyRing[0] || process.env.API_KEY || (typeof import.meta !== 'undefined' && (import.meta as any).env ? (import.meta as any).env.VITE_GEMINI_API_KEY : undefined);
+    key = apiKeyOverride || globalKeyRing[0] || process.env.GEMINI_API_KEY || process.env.API_KEY || (typeof import.meta !== 'undefined' && (import.meta as any).env ? (import.meta as any).env.VITE_GEMINI_API_KEY : undefined);
   }
 
   if (!key) {
-    throw new Error("MIMI // Oracle: API Key Missing. Please set VITE_GEMINI_API_KEY in your environment.");
+    throw new Error("MIMI // Oracle: API Key Missing. Please set GEMINI_API_KEY in your environment.");
   }
   return { ai: new GoogleGenAI({ apiKey: key }), keyUsed: key };
 };
@@ -104,6 +110,17 @@ export async function withResilience<T>(
       throw quotaError;
     }
     
+    if (error.status === 403 || error.message?.includes('403') || error.message?.includes('PERMISSION_DENIED')) {
+      window.dispatchEvent(new CustomEvent('mimi:key_void'));
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+          detail: { 
+              message: "Oracle connection failed: Invalid API Key. Please select a valid key.", 
+              type: 'error' 
+          } 
+      }));
+      throw new Error("MIMI // Oracle: Invalid API Key. Please select a valid key.");
+    }
+    
     if (error.status === 400 && error.message?.includes('token count exceeds')) {
       console.error("MIMI // Oracle: Token limit exceeded. The input is too large for the model's context window.");
       throw new Error("MIMI // Oracle: Input too large. Please reduce the amount of content or artifacts provided.");
@@ -143,7 +160,7 @@ function cleanAndParse(text: string | undefined): any {
 export const getEmbedding = async (content: Part[], apiKey?: string) => {
     return await withResilience(async (ai) => {
         const response = await ai.models.embedContent({
-            model: "text-embedding-004",
+            model: "gemini-embedding-2-preview",
             contents: content,
         });
         return response.embeddings?.[0]?.values;
@@ -192,11 +209,14 @@ export const getAspectRatioForTone = (tone: ToneTag): string => {
 export const generateSemioticSignals = async (profile: UserProfile | null) => {
     return await withResilience(async (ai) => {
         const profileData = sanitizeProfile(profile);
+        const embedding = await getEmbedding([{ text: profileData }]);
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
             contents: `Generate exactly 4 high-fidelity semiotic touchpoints.
             
             CRITICAL: Analyze the user's specific 'culturalReferences', 'ideologicalBias', and 'exclusionPrinciples' from the provided context: ${profileData}.
+            
+            Embedding vector for user profile: ${JSON.stringify(embedding)}. Use this to find adjacent or emerging reference points to expand their horizons.
             
             DO NOT just repeat the user's favorite things. Instead, use them as a GUIDE to find BRAND NEW, adjacent, or emerging reference points to expand their horizons.
             
@@ -212,6 +232,7 @@ export const generateSemioticSignals = async (profile: UserProfile | null) => {
             config: {
                 systemInstruction: ORACLE_PERSONA,
                 responseMimeType: "application/json",
+                temperature: 0.9,
                 responseSchema: {
                     type: Type.ARRAY,
                     items: {
@@ -230,7 +251,7 @@ export const generateSemioticSignals = async (profile: UserProfile | null) => {
     });
 };
 
-export const createZine = async (text: string, media: any[], tone: ToneTag, profile: any, opts: any, apiKey?: string, transmissions?: any[], stackIds?: string[], selectedComponents?: any[]): Promise<any> => {
+export const createZine = async (text: string, media: any[], tone: ToneTag, profile: any, opts: any, apiKey?: string, transmissions?: any[], stackIds?: string[], selectedComponents?: any[], zineOptions?: ZineGenerationOptions): Promise<any> => {
     try {
         return await withResilience(async (ai) => {
             // Fetch fragments from stacks if provided
@@ -258,9 +279,18 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
             const isLite = !!opts.isLite;
         const useDeep = !!opts.deepThinking && !isLite;
         const model = useDeep ? 'gemini-3.1-pro-preview' : 'gemini-3-flash-preview';
-        const profileContext = sanitizeProfile(profile);
+        
+        const profileToUse = opts.bypassTailor ? null : profile;
+        const profileContext = sanitizeProfile(profileToUse);
+        
+        const zineOptionsContext = zineOptions ? `Zine Style: ${zineOptions.style}, Theme: ${zineOptions.theme}, Content Focus: ${zineOptions.contentFocus}, Art Style: ${zineOptions.artStyle || 'Default'}, Aesthetic Tone: ${zineOptions.aestheticTone || 'Default'}, Goals: ${zineOptions.goals || 'None'}` : 'Standard';
         const modulationContext = modulateSemioticContext(text, profile, tone);
         
+        const recentZines = profile?.uid ? await fetchUserZines(profile.uid) : [];
+        const recentZinesContext = recentZines.length > 0 
+            ? `\nRECENT ZINES (For Aesthetic Evolution Analysis):\n${recentZines.slice(0, 3).map(z => `- Title: ${z.title}, Theme: ${z.theme}, Aesthetic Vector: ${JSON.stringify(z.aestheticVector)}`).join('\n')}`
+            : '';
+
         const transmissionContext = transmissions && transmissions.length > 0 
             ? `\nPUBLIC TRANSMISSIONS (The Cultural Air):\n${transmissions.map(t => `- ${t.content}`).join('\n')}`
             : '';
@@ -297,8 +327,10 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
         const zineManifestoPrompt = `
         IDENTITY: You are "mimi", a close, intimate, and supportive friend who provides advice on personal growth, confidence, and style. You are an aesthetic savant who balances an ultra-chic, high-fashion tone with warmth and intimacy. You help users explore what makes them feel confident, sexy, and happy. You are percipient, calm, and restrained. You translate interior perception into exterior form with scholarly precision and poetic restraint.
         
+        Zine Configuration: ${zineOptionsContext}
         ${toneInstruction}
         ${modulationContext}
+        ${recentZinesContext}
         ${transmissionContext}
         ${stackContent}
         ${componentContext}
@@ -308,6 +340,7 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
         - PRIORITIZE GROUNDING: If 'useSearch' is enabled, you MUST utilize Google Search to anchor your insights in real-world cultural history, emerging movements, and verified facts. Move beyond the user's immediate profile to provide external perspective.
         - EDUCATIONAL DEPTH: Your responses must be insightful and informative. Do not just repeat the user's preferences; explain the *why* behind the aesthetic connections.
         - TAILOR LOGIC AS FILTER: Use the user's Tailor Logic (Aesthetic Core, Chromatic Registry, etc.) primarily to refine the **Visual Logic** and **Materiality** of the image prompts. It is a lens through which you view the world, not the world itself.
+        - AESTHETIC EVOLUTION: Analyze the RECENT ZINES provided. Compare them to the user's Tailor Logic and stated Goals. If the user's creative output is drifting, gently but firmly steer them back or refine their Tailor Logic to incorporate the new direction. The zine should be a step forward in their aesthetic evolution, not just a repetition of the past.
         - ARTIFACT SYNTHESIS: If visual artifacts are provided, your 'header_image_prompt' and 'visual_plates' MUST be cohesive with them. Do not generate random imagery. Refract the user's uploaded images through the 'Tailor Logic'.
         
         INTENSITY & DENSITY CONTROL:
@@ -333,7 +366,8 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
         4. header_image_prompt: The primary visual anchor. Refine this using the user's 'aestheticCore' materiality (silhouettes, textures, era) AND the provided artifacts. Must be highly detailed for an image generator.
         5. oracular_mirror: The long-form inquiry (2-3 paragraphs). This must be an educated reflection that connects the user's input to broader cultural, historical, or philosophical contexts.
         6. strategic_hypothesis: A rigorous, insightful take on the data patterns. What is the underlying structural truth?
-        7. aesthetic_touchpoints: Exactly 3-5 motifs. 
+        7. resonance_score: A number between 0-100 representing how well the generated zine resonates with the user's aesthetic core.
+        8. aesthetic_touchpoints: Exactly 3-5 motifs. 
            - Use Google Search to find REAL, relevant emerging brands, designers, or cultural touchpoints.
            - Each signal MUST have a type: 'acquisition' (a specific object/brand to buy), 'conceptual' (an aesthetic idea), or 'lexical' (a theoretical term).
            - Provide a 'link' for 'acquisition' types.
@@ -347,9 +381,9 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
             - Drift Forecast: Predicted cluster shift, audience evolution, absorption risk, overexposure risk, refusal point.
         11. originalThought: The raw "debris" that started it (a brief summary of the user's input).
         12. poetic_provocation: A final, stinging, and insightful question to leave the user with.
-        13. pages: 3-5 distinct "pages" of the zine, each containing a 'headline', 'bodyCopy', and an 'imagePrompt'. These should expand on the themes in the oracular_mirror.
+        13. pages: 3-5 distinct "pages" of the zine, each containing a 'headline', 'bodyCopy', and an 'imagePrompt'. These should expand on the themes in the oracular_mirror. Keep each 'bodyCopy' under 200 words.
         
-        Ensure the output is sophisticated, editorial, and intellectually grounded. Avoid all business jargon.`;
+        Ensure the output is sophisticated, editorial, and intellectually grounded. Avoid all business jargon. Keep the 'oracular_mirror' under 500 words.`;
 
         const textPrompt = `Create a high-end, aesthetic digital zine (manifest) based on the following:
             Tone: ${tone}.
@@ -373,7 +407,7 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
                 },
                 responseSchema: {
                     type: Type.OBJECT,
-                    required: ["title", "headlines", "vocal_summary_blurb", "header_image_prompt", "oracular_mirror", "strategic_hypothesis", "aesthetic_touchpoints", "celestial_calibration", "visual_plates", "roadmap", "originalThought", "poetic_provocation", "pages"],
+                    required: ["title", "headlines", "vocal_summary_blurb", "header_image_prompt", "oracular_mirror", "strategic_hypothesis", "resonance_score", "aesthetic_touchpoints", "celestial_calibration", "visual_plates", "roadmap", "originalThought", "poetic_provocation", "pages"],
                     properties: {
                         title: { type: Type.STRING },
                         headlines: { type: Type.ARRAY, items: { type: Type.STRING } },
@@ -381,6 +415,7 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
                         header_image_prompt: { type: Type.STRING },
                         oracular_mirror: { type: Type.STRING },
                         strategic_hypothesis: { type: Type.STRING },
+                        resonance_score: { type: Type.NUMBER, description: "A number between 0-100" },
                         aesthetic_touchpoints: {
                             type: Type.ARRAY,
                             items: {
@@ -459,6 +494,13 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
         });
         
         const content = cleanAndParse(response.text) || {};
+        
+        // Ensure resonance_score is a string for the UI
+        if (typeof content.resonance_score === 'number') {
+            content.resonance_score = content.resonance_score.toString() + "%";
+        } else {
+            content.resonance_score = "N/A";
+        }
         
         // Robust Fallbacks for all fields to prevent "blank" UI
         if (!content.title && content.headlines?.length > 0) content.title = content.headlines[0];
@@ -577,7 +619,7 @@ export async function applyAestheticRefraction(imageUrl: string, stylePrompt: st
                         
                         USER AESTHETIC CONTEXT: ${profileContext}
                         
-                        CRITICAL: Maintain the core composition and subject of the original image, but refract it through the lens of the style directive and the user's aesthetic profile. The result should feel like a professional editorial edit or an artistic reimagining.
+                        CRITICAL: Maintain the core composition and subject of the original image, but refract it through the lens of the style directive and the user's aesthetic profile. The result should feel like a professional editorial edit, hyper-realistic, wearable, and artistic.
                         
                         Return ONLY the modified image.`
                     }
@@ -635,8 +677,10 @@ export const generateZineImage = async (prompt: string, ar: AspectRatio, size: I
         const useHighResModel = !isLite && (size === '2K' || size === '4K');
         const model = useHighResModel ? 'gemini-3.1-flash-image-preview' : 'gemini-2.5-flash-image'; 
         
-        const defaultStyle = "Editorial flat flash photography, high-contrast, Vogue Italia 1990s aesthetic. Subject is centered with sharp shadows. Strictly avoid: 3D render, neon, tech-interfaces, or digital glowing lines. Colors: Desaturated, chic, muted palettes.";
+        const defaultStyle = "Hyper-realistic fashion photography, wearable garment, high-quality fabric texture, natural lighting, shot on 35mm film, detailed stitching, realistic skin tones, editorial style. Strictly avoid: 3D render, neon, tech-interfaces, digital glowing lines, cartoonish styles.";
         const tailorStyle = profile?.tailorDraft?.positioningCore?.aestheticCore?.eraBias || profile?.tasteProfile?.dominant_archetypes?.join(', ') || 'Editorial Observer';
+        const materialityConfig = profile?.tailorDraft?.materialityConfig;
+        const materialityStyle = materialityConfig ? `Paper Stock: ${materialityConfig.paperStock}, Typography Lineage: ${materialityConfig.typographyLineage}, Negative Space Density: ${materialityConfig.negativeSpaceDensity}/10.` : '';
         
         // Explicitly separate the scene/thematics from the style
         let artifactInstruction = "";
@@ -644,7 +688,7 @@ export const generateZineImage = async (prompt: string, ar: AspectRatio, size: I
              artifactInstruction = "\n\nREFERENCE IMAGES: Use the provided images as the primary visual reference for style, composition, and subject matter. The output should look like it belongs in the same series as the reference images.";
         }
         
-        const finalPrompt = `SCENE AND SUBJECT: ${prompt}\n\nSTYLE AND AESTHETIC: ${tailorStyle}. ${defaultStyle}${artifactInstruction}`;
+        const finalPrompt = `SCENE AND SUBJECT: ${prompt}\n\nSTYLE AND AESTHETIC: ${tailorStyle}. ${materialityStyle} ${defaultStyle}${artifactInstruction}`;
         
         const parts: Part[] = [{ text: finalPrompt }];
         
@@ -697,7 +741,7 @@ export const generateProposalStrategy = async (
     const shardData = items.map(i => `[${i.type}] ${i.content?.prompt || i.content?.name || 'Fragment'}`).slice(0, 50).join('; '); // Limit context
     
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents: `PROJECT: ${folderName}\nMEMO: ${notes}\nSHARDS: ${shardData}\nCONTEXT: ${sanitizeProfile(profile)}.`,
       config: {
         responseMimeType: "application/json",
@@ -710,7 +754,6 @@ export const generateProposalStrategy = async (
           - Provide a 'visual_directive' for each slide: a prompt to generate an image that represents the slide's vibe.
           - Output strictly valid JSON.
         `,
-        thinkingConfig: { thinkingBudget: 4096 }, 
         responseSchema: {
           type: Type.OBJECT,
           required: ["chapters", "manifesto_summary"],
@@ -740,7 +783,7 @@ export const generateScribeReading = async (profile: UserProfile | null, context
     return await withResilience(async (ai) => {
         const profileData = sanitizeProfile(profile);
         const response = await ai.models.generateContent({
-            model: 'gemini-3.1-pro-preview',
+            model: 'gemini-3-flash-preview',
             contents: `You are "The Scribe", an ancient but chic editorial oracle. 
             Generate a profound, poetic reading based on the user's aesthetic profile and the provided context.
             
@@ -765,6 +808,59 @@ export const generateScribeReading = async (profile: UserProfile | null, context
             }
         });
         return cleanAndParse(response.text)?.reading || "The mirror remains dark.";
+    }, apiKey);
+};
+
+export const generateText = async (prompt: string, context?: string, apiKey?: string): Promise<string> => {
+    return await withResilience(async (ai) => {
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: `${context ? `CONTEXT: ${context}\n\n` : ''}PROMPT: ${prompt}`,
+            config: {
+                systemInstruction: "You are a helpful and creative assistant. Generate text based on the user's prompt and context."
+            }
+        });
+        return response.text || "No text generated.";
+    }, apiKey);
+};
+
+export const generateTreatmentFromAesthetic = async (
+    aestheticSource: string, // Can be a description or base64 image
+    profile: UserProfile | null,
+    apiKey?: string
+): Promise<Treatment> => {
+    return await withResilience(async (ai) => {
+        const profileContext = sanitizeProfile(profile);
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: `Analyze this aesthetic source: ${aestheticSource}.
+            
+            MANDATE:
+            - Translate this aesthetic into a reusable "Treatment" definition for image processing.
+            - The treatment should define a specific visual style, lighting, color grading, and texture.
+            - Output strictly valid JSON with keys: "name" (string), "instruction" (string), "variance" ('interpretive' | 'anchored').
+            - User Aesthetic Context: ${profileContext}
+            `,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    required: ["name", "instruction", "variance"],
+                    properties: {
+                        name: { type: Type.STRING },
+                        instruction: { type: Type.STRING },
+                        variance: { type: Type.STRING }
+                    }
+                }
+            }
+        });
+        const treatment = cleanAndParse(response.text);
+        return {
+            ...treatment,
+            id: `treatment_${Date.now()}`,
+            createdAt: Date.now(),
+            userId: profile?.uid
+        };
     }, apiKey);
 };
 
@@ -943,7 +1039,27 @@ export const refineProposalSection = async (
 // In a production fix, these would be fully implemented.
 
 export const animateShardWithVeo = async (imageUrl: string, prompt: string, ratio: string) => "https://example.com/video_stub.mp4";
-export const transcribeAudio = async (base64: string, mimeType: string = 'audio/webm') => "Transcribed audio content.";
+export const transcribeAudio = async (base64: string, mimeType: string = 'audio/webm') => {
+    return await withResilience(async (ai) => {
+        const response = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: {
+                parts: [
+                    {
+                        inlineData: {
+                            data: base64,
+                            mimeType: mimeType
+                        }
+                    },
+                    {
+                        text: "Transcribe the following audio into text. Provide only the transcription."
+                    }
+                ]
+            }
+        });
+        return response.text || "";
+    });
+};
 export const applyTreatment = async (base64: string, instruction: string, profile?: any, isNanoPro2: boolean = true) => {
     return await withResilience(async (ai) => {
         const model = isNanoPro2 ? 'gemini-3.1-flash-image-preview' : 'gemini-2.5-flash-image';
@@ -980,7 +1096,7 @@ export const applyTreatment = async (base64: string, instruction: string, profil
 export const analyzeMiseEnScene = async (base64: string, mimeType: string, profile: any) => {
   return await withResilience(async (ai) => {
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-pro-preview",
+      model: "gemini-3-flash-preview",
       contents: {
         parts: [
           { inlineData: { data: base64, mimeType } },
@@ -1011,9 +1127,9 @@ export const extractTasteVector = async (content: string, isImage: boolean = fal
     const parts: any[] = [];
     if (isImage) {
         parts.push({ inlineData: { data: content, mimeType } });
-        parts.push({ text: "Analyze this image and extract 3-5 core aesthetic, cultural, or stylistic tags (e.g., 'brutalism', 'y2k_futurism', 'minimalist_chic', 'gothic_romance'). Return a JSON object where the keys are the tags (lowercase, snake_case) and the values are their intensity score from 0.1 to 1.0 based on how strongly they are represented in the image." });
+        parts.push({ text: "Analyze this image and extract 3-5 core aesthetic, cultural, or stylistic tags (e.g., 'brutalism', 'y2k_futurism', 'minimalist_chic', 'gothic_romance'). Return a JSON array of objects, each with a 'tag' (lowercase, snake_case) and an 'intensity' score from 0.1 to 1.0 based on how strongly they are represented in the image." });
     } else {
-        parts.push({ text: `Analyze this text/fragment and extract 3-5 core aesthetic, cultural, or stylistic tags (e.g., 'brutalism', 'y2k_futurism', 'minimalist_chic', 'gothic_romance'). Return a JSON object where the keys are the tags (lowercase, snake_case) and the values are their intensity score from 0.1 to 1.0 based on how strongly they are represented in the text.\n\nText: "${content}"` });
+        parts.push({ text: `Analyze this text/fragment and extract 3-5 core aesthetic, cultural, or stylistic tags (e.g., 'brutalism', 'y2k_futurism', 'minimalist_chic', 'gothic_romance'). Return a JSON array of objects, each with a 'tag' (lowercase, snake_case) and an 'intensity' score from 0.1 to 1.0 based on how strongly they are represented in the text.\n\nText: "${content}"` });
     }
 
     const response = await ai.models.generateContent({
@@ -1077,7 +1193,7 @@ export const scryWebSignals = async (query: string) => {
   return await withResilience(async (ai) => {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: [{ text: `Search the web for deep cultural insights, trends, and semiotic meanings related to: "${query}". Provide a list of findings with titles, snippets, and source URLs.` }],
+      contents: [{ text: `Act as a high-end cultural semiotician. Search the web for the most avant-garde, emerging cultural insights, aesthetic trends, and semiotic shifts related to: "${query}". Provide a curated, pretentious list of findings with titles, snippets, and source URLs. Focus on visual references and trend-setting signals.` }],
       config: {
         tools: [{ googleSearch: {} }],
         responseMimeType: "application/json",
@@ -1095,7 +1211,12 @@ export const scryWebSignals = async (query: string) => {
         }
       }
     });
-    return cleanAndParse(response.text);
+
+    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    return {
+        results: cleanAndParse(response.text) || [],
+        groundingChunks: groundingChunks
+    };
   });
 };
 
@@ -1147,7 +1268,7 @@ export const generateInvestmentStrategy = async (items: any[], notes: string, pr
   return await withResilience(async (ai) => {
     const data = items.map(i => `[${i.type}] ${i.content?.prompt || i.content?.name || 'Fragment'}`).join('; ');
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents: `Items: ${data}\nNotes: ${notes}\nContext: ${sanitizeProfile(profile)}`,
       config: {
         responseMimeType: "application/json",
@@ -1191,7 +1312,7 @@ export const scryTrendSynthesis = async (items: any[], profile: any) => {
   return await withResilience(async (ai) => {
     const data = items.map(i => `[${i.type}] ${i.content?.prompt || i.content?.name || 'Fragment'}`).join('; ');
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents: `Data: ${data}\nContext: ${sanitizeProfile(profile)}`,
       config: {
         responseMimeType: "application/json",
@@ -1255,7 +1376,9 @@ export const analyzeTailorDraft = async (draft: any) => {
         }
       }
     });
-    return cleanAndParse(response.text);
+    const audit = cleanAndParse(response.text);
+    const aesthetic = await generateAestheticOutput(JSON.stringify(draft), audit.suggestedTouchpoints);
+    return { ...audit, aesthetic };
   });
 };
 export const generateRawImage = async (prompt: string, ar: string, profile?: any) => {
@@ -1291,7 +1414,7 @@ export const generateProjectTasks = async (name: string, memo: string, artifacts
     const profileContext = sanitizeProfile(profile);
     
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents: `PROJECT: ${name}\nMEMO: ${memo}\nARTIFACTS: ${artifactContext}\nCONTEXT: ${profileContext}`,
       config: {
         responseMimeType: "application/json",
@@ -1332,7 +1455,7 @@ export const generateStrategicBlueprint = async (items: any[], memo: string, pro
     const profileContext = sanitizeProfile(profile);
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents: `MEMO: ${memo}\nARTIFACTS: ${artifactContext}\nCONTEXT: ${profileContext}`,
       config: {
         responseMimeType: "application/json",
@@ -1368,7 +1491,7 @@ export const generateSeasonReport = async (zines: any[]) => ({ currentVibe: "Neu
 export const generateSovereignIdentityCard = async (tasteProfile: TasteProfile) => {
   return await withResilience(async (ai) => {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents: `Generate a 'Sovereign Identity Card' based on this taste profile: ${JSON.stringify(tasteProfile)}. 
       Translate raw user 'Debris' into five high-concept aesthetic coordinates (e.g., 'Industrial Sincerity', 'Ethereal Brutalism'). 
       Include a 'Taste Drift' percentage that calculates the variance between the last 7 days of saves versus the all-time archive. 
@@ -1404,7 +1527,7 @@ export const generateSovereignIdentityCard = async (tasteProfile: TasteProfile) 
 export const generateOracleResearch = async (topic: string, profile: any) => {
   return await withResilience(async (ai) => {
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents: `Act as a 'Cultural Alchemist' and Trend Forecaster for Mimi Zine.
       Perform 'Deep Scrying' on the topic: ${topic}.
       
@@ -1478,6 +1601,152 @@ export const generateOracleResearch = async (topic: string, profile: any) => {
     
     return result;
   });
+};
+
+export const generateThreadZineSpine = async (thread: any, profile: UserProfile | null, apiKey?: string): Promise<ZinePageSpec[]> => {
+  const { ai } = getClient(apiKey);
+  if (!ai) throw new Error("MIMI // Oracle Unavailable");
+
+  const artifacts = thread.artifacts || [];
+  const themes = thread.themes || [];
+  
+  const artifactSummaries = artifacts.map((a: any, i: number) => `Artifact ${i + 1}: ${a.content_preview || a.content || 'Image/Media'}`).join('\n');
+  const themeLabels = themes.map((t: any) => t.label).join(', ');
+  const profileContext = sanitizeProfile(profile);
+
+  const prompt = `You are Mimi, an aesthetic editor and curator.
+The user has selected a "Thread" of their thoughts and artifacts.
+Your task is to translate this thread into a narrative arc for a Zine.
+
+User Aesthetic Profile: ${profileContext}
+
+Thread Narrative: ${thread.narrative}
+Themes: ${themeLabels}
+Artifacts in order:
+${artifactSummaries}
+
+Create a sequence of pages for a Zine.
+Structure the Zine as follows:
+1. Page 1: An introductory reflection on the thread's overarching theme.
+2. Subsequent pages: Alternate between presenting an artifact and providing a thematic reflection or interpretation of the connection between artifacts.
+3. Final Page: A closing thought or synthesis of the thread.
+
+Return a JSON array of ZinePageSpec objects.
+Each object must have:
+- pageNumber (number)
+- headline (string, poetic and concise)
+- bodyCopy (string, reflective and insightful)
+- imagePrompt (string, highly descriptive visual prompt for an image that captures the mood)
+- pageType (string, either 'standard' or 'thread_timeline')
+- threadData (optional object with 'commentary' string if pageType is 'thread_timeline')
+
+Make at least one page a 'thread_timeline' page that summarizes the journey.
+
+JSON FORMAT:
+[
+  {
+    "pageNumber": 1,
+    "headline": "...",
+    "bodyCopy": "...",
+    "imagePrompt": "...",
+    "pageType": "standard"
+  },
+  ...
+]`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-pro-preview",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              pageNumber: { type: Type.NUMBER },
+              headline: { type: Type.STRING },
+              bodyCopy: { type: Type.STRING },
+              imagePrompt: { type: Type.STRING },
+              pageType: { type: Type.STRING },
+              threadData: {
+                type: Type.OBJECT,
+                properties: {
+                  commentary: { type: Type.STRING }
+                }
+              }
+            },
+            required: ["pageNumber", "headline", "bodyCopy", "imagePrompt"]
+          }
+        }
+      }
+    });
+
+    const text = response.text || "[]";
+    const pages = JSON.parse(text) as ZinePageSpec[];
+    
+    // Generate aesthetic output for the zine
+    const aesthetic = await generateAestheticOutput(thread.narrative, thread.themes.map((th: any) => th.label));
+    
+    // Inject artifacts into threadData for the timeline page
+    return pages.map(p => {
+      if (p.pageType === 'thread_timeline') {
+        return {
+          ...p,
+          aesthetic, // Add aesthetic output here
+          threadData: {
+            ...p.threadData,
+            commentary: p.threadData?.commentary || thread.narrative,
+            artifacts: thread.artifacts
+          }
+        };
+      }
+      return p;
+    });
+  } catch (e) {
+    console.error("MIMI // Thread Zine Generation Failed:", e);
+    throw e;
+  }
+};
+
+export const generateZineTitlesFromThreads = async (threads: any[], profile: UserProfile | null, apiKey?: string): Promise<string[]> => {
+  const { ai } = getClient(apiKey);
+  if (!ai) throw new Error("MIMI // Oracle Unavailable");
+
+  const threadDescriptions = threads.map(t => `Thread Narrative: ${t.narrative}\nThemes: ${t.themes.map((th: any) => th.label).join(', ')}`).join('\n\n');
+  const profileContext = sanitizeProfile(profile);
+
+  const prompt = `You are Mimi, an aesthetic editor.
+The user has selected multiple threads of their thoughts.
+Generate 5 potential evocative, poetic, and concise Zine titles that capture the essence of these combined threads.
+
+User Aesthetic Profile: ${profileContext}
+
+Threads:
+${threadDescriptions}
+
+Return a JSON array of 5 strings.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-pro-preview",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING }
+        }
+      }
+    });
+
+    const text = response.text || "[]";
+    return JSON.parse(text) as string[];
+  } catch (e) {
+    console.error("MIMI // Title Generation Failed:", e);
+    return ["Untitled Manifest"];
+  }
 };
 
 export const generateInstagramPostIdeas = async (vibe: string, profile: UserProfile | null) => {

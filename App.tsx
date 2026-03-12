@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { PublicSharePage } from './components/PublicSharePage';
 import { StackView } from './components/StackView';
 import { AppState, ToneTag, ZineMetadata, DriftEvent, MediaFile } from './types';
-import { createZine } from './services/geminiService';
+import { createZine, generateThreadZineSpine, generateZineTitlesFromThreads } from './services/geminiService';
 import { saveZineToProfile, fetchZineById, auth, isCaptiveInWebview } from './services/firebase';
 import { InputStudio } from './components/InputStudio';
 import { AnalysisDisplay } from './components/AnalysisDisplay';
@@ -15,6 +15,7 @@ import { AgentProvider, useAgents } from './contexts/AgentContext';
 import { ArchiveCloudNebula } from './components/ArchiveCloudNebula';
 import { ArchivalView } from './components/ArchivalView';
 import { UserProfileView } from './components/UserProfileView';
+import { SignatureView } from './components/SignatureView';
 import { MesopicLens } from './components/MesopicLens'; 
 import { ThePress } from './components/ThePress';
 import { SanctuaryView } from './components/SanctuaryView';
@@ -29,6 +30,7 @@ import { CaptiveSentinel } from './components/CaptiveSentinel';
 import { TheWard } from './components/TheWard'; 
 import { PatronMintView } from './components/PatronMintView';
 import { DossierView } from './components/DossierView';
+import { ThreadsView } from './components/ThreadsView';
 import { MoodboardComposer } from './components/MoodboardComposer';
 import { HelpView } from './components/HelpView';
 import { RegistryAlert } from './components/RegistryAlert';
@@ -93,27 +95,37 @@ const MobileMenu: React.FC<{
           </div>
           <div className="space-y-8 flex-1">
              <div className="space-y-4">
-                <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 dark:text-stone-400 block border-b border-stone-800 pb-2">Creation</span>
-                <button onClick={() => handleNav('studio')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Studio</button>
-                <button onClick={() => handleNav('dossier')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Projects</button>
-                <button onClick={() => handleNav('nebula')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">The Stand</button>
-                <button onClick={() => handleNav('oracle')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Oracle</button>
-                <button onClick={() => handleNav('scry')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Scry</button>
+                <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 dark:text-stone-400 block border-b border-stone-800 pb-2">Studio</span>
+                <button onClick={() => handleNav('studio')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Work Table</button>
+                <button onClick={() => handleNav('tailor')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Tailor Tools</button>
+                <button onClick={() => handleNav('dossier')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-emerald-400 transition-colors">Presets</button>
              </div>
              <div className="space-y-4">
-                <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 dark:text-stone-400 block border-b border-stone-800 pb-2">Alchemy</span>
-                <button onClick={() => handleNav('tailor')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">Tailor</button>
+                <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 dark:text-stone-400 block border-b border-stone-800 pb-2">Signature</span>
+                <button onClick={() => handleNav('signature')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">Dashboard</button>
                 <button onClick={() => handleNav('ward')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">The Ward</button>
-                <button onClick={() => handleNav('archival')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">Archive</button>
-                <button onClick={() => handleNav('mesopic')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">Mesopic</button>
-                <button onClick={() => handleNav('darkroom')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">Darkroom</button>
+                <button onClick={() => handleNav('profile')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-indigo-400 transition-colors">Profile</button>
              </div>
              <div className="space-y-4">
-                <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 dark:text-stone-400 block border-b border-stone-800 pb-2">Discover</span>
-                <button onClick={() => handleNav('proscenium')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-amber-400 transition-colors">Proscenium</button>
-                <button onClick={() => handleNav('press')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-amber-400 transition-colors">Press</button>
-                <button onClick={() => handleNav('profile')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-amber-400 transition-colors">Profile</button>
-                <button onClick={() => handleNav('help')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-amber-400 transition-colors">Codex</button>
+                <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 dark:text-stone-400 block border-b border-stone-800 pb-2">Archive</span>
+                <button onClick={() => handleNav('archival')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-amber-400 transition-colors">Library</button>
+                <button onClick={() => handleNav('mesopic')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-amber-400 transition-colors">Temporal Nebula</button>
+                <button onClick={() => handleNav('darkroom')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-amber-400 transition-colors">Darkroom</button>
+             </div>
+             <div className="space-y-4">
+                <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 dark:text-stone-400 block border-b border-stone-800 pb-2">Threads</span>
+                <button onClick={() => handleNav('threads')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-rose-400 transition-colors">Narrative Pathing</button>
+                <button onClick={() => handleNav('scry')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-rose-400 transition-colors">Trace & Scry</button>
+             </div>
+             <div className="space-y-4">
+                <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 dark:text-stone-400 block border-b border-stone-800 pb-2">Floor</span>
+                <button onClick={() => handleNav('nebula')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-cyan-400 transition-colors">Resonance Feed</button>
+                <button onClick={() => handleNav('press')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-cyan-400 transition-colors">Trend Trajectories</button>
+                <button onClick={() => handleNav('proscenium')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-cyan-400 transition-colors">Proscenium</button>
+             </div>
+             <div className="space-y-4">
+                <span className="font-sans text-[9px] uppercase tracking-[0.3em] font-black text-stone-500 dark:text-stone-400 block border-b border-stone-800 pb-2">System</span>
+                <button onClick={() => handleNav('help')} className="w-full text-left font-serif italic text-3xl py-1 hover:text-stone-400 transition-colors">Codex</button>
              </div>
           </div>
           <div className="pt-8 border-t border-stone-800">
@@ -155,6 +167,7 @@ const AppContent: React.FC = () => {
   const { activeAgents } = useAgents();
 
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
+  const [loadingMessage, setLoadingMessage] = useState("Initializing...");
   const [viewMode, setViewMode] = useState<string>('studio');
   const [showQuotaShield, setShowQuotaShield] = useState(false);
   const [zineMetadata, setZineMetadata] = useState<ZineMetadata | null>(null);
@@ -177,10 +190,12 @@ const AppContent: React.FC = () => {
     const saved = localStorage.getItem('mimi_volume');
     return saved === null ? 0.5 : parseFloat(saved);
   });
+  const hasRecordedSession = useRef(false);
 
   useEffect(() => {
-    if (user && !user.isAnonymous) {
+    if (user && !user.isAnonymous && !hasRecordedSession.current) {
         recordSession();
+        hasRecordedSession.current = true;
     }
   }, [user]);
 
@@ -259,6 +274,45 @@ const AppContent: React.FC = () => {
     };
   }, []);
 
+  const handleGenerateThreadZine = useCallback(async (thread: any) => {
+    if (!canGenerate) {
+        setShowPatronModal(true);
+        return;
+    }
+    setAppState(AppState.THINKING);
+    setLoadingMessage("Weaving thread into narrative...");
+    try {
+      const pages = await generateThreadZineSpine(thread, profile, activePersona?.apiKey);
+      const titles = await generateZineTitlesFromThreads([thread], profile, activePersona?.apiKey);
+      const title = titles[0] || "Thread Atlas";
+      
+      const zineContent = {
+        meta: {
+          mode: "editorial" as const,
+          intent: thread.narrative,
+          timestamp: Date.now()
+        },
+        title,
+        pages
+      };
+
+      const targetUid = profile?.uid || user?.uid || 'ghost';
+      const tone = 'Editorial Stillness'; // Default tone for threads
+      const id = await saveZineToProfile(targetUid, profile?.handle || 'Ghost', profile?.photoURL, zineContent, tone, undefined, false, false, false, [], thread.narrative, [], false);
+      
+      setZineMetadata({ 
+          id, userId: targetUid, userHandle: profile?.handle || 'Ghost', title: zineContent.title, tone, timestamp: Date.now(), likes: 0, content: zineContent,
+          artifacts: [], 
+          originalInput: thread.narrative,
+          transmissionsUsed: []
+      });
+      setAppState(AppState.REVEALED);
+    } catch (e) {
+      console.error(e);
+      setAppState(AppState.IDLE);
+    }
+  }, [profile, user, activePersona, canGenerate]);
+
   const handleRefine = useCallback(async (text, media, tone, opts) => {
     if (!canGenerate) {
         setShowPatronModal(true);
@@ -281,7 +335,7 @@ const AppContent: React.FC = () => {
           transmissions = snapshot.docs.map(doc => doc.data());
       } catch (e) { console.warn("MIMI // Transmission context failed to load."); }
 
-      const result = await createZine(text, media, tone, profile, opts, personaKey, transmissions, undefined, opts.selectedComponents);
+      const result = await createZine(text, media, tone, profile, opts, personaKey, transmissions, undefined, opts.selectedComponents, opts.zineOptions);
       await incrementGeneration();
       const targetUid = profile?.uid || user?.uid || 'ghost';
       const id = await saveZineToProfile(targetUid, profile?.handle || 'Ghost', profile?.photoURL, result.content, tone, undefined, opts.deepThinking, opts.isPublic, opts.isLite, media, text, transmissions, opts.isHighFidelity);
@@ -313,6 +367,24 @@ const AppContent: React.FC = () => {
   if (window.location.pathname.startsWith('/stacks/')) {
       const stackId = window.location.pathname.split('/stacks/')[1];
       return <StackView stackId={stackId} />;
+  }
+
+  if (window.location.pathname === '/privacy' || window.location.pathname === '/terms') {
+      const type = window.location.pathname === '/privacy' ? 'privacy' : 'terms';
+      return (
+          <div className="min-h-screen bg-nous-base dark:bg-stone-950 flex flex-col items-center justify-center p-8">
+              <div className="max-w-2xl w-full bg-white dark:bg-stone-900 p-12 rounded-2xl shadow-xl">
+                  <h1 className="font-serif text-4xl italic mb-8">{type === 'privacy' ? 'Privacy Policy' : 'Terms of Service'}</h1>
+                  <p className="font-sans text-stone-600 dark:text-stone-400 leading-relaxed mb-6">
+                      {type === 'privacy' 
+                          ? "Your debris (data) is yours. We do not sell your taste to the pedestrian masses. We merely store it in the vault so you may perceive yourself more clearly. Anchored identities (Google Auth) transmit data to the Cloud Registry. This data is encrypted and used solely for your personal archive and collective 'Social Floor' anonymized trends."
+                          : "You are responsible for the debris you manifest. Mimi is an editor, not a censor, but we decree that violence and harm are aesthetically wretched and grounds for vault suspension. You own your refractions. Mimi owns the machine that refines them. It is a partnership of velvet and logic."
+                      }
+                  </p>
+                  <button onClick={() => window.location.href = '/'} className="font-sans text-xs uppercase tracking-widest font-black text-nous-text dark:text-white border-b border-current pb-1">Return to Vault</button>
+              </div>
+          </div>
+      );
   }
 
   if (isPatronMint) {
@@ -351,55 +423,42 @@ const AppContent: React.FC = () => {
 
                     <div className="space-y-8">
                         <div className="space-y-1">
-                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-[0.3em] font-medium text-stone-500">Creation</span></div>
-                            <SidebarBtn active={viewMode === 'studio'} onClick={() => setViewMode('studio')} icon={<Sparkles />} label="Studio" />
-                            <SidebarBtn active={viewMode === 'nebula'} onClick={() => setViewMode('nebula')} icon={<LayoutGrid />} label="Stand" />
-                            <SidebarBtn active={viewMode === 'scry'} onClick={() => setViewMode('scry')} icon={<Compass />} label="Scry" />
+                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-[0.3em] font-medium text-stone-500">Studio</span></div>
+                            <SidebarBtn active={viewMode === 'studio'} onClick={() => setViewMode('studio')} icon={<Sparkles />} label="Work Table" note="The Artifact Engine" />
+                            <SidebarBtn active={viewMode === 'tailor'} onClick={() => setViewMode('tailor')} icon={<Scissors />} label="Tailor Tools" note="Materiality & Layout" />
+                            <SidebarBtn active={viewMode === 'dossier'} onClick={() => setViewMode('dossier')} icon={<Briefcase />} label="Presets" note="Historical Templates" />
+                        </div>
+
+                        <div className="space-y-1">
+                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-[0.3em] font-medium text-stone-500">Signature</span></div>
+                            <SidebarBtn active={viewMode === 'signature'} onClick={() => setViewMode('signature')} icon={<Target />} label="Dashboard" note="Identity & Analysis" />
+                            <SidebarBtn active={viewMode === 'ward'} onClick={() => setViewMode('ward')} icon={<ShieldCheck />} label="The Ward" note="Calibration Ritual" />
+                            <SidebarBtn active={viewMode === 'profile'} onClick={() => setViewMode('profile')} icon={<User />} label="Profile" note="Settings & Keys" />
                         </div>
 
                         <div className="space-y-1">
                             <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-[0.3em] font-medium text-stone-500">Archive</span></div>
-                            <SidebarBtn active={viewMode === 'archival'} onClick={() => setViewMode('archival')} icon={<Archive />} label="Archive" />
-                            <SidebarBtn active={viewMode === 'mesopic'} onClick={() => setViewMode('mesopic')} icon={<Camera />} label="Mesopic" />
-                            <SidebarBtn active={viewMode === 'darkroom'} onClick={() => setViewMode('darkroom')} icon={<FlaskConical />} label="Darkroom" />
+                            <SidebarBtn active={viewMode === 'archival'} onClick={() => setViewMode('archival')} icon={<Archive />} label="Library" note="Creative Memory" />
+                            <SidebarBtn active={viewMode === 'mesopic'} onClick={() => setViewMode('mesopic')} icon={<Camera />} label="Temporal Nebula" note="Living Map" />
+                            <SidebarBtn active={viewMode === 'darkroom'} onClick={() => setViewMode('darkroom')} icon={<FlaskConical />} label="Darkroom" note="Unprocessed Fragments" />
                         </div>
 
                         <div className="space-y-1">
-                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-[0.3em] font-medium text-stone-500">Alchemy</span></div>
-                            <SidebarBtn active={viewMode === 'tailor'} onClick={() => setViewMode('tailor')} icon={<Scissors />} label="Tailor" />
-                            <SidebarBtn active={viewMode === 'ward'} onClick={() => setViewMode('ward')} icon={<ShieldCheck />} label="The Ward" />
-                            <SidebarBtn active={viewMode === 'profile'} onClick={() => setViewMode('profile')} icon={<User />} label="Profile" />
+                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-[0.3em] font-medium text-stone-500">Threads</span></div>
+                            <SidebarBtn active={viewMode === 'threads'} onClick={() => setViewMode('threads')} icon={<Compass />} label="Narrative Pathing" note="Semantic Paths" />
+                            <SidebarBtn active={viewMode === 'scry'} onClick={() => setViewMode('scry')} icon={<Eye />} label="Trace & Scry" note="Aesthetic Drift Prediction" />
                         </div>
 
                         <div className="space-y-1">
-                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-[0.3em] font-medium text-stone-500">Discover</span></div>
-                            <SidebarBtn active={viewMode === 'press'} onClick={() => setViewMode('press')} icon={<Newspaper />} label="Press" />
-                            <SidebarBtn active={viewMode === 'help'} onClick={() => setViewMode('help')} icon={<BookOpen />} label="Codex" />
+                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-[0.3em] font-medium text-stone-500">Floor</span></div>
+                            <SidebarBtn active={viewMode === 'nebula'} onClick={() => setViewMode('nebula')} icon={<LayoutGrid />} label="Resonance Feed" note="The Stand" />
+                            <SidebarBtn active={viewMode === 'press'} onClick={() => setViewMode('press')} icon={<Newspaper />} label="Trend Trajectories" note="Cultural Intelligence" />
+                            <SidebarBtn active={viewMode === 'proscenium'} onClick={() => setViewMode('proscenium')} icon={<Radio />} label="Proscenium" note="Manifested Visions" />
                         </div>
 
                         <div className="space-y-1">
-                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-600">Work in Progress</span></div>
-                            <SidebarBtn 
-                                active={viewMode === 'dossier'} 
-                                onClick={() => setViewMode('dossier')} 
-                                icon={<Briefcase />} 
-                                label="Projects" 
-                                note="Consolidating creative artifacts into dossiers."
-                            />
-                            <SidebarBtn 
-                                active={viewMode === 'proscenium'} 
-                                onClick={() => setViewMode('proscenium')} 
-                                icon={<Radio />} 
-                                label="Proscenium" 
-                                note="The stage for manifested visions."
-                            />
-                            <SidebarBtn 
-                                active={viewMode === 'proposal'} 
-                                onClick={() => setViewMode('proposal')} 
-                                icon={<Target />} 
-                                label="Proposals" 
-                                note="Strategic conceptual architecture."
-                            />
+                            <div className="px-6 py-2"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-600">System</span></div>
+                            <SidebarBtn active={viewMode === 'help'} onClick={() => setViewMode('help')} icon={<BookOpen />} label="Codex" note="Documentation" />
                         </div>
                     </div>
 
@@ -482,7 +541,7 @@ const AppContent: React.FC = () => {
         <main className={`relative flex-1 flex flex-col overflow-y-auto no-scrollbar transition-all duration-1000 ${zineMetadata ? 'md:pl-0 pt-0' : 'pt-20 md:pt-24'}`}>
           <AnimatePresence mode="wait">
             {appState === AppState.THINKING ? (
-              <ElevatorLoader key="thinking" isDeep={isDeepRefraction} onBypass={(r) => { setAppState(AppState.IDLE); setThreadValue(r || ''); }} />
+              <ElevatorLoader key="thinking" isDeep={isDeepRefraction} loadingMessage={loadingMessage} onBypass={(r) => { setAppState(AppState.IDLE); setThreadValue(r || ''); }} />
             ) : zineMetadata ? (
               <AnalysisDisplay key="reveal" metadata={zineMetadata} onReset={() => { setZineMetadata(null); setAppState(AppState.IDLE); }} onUpdateMetadata={(updated) => setZineMetadata(updated)} />
             ) : (
@@ -494,10 +553,11 @@ const AppContent: React.FC = () => {
                 transition={{ duration: 0.6, ease: "easeOut" }}
               >
                 {viewMode === 'studio' && <InputStudio onRefine={handleRefine} isThinking={appState === AppState.THINKING} initialValue={threadValue} initialMedia={threadMedia} initialHighFidelity={threadHighFidelity} />}
-                {viewMode === 'nebula' && <ArchiveCloudNebula onSelectZine={(z) => { setZineMetadata(z); setAppState(AppState.REVEALED); }} />}
+                {viewMode === 'nebula' && <ArchiveCloudNebula onSelectZine={(z) => { setZineMetadata(z); setAppState(AppState.REVEALED); }} onGenerateThreadZine={handleGenerateThreadZine} />}
                 {viewMode === 'mesopic' && <MesopicLens />}
                 {viewMode === 'archival' && <ArchivalView onSelectZine={(z) => { setZineMetadata(z); setAppState(AppState.REVEALED); }} />}
                 {viewMode === 'profile' && <UserProfileView />}
+                {viewMode === 'signature' && <SignatureView />}
                 {viewMode === 'tailor' && <TailorView initialOverrides={tailorOverrides} />}
                 {viewMode === 'scry' && <ScryView />}
                 {viewMode === 'press' && <ThePress />}
@@ -506,6 +566,7 @@ const AppContent: React.FC = () => {
                 {viewMode === 'sanctuary' && <SanctuaryView />}
                 {viewMode === 'ward' && <TheWard />}
                 {viewMode === 'dossier' && <DossierView />}
+                {viewMode === 'threads' && <ThreadsView />}
                 {viewMode === 'help' && <HelpView />}
               </motion.div>
             )}

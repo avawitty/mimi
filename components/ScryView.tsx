@@ -36,8 +36,16 @@ export const ScryView: React.FC = () => {
 
       // Run text-based scrying in parallel so they populate quickly
       const textPromises = [
-        scryWebSignals(query).then(hits => {
-          setWebResults(hits);
+        scryWebSignals(query).then(data => {
+          setWebResults(data.results);
+          // Use data.groundingChunks here
+          if (data.groundingChunks && data.groundingChunks.length > 0) {
+              setResults(prev => [...prev, ...data.groundingChunks.map((c: any) => ({
+                  title: c.web?.title || 'Grounded Insight',
+                  snippet: 'Grounded in real-time data',
+                  url: c.web?.uri
+              }))]);
+          }
           setIsWebScrying(false);
         }).catch(e => console.error("Web scry failed", e)),
         
@@ -84,32 +92,7 @@ export const ScryView: React.FC = () => {
   };
 
   return (
-    <div className="flex w-full h-screen bg-[#f5f5f0] text-[#1c1917] font-sans overflow-hidden relative selection:bg-emerald-500/20">
-        
-        {/* Sidebar Navigation */}
-        <nav className="w-16 h-full border-r border-[#e5e5e0] flex flex-col justify-between py-8 items-center z-20 bg-[#f5f5f0]">
-            <div className="flex flex-col gap-12 items-center">
-                 {/* Status Dot */}
-                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
-                
-                {/* Vertical Text Nav */}
-                <div className="flex flex-col gap-8 [writing-mode:vertical-rl] rotate-180 items-center">
-                    <button className="text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400 hover:text-stone-800 transition-colors">Archive</button>
-                    <button 
-                        className="text-[10px] uppercase tracking-[0.2em] font-bold text-stone-900 relative"
-                    >
-                        Scry
-                        <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-1 h-1 bg-black rounded-full" />
-                    </button>
-                    <button className="text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400 hover:text-stone-800 transition-colors">Signals</button>
-                </div>
-            </div>
-
-            <button className="text-stone-400 hover:text-stone-800 transition-colors">
-                <Settings size={18} />
-            </button>
-        </nav>
-
+    <div className="flex w-full h-full bg-[#f5f2ed] dark:bg-[#050505] text-[#1c1917] dark:text-[#E4E3E0] font-serif overflow-hidden relative selection:bg-emerald-500/20">
         {/* Main Content */}
         <main className="flex-1 flex flex-col items-center relative overflow-y-auto scrollbar-hide">
               <div className="w-full max-w-5xl flex flex-col items-center pt-16 px-8 min-h-screen pb-32">
