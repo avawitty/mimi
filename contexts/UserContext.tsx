@@ -314,9 +314,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       // If no cloud data exists, but we have local data (fresh sign-up or first sync)
-      if (!cloudProfileSnap && !cloudPrefsSnap && currentLocal) {
-          await migrateLocalToCloud(fbUser.uid, currentLocal);
-      }
       
       // 2. Setup Real-time Listeners
       unsubscribeProfile.current = subscribeToUserProfile(fbUser.uid, (pData) => {

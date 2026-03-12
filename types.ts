@@ -341,6 +341,7 @@ export interface ZineMetadata {
   originalInput?: string; 
   artifacts?: MediaFile[];
   lineage?: string[];
+  embedding?: number[]; // NEW
 }
 
 export interface SemioticSignal {

@@ -18,7 +18,8 @@ try {
 }
 
 // TARGET DATABASE
-const TARGET_DB_ID = firebaseConfig.firestoreDatabaseId || "(default)";
+// Check for override in environment variables
+const TARGET_DB_ID = import.meta.env.VITE_FIRESTORE_DATABASE_ID || firebaseConfig.firestoreDatabaseId || "(default)";
 
 // MIMI // REGISTRY AUDIT
 if (typeof window !== 'undefined') {

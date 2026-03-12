@@ -3,9 +3,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchCommunityZines } from '../services/firebase';
-import { generateSeasonReport } from '../services/geminiService';
+import { generateSeasonReport, generateAestheticSiblings } from '../services/geminiService';
 import { ZineMetadata, SeasonReport, ProsceniumRole } from '../types';
-import { Radio, Activity, Clock, Shield, Eye, MessageSquare, Headphones, Loader2, Zap, ChevronRight, Sparkles, Layers, PenTool, Wind, Map, Info, Orbit } from 'lucide-react';
+import { Radio, Activity, Clock, Shield, Eye, MessageSquare, Headphones, Loader2, Zap, ChevronRight, Sparkles, Layers, PenTool, Wind, Map, Info, Orbit, Users } from 'lucide-react';
 import { ZineCard } from './ZineCard';
 import { useUser } from '../contexts/UserContext';
 
@@ -13,6 +13,7 @@ export const CliqueRadar: React.FC<{ onSelectZine: (zine: ZineMetadata) => void 
   const { profile } = useUser();
   const [zines, setZines] = useState<ZineMetadata[]>([]);
   const [report, setReport] = useState<SeasonReport | null>(null);
+  const [siblings, setSiblings] = useState<{ name: string; explanation: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [syncLevel, setSyncLevel] = useState(90);
@@ -29,6 +30,12 @@ export const CliqueRadar: React.FC<{ onSelectZine: (zine: ZineMetadata) => void 
               setReport(r);
             } catch (re) {}
         }
+        if (profile?.tasteVector) {
+            try {
+                const s = await generateAestheticSiblings(profile.tasteVector);
+                setSiblings(s);
+            } catch (se) {}
+        }
       } catch (e) {} finally { setLoading(false); }
     };
     loadRadar();
@@ -38,7 +45,7 @@ export const CliqueRadar: React.FC<{ onSelectZine: (zine: ZineMetadata) => void 
     }, 3000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [profile?.tasteVector]);
 
   const activeZine = zines[activeIndex];
   const queue = zines.filter((_, i) => i !== activeIndex).slice(0, 8);
@@ -85,6 +92,22 @@ export const CliqueRadar: React.FC<{ onSelectZine: (zine: ZineMetadata) => void 
                     )}
                 </AnimatePresence>
             </div>
+
+            {siblings.length > 0 && (
+                <div className="mb-64">
+                    <h3 className="font-sans text-[10px] uppercase tracking-[0.5em] text-stone-400 font-black mb-12 flex items-center gap-4">
+                        <Users size={14} /> Aesthetic Siblings
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                        {siblings.map((sibling, i) => (
+                            <div key={i} className="border-l border-stone-200 dark:border-stone-800 pl-8">
+                                <h4 className="font-serif italic text-3xl text-nous-text dark:text-white mb-4">{sibling.name}</h4>
+                                <p className="font-sans text-[10px] leading-relaxed text-stone-500">{sibling.explanation}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
                 {queue.map((zine, i) => (

@@ -73,6 +73,13 @@ export async function withResilience<T>(
   try {
     return await operation(ai);
   } catch (error: any) {
+    console.error("MIMI // Gemini Resilience: Attempt failed.", {
+      error: error,
+      message: error.message,
+      code: error.code,
+      status: error.status,
+      errorBody: error.error,
+    });
     const isQuotaError = 
       error.status === 429 || 
       error.code === 429 || 
@@ -86,7 +93,10 @@ export async function withResilience<T>(
       error.error?.code === 503 ||
       error.message?.includes('503') ||
       error.message?.includes('high demand') ||
-      error.error?.message?.includes('high demand');
+      error.error?.message?.includes('high demand') ||
+      error.status === 403 ||
+      error.message?.includes('403') ||
+      error.message?.includes('PERMISSION_DENIED');
     
     if (retries > 0 && isQuotaError) {
       const jitter = Math.random() * 1000;
@@ -1780,3 +1790,35 @@ export const generateInstagramPostIdeas = async (vibe: string, profile: UserProf
     return cleanAndParse(response.text);
   });
 };
+
+export async function generateAestheticSiblings(userTaste: any): Promise<{ name: string; explanation: string }[]> {
+  return withResilience(async (ai) => {
+    const prompt = `
+      Analyze the following aesthetic taste profile: ${JSON.stringify(userTaste)}.
+      Identify 3 "aesthetic siblings" for this user—artists, movements, or styles that resonate with their taste.
+      For each sibling, provide a name and a brief, insightful explanation of why they are a sibling.
+      Return the result as a JSON array of objects with 'name' and 'explanation' fields.
+    `;
+    
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              name: { type: Type.STRING },
+              explanation: { type: Type.STRING }
+            },
+            required: ["name", "explanation"]
+          }
+        }
+      }
+    });
+
+    return JSON.parse(response.text || "[]");
+  });
+}

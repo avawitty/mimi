@@ -277,14 +277,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
               <ZineComments zineId={metadata.id} onClose={() => setShowComments(false)} />
             </motion.div>
           )}
-          {/* Visual Language Reflection Modal */}
-          {showReflection && (
-            <VisualLanguageReflection 
-              onClose={() => setShowReflection(false)} 
-              resonanceScore={metadata.content.resonance_score || "N/A"}
-              reflection={metadata.content.strategic_hypothesis || "No reflection available."}
-            />
-          )}
+          {/* Visual Language Reflection Modal removed */}
       </AnimatePresence>
 
       {/* TOP-LEFT EXIT BUTTON */}

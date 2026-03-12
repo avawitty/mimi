@@ -211,6 +211,8 @@ export const linkIdentity = async (forceRedirect = false): Promise<void> => {
   }
 };
 
+import { generateAndStoreZineEmbedding } from "./zineEmbeddingService";
+
 export const saveZineToProfile = async (uid: string, handle: string, avatar: string | undefined, zine: ZineContent, tone: ToneTag, coverUrl?: string, deep?: boolean, isPublic?: boolean, isLite?: boolean, artifacts?: MediaFile[], originalInput?: string, transmissionsUsed?: any[], isHighFidelity?: boolean): Promise<string> => {
   if (!uid || uid === 'ghost' || !auth.currentUser) return '';
   const targetId = `zine_${uid}_${Date.now()}`;
@@ -232,6 +234,9 @@ export const saveZineToProfile = async (uid: string, handle: string, avatar: str
     try {
       await setDoc(doc(db, "zines", targetId), meta);
       syncToShadowMemory(meta);
+      
+      // Generate and store embedding
+      generateAndStoreZineEmbedding(meta);
       
       // Update taste graph with the generated zine content
       updateTasteGraph(uid, 'text', { content: `${zine.title} - ${zine.meta?.intent || ''} - ${zine.pages?.map(p => p.text).join(' ')}` });
@@ -791,39 +796,7 @@ export const subscribeToUserPreferences = (uid: string, callback: (p: UserPrefer
   );
 };
 
-// MIGRATION LOGIC
-export const migrateLocalToCloud = async (uid: string, localProfile: UserProfile) => {
-  if (!uid || uid === 'ghost' || !auth.currentUser || !localProfile) return;
-  
-  // 1. Prepare Identity Data (Public/Shared)
-  const profileData: Partial<UserProfile> = { ...localProfile, uid };
-  delete profileData.tailorDraft;
-  delete profileData.tasteProfile;
-  delete profileData.starredZineIds;
-  delete profileData.lastAuditReport;
-  delete profileData.personas;
-  delete profileData.activePersonaId;
-
-  // 2. Prepare Preferences Data (Private)
-  const preferencesData: UserPreferences = {
-    tailorDraft: localProfile.tailorDraft,
-    tasteProfile: localProfile.tasteProfile,
-    starredZineIds: localProfile.starredZineIds,
-    lastAuditReport: localProfile.lastAuditReport,
-    personas: localProfile.personas,
-    activePersonaId: localProfile.activePersonaId
-  };
-
-  // 3. Parallel Write
-  try {
-    await Promise.all([
-      setDoc(doc(db, "profiles", uid), sanitizeFirestoreData(profileData), { merge: true }),
-      setDoc(doc(db, "userPreferences", uid), sanitizeFirestoreData(preferencesData), { merge: true })
-    ]);
-  } catch (e: any) {
-    console.warn("MIMI // Migration Partial/Blocked:", e.code);
-  }
-};
+// MIGRATION LOGIC REMOVED
 
 export const startGhostSession = () => signInAnonymously(auth);
 
