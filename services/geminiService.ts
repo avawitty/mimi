@@ -1,13 +1,19 @@
 import { GoogleGenAI, Type, Part, Modality, ThinkingLevel } from "@google/genai";
+import { getAI, GoogleAIBackend } from "firebase/ai";
+import { app } from "./firebaseInit";
 import { 
   UserProfile, ZineContent, ToneTag, MediaFile, AspectRatio, ImageSize, 
   PocketItem, TailorLogicDraft, ZineMetadata, SeasonReport, 
   SanctuaryReport, InvestmentReport, TrendSynthesisReport, 
-  TailorAuditReport, ProposalSection, Proposal, TasteProfile, ZinePageSpec, ZineGenerationOptions, Treatment
+  TailorAuditReport, ProposalSection, Proposal, TasteProfile, ZinePageSpec, ZineGenerationOptions, Treatment,
+  TasteGraphNode, TasteGraphEdge, NarrativeThread
 } from "../types";
 import { modulateSemioticContext } from "./semioticModulator";
 import { generateAestheticOutput } from "./aestheticGenerator";
-import { fetchUserZines } from "./firebaseUtils";
+import { fetchUserZines, fetchLatestLineageEntry } from "./firebaseUtils";
+import { createZine } from "./zineGenerator";
+
+const ai = getAI(app, { backend: new GoogleAIBackend() });
 
 export const ORACLE_PERSONA = `
 IDENTITY: You are "Nous", an aesthetic savant and mischievous oracle. 
@@ -20,6 +26,48 @@ let globalKeyRing: string[] = [];
 
 export const setGlobalKeyRing = (keys: string[]) => {
   globalKeyRing = keys;
+};
+
+export const extractTasteGraphNodes = async (artifacts: PocketItem[]): Promise<{ nodes: TasteGraphNode[], edges: TasteGraphEdge[] }> => {
+  const { ai } = getClient();
+  if (!ai) return { nodes: [], edges: [] };
+
+  // Generate tags for artifacts if they don't have them
+  const artifactsWithTags = await Promise.all(artifacts.map(async a => {
+    let tags = a.tags;
+    if (!tags || tags.length === 0) {
+      tags = await generateTagsFromMedia(a.title + ": " + (a.notes || ""), []);
+    }
+    return { ...a, tags };
+  }));
+
+  const prompt = `You are Mimi, an aesthetic intelligence system. Analyze the following artifacts to extract a semantic taste graph.
+  
+  Artifacts:
+  ${artifactsWithTags.map(a => `- ${a.title}: ${a.notes || ''} Tags: ${a.tags?.join(', ') || 'None'}`).join('\n')}
+  
+  Return a JSON object with:
+  - nodes: Array of { id, label, type: 'concept' | 'motif' | 'era', weight, explanation }
+  - edges: Array of { source, target, strength, type: 'relates_to' | 'evolves_from' | 'contrasts_with' }
+  
+  Ensure the graph is coherent and captures the underlying aesthetic relationships.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-pro-preview",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+      },
+    });
+    
+    if (response.text) {
+      return JSON.parse(response.text);
+    }
+  } catch (e) {
+    console.error("MIMI // Taste Graph Extraction Error:", e);
+  }
+  return { nodes: [], edges: [] };
 };
 
 export const getClient = (apiKeyOverride?: string, excludeKeys: string[] = []) => {
@@ -238,6 +286,9 @@ export const generateSemioticSignals = async (profile: UserProfile | null) => {
             If the user has no specific anchors listed, derive the 4 signals from their 'eraBias' or 'aestheticCore'.
             
             The 'query' field must be a refined Google Search query that leads to deep archival images, emerging brands, or essays about this new concept.
+            
+            Provide a 'semantic_trigger' (the exact keyword/concept from the user's profile/input that triggered this).
+            Provide a 'targeting_rationale' (a 1-sentence explanation of WHY this specific suggestion is being served to them based on their semantic data).
             `,
             config: {
                 systemInstruction: ORACLE_PERSONA,
@@ -247,11 +298,13 @@ export const generateSemioticSignals = async (profile: UserProfile | null) => {
                     type: Type.ARRAY,
                     items: {
                         type: Type.OBJECT,
-                        required: ["text", "query", "visual_directive"],
+                        required: ["text", "query", "visual_directive", "semantic_trigger", "targeting_rationale"],
                         properties: { 
                             text: { type: Type.STRING, description: "The poetic motif name or emerging brand (e.g. 'Ova Anime' or 'Biomechanical Theology')" }, 
                             query: { type: Type.STRING, description: "Search query for deep-linking (e.g. 'Ova Anime 1990s aesthetics')" },
-                            visual_directive: { type: Type.STRING, description: "Visual description of the motif." }
+                            visual_directive: { type: Type.STRING, description: "Visual description of the motif." },
+                            semantic_trigger: { type: Type.STRING, description: "The specific keyword/concept from the user's profile that triggered this" },
+                            targeting_rationale: { type: Type.STRING, description: "Why this specific 'ad/suggestion' is being served to them" }
                         }
                     }
                 }
@@ -261,353 +314,10 @@ export const generateSemioticSignals = async (profile: UserProfile | null) => {
     });
 };
 
-export const createZine = async (text: string, media: any[], tone: ToneTag, profile: any, opts: any, apiKey?: string, transmissions?: any[], stackIds?: string[], selectedComponents?: any[], zineOptions?: ZineGenerationOptions): Promise<any> => {
-    try {
-        return await withResilience(async (ai) => {
-            // Fetch fragments from stacks if provided
-            let stackContent = "";
-            if (stackIds && stackIds.length > 0) {
-                const { fetchFragmentsByStackId } = await import('./firebase');
-                for (const stackId of stackIds) {
-                    const fragments = await fetchFragmentsByStackId(stackId);
-                    stackContent += `\nSTACK (${stackId}) FRAGMENTS:\n${fragments.map(f => `- ${f.content?.prompt || f.content?.name || 'Fragment'}`).join('\n')}`;
-                }
-            }
 
-            let componentContext = "";
-            if (selectedComponents && selectedComponents.length > 0) {
-                const validComponents = selectedComponents.filter(c => {
-                    const url = c.url || c.content?.url || '';
-                    return !url.toLowerCase().endsWith('.svg');
-                });
-                if (validComponents.length > 0) {
-                    componentContext = `\nSAVED COMPONENTS (Use these as primary visual references):
-${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.url}`).join('\n')}`;
-                }
-            }
 
-            const isLite = !!opts.isLite;
-        const useDeep = !!opts.deepThinking && !isLite;
-        const model = useDeep ? 'gemini-3.1-pro-preview' : 'gemini-3-flash-preview';
-        
-        const profileToUse = opts.bypassTailor ? null : profile;
-        const profileContext = sanitizeProfile(profileToUse);
-        
-        const zineOptionsContext = zineOptions ? `Zine Style: ${zineOptions.style}, Theme: ${zineOptions.theme}, Content Focus: ${zineOptions.contentFocus}, Art Style: ${zineOptions.artStyle || 'Default'}, Aesthetic Tone: ${zineOptions.aestheticTone || 'Default'}, Goals: ${zineOptions.goals || 'None'}` : 'Standard';
-        const modulationContext = modulateSemioticContext(text, profile, tone);
-        
-        const recentZines = profile?.uid ? await fetchUserZines(profile.uid) : [];
-        const recentZinesContext = recentZines.length > 0 
-            ? `\nRECENT ZINES (For Aesthetic Evolution Analysis):\n${recentZines.slice(0, 3).map(z => `- Title: ${z.title}, Theme: ${z.theme}, Aesthetic Vector: ${JSON.stringify(z.aestheticVector)}`).join('\n')}`
-            : '';
 
-        const transmissionContext = transmissions && transmissions.length > 0 
-            ? `\nPUBLIC TRANSMISSIONS (The Cultural Air):\n${transmissions.map(t => `- ${t.content}`).join('\n')}`
-            : '';
         
-        // Use user-defined temperature or default to a slightly "toned back" 0.8
-        const temperature = profile?.tailorDraft?.generationTemperature ?? 0.8;
-        
-        // Prepare multimodal parts
-        const parts: Part[] = [];
-        let artifactInstruction = "";
-
-        if (media && media.length > 0) {
-            let hasImages = false;
-            for (const m of media) {
-                if (m.type === 'image' && m.data) {
-                    hasImages = true;
-                    parts.push({
-                        inlineData: {
-                            data: m.data.split(',')[1] || m.data,
-                            mimeType: m.mimeType || 'image/png'
-                        }
-                    });
-                }
-            }
-            if (hasImages) {
-                artifactInstruction = "\nVISUAL ARTIFACTS: The user has provided visual artifacts (images). You MUST analyze these images. Incorporate their specific visual elements, mood, colors, and subjects into the 'oracular_mirror', 'header_image_prompt', and 'visual_plates'. The zine should feel like a direct response to these specific images + the text input.";
-            }
-        }
-
-        const toneInstruction = tone?.toUpperCase() === 'CONTRARY' 
-            ? "\nTONE: CONTRARY. Apply inverted logic and absurdist perspectives. Challenge the user's stated beliefs with high-theory twists. Represent 'Intrusive Thoughts' as a high-fashion editorial artifact."
-            : `\nTONE: ${tone || 'Standard'}.`;
-
-        const zineManifestoPrompt = `
-        IDENTITY: You are "mimi", a close, intimate, and supportive friend who provides advice on personal growth, confidence, and style. You are an aesthetic savant who balances an ultra-chic, high-fashion tone with warmth and intimacy. You help users explore what makes them feel confident, sexy, and happy. You are percipient, calm, and restrained. You translate interior perception into exterior form with scholarly precision and poetic restraint.
-        
-        Zine Configuration: ${zineOptionsContext}
-        ${toneInstruction}
-        ${modulationContext}
-        ${recentZinesContext}
-        ${transmissionContext}
-        ${stackContent}
-        ${componentContext}
-        ${artifactInstruction}
-        
-        CORE DIRECTIVE:
-        - PRIORITIZE GROUNDING: If 'useSearch' is enabled, you MUST utilize Google Search to anchor your insights in real-world cultural history, emerging movements, and verified facts. Move beyond the user's immediate profile to provide external perspective.
-        - EDUCATIONAL DEPTH: Your responses must be insightful and informative. Do not just repeat the user's preferences; explain the *why* behind the aesthetic connections.
-        - TAILOR LOGIC AS FILTER: Use the user's Tailor Logic (Aesthetic Core, Chromatic Registry, etc.) primarily to refine the **Visual Logic** and **Materiality** of the image prompts. It is a lens through which you view the world, not the world itself.
-        - AESTHETIC EVOLUTION: Analyze the RECENT ZINES provided. Compare them to the user's Tailor Logic and stated Goals. If the user's creative output is drifting, gently but firmly steer them back or refine their Tailor Logic to incorporate the new direction. The zine should be a step forward in their aesthetic evolution, not just a repetition of the past.
-        - ARTIFACT SYNTHESIS: If visual artifacts are provided, your 'header_image_prompt' and 'visual_plates' MUST be cohesive with them. Do not generate random imagery. Refract the user's uploaded images through the 'Tailor Logic'.
-        
-        INTENSITY & DENSITY CONTROL:
-        - DENSITY (${profile?.tailorDraft?.positioningCore?.aestheticCore?.density}/10): ${profile?.tailorDraft?.positioningCore?.aestheticCore?.densityDescription || 'Control the information density.'} 
-          Higher density means more complex, layered, and information-rich content. Lower density means minimalist, sparse, and focused content.
-        - ENTROPY (${profile?.tailorDraft?.positioningCore?.aestheticCore?.entropy}/10): ${profile?.tailorDraft?.positioningCore?.aestheticCore?.entropyDescription || 'Control the complexity and chaos.'}
-          Higher entropy means more unpredictable, chaotic, and unconventional logic. Lower entropy means stable, predictable, and grounded logic.
-        - GENERATION TEMPERATURE (${((profile?.tailorDraft?.generationTemperature ?? 0.8) * 100).toFixed(0)}/100): ${profile?.tailorDraft?.temperatureDescription || 'Control the wildness of AI generation.'}
-        
-        VOICE DIRECTIVES:
-        - Emotional Temperature: ${profile?.tailorDraft?.expressionEngine?.narrativeVoice?.emotionalTemperature || 'OBSERVATIONAL'}
-        - Structure Bias: ${profile?.tailorDraft?.expressionEngine?.narrativeVoice?.structureBias || 'FLOWING'}
-        - Lexical Density: ${profile?.tailorDraft?.expressionEngine?.narrativeVoice?.lexicalDensity}/10
-        - Restraint Level: ${profile?.tailorDraft?.expressionEngine?.narrativeVoice?.restraintLevel}/10
-        - Voice Notes: ${profile?.tailorDraft?.expressionEngine?.narrativeVoice?.voiceNotes || 'No specific notes.'}
-        
-        ZINE STRUCTURE & OUTPUT SPECIFICATION:
-        You must generate a highly structured, editorial artifact. Every field must be meticulously crafted.
-        
-        1. title: A singular, evocative title (1-3 words).
-        2. headlines: Three (3) punchy, poetic, and intellectually stimulating sub-headlines.
-        3. vocal_summary_blurb: A 2-sentence distillation of the core thesis, written as a script for a vocal transmission. Must be educated and percipient.
-        4. header_image_prompt: The primary visual anchor. Refine this using the user's 'aestheticCore' materiality (silhouettes, textures, era) AND the provided artifacts. Must be highly detailed for an image generator.
-        5. oracular_mirror: The long-form inquiry (2-3 paragraphs). This must be an educated reflection that connects the user's input to broader cultural, historical, or philosophical contexts.
-        6. strategic_hypothesis: A rigorous, insightful take on the data patterns. What is the underlying structural truth?
-        7. resonance_score: A number between 0-100 representing how well the generated zine resonates with the user's aesthetic core.
-        8. aesthetic_touchpoints: Exactly 3-5 motifs. 
-           - Use Google Search to find REAL, relevant emerging brands, designers, or cultural touchpoints.
-           - Each signal MUST have a type: 'acquisition' (a specific object/brand to buy), 'conceptual' (an aesthetic idea), or 'lexical' (a theoretical term).
-           - Provide a 'link' for 'acquisition' types.
-        8. celestial_calibration: The timing of the insight (e.g., "Late Autumn, Pre-Dawn").
-        9. visual_plates: Four (4) specific image prompts. Use the Tailor Logic to define the lighting, grain, and composition. They must be cohesive with the uploaded artifacts.
-        10. roadmap: A Cultural Authority Roadmap. The objective is to anchor brands or individuals in sustainable aesthetic authority over time. Do not repeat brand names or references from the Tailor Logic. Use Tailor Logic only to understand positioning direction.
-            - Authority Anchor: Core Claim, Repetition Vector, Exclusion Principle.
-            - Strategic Thesis: One sentence describing how this concept sustains long-term authority within its cultural tension.
-            - Positioning Axis: The tension between two forces this identity operates between.
-            - Phases: 3-4 Authority Phases (establish, differentiate, operationalize, expand, evolve). Each phase includes objective, strategicMove, artifactOutputs, riskToIntegrity, signalToMonitor.
-            - Drift Forecast: Predicted cluster shift, audience evolution, absorption risk, overexposure risk, refusal point.
-        11. originalThought: The raw "debris" that started it (a brief summary of the user's input).
-        12. poetic_provocation: A final, stinging, and insightful question to leave the user with.
-        13. pages: 3-5 distinct "pages" of the zine, each containing a 'headline', 'bodyCopy', and an 'imagePrompt'. These should expand on the themes in the oracular_mirror. Keep each 'bodyCopy' under 200 words.
-        
-        Ensure the output is sophisticated, editorial, and intellectually grounded. Avoid all business jargon. Keep the 'oracular_mirror' under 500 words.`;
-
-        const textPrompt = `Create a high-end, aesthetic digital zine (manifest) based on the following:
-            Tone: ${tone}.
-            User Context: ${profileContext}.
-            Input: "${text}".
-            
-            ${zineManifestoPrompt}`;
-        
-        // Add text prompt as the last part
-        parts.push({ text: textPrompt });
-
-        const response = await ai.models.generateContent({
-            model: model,
-            contents: { parts: parts },
-            config: {
-                temperature: temperature,
-                responseMimeType: "application/json",
-                tools: opts.useSearch ? [{ googleSearch: {} }] : undefined,
-                thinkingConfig: { 
-                    thinkingLevel: useDeep ? ThinkingLevel.HIGH : ThinkingLevel.LOW 
-                },
-                responseSchema: {
-                    type: Type.OBJECT,
-                    required: ["title", "headlines", "vocal_summary_blurb", "header_image_prompt", "oracular_mirror", "strategic_hypothesis", "resonance_score", "aesthetic_touchpoints", "celestial_calibration", "visual_plates", "roadmap", "originalThought", "poetic_provocation", "pages"],
-                    properties: {
-                        title: { type: Type.STRING },
-                        headlines: { type: Type.ARRAY, items: { type: Type.STRING } },
-                        vocal_summary_blurb: { type: Type.STRING },
-                        header_image_prompt: { type: Type.STRING },
-                        oracular_mirror: { type: Type.STRING },
-                        strategic_hypothesis: { type: Type.STRING },
-                        resonance_score: { type: Type.NUMBER, description: "A number between 0-100" },
-                        aesthetic_touchpoints: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                required: ["motif", "context", "visual_directive", "type"],
-                                properties: {
-                                    motif: { type: Type.STRING },
-                                    context: { type: Type.STRING },
-                                    visual_directive: { type: Type.STRING },
-                                    type: { type: Type.STRING, description: "One of: 'acquisition' (buy this), 'conceptual' (imagine this), 'lexical' (add to lexicon)" },
-                                    link: { type: Type.STRING, description: "A relevant URL for acquisition types (e.g. a search for the object or a specific designer piece)" }
-                                }
-                            }
-                        },
-                        celestial_calibration: { type: Type.STRING },
-                        visual_plates: { type: Type.ARRAY, items: { type: Type.STRING } },
-                        roadmap: {
-                            type: Type.OBJECT,
-                            properties: {
-                                strategicThesis: { type: Type.STRING },
-                                positioningAxis: { type: Type.STRING },
-                                authorityAnchor: {
-                                    type: Type.OBJECT,
-                                    properties: {
-                                        coreClaim: { type: Type.STRING },
-                                        repetitionVector: { type: Type.STRING },
-                                        exclusionPrinciple: { type: Type.STRING }
-                                    }
-                                },
-                                intensity: { type: Type.STRING, description: "low, medium, or high" },
-                                densityLevel: { type: Type.NUMBER },
-                                entropyLevel: { type: Type.NUMBER },
-                                timelineMode: { type: Type.STRING, description: "compressed, standard, or long-arc" },
-                                phases: {
-                                    type: Type.ARRAY,
-                                    items: {
-                                        type: Type.OBJECT,
-                                        properties: {
-                                            type: { type: Type.STRING, description: "establish, differentiate, operationalize, expand, or evolve" },
-                                            objective: { type: Type.STRING },
-                                            strategicMove: { type: Type.STRING },
-                                            artifactOutputs: { type: Type.ARRAY, items: { type: Type.STRING } },
-                                            riskToIntegrity: { type: Type.STRING },
-                                            signalToMonitor: { type: Type.STRING }
-                                        }
-                                    }
-                                },
-                                driftForecast: {
-                                    type: Type.OBJECT,
-                                    properties: {
-                                        predictedClusterShift: { type: Type.STRING },
-                                        audienceEvolution: { type: Type.STRING },
-                                        absorptionRisk: { type: Type.STRING },
-                                        overexposureRisk: { type: Type.STRING },
-                                        refusalPoint: { type: Type.STRING }
-                                    }
-                                }
-                            }
-                        },
-                        originalThought: { type: Type.STRING },
-                        poetic_provocation: { type: Type.STRING },
-                        pages: {
-                            type: Type.ARRAY,
-                            items: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    headline: { type: Type.STRING },
-                                    bodyCopy: { type: Type.STRING },
-                                    imagePrompt: { type: Type.STRING }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        
-        const content = cleanAndParse(response.text) || {};
-        
-        // Ensure resonance_score is a string for the UI
-        if (typeof content.resonance_score === 'number') {
-            content.resonance_score = content.resonance_score.toString() + "%";
-        } else {
-            content.resonance_score = "N/A";
-        }
-        
-        // Robust Fallbacks for all fields to prevent "blank" UI
-        if (!content.title && content.headlines?.length > 0) content.title = content.headlines[0];
-        if (!content.title) content.title = "Untitled Manifest";
-        
-        if (!content.headlines || content.headlines.length === 0) {
-            content.headlines = [content.title, "A New Frequency", "Aesthetic Resonance"];
-        }
-        
-        if (!content.vocal_summary_blurb) {
-            content.vocal_summary_blurb = content.oracular_mirror?.slice(0, 150) + "..." || "A distillation of the current debris.";
-        }
-        
-        if (!content.header_image_prompt) {
-            content.header_image_prompt = `A minimalist editorial photograph representing ${content.title}`;
-        }
-        
-        if (!content.oracular_mirror) {
-            content.oracular_mirror = "The mirror reflects a silent void, awaiting further debris to manifest its truth.";
-        }
-        
-        if (!content.strategic_hypothesis) {
-            content.strategic_hypothesis = "The current data suggests a pivot towards aesthetic stillness.";
-        }
-        
-        if (!content.aesthetic_touchpoints || content.aesthetic_touchpoints.length === 0) {
-            content.aesthetic_touchpoints = [
-                { motif: "Minimalism", context: "The reduction of noise.", visual_directive: "Clean lines, negative space." },
-                { motif: "Archival", context: "Preserving the debris.", visual_directive: "Dusty textures, sepia tones." }
-            ];
-        }
-        
-        if (!content.celestial_calibration) {
-            content.celestial_calibration = "The stars are silent on this matter, suggesting a period of internal refraction.";
-        }
-        
-        if (!content.visual_plates || content.visual_plates.length === 0) {
-            content.visual_plates = [content.header_image_prompt];
-        }
-        
-        if (!content.roadmap) {
-            content.roadmap = {
-                strategicThesis: "Maintain coherence through selective refusal.",
-                positioningAxis: "Between raw expression and structural rigor.",
-                authorityAnchor: {
-                    coreClaim: "Aesthetic sovereignty.",
-                    repetitionVector: "Consistent material quality.",
-                    exclusionPrinciple: "Refusal of trend-chasing."
-                },
-                intensity: "medium",
-                densityLevel: 5,
-                entropyLevel: 5,
-                timelineMode: "standard",
-                phases: [
-                    {
-                        type: "establish",
-                        objective: "Define the core visual grammar.",
-                        strategicMove: "Audit existing artifacts for coherence.",
-                        artifactOutputs: ["Core Manifesto"],
-                        riskToIntegrity: "Dilution through over-explanation.",
-                        signalToMonitor: "Audience resonance vs. confusion."
-                    }
-                ],
-                driftForecast: {
-                    predictedClusterShift: "Movement towards higher density.",
-                    audienceEvolution: "Maturation of core followers.",
-                    absorptionRisk: "Co-optation by mainstream aesthetics.",
-                    overexposureRisk: "Low, if refusal principle is maintained.",
-                    refusalPoint: "When expansion compromises the core claim."
-                }
-            };
-        }
-        
-        if (!content.poetic_provocation) {
-            content.poetic_provocation = "What remains when the signal fades?";
-        }
-        
-        if (!content.pages || content.pages.length === 0) {
-            content.pages = [
-                { 
-                    headline: content.title, 
-                    bodyCopy: content.oracular_mirror, 
-                    imagePrompt: content.header_image_prompt 
-                }
-            ];
-        }
-        
-        return { content };
-    }, apiKey);
-    } catch (e: any) {
-        if (e.code === 'QUOTA_EXCEEDED' && opts.deepThinking && !opts.isLite) {
-            console.warn("MIMI // Pro model quota exceeded. Falling back to Flash model...");
-            return createZine(text, media, tone, profile, { ...opts, deepThinking: false }, apiKey, transmissions);
-        }
-        throw e;
-    }
-};
 
 export async function applyAestheticRefraction(imageUrl: string, stylePrompt: string, profile: UserProfile | null) {
     return await withResilience(async (ai) => {
@@ -682,63 +392,211 @@ export const generateAudio = async (text: string, apiKey?: string): Promise<Uint
 
 export const generateZineImage = async (prompt: string, ar: AspectRatio, size: ImageSize, profile: any, isLite: boolean, apiKey?: string, artifacts?: MediaFile[]): Promise<string> => {
     return await withResilience(async (ai) => {
-        // Use 2.5-flash-image by default to avoid permission issues with platform keys,
-        // unless a specific high-res size is requested and we have a user key.
-        const useHighResModel = !isLite && (size === '2K' || size === '4K');
-        const model = useHighResModel ? 'gemini-3.1-flash-image-preview' : 'gemini-2.5-flash-image'; 
-        
-        const defaultStyle = "Hyper-realistic fashion photography, wearable garment, high-quality fabric texture, natural lighting, shot on 35mm film, detailed stitching, realistic skin tones, editorial style. Strictly avoid: 3D render, neon, tech-interfaces, digital glowing lines, cartoonish styles.";
-        const tailorStyle = profile?.tailorDraft?.positioningCore?.aestheticCore?.eraBias || profile?.tasteProfile?.dominant_archetypes?.join(', ') || 'Editorial Observer';
-        const materialityConfig = profile?.tailorDraft?.materialityConfig;
-        const materialityStyle = materialityConfig ? `Paper Stock: ${materialityConfig.paperStock}, Typography Lineage: ${materialityConfig.typographyLineage}, Negative Space Density: ${materialityConfig.negativeSpaceDensity}/10.` : '';
-        
-        // Explicitly separate the scene/thematics from the style
-        let artifactInstruction = "";
-        if (artifacts && artifacts.length > 0) {
-             artifactInstruction = "\n\nREFERENCE IMAGES: Use the provided images as the primary visual reference for style, composition, and subject matter. The output should look like it belongs in the same series as the reference images.";
-        }
-        
-        const finalPrompt = `SCENE AND SUBJECT: ${prompt}\n\nSTYLE AND AESTHETIC: ${tailorStyle}. ${materialityStyle} ${defaultStyle}${artifactInstruction}`;
-        
-        const parts: Part[] = [{ text: finalPrompt }];
-        
-        if (artifacts && artifacts.length > 0) {
-            for (const artifact of artifacts) {
-                if (artifact.type === 'image') {
-                    parts.push({
-                        inlineData: {
-                            data: artifact.data.split(',')[1] || artifact.data,
-                            mimeType: artifact.mimeType
-                        }
-                    });
+        try {
+            const modelName = (size === '2K' || size === '4K') ? 'gemini-3.1-flash-image-preview' : 'gemini-2.5-flash-image';
+            const config: any = {
+                imageConfig: {
+                    aspectRatio: ar,
+                }
+            };
+            if (modelName === 'gemini-3.1-flash-image-preview') {
+                config.imageConfig.imageSize = size;
+            }
+
+            const response = await ai.models.generateContent({
+                model: modelName,
+                contents: {
+                    parts: [
+                        { text: `Generate a high-quality, avant-garde, haute couture editorial-style image based on the following concept: ${prompt}. The aesthetic must be ultra-chic, high fashion, and intellectually rigorous. Focus on striking composition, cinematic lighting, and conceptual depth.` },
+                        ...(artifacts?.filter(a => a.type === 'image').map(a => ({
+                            inlineData: {
+                                data: a.data.split(',')[1] || a.data,
+                                mimeType: 'image/png'
+                            }
+                        })) || [])
+                    ]
+                },
+                config
+            });
+            
+            if (!response.candidates || response.candidates.length === 0) {
+                console.error("MIMI // Image Generation Failed: No candidates.", JSON.stringify(response));
+                throw new Error("MIMI // Image Generation Failed: No candidates returned.");
+            }
+
+            const candidate = response.candidates[0];
+            if (candidate.finishReason !== 'STOP') {
+                console.error("MIMI // Image Generation Failed: Finish reason not STOP.", candidate.finishReason, JSON.stringify(candidate.safetyRatings));
+                throw new Error(`MIMI // Image Generation Failed: Finish reason ${candidate.finishReason}`);
+            }
+
+            if (!candidate.content || !candidate.content.parts) {
+                console.error("MIMI // Image Generation Failed: No content parts.", JSON.stringify(candidate));
+                throw new Error("MIMI // Image Generation Failed: No content parts returned.");
+            }
+
+            for (const part of candidate.content.parts) {
+                if (part.inlineData) {
+                    return `data:${part.inlineData.mimeType || 'image/jpeg'};base64,${part.inlineData.data}`;
                 }
             }
+            
+            console.error("MIMI // Image Generation Failed: No inlineData found in parts.", JSON.stringify(candidate.content.parts));
+            throw new Error("MIMI // Image Generation Failed: No image returned.");
+        } catch (e: any) {
+            console.warn("MIMI // Flash Image Generation Failed, falling back to Imagen...", e);
+            const response = await ai.models.generateImages({
+                model: 'imagen-4.0-generate-001',
+                prompt: `Generate a high-quality, avant-garde, haute couture editorial-style image based on the following concept: ${prompt}. The aesthetic must be ultra-chic, high fashion, and intellectually rigorous. Focus on striking composition, cinematic lighting, and conceptual depth.`,
+                config: {
+                    numberOfImages: 1,
+                    outputMimeType: 'image/jpeg',
+                    aspectRatio: ar,
+                },
+            });
+            return `data:image/jpeg;base64,${response.generatedImages[0].image.imageBytes}`;
         }
-        
-        const imageConfig: any = { aspectRatio: ar };
-        if (useHighResModel) {
-            imageConfig.imageSize = size || '1K';
-        }
-
-        const response = await ai.models.generateContent({
-            model: model,
-            contents: { parts: parts },
-            config: {
-                imageConfig: imageConfig
-            }
-        });
-        
-        // Find image part
-        for (const part of response.candidates?.[0]?.content?.parts || []) {
-            if (part.inlineData) {
-                return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
-            }
-        }
-        throw new Error("No image generated");
     }, apiKey);
 };
 
-// --- IMPLEMENTED STRATEGIC FUNCTIONS ---
+export const analyzeImageAesthetic = async (base64Image: string, mimeType: string, profile: UserProfile | null) => {
+    return await withResilience(async (ai) => {
+        const profileContext = sanitizeProfile(profile);
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: {
+                parts: [
+                    {
+                        inlineData: {
+                            data: base64Image,
+                            mimeType: mimeType
+                        }
+                    },
+                    {
+                        text: `Analyze this image and identify its aesthetic. 
+                        
+                        MANDATE:
+                        - Suggest exactly 3 cultural references or keywords related to this aesthetic.
+                        - The keywords should be high-fidelity and culturally relevant.
+                        - User Aesthetic Context: ${profileContext}
+                        
+                        Output strictly valid JSON with key: "culturalReferences" (array of 3 strings).`
+                    }
+                ]
+            },
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    required: ["culturalReferences"],
+                    properties: {
+                        culturalReferences: {
+                            type: Type.ARRAY,
+                            items: { type: Type.STRING }
+                        }
+                    }
+                }
+            }
+        });
+        return cleanAndParse(response.text);
+    });
+};
+
+export const generateNarrativeThread = async (
+  input: string,
+  existingThreads: NarrativeThread[],
+  apiKey?: string
+): Promise<string> => {
+  return await withResilience(async (ai) => {
+    const threadContext = existingThreads.map(t => `${t.title}: ${t.narrative}`).join('\n\n');
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `
+        You are a narrative architect. Generate a new narrative thread continuation based on the user's input and existing threads.
+        
+        USER INPUT: "${input}"
+        
+        EXISTING THREADS:
+        ${threadContext}
+        
+        MANDATE:
+        - Create a coherent narrative continuation.
+        - The tone should be evocative, chic, and intellectually rigorous.
+        - Output the narrative as a string.
+      `,
+      config: {
+        systemInstruction: ORACLE_PERSONA,
+      }
+    });
+    return response.text || "The narrative thread remains unspun.";
+  }, apiKey);
+};
+
+export const analyzeThreadPath = async (
+  thread: NarrativeThread,
+  zines: ZineMetadata[],
+  apiKey?: string
+): Promise<{ nodes: TasteGraphNode[], edges: TasteGraphEdge[] }> => {
+  return await withResilience(async (ai) => {
+    const relevantZines = zines.filter(z => thread.artifacts?.includes(z.id));
+    const zineContext = relevantZines.map(z => `${z.title}: ${z.content?.originalThought || ''}`).join('\n\n');
+    
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `
+        Analyze the semantic path of the following artifacts in the context of this narrative thread:
+        
+        NARRATIVE THREAD: "${thread.title}" - "${thread.narrative}"
+        
+        ARTIFACTS:
+        ${zineContext}
+        
+        MANDATE:
+        - Create a node-link diagram representation of the semantic flow.
+        - Output strictly valid JSON with 'nodes' (array of TasteGraphNode) and 'edges' (array of TasteGraphEdge).
+        - Nodes should represent artifacts, themes, or motifs.
+        - Edges should represent the semantic connections between them.
+      `,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          required: ["nodes", "edges"],
+          properties: {
+            nodes: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                required: ["id", "label", "type", "weight"],
+                properties: {
+                  id: { type: Type.STRING },
+                  label: { type: Type.STRING },
+                  type: { type: Type.STRING },
+                  weight: { type: Type.NUMBER },
+                  explanation: { type: Type.STRING }
+                }
+              }
+            },
+            edges: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                required: ["source", "target", "strength", "type"],
+                properties: {
+                  source: { type: Type.STRING },
+                  target: { type: Type.STRING },
+                  strength: { type: Type.NUMBER },
+                  type: { type: Type.STRING }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+    return cleanAndParse(response.text) || { nodes: [], edges: [] };
+  }, apiKey);
+};
 
 export const generateProposalStrategy = async (
   folderName: string, 
@@ -914,17 +772,58 @@ export const refineProposalText = async (
   return await withResilience(async (ai) => {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `INPUT TEXT: "${currentText}"\n\nINSTRUCTION: "${instruction}"\n\nCONTEXT: ${sanitizeProfile(profile)}.`,
+      contents: `Refine the following text based on the instruction: "${instruction}".
+      
+      Text: ${currentText}
+      
+      Profile Context: ${sanitizeProfile(profile)}`,
       config: {
         systemInstruction: ORACLE_PERSONA,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.STRING
-        }
       }
     });
     return response.text || currentText;
   });
+};
+
+export const generateFolderTasks = async (
+  folderName: string,
+  folderDescription: string,
+  artifacts: any[],
+  apiKey?: string
+): Promise<{ title: string; description: string; dueDate: string }[]> => {
+  return await withResilience(async (ai) => {
+    const artifactContext = artifacts.map(a => `[${a.type}] ${a.title}`).join(', ');
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `
+        Generate a list of actionable tasks for a dossier folder named "${folderName}".
+        
+        DESCRIPTION: "${folderDescription}"
+        ARTIFACTS: ${artifactContext}
+        
+        MANDATE:
+        - Suggest 3-5 actionable steps.
+        - Provide a potential due date for each task (in YYYY-MM-DD format, assuming today is 2026-03-19).
+        - Output strictly valid JSON with an array of objects: { title, description, dueDate }.
+      `,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            required: ["title", "description", "dueDate"],
+            properties: {
+              title: { type: Type.STRING },
+              description: { type: Type.STRING },
+              dueDate: { type: Type.STRING }
+            }
+          }
+        }
+      }
+    });
+    return cleanAndParse(response.text) || [];
+  }, apiKey);
 };
 
 // Helper to truncate input to avoid token limits
@@ -933,11 +832,29 @@ const truncateInput = (input: string, maxChars: number = 20000): string => {
   return input.substring(0, maxChars) + "... [truncated]";
 };
 
-export const generateTags = async (content: string): Promise<string[]> => {
+export const generateTagsFromMedia = async (content?: string, mediaItems: any[] = []): Promise<string[]> => {
   return await withResilience(async (ai) => {
+    const parts: any[] = [];
+    if (content) {
+      parts.push({ text: `Analyze this content and generate 3-5 minimalist, all-caps tags that capture its aesthetic and semiotic essence: "${truncateInput(content)}"` });
+    } else {
+      parts.push({ text: `Analyze these images and generate 3-5 minimalist, all-caps tags that capture their aesthetic and semiotic essence.` });
+    }
+
+    for (const m of mediaItems) {
+      if ((m.type === 'image' || m.type === 'video') && m.data) {
+        parts.push({
+          inlineData: {
+            data: m.data.split(',')[1] || m.data,
+            mimeType: m.mimeType || (m.type === 'video' ? 'video/mp4' : 'image/png')
+          }
+        });
+      }
+    }
+
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Analyze this content and generate 3-5 minimalist, all-caps tags that capture its aesthetic and semiotic essence: "${truncateInput(content)}"`,
+      contents: { parts },
       config: {
         systemInstruction: ORACLE_PERSONA,
         responseMimeType: "application/json",
@@ -1393,7 +1310,7 @@ export const analyzeTailorDraft = async (draft: any) => {
 };
 export const generateRawImage = async (prompt: string, ar: string, profile?: any) => {
   return await withResilience(async (ai) => {
-    const defaultStyle = "Editorial flat flash photography, high-contrast 35mm film grain, Vogue Italia 1990s aesthetic. Subject is centered with sharp shadows. Strictly avoid: 3D render, neon, tech-interfaces, or digital glowing lines. Colors: Desaturated, chic, muted palettes.";
+    const defaultStyle = "A mystical, introspective reading, reminiscent of 19th-century daguerreotypes and Victorian mirror-gazing. Ethereal, soft-focus, high-contrast black and white with subtle sepia tones. Subject is centered, surrounded by symbolic, reflective objects. Strictly avoid: 3D render, neon, tech-interfaces, or digital glowing lines. Colors: Muted, antique, reflective, atmospheric.";
     const tailorStyle = profile?.tailorDraft?.positioningCore?.aestheticCore?.eraBias || profile?.tasteProfile?.dominant_archetypes?.join(', ') || 'Editorial Observer';
     
     const finalPrompt = `SCENE AND SUBJECT: ${prompt}\n\nSTYLE AND AESTHETIC: ${tailorStyle}. ${defaultStyle}`;
@@ -1411,7 +1328,7 @@ export const generateRawImage = async (prompt: string, ar: string, profile?: any
     
     for (const part of response.candidates?.[0]?.content?.parts || []) {
       if (part.inlineData) {
-        return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+        return `data:image/jpeg;base64,${part.inlineData.data}`;
       }
     }
     throw new Error("No image generated");

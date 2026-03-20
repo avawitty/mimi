@@ -8,7 +8,7 @@ import { getAnalytics, Analytics, isSupported } from "firebase/analytics";
 import firebaseConfig from "../firebase-applet-config.json";
 
 const apps = getApps();
-let app: FirebaseApp;
+export let app: FirebaseApp;
 try {
   app = apps.length > 0 ? apps[0] : initializeApp(firebaseConfig);
 } catch (e) {
@@ -18,12 +18,12 @@ try {
 }
 
 // TARGET DATABASE
-// Check for override in environment variables
-const TARGET_DB_ID = import.meta.env.VITE_FIRESTORE_DATABASE_ID || firebaseConfig.firestoreDatabaseId || "(default)";
+const TARGET_DB_ID = firebaseConfig.firestoreDatabaseId || "(default)";
 
 // MIMI // REGISTRY AUDIT
 if (typeof window !== 'undefined') {
   console.info(`%c MIMI // Registry Active: ${firebaseConfig.projectId} [TARGET DB: ${TARGET_DB_ID}]`, "color: #10B981; font-weight: bold; font-family: serif; font-style: italic;");
+  console.info("MIMI // Database ID:", TARGET_DB_ID);
 }
 
 export const auth: Auth = getAuth(app);
@@ -32,15 +32,7 @@ export const auth: Auth = getAuth(app);
 const isIframe = typeof window !== 'undefined' && window.self !== window.top;
 
 let dbInstance: Firestore;
-try {
-  dbInstance = getFirestore(app, TARGET_DB_ID);
-} catch (e) {
-  dbInstance = initializeFirestore(app, {
-    experimentalForceLongPolling: true,
-    experimentalAutoDetectLongPolling: false,
-    ignoreUndefinedProperties: true,
-  }, TARGET_DB_ID);
-}
+dbInstance = getFirestore(app, TARGET_DB_ID);
 
 export const db = dbInstance;
 

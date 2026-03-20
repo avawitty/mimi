@@ -2,7 +2,8 @@
 // @ts-nocheck
 import React, { useMemo, useState, useEffect } from 'react';
 import { ZineMetadata, ToneTag } from '../types';
-import { Activity, Sparkles, Eye, Radio, ShieldCheck, Bookmark, Check, Hash, ArrowUpRight, EyeOff } from 'lucide-react';
+import { Activity, Sparkles, Eye, Radio, ShieldCheck, Bookmark, Check, Hash, ArrowUpRight, EyeOff, Edit2, Shuffle, RotateCcw, X } from 'lucide-react';
+import { applyAestheticRefraction, generateZineImage } from '../services/geminiService';
 import { motion } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -45,6 +46,41 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
   const [isHovered, setIsHovered] = useState(false);
   const [isArchived, setIsArchived] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editPrompt, setEditPrompt] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [currentImageUrl, setCurrentImageUrl] = useState(zine.coverImageUrl || zine.content?.hero_image_url);
+
+  const handleEdit = async () => {
+      if (!currentImageUrl || !editPrompt) return;
+      setIsEditing(true);
+      try {
+          const newImage = await applyAestheticRefraction(currentImageUrl, editPrompt, profile);
+          setCurrentImageUrl(newImage);
+          setShowEditModal(false);
+          setEditPrompt('');
+          // TODO: Save new image to zine metadata
+      } catch (err) {
+          console.error("Edit Failed", err);
+      } finally {
+          setIsEditing(false);
+      }
+  };
+
+  const handleRegenerate = async () => {
+      if (!zine.content?.headlines?.[0]) return;
+      setIsRegenerating(true);
+      try {
+          const newImage = await generateZineImage(zine.content.headlines[0], '3:4', '1K', profile, false);
+          setCurrentImageUrl(newImage);
+          // TODO: Save new image to zine metadata
+      } catch (err) {
+          console.error("Regenerate Failed", err);
+      } finally {
+          setIsRegenerating(false);
+      }
+  };
   
   const baseStyles = TONE_STYLES[zine.tone] || TONE_STYLES['default'];
 
@@ -81,7 +117,7 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
     try {
       await addToPocket(user.uid, 'zine_card', { 
           zineId: zine.id, 
-          title: zine.title, 
+          title: zine.content?.headlines?.[0] || zine.title || "Untitled", 
           analysis: {
              ...zine.content,
              design_brief: zine.content.strategic_hypothesis || zine.content.designBrief || zine.content.poetic_interpretation
@@ -115,7 +151,7 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
         {(zine.coverImageUrl || zine.content?.hero_image_url) && (
             <div className={`relative w-full ${isMasonry ? 'h-auto' : 'absolute inset-0 opacity-0 group-hover:opacity-100'} transition-opacity duration-[1.5s] z-0 overflow-hidden`}>
                <img 
-                 src={zine.coverImageUrl || zine.content?.hero_image_url} 
+                 src={currentImageUrl} 
                  loading="lazy"
                  decoding="async"
                  className={`w-full h-full object-cover transition-all duration-[2s] ${isMasonry ? 'grayscale hover:grayscale-0' : 'grayscale opacity-20'}`}
@@ -130,15 +166,26 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
         )}
         
         {/* ARCHIVE BUTTON OVERLAY */}
-        <div className="absolute top-3 right-3 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-2">
+        <div className="absolute top-3 right-3 z-30 opacity-100 transition-opacity duration-300 flex gap-2">
             {user && user.uid === zine.userId && (
-                <button 
-                    onClick={handlePublishToggle}
-                    className={`p-2 rounded-full shadow-lg transition-all backdrop-blur-md ${zine.isPublic ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white hover:bg-white hover:text-black'}`}
-                    title={zine.isPublic ? "Unpublish" : "Publish"}
-                >
-                    {zine.isPublic ? <Radio size={12} /> : <EyeOff size={12} />}
-                </button>
+                <>
+                    <button onClick={(e) => { e.stopPropagation(); setShowEditModal(true); }} className="p-2 rounded-full shadow-lg backdrop-blur-md bg-white/10 text-white hover:bg-white hover:text-black" title="Edit">
+                        <Edit2 size={12} />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); /* TODO: Implement Mix */ }} className="p-2 rounded-full shadow-lg backdrop-blur-md bg-white/10 text-white hover:bg-white hover:text-black" title="Mix">
+                        <Shuffle size={12} />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); handleRegenerate(); }} className={`p-2 rounded-full shadow-lg backdrop-blur-md ${isRegenerating ? 'bg-emerald-500' : 'bg-white/10'} text-white hover:bg-white hover:text-black`} title="Regenerate">
+                        <RotateCcw size={12} className={isRegenerating ? 'animate-spin' : ''} />
+                    </button>
+                    <button 
+                        onClick={handlePublishToggle}
+                        className={`p-2 rounded-full shadow-lg transition-all backdrop-blur-md ${zine.isPublic ? 'bg-emerald-500 text-white' : 'bg-white/10 text-white hover:bg-white hover:text-black'}`}
+                        title={zine.isPublic ? "Unpublish" : "Publish"}
+                    >
+                        {zine.isPublic ? <Radio size={12} /> : <EyeOff size={12} />}
+                    </button>
+                </>
             )}
             <button 
                 onClick={handleArchive}
@@ -148,6 +195,31 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
                 {isArchived ? <Check size={12} /> : <Bookmark size={12} />}
             </button>
         </div>
+
+        {/* EDIT MODAL */}
+        {showEditModal && (
+            <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
+                <div className="bg-white dark:bg-stone-900 p-6 rounded-xl w-full max-w-sm">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-sm font-mono uppercase tracking-widest">Edit Image</h3>
+                        <button onClick={() => setShowEditModal(false)}><X size={16} /></button>
+                    </div>
+                    <textarea 
+                        value={editPrompt} 
+                        onChange={(e) => setEditPrompt(e.target.value)}
+                        placeholder="e.g., add grain, make dress red..."
+                        className="w-full p-2 mb-4 bg-stone-100 dark:bg-stone-800 rounded-md text-sm"
+                    />
+                    <button 
+                        onClick={handleEdit}
+                        disabled={isEditing}
+                        className="w-full py-2 bg-emerald-500 text-white rounded-full text-xs font-bold uppercase tracking-widest"
+                    >
+                        {isEditing ? 'Refracting...' : 'Apply Edit'}
+                    </button>
+                </div>
+            </div>
+        )}
 
         {/* META TAG (Masonry) */}
         {isMasonry && (
@@ -181,7 +253,7 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
           {/* CENTER: TITLE */}
           <div className={`flex-1 flex flex-col justify-end ${isMasonry ? 'items-start text-left' : 'items-center text-center'} space-y-2`}>
                <h2 className={`${headlineFont} ${isMasonry ? 'text-3xl text-white' : `text-5xl md:text-7xl ${styles.text}`} italic leading-[0.9] tracking-tighter transition-colors duration-1000`}>
-                  {zine.title || "Untitled"}
+                  {zine.content?.headlines?.[0] || zine.title || "Untitled"}
                </h2>
                {isHovered && !isMasonry && (
                  <motion.p 

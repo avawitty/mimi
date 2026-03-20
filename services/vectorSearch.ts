@@ -1,8 +1,8 @@
 
-// @ts-nocheck
+import { Product } from '../types';
 import { auth, db } from "./firebaseInit";
 import { signInAnonymously } from "firebase/auth";
-import { collection, doc, setDoc, getDocs, deleteDoc, getDoc, query, where } from "firebase/firestore";
+import { collection, doc, setDoc, getDocs, deleteDoc, query } from "firebase/firestore";
 import { getClient, getEmbedding } from "./geminiService";
 
 const getAiClient = () => {
@@ -14,13 +14,7 @@ const getAiClient = () => {
     }
 };
 
-const ensureAnonymousAuth = async () => {
-  if (auth.currentUser) return auth.currentUser.uid;
-  const res = await signInAnonymously(auth);
-  return res.user.uid;
-};
-
-function cosineSimilarity(vecA: number[], vecB: number[]): number {
+const cosineSimilarity = (vecA: number[], vecB: number[]): number => {
   let dotProduct = 0, magA = 0, magB = 0;
   for (let i = 0; i < vecA.length; i++) {
     dotProduct += vecA[i] * vecB[i];
@@ -30,7 +24,33 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
   magA = Math.sqrt(magA); magB = Math.sqrt(magB);
   if (magA === 0 || magB === 0) return 0;
   return dotProduct / (magA * magB);
-}
+};
+
+export const findSimilarProducts = async (tasteVector: number[], limit: number = 2): Promise<Product[]> => {
+  try {
+    const productsSnapshot = await getDocs(collection(db, 'products'));
+    const products = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+    
+    return products
+      .map(product => ({
+        product,
+        similarity: cosineSimilarity(tasteVector, product.embedding)
+      }))
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, limit)
+      .map(item => item.product);
+  } catch (e) {
+    console.error("MIMI // Failed to find similar products:", e);
+    return [];
+  }
+};
+
+const ensureAnonymousAuth = async () => {
+  if (auth.currentUser) return auth.currentUser.uid;
+  const res = await signInAnonymously(auth);
+  return res.user.uid;
+};
+
 
 export const syncToShadowMemory = async (item: any) => {
   try {
@@ -112,7 +132,7 @@ export const scryShadowMemory = async (userQuery: string, options: { filterType?
     const oneMonth = 30 * 24 * 60 * 60 * 1000;
 
     const results = snapshot.docs.map(d => {
-        const data = d.data();
+        const data = d.data() as any;
         return { 
           ...data, 
           id: d.id, 

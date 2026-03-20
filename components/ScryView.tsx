@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Loader2, Sparkles, Radio, ScanLine, Database, ArrowRight, Globe, ExternalLink, PenTool, BookOpen, Mic, Square, Hash, Layers, Eye, Wind, Terminal, Activity, Cpu, Signal, Lock, Settings, Moon, Volume2, ChevronRight } from 'lucide-react';
+import { searchGrounding } from '../services/searchService';
 import { scryShadowMemory } from '../services/vectorSearch';
 import { scryWebSignals, generateScribeReading, generateRawImage } from '../services/geminiService';
 import { useUser } from '../contexts/UserContext';
@@ -22,21 +23,29 @@ export const ScryView: React.FC = () => {
 
   const { isRecording, startRecording, stopRecording, audioBlob } = useRecorder();
 
-  const handleScry = async () => {
-    if (!query.trim() || isScrying) return;
+  const handleScry = async (q?: string) => {
+    const queryToUse = q || query;
+    if (!queryToUse.trim() || isScrying) return;
     setIsScrying(true);
     setVisualState('loading');
     setWebResults([]);
     setResults([]);
     setScribeReading(null);
     setGeneratedImage(null);
+    if (q) setQuery(q);
 
     try {
       setIsWebScrying(true);
 
       // Run text-based scrying in parallel so they populate quickly
       const textPromises = [
-        scryWebSignals(query).then(data => {
+        searchGrounding(queryToUse).then(data => {
+          setResults(prev => [...prev, ...data.results]);
+          setScribeReading(data.summary);
+          setIsWebScrying(false);
+        }).catch(e => console.error("Search grounding failed", e)),
+        
+        scryWebSignals(queryToUse).then(data => {
           setWebResults(data.results);
           // Use data.groundingChunks here
           if (data.groundingChunks && data.groundingChunks.length > 0) {
@@ -49,17 +58,17 @@ export const ScryView: React.FC = () => {
           setIsWebScrying(false);
         }).catch(e => console.error("Web scry failed", e)),
         
-        generateScribeReading(profile, query, activePersona?.apiKey).then(reading => {
+        generateScribeReading(profile, queryToUse, activePersona?.apiKey).then(reading => {
           setScribeReading(reading);
         }).catch(e => console.error("Scribe failed", e)),
         
-        scryShadowMemory(query).then(hits => {
+        scryShadowMemory(queryToUse).then(hits => {
           setResults(hits);
         }).catch(e => console.error("Shadow memory failed", e))
       ];
 
       // Start the slow image generation
-      const imagePromise = generateRawImage(query, '1:1', profile).then(img => {
+      const imagePromise = generateRawImage(queryToUse, '1:1', profile).then(img => {
         if (img) {
           setGeneratedImage(img);
           setVisualState('image');
@@ -83,6 +92,14 @@ export const ScryView: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    const handleScrySearch = (e: any) => {
+      handleScry(e.detail);
+    };
+    window.addEventListener('mimi:scry_search', handleScrySearch);
+    return () => window.removeEventListener('mimi:scry_search', handleScrySearch);
+  }, []);
+
   // Handle Enter key
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -98,12 +115,16 @@ export const ScryView: React.FC = () => {
               <div className="w-full max-w-5xl flex flex-col items-center pt-16 px-8 min-h-screen pb-32">
                 
                 {/* The Void / Scry Circle */}
+                <div className="text-center mb-12">
+                    <h1 className="font-serif italic text-6xl text-stone-900 mb-4">The Scry</h1>
+                    <p className="font-sans text-stone-500 uppercase tracking-widest text-xs">Consult the aesthetic oracle.</p>
+                </div>
                 <div className="relative group mt-12">
                     <motion.div 
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ duration: 1, ease: "easeOut" }}
-                        className="w-[400px] h-[400px] md:w-[500px] md:h-[500px] rounded-full bg-black shadow-2xl flex items-center justify-center overflow-hidden relative z-10"
+                        className="w-[200px] h-[200px] md:w-[250px] md:h-[250px] rounded-full bg-black shadow-2xl flex items-center justify-center overflow-hidden relative z-10"
                     >
                         {/* Inner Texture/Gradient */}
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#2a2a2a_0%,#000000_70%)] opacity-80" />

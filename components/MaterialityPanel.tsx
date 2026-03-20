@@ -1,6 +1,6 @@
 import React from 'react';
 import { MaterialityConfig } from '../types';
-import { Layers, Type as FontIcon, SlidersHorizontal } from 'lucide-react';
+import { Layers, Type as FontIcon, SlidersHorizontal, Palette } from 'lucide-react';
 
 interface MaterialityPanelProps {
   config: MaterialityConfig;
@@ -47,6 +47,27 @@ export const MaterialityPanel: React.FC<MaterialityPanelProps> = ({ config, onCh
               }`}
             >
               {lineage.replace('-', ' ')}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 flex items-center gap-2">
+          <Palette size={12} /> Color Scheme
+        </span>
+        <div className="grid grid-cols-1 gap-2">
+          {(['monochrome', 'high-contrast', 'earth-tones'] as const).map((scheme) => (
+            <button
+              key={scheme}
+              onClick={() => onChange({ ...config, colorScheme: scheme })}
+              className={`py-2 px-4 border rounded-sm text-[8px] font-sans font-black uppercase transition-all ${
+                config.colorScheme === scheme
+                  ? 'bg-nous-text text-white dark:bg-white dark:text-black border-transparent'
+                  : 'border-stone-200 dark:border-stone-800 text-stone-400'
+              }`}
+            >
+              {scheme.replace('-', ' ')}
             </button>
           ))}
         </div>

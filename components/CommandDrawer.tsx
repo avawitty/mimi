@@ -1,0 +1,194 @@
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, Radar, X, Loader2, Image as ImageIcon, Search } from 'lucide-react';
+import { GoogleGenAI } from "@google/genai";
+import { SignatureUI } from './SignatureUI';
+import { searchGrounding } from '../services/searchService';
+import { saveArtifactLocally } from '../services/localArchive';
+
+interface CommandDrawerProps {
+  isOpen: boolean;
+  onClose: () => void;
+  context?: string;
+}
+
+export const CommandDrawer: React.FC<CommandDrawerProps> = ({ isOpen, onClose, context }) => {
+  const [activeTab, setActiveTab] = useState<'image' | 'search'>('image');
+  const [prompt, setPrompt] = useState(context || '');
+  const [generating, setGenerating] = useState(false);
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState(context || '');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchSummary, setSearchSummary] = useState('');
+  const [searching, setSearching] = useState(false);
+
+  const handleGenerate = async () => {
+    if (!prompt) return;
+    setGenerating(true);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      const response = await ai.models.generateImages({
+        model: 'imagen-4.0-generate-001',
+        prompt: prompt,
+        config: {
+          numberOfImages: 1,
+          outputMimeType: 'image/jpeg',
+          aspectRatio: '1:1',
+        },
+      });
+      const base64EncodeString = response.generatedImages[0].image.imageBytes;
+      setGeneratedImage(`data:image/jpeg;base64,${base64EncodeString}`);
+    } catch (error) {
+      console.error('Error generating image:', error);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchQuery) return;
+    setSearching(true);
+    try {
+      const { results, summary } = await searchGrounding(searchQuery);
+      setSearchResults(results);
+      setSearchSummary(summary);
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[5000] bg-stone-950/90 backdrop-blur-xl flex items-center justify-center p-8"
+        >
+          <div className="max-w-5xl w-full">
+            <div className="flex gap-2 mb-12">
+              <button 
+                onClick={() => setActiveTab('image')} 
+                className={`px-6 py-2 rounded-full font-sans text-xs uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'image' ? 'bg-white text-stone-900' : 'bg-stone-900 text-stone-500 hover:bg-stone-800'}`}
+              >
+                Manifest
+              </button>
+              <button 
+                onClick={() => setActiveTab('search')} 
+                className={`px-6 py-2 rounded-full font-sans text-xs uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'search' ? 'bg-white text-stone-900' : 'bg-stone-900 text-stone-500 hover:bg-stone-800'}`}
+              >
+                Scry
+              </button>
+            </div>
+
+            {activeTab === 'image' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+                <div className="flex flex-col gap-6">
+                  <div className="flex items-center gap-3 text-white">
+                    <Sparkles size={24} className="text-emerald-400" />
+                    <h2 className="font-serif italic text-4xl">Manifest</h2>
+                  </div>
+                  <textarea
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder="Describe the aesthetic..."
+                    className="w-full bg-stone-900/50 border border-stone-700 p-6 text-white font-mono text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+                    rows={6}
+                  />
+                  <button
+                    onClick={handleGenerate}
+                    disabled={generating}
+                    className="bg-white text-stone-900 py-4 font-sans text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-emerald-400 transition-colors"
+                  >
+                    {generating ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Manifest'}
+                  </button>
+                  {generatedImage && (
+                    <div className="mt-4 space-y-2">
+                      <img src={generatedImage} alt="Generated" className="w-full h-80 object-cover border border-stone-700" />
+                      <button 
+                        onClick={async () => {
+                          await saveArtifactLocally({
+                            id: Date.now().toString(),
+                            type: 'image',
+                            data: generatedImage,
+                            timestamp: Date.now()
+                          });
+                          alert('Saved to archive');
+                        }}
+                        className="w-full bg-stone-800 text-stone-300 py-2 text-xs uppercase tracking-widest hover:bg-emerald-900 hover:text-white transition-colors"
+                      >
+                        Save to Archive
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col gap-6">
+                  <div className="flex items-center gap-3 text-white">
+                    <Radar size={24} className="text-indigo-400" />
+                    <h2 className="font-serif italic text-4xl">Signature</h2>
+                  </div>
+                  <div className="h-80 bg-stone-900/50 border border-stone-700 p-4 overflow-hidden">
+                    <SignatureUI />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-8 text-white">
+                <div className="flex items-center gap-3">
+                  <Search size={24} className="text-emerald-400" />
+                  <h2 className="font-serif italic text-4xl">Scry Artifacts</h2>
+                </div>
+                
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    value={searchQuery} 
+                    onChange={(e) => setSearchQuery(e.target.value)} 
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    className="w-full bg-stone-900/50 border border-stone-700 p-6 text-white font-mono text-lg focus:outline-none focus:border-emerald-500 transition-colors" 
+                    placeholder="What are you looking for?" 
+                  />
+                  <button 
+                    onClick={handleSearch} 
+                    disabled={searching} 
+                    className="absolute right-4 top-4 bg-emerald-600 text-white p-3 rounded-lg hover:bg-emerald-500 transition-colors"
+                  >
+                    {searching ? <Loader2 className="animate-spin" /> : <Search size={20} />}
+                  </button>
+                </div>
+
+                {searchSummary && (
+                  <div className="bg-stone-900/30 border-l-2 border-emerald-500 p-6 font-serif italic text-stone-200 text-lg">
+                    {searchSummary}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {searchResults.map((res: any, i: number) => (
+                    <motion.div 
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="bg-stone-900 border border-stone-800 p-6 hover:border-emerald-500/50 transition-colors group"
+                    >
+                      <h3 className="font-medium text-white mb-2 group-hover:text-emerald-400 transition-colors">{res.title || 'Untitled Fragment'}</h3>
+                      <p className="text-stone-400 text-sm font-mono">{res.type || 'Fragment'}</p>
+                      {res.snippet && <p className="text-stone-500 text-xs mt-4 line-clamp-3">{res.snippet}</p>}
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <button onClick={onClose} className="absolute top-12 right-12 text-stone-500 hover:text-white transition-colors">
+            <X size={32} />
+          </button>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};

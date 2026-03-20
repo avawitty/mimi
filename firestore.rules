@@ -1,143 +1,234 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() { return request.auth != null; }
+    function isOwner(userId) { return isAuthenticated() && request.auth.uid == userId; }
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "avaawittkop@gmail.com" && request.auth.token.email_verified == true));
+    }
+    function hasRequiredFields(fields) { return request.resource.data.keys().hasAll(fields); }
+    function hasOnlyAllowedFields(fields) { return request.resource.data.keys().hasOnly(fields); }
     
-    // PUBLIC PROFILES (Read: Everyone, Write: Owner)
-    match /profiles/{userId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+    function validString(field, min, max) {
+      return request.resource.data[field] is string && 
+             request.resource.data[field].size() >= min && 
+             request.resource.data[field].size() <= max;
     }
     
-    // PRIVATE PREFERENCES (Read/Write: Owner only)
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) ||
+        request.resource.data.uid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data) ||
+        request.resource.data.uid == resource.data.uid;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    // NOTIFICATIONS (Owner only)
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    // NOTIFICATIONS (Owner only)
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    // SYSTEM (Admin only)
+    match /system/{docId} {
+      allow read: if isAdmin();
+    }
+    
+    // PRODUCTS (Public Read)
+    match /products/{productId} {
+      allow read: if true;
+    }
+
+    // PROFILES (Public Read, Owner Write)
+    match /profiles_public/{userId} {
+      allow read: if true;
+      allow create, update, delete: if isOwner(userId);
+    }
+
+    // PROFILES (Private: Owner only)
+    match /profiles_private/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // USER PREFERENCES (Owner only)
     match /userPreferences/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isOwner(userId);
+    }
+
+    // PROFILES (PII Protected: Owner only)
+    match /profiles/{userId} {
+      allow read, write: if isOwner(userId);
     }
     
-    // LEGACY / FALLBACK (Read/Write: Owner only)
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-      
-      match /memory/{memoryId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      
-      match /themes/{themeId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      
-      match /threads/{threadId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
+    match /profiles {
+      allow list: if isAuthenticated();
     }
-    
-    // ZINES (Read: Public, Write: Authenticated or Collaborator)
+
+    // ZINES (Public Read if isPublic, Owner Write)
     match /zines/{zineId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
+      allow read: if resource.data.isPublic == true || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
-    
-    // PUBLIC TRANSMISSIONS (Proscenium)
+
+    // PUBLIC TRANSMISSIONS (Public Read, Authenticated Write)
     match /public_transmissions/{transmissionId} {
       allow read: if true;
-      allow create: if request.auth != null;
-      allow update: if true; // Allow anyone to increment likes and add vibe notes
-      allow delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
     }
-    
-    // POCKET ITEMS (Owner or Collaborator)
+
+    // POCKET ITEMS (Owner only)
     match /pocket/{itemId} {
-      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || ('collaborators' in resource.data && request.auth.uid in resource.data.collaborators));
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || ('collaborators' in resource.data && request.auth.uid in resource.data.collaborators));
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
+      allow update, delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || request.auth.uid in resource.data.collaborators);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+
+    // LINEAGE ENTRIES (Owner only)
+    match /lineage_entries/{lineageId} {
+      allow get: if isAuthenticated() && (resource.data.userId == request.auth.uid);
+      allow list: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
     }
     
-    // DOSSIER FOLDERS (Owner or Collaborator)
+    // STACKS (Owner only)
+    match /stacks/{stackId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid);
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // DOSSIER FOLDERS (Owner/Collaborator only)
     match /dossier_folders/{folderId} {
-      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || ('collaborators' in resource.data && request.auth.uid in resource.data.collaborators));
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || ('collaborators' in resource.data && request.auth.uid in resource.data.collaborators));
+      allow get: if isAuthenticated() && (
+        (resource.data.userId == request.auth.uid) || 
+        (resource.data.collaborators is list && request.auth.uid in resource.data.collaborators)
+      );
+      allow list: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || (resource.data.collaborators is list && request.auth.uid in resource.data.collaborators));
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
     }
     
-    // DOSSIER ARTIFACTS (Owner, Collaborator, or Folder Access)
+    // DOSSIER ARTIFACTS (Owner only)
     match /dossier_artifacts/{artifactId} {
-      allow read: if request.auth != null && (
-        resource.data.userId == request.auth.uid || 
-        ('collaborators' in resource.data && request.auth.uid in resource.data.collaborators) ||
-        (
-          exists(/databases/$(database)/documents/dossier_folders/$(resource.data.folderId)) &&
-          (
-            get(/databases/$(database)/documents/dossier_folders/$(resource.data.folderId)).data.userId == request.auth.uid ||
-            ('collaborators' in get(/databases/$(database)/documents/dossier_folders/$(resource.data.folderId)).data && request.auth.uid in get(/databases/$(database)/documents/dossier_folders/$(resource.data.folderId)).data.collaborators)
-          )
-        )
-      );
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid && (
-        exists(/databases/$(database)/documents/dossier_folders/$(request.resource.data.folderId)) &&
-        (
-          get(/databases/$(database)/documents/dossier_folders/$(request.resource.data.folderId)).data.userId == request.auth.uid ||
-          ('collaborators' in get(/databases/$(database)/documents/dossier_folders/$(request.resource.data.folderId)).data && request.auth.uid in get(/databases/$(database)/documents/dossier_folders/$(request.resource.data.folderId)).data.collaborators)
-        )
-      );
-      allow update, delete: if request.auth != null && (
-        resource.data.userId == request.auth.uid || 
-        ('collaborators' in resource.data && request.auth.uid in resource.data.collaborators) ||
-        (
-          exists(/databases/$(database)/documents/dossier_folders/$(resource.data.folderId)) &&
-          (
-            get(/databases/$(database)/documents/dossier_folders/$(resource.data.folderId)).data.userId == request.auth.uid ||
-            ('collaborators' in get(/databases/$(database)/documents/dossier_folders/$(resource.data.folderId)).data && request.auth.uid in get(/databases/$(database)/documents/dossier_folders/$(resource.data.folderId)).data.collaborators)
-          )
-        )
-      );
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid);
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
     }
     
-    // PROPOSALS (Owner or Collaborator)
+    // PROPOSALS (Owner only)
     match /proposals/{proposalId} {
-      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || ('collaborators' in resource.data && request.auth.uid in resource.data.collaborators));
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || ('collaborators' in resource.data && request.auth.uid in resource.data.collaborators));
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid);
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
     }
     
     // CONTEXT (Owner only)
     match /context/{contextId} {
-      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid);
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
     }
     
-    // CONNECTIONS (Friends/Following)
-    match /connections/{connectionId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.followerId == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.followerId == request.auth.uid;
+    // NARRATIVE THREADS (Owner only)
+    match /narrative_threads/{threadId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid);
+      allow delete: if isAuthenticated() && (resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid &&
+                       validString('title', 1, 200) &&
+                       validString('narrative', 1, 100000);
+      allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid) &&
+                       request.resource.data.userId == resource.data.userId &&
+                       validString('title', 1, 200) &&
+                       validString('narrative', 1, 100000);
     }
 
-    // FRIEND REQUESTS
-    match /friend_requests/{requestId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.senderId == request.auth.uid;
-      allow update, delete: if request.auth != null && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
-    }
-    
-    // FRIENDSHIPS
-    match /friendships/{friendshipId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && (request.resource.data.user1 == request.auth.uid || request.resource.data.user2 == request.auth.uid);
-      allow update, delete: if request.auth != null && (resource.data.user1 == request.auth.uid || resource.data.user2 == request.auth.uid);
-    }
-
-    // ZINE COMMENTS
+    // ZINE COMMENTS (Authenticated Read/Write)
     match /zine_comments/{commentId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
-
-    // STATS (Publicly readable)
-    match /stats/{docId} {
-      allow read: if true;
+    
+    // TASTE EVENTS (Owner only, Immutable)
+    match /taste_events/{eventId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+    
+    // PRODUCT INTERACTIONS (Owner only)
+    match /product_interactions/{interactionId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid);
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // PRESS ISSUES (Owner only)
+    match /pressIssues/{issueId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid);
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // RETENTION EVENTS (Owner only)
+    match /retention_events/{userId}/{subcollection}/{docId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    // CONNECTIONS (Owner only)
+    match /connections/{connectionId} {
+      allow read: if isAuthenticated() && (resource.data.followerId == request.auth.uid || resource.data.followingId == request.auth.uid);
+      allow update, delete: if isAuthenticated() && (resource.data.followerId == request.auth.uid || resource.data.followingId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.followerId == request.auth.uid;
+    }
+    
+    // FRIEND REQUESTS (Owner only)
+    match /friend_requests/{requestId} {
+      allow read: if isAuthenticated() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      allow update, delete: if isAuthenticated() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid;
+    }
+    
+    // FRIENDSHIPS (Owner only)
+    match /friendships/{friendshipId} {
+      allow read: if isAuthenticated() && (resource.data.user1 == request.auth.uid || resource.data.user2 == request.auth.uid);
+      allow update, delete: if isAuthenticated() && (resource.data.user1 == request.auth.uid || resource.data.user2 == request.auth.uid);
+      allow create: if isAuthenticated() && (request.resource.data.user1 == request.auth.uid || request.resource.data.user2 == request.auth.uid);
+    }
+    
+    // USERS (Owner only)
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      match /{subcollection}/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+    
+    // USERS COLLECTION (Admin only)
+    match /users {
+      allow list: if isAdmin();
     }
   }
 }

@@ -1,0 +1,31 @@
+import React from 'react';
+
+const features = [
+  { name: 'Thimble', status: 'in-progress' },
+  { name: 'Tag signals', status: 'todo' },
+  { name: 'Narrative threads', status: 'todo' },
+  { name: 'Narrative passing', status: 'todo' },
+  { name: 'Tag graph', status: 'todo' },
+  { name: 'Constellations', status: 'todo' },
+  { name: 'The signature', status: 'todo' },
+];
+
+export const FeatureChecklist: React.FC = () => {
+  return (
+    <div className="bg-stone-50 border border-stone-200 p-6 rounded-sm">
+      <h3 className="font-serif text-xl italic mb-4">Development Roadmap</h3>
+      <ul className="space-y-2">
+        {features.map((feature) => (
+          <li key={feature.name} className="flex items-center justify-between text-sm font-mono">
+            <span>{feature.name}</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] ${
+              feature.status === 'in-progress' ? 'bg-amber-100 text-amber-800' : 'bg-stone-100 text-stone-500'
+            }`}>
+              {feature.status}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};

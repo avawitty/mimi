@@ -3,19 +3,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
-import { fetchPocketItems, updatePocketItem, addToPocket, createMoodboard, deleteFromPocket } from '../services/firebase';
+import { fetchPocketItems, updatePocketItem, addToPocket, createMoodboard, deleteFromPocket, fetchStacksByUserId, saveStack } from '../services/firebase';
 import { getLocalPocket } from '../services/localArchive';
-import { PocketItem, Treatment, AspectRatio, DarkroomLayer } from '../types';
+import { PocketItem, Treatment, AspectRatio, DarkroomLayer, Stack } from '../types';
 import { FlaskConical, Image as ImageIcon, Zap, Sparkles, Loader2, X, Plus, Check, Wand2, Sliders, Layers, Trash2, Camera, Info, ShieldCheck, Maximize2, Download, Eye, ArrowRight, Save, Copy, Filter, Target, Briefcase, FolderPlus, Activity, Scissors, Eraser, PenTool, Upload, ChevronUp, ChevronDown, Monitor, GripVertical, EyeOff, Crop, BrainCircuit } from 'lucide-react';
 import { applyTreatment, compressImage, generateRawImage, cropImage, analyzeMiseEnScene, generateTreatmentFromAesthetic } from '../services/geminiService';
 import { Visualizer } from './Visualizer';
 
 const PRESET_TREATMENTS: Treatment[] = [
-  { id: 'object_purge', name: 'Object Purge', instruction: 'Identify and remove distracting background objects or people while seamlessly reconstructing the background. Maintain high resolution.', variance: 'anchored' },
-  { id: 'scotopic', name: 'Scotopic Depth', instruction: 'Deepen scotopic shadows and reduce overall temperature to cold mercury for a nocturnal feel.', variance: 'anchored' },
-  { id: 'ethereal', name: 'Ethereal Bloom', instruction: 'Raise white point, add a soft bloom to highlights, and introduce a soft atmospheric glow.', variance: 'interpretive' },
-  { id: 'editorial_94', name: 'Editorial 94', instruction: 'Slightly overexpose and add a magenta tint to shadows for a vintage editorial aesthetic.', variance: 'interpretive' },
-  { id: 'brutalist', name: 'Brutalist Raw', instruction: 'Increase contrast, crush blacks, and convert to high-fidelity monochromatic silver seed.', variance: 'anchored' }
+  { id: 'object_purge', name: 'Form Purification', instruction: 'Identify and remove distracting background objects or people while seamlessly reconstructing the background. Maintain high resolution.', variance: 'anchored' },
+  { id: 'scotopic', name: 'Nocturnal Mercury', instruction: 'Deepen scotopic shadows and reduce overall temperature to cold mercury for a nocturnal feel.', variance: 'anchored' },
+  { id: 'ethereal', name: 'Atmospheric Bloom', instruction: 'Raise white point, add a soft bloom to highlights, and introduce a soft atmospheric glow.', variance: 'interpretive' },
+  { id: 'editorial_94', name: 'Archive 94', instruction: 'Slightly overexpose and add a magenta tint to shadows for a vintage editorial aesthetic.', variance: 'interpretive' },
+  { id: 'brutalist', name: 'Monochrome Raw', instruction: 'Increase contrast, crush blacks, and convert to high-fidelity monochromatic silver seed.', variance: 'anchored' }
 ];
 
 interface ControlsContentProps {
@@ -32,6 +32,12 @@ interface ControlsContentProps {
   selectedCount: number;
   useFlatFlash: boolean;
   setUseFlatFlash: (val: boolean) => void;
+  contrast: number;
+  setContrast: (val: number) => void;
+  brightness: number;
+  setBrightness: (val: number) => void;
+  saturation: number;
+  setSaturation: (val: number) => void;
   exposure: number;
   setExposure: (val: number) => void;
   grainAmount: number;
@@ -41,6 +47,8 @@ interface ControlsContentProps {
   onExtractTreatment: () => void;
   onApplyAestheticRefraction: () => void;
   activeShard: PocketItem | null;
+  onManifest: () => void;
+  stacks: Stack[];
 }
 
 const ControlsContent: React.FC<ControlsContentProps> = ({
@@ -59,13 +67,21 @@ const ControlsContent: React.FC<ControlsContentProps> = ({
   setUseFlatFlash,
   exposure,
   setExposure,
+  contrast,
+  setContrast,
+  brightness,
+  setBrightness,
+  saturation,
+  setSaturation,
   grainAmount,
   setGrainAmount,
   semioticTension,
   setSemioticTension,
   onExtractTreatment,
   onApplyAestheticRefraction,
-  activeShard
+  activeShard,
+  onManifest,
+  stacks
 }) => (
     <div className="flex flex-col h-full bg-[#080808]">
       <div className="p-4 space-y-4 flex-1 overflow-y-auto no-scrollbar">
@@ -75,9 +91,14 @@ const ControlsContent: React.FC<ControlsContentProps> = ({
             <span className="font-sans text-[8px] uppercase tracking-widest font-black text-emerald-500 flex items-center gap-2">
                <Sparkles size={12} /> Aesthetic Intelligence
             </span>
-            <div className="grid grid-cols-2 gap-2">
-                <button onClick={onExtractTreatment} className="p-2 bg-stone-900 border border-white/10 rounded-sm font-sans text-[7px] uppercase tracking-widest font-black text-white hover:bg-emerald-500/20 transition-all">Extract Treatment</button>
-                <button onClick={onApplyAestheticRefraction} className="p-2 bg-stone-900 border border-white/10 rounded-sm font-sans text-[7px] uppercase tracking-widest font-black text-white hover:bg-emerald-500/20 transition-all">Apply Refraction</button>
+            <div className="grid grid-cols-1 gap-2">
+                <button onClick={onManifest} className="p-2 bg-emerald-600 border border-emerald-500 rounded-sm font-sans text-[7px] uppercase tracking-widest font-black text-white hover:bg-emerald-500 transition-all flex items-center justify-center gap-2">
+                    <Sparkles size={12} /> Manifest New Shard
+                </button>
+                <div className="grid grid-cols-2 gap-2">
+                    <button onClick={onExtractTreatment} className="p-2 bg-stone-900 border border-white/10 rounded-sm font-sans text-[7px] uppercase tracking-widest font-black text-white hover:bg-emerald-500/20 transition-all">Extract Treatment</button>
+                    <button onClick={onApplyAestheticRefraction} className="p-2 bg-stone-900 border border-white/10 rounded-sm font-sans text-[7px] uppercase tracking-widest font-black text-white hover:bg-emerald-500/20 transition-all">Apply Refraction</button>
+                </div>
             </div>
          </div>
 
@@ -110,8 +131,8 @@ const ControlsContent: React.FC<ControlsContentProps> = ({
 
                 <div className="flex items-center justify-between p-2 bg-stone-900 border border-white/5 rounded-sm">
                     <div className="flex flex-col">
-                        <span className="font-sans text-[8px] uppercase font-black text-white">Vogue Italia Filter</span>
-                        <span className="font-mono text-[6px] text-stone-500 uppercase tracking-widest">Flat Flash & High Contrast</span>
+                        <span className="font-sans text-[8px] uppercase font-black text-white">Atelier Flash</span>
+                        <span className="font-mono text-[6px] text-stone-500 uppercase tracking-widest">High-Contrast Flash</span>
                     </div>
                     <button 
                         onClick={() => setUseFlatFlash(!useFlatFlash)}
@@ -119,6 +140,30 @@ const ControlsContent: React.FC<ControlsContentProps> = ({
                     >
                         <div className={`w-2 h-2 bg-white rounded-full absolute top-1 transition-transform ${useFlatFlash ? 'translate-x-5' : 'translate-x-1'}`} />
                     </button>
+                </div>
+
+                <div className="space-y-1 p-2 bg-stone-900 border border-white/5 rounded-sm">
+                    <div className="flex justify-between items-center">
+                        <span className="font-sans text-[6px] uppercase tracking-widest font-black text-stone-500">Contrast</span>
+                        <span className="font-mono text-[7px] text-emerald-500">{contrast}%</span>
+                    </div>
+                    <input type="range" min="0" max="200" value={contrast} onChange={(e) => setContrast(parseInt(e.target.value))} className="w-full accent-emerald-500 bg-stone-800 h-1 rounded-full cursor-pointer" />
+                </div>
+
+                <div className="space-y-1 p-2 bg-stone-900 border border-white/5 rounded-sm">
+                    <div className="flex justify-between items-center">
+                        <span className="font-sans text-[6px] uppercase tracking-widest font-black text-stone-500">Brightness</span>
+                        <span className="font-mono text-[7px] text-emerald-500">{brightness}%</span>
+                    </div>
+                    <input type="range" min="0" max="200" value={brightness} onChange={(e) => setBrightness(parseInt(e.target.value))} className="w-full accent-emerald-500 bg-stone-800 h-1 rounded-full cursor-pointer" />
+                </div>
+
+                <div className="space-y-1 p-2 bg-stone-900 border border-white/5 rounded-sm">
+                    <div className="flex justify-between items-center">
+                        <span className="font-sans text-[6px] uppercase tracking-widest font-black text-stone-500">Saturation</span>
+                        <span className="font-mono text-[7px] text-emerald-500">{saturation}%</span>
+                    </div>
+                    <input type="range" min="0" max="200" value={saturation} onChange={(e) => setSaturation(parseInt(e.target.value))} className="w-full accent-emerald-500 bg-stone-800 h-1 rounded-full cursor-pointer" />
                 </div>
 
                 <div className="space-y-1 p-2 bg-stone-900 border border-white/5 rounded-sm">
@@ -401,6 +446,9 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
   const [isNanoPro2, setIsNanoPro2] = useState(true);
   const [useFlatFlash, setUseFlatFlash] = useState(false);
   const [exposure, setExposure] = useState(0);
+  const [contrast, setContrast] = useState(100);
+  const [brightness, setBrightness] = useState(100);
+  const [saturation, setSaturation] = useState(100);
   const [semioticTension, setSemioticTension] = useState(50);
   const [grainAmount, setGrainAmount] = useState(0);
 
@@ -624,8 +672,8 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
     const fullInstruction = [
         "Aesthetic Composite Sequence:",
         layerInstructions, 
-        useFlatFlash ? "Apply Vogue Italia 1990s flat flash lighting, high contrast, sharp shadows." : "",
-        `Exposure Adjustment: ${exposure}%. Semiotic Tension (Surrealism/Edge): ${semioticTension}%.`,
+        useFlatFlash ? "Apply Atelier Flash lighting, high contrast, sharp shadows." : "",
+        `Exposure: ${exposure}%. Contrast: ${contrast}%. Brightness: ${brightness}%. Saturation: ${saturation}%. Semiotic Tension: ${semioticTension}%.`,
         customInstruction ? `Final Global Treatment: ${customInstruction}` : ''
     ].filter(i => i.trim()).join(". ");
 
@@ -666,6 +714,23 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
       setIsProcessing(false);
       setCurrentlyProcessingId(null);
     }
+  };
+
+  const handleCreateCollection = async () => {
+    const title = prompt("Enter collection title:");
+    if (!title || !user) return;
+    
+    const newStack: Stack = {
+        id: crypto.randomUUID(),
+        userId: user.uid,
+        title,
+        description: '',
+        fragmentIds: [],
+        createdAt: Date.now()
+    };
+    
+    await saveStack(newStack);
+    setStacks([...stacks, newStack]);
   };
 
   const handleCropSave = async (newBase64: string) => {
@@ -751,13 +816,20 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
     setUseFlatFlash,
     grainAmount,
     setGrainAmount,
+    contrast,
+    setContrast,
+    brightness,
+    setBrightness,
+    saturation,
+    setSaturation,
     exposure,
     setExposure,
     semioticTension,
     setSemioticTension,
     onExtractTreatment: handleExtractTreatment,
     onApplyAestheticRefraction: handleApplyAestheticRefraction,
-    activeShard
+    activeShard,
+    onManifest: () => setShowManifestModal(true)
   };
 
   return (
@@ -773,18 +845,17 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
            </div>
            <div className="flex gap-4 overflow-x-auto no-scrollbar w-full md:w-auto pb-2 md:pb-0 snap-x">
               <input type="file" id="darkroomUpload" name="darkroomUpload" ref={fileInputRef} className="hidden" multiple accept="image/*" onChange={handleManualUpload} />
-              
-              <button onClick={() => { setIsSelectionMode(!isSelectionMode); setSelectedIds(new Set()); }} className={`shrink-0 px-6 py-3 border rounded-full font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-3 snap-start ${isSelectionMode ? 'bg-emerald-500 text-white border-emerald-400' : 'border-white/10 text-stone-400 hover:text-white'}`}>
+                          <button onClick={() => { setIsSelectionMode(!isSelectionMode); setSelectedIds(new Set()); }} className={`shrink-0 px-6 py-3 border rounded-full font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-3 snap-start ${isSelectionMode ? 'bg-emerald-500 text-white border-emerald-400' : 'border-white/10 text-stone-400 hover:text-white'}`}>
                 <Filter size={14} />
                 {isSelectionMode ? 'Exit Batch' : 'Batch Protocol'}
               </button>
 
-              <button onClick={() => setShowManifestModal(true)} disabled={isProcessing} className="shrink-0 px-8 py-3 bg-stone-900 border border-white/10 text-white rounded-full font-sans text-[9px] uppercase tracking-widest font-black flex items-center gap-3 shadow-xl active:scale-95 transition-all hover:bg-stone-800 snap-start">
-                 <Sparkles size={14} className="text-emerald-500" /> Manifest Shard
-              </button>
-
               <button onClick={() => setShowUrlModal(true)} disabled={isProcessing} className="shrink-0 px-8 py-3 bg-stone-900 border border-white/10 text-white rounded-full font-sans text-[9px] uppercase tracking-widest font-black flex items-center gap-3 shadow-xl active:scale-95 transition-all hover:bg-stone-800 snap-start">
                  <ImageIcon size={14} className="text-indigo-400" /> Inject URL
+              </button>
+
+              <button onClick={handleCreateCollection} className="shrink-0 px-8 py-3 bg-stone-900 border border-white/10 text-white rounded-full font-sans text-[9px] uppercase tracking-widest font-black flex items-center gap-3 shadow-xl active:scale-95 transition-all hover:bg-stone-800 snap-start">
+                 <FolderPlus size={14} className="text-emerald-400" /> New Collection
               </button>
 
               <button onClick={() => fileInputRef.current?.click()} disabled={isProcessing} className="shrink-0 px-8 py-3 bg-white text-black rounded-full font-sans text-[9px] uppercase tracking-widest font-black flex items-center gap-3 shadow-xl active:scale-95 transition-all disabled:opacity-50 snap-start">
@@ -799,7 +870,7 @@ export const DarkroomView: React.FC<{ initialShard?: PocketItem }> = ({ initialS
                  {shards.map(shard => (
                    <motion.div key={shard.id} layout className={`group relative bg-stone-900 p-1 border transition-all cursor-pointer ${selectedIds.has(shard.id) ? 'border-emerald-500 ring-4 ring-emerald-500/10 scale-[1.02] shadow-2xl' : 'border-white/5'}`} onClick={() => toggleSelection(shard.id)}>
                       <div className="relative aspect-[3/4] overflow-hidden">
-                        <img src={shard.content.imageUrl} className={`w-full h-full object-cover transition-all duration-[2s] group-hover:scale-105 ${currentlyProcessingId === shard.id ? 'blur-xl grayscale' : 'grayscale group-hover:grayscale-0'}`} />
+                        <img src={shard.content.thumbnailUrl || shard.content.imageUrl} className={`w-full h-full object-cover transition-all duration-[2s] group-hover:scale-105 ${currentlyProcessingId === shard.id ? 'blur-xl' : 'group-hover:scale-105'}`} loading="lazy" />
                         {isSelectionMode && (
                           <div className="absolute top-4 left-4 z-20">
                              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${selectedIds.has(shard.id) ? 'bg-emerald-500 border-emerald-400' : 'bg-black/40 border-white/20'}`}>

@@ -113,7 +113,7 @@ export const CliqueRadar: React.FC<{ onSelectZine: (zine: ZineMetadata) => void 
                 {queue.map((zine, i) => (
                     <div key={zine.id} onClick={() => setActiveIndex(zines.indexOf(zine))} className="group cursor-pointer border-l-2 border-stone-50 dark:border-stone-900 pl-8 py-4 hover:border-nous-text transition-all">
                         <span className="font-sans text-[8px] uppercase tracking-widest text-stone-500 font-black">@{zine.userHandle}</span>
-                        <h3 className="font-serif italic text-2xl text-stone-400 group-hover:text-nous-text transition-colors">{zine.title}</h3>
+                        <h3 className="font-serif italic text-2xl text-stone-400 group-hover:text-nous-text transition-colors">{zine.content?.headlines?.[0] || zine.title || "Untitled"}</h3>
                     </div>
                 ))}
             </div>

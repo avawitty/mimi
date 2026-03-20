@@ -4,6 +4,7 @@ import { Eye, Zap, Share2, Loader2, WifiOff, Maximize2, Users, User, MessageSqua
 import { useUser } from '../contexts/UserContext';
 import { collection, query, orderBy, limit, onSnapshot, updateDoc, doc, increment, arrayUnion } from 'firebase/firestore';
 import { db } from '../services/firebase';
+import { handleFirestoreError, logFirestoreError, OperationType } from '../services/firebaseUtils';
 import { ZineMetadata, VibeNote } from '../types';
 import { subscribeToFollowing, Connection } from '../services/connections';
 import { PublicProfileModal } from './PublicProfileModal';
@@ -142,7 +143,7 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
       
       setIsOfflineMode(false);
     }, (error) => {
-        console.warn("Proscenium connection failed (switching to local protocol):", error.message);
+        logFirestoreError(error, OperationType.LIST, "public_transmissions");
         setIsOfflineMode(true);
         setTransmissions(localTransmissions);
     });

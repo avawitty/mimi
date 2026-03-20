@@ -1,12 +1,22 @@
 
 import { ensureDb } from "./firebase";
 import { collection, addDoc, doc, runTransaction, getDoc, updateDoc } from "firebase/firestore";
-import { TasteEvent, DriftEvent, TasteProfile } from "../types";
+import { TasteEvent, DriftEvent, TasteProfile, ProductTasteEvent } from "../types";
 import { logEvent } from "firebase/analytics";
 import { analytics } from "./firebaseInit";
 
 const COLLECTION_NAME = "taste_events";
+const PRODUCT_INTERACTION_COLLECTION = "product_interactions";
 const USER_COLLECTION = "users";
+
+export const logProductTasteEvent = async (event: ProductTasteEvent): Promise<void> => {
+  try {
+    const db = await ensureDb();
+    await addDoc(collection(db, PRODUCT_INTERACTION_COLLECTION), event);
+  } catch (error) {
+    console.warn("MIMI // Product Interaction Log Dropped:", error);
+  }
+};
 
 export const logTasteEvent = async (event: TasteEvent): Promise<void> => {
   try {

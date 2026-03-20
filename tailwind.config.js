@@ -14,13 +14,18 @@ export default {
   theme: {
     extend: {
       fontFamily: {
+        "display": ['"Cormorant Garamond"', "serif"],
+        "sans": ['"Public Sans"', "sans-serif"],
         serif: ['"Cormorant Garamond"', 'serif'],
-        sans: ['"Inter"', 'system-ui', 'sans-serif'],
-        mono: ['"Space Mono"', 'monospace'],
+        mono: ['"JetBrains Mono"', 'monospace'],
         header: ['"Cormorant Garamond"', 'serif'],
         hand: ['"La Belle Aurore"', 'cursive'],
       },
       colors: {
+        "primary": "#1a1a1a",
+        "background-light": "#EAE8E3",
+        "background-dark": "#191919",
+        "canvas-border": "#000000",
         nous: {
           base: 'var(--nous-base)',
           text: 'var(--nous-text)',

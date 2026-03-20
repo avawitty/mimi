@@ -82,7 +82,7 @@ export const ObsidianMirror: React.FC = () => {
 
     try {
       const zines = await fetchCommunityZines(12);
-      const titles = (zines || []).map(z => z.title).join(', ');
+      const titles = (zines || []).map(z => z.content?.headlines?.[0] || z.title).join(', ');
 
       const data = await generateMirrorRefraction(profile, titles);
       

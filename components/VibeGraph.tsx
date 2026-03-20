@@ -42,11 +42,15 @@ export const VibeGraph: React.FC<VibeGraphProps> = ({ onGenerateZine }) => {
   const [threadMode, setThreadMode] = useState<ThreadMode>('emotion');
 
   const loadData = async () => {
-    const mems = await getAllShadowMemory() as MemoryItem[];
-    const thms = await getClusterAnchors();
-    setMemories(mems);
-    setThemes(thms);
-    console.log(`MIMI // VibeGraph: Loaded ${mems.length} artifacts, ${thms.length} themes.`);
+    try {
+      const mems = await getAllShadowMemory() as MemoryItem[];
+      const thms = await getClusterAnchors();
+      setMemories(mems);
+      setThemes(thms);
+      console.log(`MIMI // VibeGraph: Loaded ${mems.length} artifacts, ${thms.length} themes.`);
+    } catch (e) {
+      console.error("MIMI // Failed to load vibe graph data:", e);
+    }
   };
 
   useEffect(() => {
@@ -224,23 +228,33 @@ export const VibeGraph: React.FC<VibeGraphProps> = ({ onGenerateZine }) => {
 
   const handleGenerateClusters = async () => {
     setIsGenerating(true);
-    await generateClusterAnchors();
-    await loadData();
-    setIsGenerating(false);
+    try {
+      await generateClusterAnchors();
+      await loadData();
+    } catch (e) {
+      console.error("MIMI // Failed to generate clusters:", e);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleFindThread = async () => {
     if (!selectedNode) return;
     setIsThreading(true);
-    const thread = await findThread(selectedNode.id, memories, themes, threadMode);
-    if (thread) {
-      setActiveThread(thread);
-    } else {
-      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
-        detail: { message: "Not enough resonance to form a thread.", type: 'error' } 
-      }));
+    try {
+      const thread = await findThread(selectedNode.id, memories, themes, threadMode);
+      if (thread) {
+        setActiveThread(thread);
+      } else {
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+          detail: { message: "Not enough resonance to form a thread.", type: 'error' } 
+        }));
+      }
+    } catch (e) {
+      console.error("MIMI // Failed to find thread:", e);
+    } finally {
+      setIsThreading(false);
     }
-    setIsThreading(false);
   };
 
   return (

@@ -46,6 +46,7 @@ export const TheStand: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> 
         const q = searchQuery.toLowerCase();
         result = result.filter(z => 
             z.title.toLowerCase().includes(q) || 
+            (z.content?.headlines?.[0] && z.content.headlines[0].toLowerCase().includes(q)) ||
             z.tone.toLowerCase().includes(q) ||
             z.userHandle.toLowerCase().includes(q)
         );

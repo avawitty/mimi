@@ -40,28 +40,38 @@ export const DossierArtifactView: React.FC<{ artifact: DossierArtifact; onClose:
           </div>
       </div>
 
-      <main className="max-w-6xl mx-auto px-6 md:px-12 py-16 md:py-24 space-y-24 relative z-10">
-          <header className="space-y-12 md:space-y-16">
+      <div className="max-w-6xl mx-auto px-6 md:px-12 py-16 md:py-24 space-y-12 relative z-10">
+          <header className="space-y-6">
               <div className="flex items-center gap-4 text-emerald-500">
                   <ScanLine size={18} className="animate-pulse" />
                   <span className="font-mono text-[9px] uppercase tracking-[0.4em] font-bold">Artifact Analysis</span>
               </div>
-              <div className="space-y-6">
-                <h1 className="font-serif text-5xl md:text-7xl italic tracking-tighter leading-none text-stone-100">
-                   {artifact.title}
-                </h1>
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pt-8 border-t border-stone-800">
-                   <div className="flex items-center gap-4">
-                      <span className="font-mono text-[9px] uppercase tracking-widest font-bold text-stone-600">Type:</span>
-                      <span className="font-mono text-sm text-emerald-500 uppercase tracking-widest border border-emerald-500/20 bg-emerald-500/5 px-3 py-1 rounded-sm">{artifact.type || 'Unknown'}</span>
-                   </div>
-                   <div className="flex flex-col items-start md:items-end">
-                      <span className="font-mono text-[9px] uppercase tracking-widest font-bold text-stone-600">Timestamp</span>
-                      <span className="font-mono text-xs text-stone-400">{new Date(artifact.createdAt).toLocaleDateString()} <span className="text-stone-600">|</span> {new Date(artifact.createdAt).toLocaleTimeString()}</span>
-                   </div>
-                </div>
-              </div>
+              <h1 className="font-serif text-4xl md:text-6xl italic tracking-tighter leading-none text-stone-100">
+                  {artifact.title}
+              </h1>
           </header>
+          
+          <div className="grid md:grid-cols-2 gap-12">
+              <div className="bg-stone-900 p-2 border border-stone-800">
+                  <img src={artifact.content} className="w-full h-auto object-contain" alt={artifact.title} />
+              </div>
+              <div className="space-y-8">
+                  <p className="font-serif text-xl text-stone-300 leading-relaxed">
+                      {artifact.description}
+                  </p>
+                  <AestheticDNA dna={artifact.dna} />
+                  <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pt-8 border-t border-stone-800">
+                     <div className="flex items-center gap-4">
+                        <span className="font-mono text-[9px] uppercase tracking-widest font-bold text-stone-600">Type:</span>
+                        <span className="font-mono text-sm text-emerald-500 uppercase tracking-widest border border-emerald-500/20 bg-emerald-500/5 px-3 py-1 rounded-sm">{artifact.type || 'Unknown'}</span>
+                     </div>
+                     <div className="flex flex-col items-start md:items-end">
+                        <span className="font-mono text-[9px] uppercase tracking-widest font-bold text-stone-600">Timestamp</span>
+                        <span className="font-mono text-xs text-stone-400">{new Date(artifact.createdAt).toLocaleDateString()} <span className="text-stone-600">|</span> {new Date(artifact.createdAt).toLocaleTimeString()}</span>
+                     </div>
+                  </div>
+              </div>
+          </div>
 
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 md:gap-16">
              {artifact.elements?.map((el, idx) => (
@@ -163,7 +173,7 @@ export const DossierArtifactView: React.FC<{ artifact: DossierArtifact; onClose:
              </div>
              <button onClick={onClose} className="px-12 py-4 border border-stone-800 hover:border-emerald-500 text-stone-500 hover:text-emerald-500 font-mono text-[9px] uppercase tracking-[0.4em] font-bold rounded-sm transition-all">Return to Grid</button>
           </footer>
-      </main>
+      </div>
     </div>
   );
 };

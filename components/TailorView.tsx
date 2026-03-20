@@ -17,6 +17,8 @@ import { TailorAuditOverlay } from './TailorAuditOverlay';
 import { TailorPreview } from './TailorPreview';
 import { ShardAnalyzer } from './ShardAnalyzer';
 import { ScryLinkInput } from './ScryLinkInput';
+import { TasteBlueprintModule } from './TasteBlueprintModule';
+
 
 // Helper for Blob conversion
 const dataURLtoBlob = (dataurl: string) => {
@@ -993,6 +995,14 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                     {/* LEFT COL: THE SPECS */}
                     <div className="md:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                         
+                        <div className="md:col-span-2 mb-4">
+
+                        </div>
+
+                        <div className="md:col-span-2">
+                            <TasteBlueprintModule />
+                        </div>
+
                         {/* POSITIONING CARD */}
                         <BlueprintCard label="Persona Positioning" subLabel="REF: POS-01" onClick={() => openEditor('positioning')} className="md:col-span-2">
                             <div className="space-y-6">

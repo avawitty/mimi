@@ -1,9 +1,25 @@
 
-import { setPersistence, indexedDBLocalPersistence, onAuthStateChanged, User } from "firebase/auth";
+import { setPersistence, browserSessionPersistence, onAuthStateChanged, User } from "firebase/auth";
 import { auth, db, storage } from "./firebaseInit";
 import { PocketItem, Stack } from "../types";
+import { logFirestoreError, handleFirestoreError, OperationType } from "./firebaseUtils";
 
 export { auth, db, storage };
+
+// Test connection on boot to catch "Database not found" early
+const testConnection = async () => {
+  try {
+    const { doc, getDocFromServer } = await import('firebase/firestore');
+    await getDocFromServer(doc(db, 'system', 'connection_test'));
+  } catch (error: any) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    // We only care about connection/existence errors here, ignore permission denied
+    if (errorMessage.includes('not-found') || errorMessage.includes('offline') || errorMessage.includes('does not exist')) {
+      logFirestoreError(error, OperationType.GET, 'system/connection_test');
+    }
+  }
+};
+testConnection();
 
 // INITIALIZE PERSISTENCE ONCE
 let persistenceInitialized = false;
@@ -12,10 +28,10 @@ export const initializeAuthPersistence = async (): Promise<void> => {
   if (persistenceInitialized) return;
   
   try {
-    // indexedDB is more reliable in iframes than localStorage
-    await setPersistence(auth, indexedDBLocalPersistence);
+    // browserSessionPersistence clears on tab close
+    await setPersistence(auth, browserSessionPersistence);
     persistenceInitialized = true;
-    console.info("MIMI // Persistence Locked: indexedDB");
+    console.info("MIMI // Persistence Locked: browserSessionPersistence");
   } catch (err: any) {
     console.error("MIMI // Persistence Calibration Failed:", err.code, err.message);
     persistenceInitialized = true;
@@ -65,6 +81,11 @@ export const ensureAuth = async () => {
   return auth;
 };
 
+export const isFullyAuthenticated = () => {
+  console.info("MIMI // isFullyAuthenticated check:", auth.currentUser ? auth.currentUser.uid : "null", auth.currentUser ? "isAnonymous: " + auth.currentUser.isAnonymous : "");
+  return !!auth.currentUser;
+};
+
 export const ensureDb = async () => db;
 export const ensureStorage = async () => storage;
 
@@ -75,7 +96,7 @@ export const fetchFragmentsByStackId = async (stackId: string) => {
         const snap = await getDocs(q);
         return snap.docs.map(d => d.data() as PocketItem);
     } catch (e: any) {
-        console.warn("MIMI // Stack Fragments Fetch Error:", e.code);
+        handleFirestoreError(e, OperationType.LIST, "pocket");
         return [];
     }
 };
@@ -87,8 +108,20 @@ export const fetchStackById = async (stackId: string) => {
         if (snap.exists()) return snap.data() as Stack;
         return null;
     } catch (e: any) {
-        console.warn("MIMI // Stack Fetch Error:", e.code);
+        handleFirestoreError(e, OperationType.GET, `stacks/${stackId}`);
         return null;
+    }
+};
+
+export const fetchStacksByUserId = async (userId: string) => {
+    try {
+        const { collection, query, where, getDocs } = await import('firebase/firestore');
+        const q = query(collection(db, "stacks"), where("userId", "==", userId));
+        const snap = await getDocs(q);
+        return snap.docs.map(d => d.data() as Stack);
+    } catch (e: any) {
+        handleFirestoreError(e, OperationType.LIST, "stacks");
+        return [];
     }
 };
 
@@ -97,7 +130,7 @@ export const saveStack = async (stack: Stack) => {
         const { doc, setDoc } = await import('firebase/firestore');
         await setDoc(doc(db, "stacks", stack.id), stack);
     } catch (e: any) {
-        console.warn("MIMI // Stack Save Error:", e.code);
+        handleFirestoreError(e, OperationType.WRITE, `stacks/${stack.id}`);
     }
 };
 

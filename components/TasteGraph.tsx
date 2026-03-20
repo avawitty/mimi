@@ -1,160 +1,230 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import * as d3 from 'd3';
 import { motion } from 'framer-motion';
-import { Activity, Radar, Pin, Flame } from 'lucide-react';
-import { generateTags } from '../services/geminiService';
+import { Loader2, Radar, RefreshCw } from 'lucide-react';
+import { useUser } from '../contexts/UserContext';
+import { getTasteGraph, saveTasteGraph } from '../services/tasteGraphService';
+import { extractTasteGraphNodes } from '../services/geminiService';
+import { getAllShadowMemory } from '../services/vectorSearch';
+import { TasteGraphNode, TasteGraphEdge } from '../types';
 
-interface TasteGraphProps {
-  tasteVector?: Record<string, number>;
-  variant?: 'portrait' | 'diagnostic';
-}
+export const TasteGraph: React.FC = () => {
+  const { user } = useUser();
+  const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  const [nodes, setNodes] = useState<TasteGraphNode[]>([]);
+  const [edges, setEdges] = useState<TasteGraphEdge[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [extracting, setExtracting] = useState(false);
 
-export const TasteGraph: React.FC<TasteGraphProps> = ({ tasteVector, variant = 'diagnostic' }) => {
-  const [pinnedTags, setPinnedTags] = useState<Set<string>>(new Set());
-  const [inferredTags, setInferredTags] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (tasteVector) {
-        generateTags(Object.keys(tasteVector).join(', ')).then(setInferredTags);
+  const loadGraph = async () => {
+    setLoading(true);
+    try {
+      const graph = await getTasteGraph();
+      setNodes(graph.nodes);
+      setEdges(graph.edges);
+    } catch (e) {
+      console.error("MIMI // Failed to load taste graph:", e);
+    } finally {
+      setLoading(false);
     }
-  }, [tasteVector]);
-
-  const sortedTags = useMemo(() => {
-    if (!tasteVector) return [];
-    return Object.entries(tasteVector)
-      .sort((a, b) => (Number(b[1]) || 0) - (Number(a[1]) || 0))
-      .slice(0, variant === 'portrait' ? 5 : 12);
-  }, [tasteVector, variant]);
-
-  if (!tasteVector || sortedTags.length === 0) {
-    return (
-      <div className="w-full p-8 border border-stone-100 dark:border-stone-800 rounded-sm bg-stone-50 dark:bg-stone-900/50 flex flex-col items-center justify-center text-center space-y-4">
-        <Radar size={24} className="text-stone-300 dark:text-stone-700" />
-        <div>
-          <h4 className="font-sans text-[10px] uppercase tracking-widest font-black text-stone-400">The Taste Graph</h4>
-          <p className="font-serif italic text-xs text-stone-500 mt-1">Awaiting sufficient debris to map your aesthetic intelligence.</p>
-        </div>
-      </div>
-    );
-  }
-
-  const maxIntensity = Math.max(...sortedTags.map(t => t[1]), 0.1);
-
-  const togglePin = (tag: string) => {
-    setPinnedTags(prev => {
-      const next = new Set(prev);
-      if (next.has(tag)) next.delete(tag);
-      else next.add(tag);
-      return next;
-    });
   };
 
-  if (variant === 'portrait') {
-    return (
-      <div className="w-full p-6 border border-stone-100 dark:border-stone-800 rounded-sm bg-stone-50 dark:bg-stone-900/50 space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-stone-400">
-            <Activity size={14} />
-            <h4 className="font-sans text-[10px] uppercase tracking-widest font-black">Aesthetic DNA</h4>
-          </div>
-          <span className="font-mono text-[9px] text-stone-400 uppercase">Signature</span>
-        </div>
+  useEffect(() => {
+    if (user?.uid) {
+      loadGraph();
+    }
+  }, [user]);
 
-        <div className="space-y-3">
-          {sortedTags.map(([tag, intensity], idx) => {
-            const percentage = (intensity / maxIntensity) * 100;
-            return (
-              <div key={tag} className="flex items-center gap-4">
-                <span className="font-mono text-[10px] text-stone-500 w-24 truncate">
-                  {tag.replace(/_/g, ' ')}
-                </span>
-                <div className="flex-1 h-px bg-stone-200 dark:bg-stone-800 relative">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${percentage}%` }}
-                    transition={{ duration: 1.5, delay: idx * 0.1, ease: "easeOut" }}
-                    className="absolute top-1/2 -translate-y-1/2 h-0.5 bg-stone-400 dark:bg-stone-500 rounded-full"
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
+  const handleExtract = async () => {
+    setExtracting(true);
+    try {
+      const artifacts = await getAllShadowMemory();
+      if (artifacts.length === 0) {
+        alert("No artifacts found. Please add some artifacts first.");
+        setExtracting(false);
+        return;
+      }
+      
+      const graph = await extractTasteGraphNodes(artifacts as any);
+      if (graph.nodes.length > 0) {
+        await saveTasteGraph(graph.nodes, graph.edges);
+        setNodes(graph.nodes);
+        setEdges(graph.edges);
+      }
+    } catch (e) {
+      console.error("Failed to extract graph:", e);
+    } finally {
+      setExtracting(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!svgRef.current || !containerRef.current || nodes.length === 0) return;
+
+    const width = containerRef.current.clientWidth;
+    const height = containerRef.current.clientHeight;
+
+    const svg = d3.select(svgRef.current);
+    svg.selectAll("*").remove(); // Clear previous render
+
+    // Create a deep copy of nodes and edges for d3 to mutate
+    const d3Nodes = nodes.map(d => ({ ...d })) as any[];
+    const d3Edges = edges.map(d => ({ ...d })) as any[];
+
+    const simulation = d3.forceSimulation(d3Nodes)
+      .force("link", d3.forceLink(d3Edges).id((d: any) => d.id).distance(100))
+      .force("charge", d3.forceManyBody().strength(-300))
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("collide", d3.forceCollide().radius(40));
+
+    const g = svg.append("g");
+
+    // Add zoom capabilities
+    const zoom = d3.zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.1, 4])
+      .on("zoom", (event) => {
+        g.attr("transform", event.transform);
+      });
+
+    svg.call(zoom);
+
+    // Draw edges
+    const link = g.append("g")
+      .attr("stroke", "#57534e") // stone-600
+      .attr("stroke-opacity", 0.6)
+      .selectAll("line")
+      .data(d3Edges)
+      .join("line")
+      .attr("stroke-width", (d: any) => Math.sqrt(d.strength || 1));
+
+    // Draw nodes
+    const node = g.append("g")
+      .attr("stroke", "#1c1917") // stone-900
+      .attr("stroke-width", 1.5)
+      .selectAll("circle")
+      .data(d3Nodes)
+      .join("circle")
+      .attr("r", (d: any) => Math.max(3, (d.weight || 1) * 1.5))
+      .attr("fill", (d: any) => {
+        switch (d.type) {
+          case 'concept': return '#10b981'; // emerald-500
+          case 'motif': return '#6366f1'; // indigo-500
+          case 'era': return '#f59e0b'; // amber-500
+          default: return '#a8a29e'; // stone-400
+        }
+      })
+      .call(d3.drag<SVGCircleElement, any>()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended));
+
+    // Add labels
+    const labels = g.append("g")
+      .selectAll("text")
+      .data(d3Nodes)
+      .join("text")
+      .text((d: any) => d.label)
+      .attr("font-size", "10px")
+      .attr("font-family", "monospace")
+      .attr("fill", "#a8a29e") // stone-400
+      .attr("dx", 12)
+      .attr("dy", 4);
+
+    simulation.on("tick", () => {
+      link
+        .attr("x1", (d: any) => d.source.x)
+        .attr("y1", (d: any) => d.source.y)
+        .attr("x2", (d: any) => d.target.x)
+        .attr("y2", (d: any) => d.target.y);
+
+      node
+        .attr("cx", (d: any) => d.x)
+        .attr("cy", (d: any) => d.y);
+
+      labels
+        .attr("x", (d: any) => d.x)
+        .attr("y", (d: any) => d.y);
+    });
+
+    function dragstarted(event: any) {
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      event.subject.fx = event.subject.x;
+      event.subject.fy = event.subject.y;
+    }
+
+    function dragged(event: any) {
+      event.subject.fx = event.x;
+      event.subject.fy = event.y;
+    }
+
+    function dragended(event: any) {
+      if (!event.active) simulation.alphaTarget(0);
+      event.subject.fx = null;
+      event.subject.fy = null;
+    }
+
+    return () => {
+      simulation.stop();
+    };
+  }, [nodes, edges]);
 
   return (
-    <div className="w-full p-6 border border-stone-100 dark:border-stone-800 rounded-sm bg-stone-50 dark:bg-stone-900/50 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-emerald-500">
-          <Activity size={14} />
-          <h4 className="font-sans text-[10px] uppercase tracking-widest font-black">The Taste Graph</h4>
+    <div className="flex-1 flex flex-col h-full bg-[#f5f2ed] dark:bg-[#050505] text-stone-900 dark:text-stone-100 p-6 md:p-12 relative">
+      <div className="flex justify-between items-end mb-8 z-10">
+        <div>
+          <h2 className="text-4xl md:text-5xl font-serif italic">Taste Graph</h2>
+          <p className="text-stone-500 font-sans text-[10px] uppercase tracking-[0.2em] mt-2">Semantic Network of Aesthetics</p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1 font-mono text-[9px] text-amber-500 uppercase">
-            <Flame size={10} /> Heat Map
-          </span>
-          <span className="font-mono text-[9px] text-stone-400 uppercase">Diagnostic View</span>
-        </div>
+        <button 
+          onClick={handleExtract}
+          disabled={extracting}
+          className="flex items-center gap-2 px-4 py-2 bg-stone-200 dark:bg-stone-800 hover:bg-stone-300 dark:hover:bg-stone-700 rounded-full transition-colors font-sans text-[10px] uppercase tracking-widest disabled:opacity-50"
+        >
+          {extracting ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+          {nodes.length > 0 ? 'Regenerate Graph' : 'Extract Graph'}
+        </button>
       </div>
 
-      <div className="space-y-4">
-        {sortedTags.map(([tag, intensity], idx) => {
-          const percentage = (intensity / maxIntensity) * 100;
-          const isPinned = pinnedTags.has(tag);
-          
-          return (
-            <div key={tag} className="space-y-1 group relative">
-              <div className="flex justify-between items-end">
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => togglePin(tag)}
-                    className={`transition-colors ${isPinned ? 'text-amber-500' : 'text-stone-300 dark:text-stone-700 hover:text-amber-400'}`}
-                    title={isPinned ? "Unpin from Tailor focus" : "Pin to influence Tailor"}
-                  >
-                    <Pin size={12} className={isPinned ? "fill-current" : ""} />
-                  </button>
-                  <span className={`font-mono text-[10px] transition-colors ${isPinned ? 'text-amber-500 font-bold' : 'text-stone-600 dark:text-stone-400 group-hover:text-emerald-500'}`}>
-                    {tag.replace(/_/g, ' ')}
-                  </span>
-                </div>
-                <span className="font-mono text-[9px] text-stone-400">
-                  {intensity.toFixed(2)}
-                </span>
-              </div>
-              <div className="w-full h-1.5 bg-stone-200 dark:bg-stone-800 rounded-full overflow-hidden relative">
-                {/* Heat map background representing recent inspiration vs all-time */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-                
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${percentage}%` }}
-                  transition={{ duration: 1, delay: idx * 0.05 }}
-                  className={`h-full ${isPinned ? 'bg-amber-500' : 'bg-emerald-500'}`}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="pt-4 border-t border-stone-200 dark:border-stone-800 flex flex-col gap-2">
-        {inferredTags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-2">
-            {inferredTags.map(tag => (
-              <span key={tag} className="px-2 py-1 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 font-mono text-[9px] uppercase tracking-widest rounded-full">
-                {tag}
-              </span>
-            ))}
+      <div className="flex-1 relative border border-stone-200 dark:border-stone-800 rounded-lg overflow-hidden" ref={containerRef}>
+        {loading ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-stone-400 space-y-4">
+            <Loader2 size={24} className="animate-spin" />
+            <p className="font-sans text-[10px] uppercase tracking-[0.2em]">Loading Semantic Network...</p>
           </div>
+        ) : nodes.length === 0 && !extracting ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-stone-400 space-y-4 text-center px-6">
+            <Radar size={32} className="opacity-20" />
+            <p className="font-serif italic text-xl">No Graph Data</p>
+            <p className="font-sans text-[10px] uppercase tracking-widest max-w-md">Extract the semantic graph to visualize the relationships between your artifacts.</p>
+          </div>
+        ) : extracting ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-stone-400 space-y-4">
+            <Loader2 size={24} className="animate-spin" />
+            <p className="font-sans text-[10px] uppercase tracking-[0.2em]">Analyzing Artifacts & Extracting Nodes...</p>
+          </div>
+        ) : (
+          <svg ref={svgRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
         )}
-        <p className="font-serif italic text-[11px] text-stone-500 leading-relaxed">
-          This vector map evolves dynamically as you save fragments to your Pocket. It forms the foundation of your proprietary aesthetic intelligence dataset.
-        </p>
-        <p className="font-sans text-[8px] uppercase tracking-widest text-amber-600/70 font-black">
-          * Pin nodes to bias the Tailor's generation weights for your next issue.
-        </p>
       </div>
+      
+      {nodes.length > 0 && (
+        <div className="absolute bottom-16 left-16 flex gap-6 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md p-4 rounded-lg border border-stone-200 dark:border-stone-800">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-emerald-500" />
+            <span className="font-sans text-[10px] uppercase tracking-widest text-stone-500">Concept</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-indigo-500" />
+            <span className="font-sans text-[10px] uppercase tracking-widest text-stone-500">Motif</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-amber-500" />
+            <span className="font-sans text-[10px] uppercase tracking-widest text-stone-500">Era</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

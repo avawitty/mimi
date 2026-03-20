@@ -1,129 +1,22 @@
-
 // @ts-nocheck
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useUser } from '../contexts/UserContext';
 import { UserProfile, TypographicArchetype, Persona } from '../types';
-import { isHandleAvailable, uploadBlob, saveUserProfile, fetchUserZines, fetchPocketItems } from '../services/firebaseUtils';
-import { Loader2, Camera, Check, Type, PenTool, Layers, Moon, Orbit, ShieldCheck, Fingerprint, Palette, Scissors, Anchor, Heart, Info, ArrowRight, MapPin, Clock, Calendar, Cloud, Save, MousePointer2, Radio, Upload, Settings, Plus, X, Trash2, Key, ExternalLink, ToggleLeft, ToggleRight, Box, CheckCircle2, Zap, Wallet, User, ChevronRight, ChevronLeft, Sparkles, Eraser, Shield, Cpu, Link, Database, Crown, Download, FileJson, RefreshCw, Users, BookOpen, Activity } from 'lucide-react';
-import { useTheme, PALETTES } from '../contexts/ThemeContext';
+import { isHandleAvailable, uploadBlob, fetchUserZines, fetchPocketItems } from '../services/firebaseUtils';
+import { Loader2, Camera, Trash2, Download, ExternalLink, Shield, Key, Settings, Plus, Check } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DeveloperSettings } from './DeveloperSettings';
 import { TheWard } from './TheWard';
 import { ImperialPatronageModal } from './ImperialPatronageModal';
 import { ConnectionsManager } from './ConnectionsManager';
-import { ArchetypeIndex } from './ArchetypeIndex';
-import { TasteGraph } from './TasteGraph';
-import { AestheticGenomeCard } from './AestheticGenomeCard';
-import { SovereignIdentityCardView } from './SovereignIdentityCardView'; // NEW
-import { generateSignature } from '../services/signatureService';
 
-const DNAButton: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; label: string }> = ({ active, onClick, icon, label }) => (
-  <button 
-    onClick={onClick}
-    className={`flex-1 flex flex-col items-center justify-center gap-3 py-6 md:py-10 transition-all duration-700 relative overflow-hidden group ${active ? 'text-nous-text dark:text-white' : 'text-stone-300 dark:text-stone-700 hover:text-stone-400'}`}
-  >
-    <div className={`transition-transform duration-500 ${active ? 'scale-110' : 'group-hover:scale-105'}`}>{icon}</div>
-    <span className="font-sans text-[7px] uppercase tracking-[0.4em] font-black">{label}</span>
-    {active && <motion.div layoutId="dna-pill" className="absolute bottom-0 w-8 h-0.5 bg-emerald-500" />}
-  </button>
-);
-
-const MaskCard: React.FC<{ persona: Persona; isActive: boolean; onSelect: () => void; onDelete: () => void; onUpdate: (p: Persona) => void; userUid: string }> = ({ persona, isActive, onSelect, onDelete, onUpdate, userUid }) => {
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            try {
-                const url = await uploadBlob(file, `avatars/${userUid}_mask_${persona.id}_${Date.now()}`);
-                onUpdate({ ...persona, photoURL: url });
-                window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Mask Visual Anchored.", type: 'success' } }));
-            } catch (err) {
-                console.error("Mask upload failed", err);
-                window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Upload Failed.", type: 'error' } }));
-            }
-        }
-    };
-
-    return (
-        <motion.div 
-            layout
-            whileHover={{ y: -5 }}
-            onClick={onSelect}
-            className={`relative shrink-0 w-64 md:w-80 p-8 rounded-sm border transition-all duration-700 cursor-pointer group ${isActive ? 'bg-white dark:bg-stone-900 border-emerald-500 shadow-2xl ring-1 ring-emerald-500/20' : 'bg-stone-50 dark:bg-black/20 border-stone-100 dark:border-stone-800 opacity-60 hover:opacity-100 shadow-sm'}`}
-        >
-            <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:rotate-12 transition-transform duration-1000">
-                <User size={120} />
-            </div>
-            
-            <div className="flex justify-between items-start mb-10 relative z-10">
-                <div 
-                    onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center shadow-inner overflow-hidden border border-black/5 dark:border-white/5 cursor-pointer relative group/avatar ${isActive ? 'bg-emerald-500 text-white animate-pulse' : 'bg-stone-200 dark:bg-stone-800 text-stone-400'}`}
-                >
-                    {persona.photoURL ? (
-                        <img src={persona.photoURL} className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover/avatar:grayscale-0" alt="" />
-                    ) : (
-                        <User size={18} />
-                    )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center transition-opacity duration-300">
-                        <Camera size={14} className="text-white" />
-                    </div>
-                </div>
-                <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    className="hidden" 
-                    accept="image/*" 
-                    onChange={handleImageUpload} 
-                />
-                {isActive && (
-                    <div className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-                        <span className="font-sans text-[7px] uppercase tracking-widest font-black text-emerald-600 dark:text-emerald-400">Active Mask</span>
-                    </div>
-                )}
-            </div>
-
-            <div className="space-y-6 relative z-10">
-                <div className="space-y-1">
-                    <h3 className={`font-serif text-3xl italic tracking-tighter transition-colors ${isActive ? 'text-nous-text dark:text-white' : 'text-stone-500'}`}>{persona.name}.</h3>
-                    <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400 font-black">Identity Namespace</p>
-                </div>
-
-                <div className="flex flex-col gap-2 pt-4 border-t border-black/5 dark:border-white/5">
-                    <div className="flex items-center gap-2 text-stone-400">
-                        <Wallet size={10} className={persona.apiKey ? 'text-emerald-500' : ''} />
-                        <span className="font-sans text-[7px] uppercase tracking-widest font-black">
-                            {persona.apiKey ? 'Specific Billing Enabled' : 'Global Billing Registry'}
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-stone-400">
-                        <Calendar size={10} />
-                        <span className="font-sans text-[7px] uppercase tracking-widest font-black">Minted: {new Date(persona.createdAt).toLocaleDateString()}</span>
-                    </div>
-                </div>
-            </div>
-
-            {!isActive && (
-                <button 
-                    onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                    className="absolute bottom-6 right-6 p-2 text-stone-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-                >
-                    <Trash2 size={14} />
-                </button>
-            )}
-        </motion.div>
-    );
-};
-
-// Detects cross-origin iframes (AI Studio, social webviews) where Google OAuth is
-// blocked by Google's own policy
 const detectIframeContext = (): boolean => {
   if (typeof window === 'undefined') return false;
   try {
     if (window.self !== window.top) return true;
   } catch {
-    return true; // cross-origin access throws — definitely an iframe
+    return true;
   }
   const ua = (navigator.userAgent || '').toLowerCase();
   const isSocial = /instagram|fb_iab|fban|fbav|tiktok|threads|wv\b|webview/i.test(ua);
@@ -132,101 +25,73 @@ const detectIframeContext = (): boolean => {
 };
 
 export const UserProfileView: React.FC = () => {
-  const { user, profile, updateProfile, logout, personas, activePersonaId, switchPersona, createPersona, updatePersona, deletePersona, linkAccount, verifyIdentity, featureFlags, toggleFeature, keyRing, addKeyToRing, removeKeyFromRing, openKeySelector, signInWithGoogleRedirect, login } = useUser();
-  const { currentPalette } = useTheme();
+  const { user, profile, updateProfile, logout, personas, activePersonaId, switchPersona, createPersona, updatePersona, deletePersona, linkAccount, featureFlags, keyRing } = useUser();
   
   const [isIframe, setIsIframe] = useState(false);
   const [handle, setHandle] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [externalLinks, setExternalLinks] = useState<{ title: string; url: string }[]>([]);
   const [isCheckingHandle, setIsCheckingHandle] = useState(false);
   const [handleAvailable, setHandleAvailable] = useState<boolean | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
   const [showHandleConfirm, setShowHandleConfirm] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const [archetype, setArchetype] = useState<TypographicArchetype>('minimalist-sans');
+  const [tasteDefinition, setTasteDefinition] = useState('');
+
+  // Agent Config
+  const [curatorEnabled, setCuratorEnabled] = useState(true);
+  const [sentinelEnabled, setSentinelEnabled] = useState(true);
+  const [curatorBudget, setCuratorBudget] = useState(50);
+  const [sentinelBudget, setSentinelBudget] = useState(50);
+
+  // Mask Management
+  const [isAddingPersona, setIsAddingPersona] = useState(false);
+  const [newPersonaName, setNewPersonaName] = useState('');
+  const [newPersonaKey, setNewPersonaKey] = useState('');
+  const [isEditingMask, setIsEditingMask] = useState(false);
+  const [editingMaskTemp, setEditingMaskTemp] = useState(0.7);
+
+  const [showWard, setShowWard] = useState(false);
+  const [showDevSettings, setShowDevSettings] = useState(false);
+  const [showPatronageModal, setShowPatronageModal] = useState(false);
+  const [isPatronActive, setIsPatronActive] = useState(false);
+
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setIsIframe(detectIframeContext());
   }, []);
-  
-  const [archetype, setArchetype] = useState<TypographicArchetype>('minimalist-sans');
-  const [tasteDefinition, setTasteDefinition] = useState('');
-
-  const handleGenerateDescription = async () => {
-    if (!profile) return;
-    setIsGeneratingDescription(true);
-    try {
-      const { withResilience } = await import("../services/geminiService");
-      
-      const prompt = `Generate a short, poetic, and evocative description for a user profile based on their taste profile: ${JSON.stringify(profile.tasteProfile)}. The description should be in the style of a creative director or curator.`;
-      
-      const text = await withResilience(async (ai) => {
-        const response = await ai.models.generateContent({
-          model: "gemini-3-flash-preview",
-          contents: prompt,
-        });
-        return response.text;
-      });
-      
-      if (text) {
-        await updateProfile({ ...profile, bio: text });
-        setMessage({ text: "Description generated and anchored.", type: 'success' });
-        setTimeout(() => setMessage(null), 3000);
-      }
-    } catch (e) {
-      console.error(e);
-      setMessage({ text: "Generation failed.", type: 'error' });
-    } finally {
-      setIsGeneratingDescription(false);
-    }
-  };
-  
-  const [isAddingPersona, setIsAddingPersona] = useState(false);
-  const [showWard, setShowWard] = useState(false);
-  const [newPersonaName, setNewPersonaName] = useState('');
-  const [newPersonaKey, setNewPersonaKey] = useState('');
-  const [showDevSettings, setShowDevSettings] = useState(false);
-  const [showPatronageModal, setShowPatronageModal] = useState(false);
-  const [patronagePrefill, setPatronagePrefill] = useState('');
-  const [isPatronActive, setIsPatronActive] = useState(false);
-  
-  const [showKeyRing, setShowKeyRing] = useState(false);
-  const [newRingKey, setNewRingKey] = useState('');
-
-  const avatarInputRef = useRef<HTMLInputElement>(null);
-  const maskSliderRef = useRef<HTMLDivElement>(null);
-
-  // Check patronage status on mount and when modal closes
-  useEffect(() => {
-      const checkPatron = () => {
-          const status = localStorage.getItem('mimi_patron_status');
-          setIsPatronActive(status === 'active' || featureFlags.proposal);
-      };
-      checkPatron();
-      // Listen for local storage changes or modal closes
-      const interval = setInterval(checkPatron, 1000);
-      return () => clearInterval(interval);
-  }, [featureFlags]);
 
   useEffect(() => {
-    // If opened via Members link in footer or Redirect Flow
-    const handleViewChange = (e) => {
-        if(e.detail?.section === 'patronage') {
-            if(e.detail.prefill) {
-                setPatronagePrefill(e.detail.prefill);
-            }
-            setShowPatronageModal(true);
-        }
+    const checkPatron = () => {
+      const status = localStorage.getItem('mimi_patron_status');
+      setIsPatronActive(status === 'active' || featureFlags.proposal);
     };
-    window.addEventListener('mimi:change_view', handleViewChange);
-    return () => window.removeEventListener('mimi:change_view', handleViewChange);
-  }, []);
+    checkPatron();
+    const interval = setInterval(checkPatron, 1000);
+    return () => clearInterval(interval);
+  }, [featureFlags]);
 
   useEffect(() => {
     if (profile) {
       setHandle(profile.handle || '');
+      setDisplayName(profile.displayName || '');
+      setAvatar(profile.photoURL || null);
+      setExternalLinks(profile.externalLinks || []);
       setArchetype((profile.tasteProfile?.dominant_archetypes?.[0] as TypographicArchetype) || 'minimalist-sans');
       setTasteDefinition(profile.tasteProfile?.inspirations || '');
+      
+      if (profile.agentConfig) {
+        setCuratorEnabled(profile.agentConfig.curatorEnabled);
+        setSentinelEnabled(profile.agentConfig.sentinelEnabled);
+        setCuratorBudget(profile.agentConfig.curatorBudget);
+        setSentinelBudget(profile.agentConfig.sentinelBudget);
+      }
     }
   }, [profile]);
 
@@ -248,10 +113,27 @@ export const UserProfileView: React.FC = () => {
     return () => clearTimeout(timer);
   }, [handle, user?.uid, profile?.handle]);
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setIsUploading(true);
+      try {
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+              const base64 = reader.result as string;
+              setAvatar(base64);
+              setIsUploading(false);
+          };
+          reader.readAsDataURL(file);
+      } catch (e) {
+          setMessage({ text: "Upload Failed.", type: 'error' });
+          setIsUploading(false);
+      }
+  };
+
   const handleSave = async () => {
     if (!profile || isSaving || handleAvailable === false) return;
     
-    // If handle changed, require confirmation
     if (handle.trim().toLowerCase() !== profile.handle && !showHandleConfirm) {
         setShowHandleConfirm(true);
         return;
@@ -262,10 +144,19 @@ export const UserProfileView: React.FC = () => {
       await updateProfile({ 
         ...profile, 
         handle: handle.trim().toLowerCase(), 
+        displayName: displayName,
+        photoURL: avatar,
+        externalLinks: externalLinks,
         tasteProfile: {
             ...profile.tasteProfile,
             inspirations: tasteDefinition,
             dominant_archetypes: [archetype]
+        },
+        agentConfig: {
+            curatorEnabled,
+            sentinelEnabled,
+            curatorBudget,
+            sentinelBudget
         }
       });
       setMessage({ text: "Sovereign Registry Anchored.", type: 'success' });
@@ -273,6 +164,38 @@ export const UserProfileView: React.FC = () => {
       setTimeout(() => setMessage(null), 3000);
     } catch (e) { setMessage({ text: "Handshake Error.", type: 'error' }); } finally { setIsSaving(false); }
   };
+
+// ... inside JSX
+          <div className="mb-8 flex items-center gap-6">
+            <div className="relative w-20 h-20 rounded-full overflow-hidden border border-stone-200 dark:border-stone-700 bg-stone-100 dark:bg-stone-800 flex items-center justify-center">
+                {avatar ? <img src={avatar} className="w-full h-full object-cover" /> : <Camera size={24} className="text-stone-400" />}
+                <input type="file" ref={avatarInputRef} onChange={handleAvatarUpload} className="hidden" accept="image/*" />
+                <button onClick={() => avatarInputRef.current?.click()} className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity">
+                    <Camera size={16} className="text-white" />
+                </button>
+            </div>
+            <div className="flex-grow space-y-2">
+                <input 
+                    value={displayName} 
+                    onChange={e => setDisplayName(e.target.value)} 
+                    className="w-full bg-transparent font-serif text-xl border-b border-stone-200 dark:border-stone-700 pb-1 focus:outline-none focus:border-stone-800 dark:focus:border-stone-400" 
+                    placeholder="Display Name..."
+                />
+                <input 
+                    value={handle} 
+                    onChange={e => setHandle(e.target.value)} 
+                    className="w-full bg-transparent font-mono text-sm text-stone-500 border-b border-stone-200 dark:border-stone-700 pb-1 focus:outline-none focus:border-stone-800 dark:focus:border-stone-400" 
+                    placeholder="Handle..."
+                />
+            </div>
+            <button 
+                onClick={handleSave} 
+                disabled={isSaving}
+                className="px-4 py-2 bg-stone-800 text-white text-[10px] uppercase tracking-widest hover:bg-stone-700 transition-colors"
+            >
+                {isSaving ? 'Saving...' : 'Save Profile'}
+            </button>
+          </div>
 
   const handleCreateMask = async () => {
       if(!newPersonaName.trim()) return;
@@ -282,37 +205,29 @@ export const UserProfileView: React.FC = () => {
       setTimeout(() => setMessage(null), 3000);
   };
 
-  const handleGoogleLink = async (forceRedirect = true) => {
-      if (user?.isAnonymous) {
-          try {
-              if (forceRedirect) {
-                  await linkAccount(true);
-                  return;
-              }
-              await linkAccount(true);
-              setMessage({ text: "Identity Anchored to Google.", type: 'success' });
-          } catch(e: any) {
-              console.error("Link Error:", e);
-              setMessage({ text: e.message || "Link Failed.", type: 'error' });
-              // If it's an internal error, show troubleshooting
-              if (e.code === 'auth/internal-error' || e.message?.includes('internal-error')) {
-                  window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
-                      detail: { 
-                          message: "Auth Internal Error detected. Try Redirect Flow.", 
-                          type: 'error' 
-                      } 
-                  }));
-              }
+  const handleUpdateActiveMask = async () => {
+      const activePersona = personas.find(p => p.id === activePersonaId);
+      if (!activePersona) return;
+      await updatePersona({
+          ...activePersona,
+          operationalParameters: {
+              ...activePersona.operationalParameters,
+              temperature: editingMaskTemp
           }
-      }
+      });
+      setIsEditingMask(false);
+      setMessage({ text: "Mask Parameters Updated.", type: 'success' });
+      setTimeout(() => setMessage(null), 3000);
   };
 
-  const handleAddRingKey = () => {
-      if (!newRingKey.trim()) return;
-      addKeyToRing(newRingKey);
-      setNewRingKey('');
-      setMessage({ text: "Key Added to Ring.", type: 'success' });
-      setTimeout(() => setMessage(null), 2000);
+  const handleGoogleLink = async () => {
+      if (user?.isAnonymous) {
+          try {
+              await linkAccount(true);
+          } catch(e: any) {
+              setMessage({ text: e.message || "Link Failed.", type: 'error' });
+          }
+      }
   };
 
   const handleExportData = async () => {
@@ -338,20 +253,30 @@ export const UserProfileView: React.FC = () => {
           a.click();
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
-          
-          window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
-              detail: { message: "Archive Download Initiated.", icon: <Download size={14} /> } 
-          }));
       } catch(e) {
-          console.error("Export Failed", e);
           setMessage({ text: "Backup Failed.", type: 'error' });
       } finally {
           setIsExporting(false);
       }
   };
 
+  const activePersona = personas.find(p => p.id === activePersonaId);
+  const activePersonaIndex = personas.findIndex(p => p.id === activePersonaId);
+
+  const nextMask = () => {
+      if (personas.length === 0) return;
+      const nextIndex = (activePersonaIndex + 1) % personas.length;
+      switchPersona(personas[nextIndex].id);
+  };
+
+  const prevMask = () => {
+      if (personas.length === 0) return;
+      const prevIndex = (activePersonaIndex - 1 + personas.length) % personas.length;
+      switchPersona(personas[prevIndex].id);
+  };
+
   return (
-    <div className="w-full h-full overflow-y-auto no-scrollbar flex flex-col items-center transition-colors duration-1000 bg-nous-base dark:bg-stone-950 pb-64 px-4 md:px-8 relative">
+    <div className="w-full h-full overflow-y-auto no-scrollbar bg-[#F9F7F2] dark:bg-stone-950 text-[#1A1A1A] dark:text-stone-100 p-4 md:p-8">
       <AnimatePresence>
         {message && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={`fixed top-24 z-[10000] px-8 py-3 rounded-full font-sans text-[10px] uppercase tracking-widest font-black shadow-2xl border ${message.type === 'success' ? 'bg-emerald-500 text-white border-emerald-400' : 'bg-red-500 text-white border-red-400'}`}>
@@ -360,411 +285,308 @@ export const UserProfileView: React.FC = () => {
         )}
         {showDevSettings && <DeveloperSettings onClose={() => setShowDevSettings(false)} />}
         {showWard && <TheWard onClose={() => setShowWard(false)} />}
-        {showPatronageModal && <ImperialPatronageModal isOpen={showPatronageModal} onClose={() => setShowPatronageModal(false)} prefillKey={patronagePrefill} />}
+        {showPatronageModal && <ImperialPatronageModal isOpen={showPatronageModal} onClose={() => setShowPatronageModal(false)} prefillKey="" />}
       </AnimatePresence>
 
-      <div className="w-full max-w-5xl pt-16 md:pt-32 space-y-24 md:space-y-40">
+      <header className="max-w-7xl mx-auto mb-8 flex justify-between items-end">
+        <div>
+          <span className="text-[10px] uppercase tracking-[0.3em] font-mono text-stone-500 mb-1 block">System Profile // Access Level: Sovereign</span>
+          <h1 className="font-serif text-4xl italic">Sovereign Profile & Logic Registry</h1>
+        </div>
+        <div className="text-right hidden md:block">
+          <span className="text-[10px] uppercase tracking-widest font-mono text-stone-400">Registry ID: {user?.uid?.substring(0, 8).toUpperCase() || '00-MZ-892-X'}</span>
+          <div className="flex items-center justify-end gap-2 mt-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+            <span className="text-[10px] uppercase tracking-widest font-mono">Status: Synced</span>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto grid grid-cols-12 gap-[1px] bg-[#D4D1C9] dark:bg-stone-800 border border-[#D4D1C9] dark:border-stone-800">
         
-        {/* IDENTITY OVERVIEW */}
-        <section className="flex flex-col items-center gap-10 text-center relative">
-            <div className="relative group">
-                <div onClick={() => avatarInputRef.current?.click()} className="w-32 h-32 md:w-48 md:h-48 rounded-full overflow-hidden border border-black/5 dark:border-white/5 cursor-pointer shadow-2xl bg-stone-50 dark:bg-stone-900 relative">
-                    <img src={profile?.photoURL || `https://ui-avatars.com/api/?name=${handle || 'G'}&background=1c1917&color=fff`} className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0" alt="" />
-                    <div className="absolute inset-0 bg-nous-text/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-500"><Camera size={24} className="text-white" /></div>
+        {/* Identity & Global Registry */}
+        <section className="col-span-12 md:col-span-6 lg:col-span-3 order-1 bg-[#F9F7F2] dark:bg-stone-900 p-6 flex flex-col">
+          <div className="flex justify-between items-start mb-6">
+            <h2 className="font-serif text-xl">Identity & Global Registry</h2>
+            <Shield size={16} className="text-stone-400" />
+          </div>
+          
+          <div className="mb-8">
+            <label className="text-[10px] uppercase tracking-widest font-mono text-stone-500 block mb-2">Registry Handle</label>
+            <input 
+                value={handle} 
+                onChange={e => setHandle(e.target.value)} 
+                className="w-full bg-transparent font-mono text-lg border-b border-stone-200 dark:border-stone-700 pb-1 focus:outline-none focus:border-stone-800 dark:focus:border-stone-400" 
+            />
+            {handleAvailable === false && <p className="text-red-500 text-[10px] mt-1">Handle unavailable</p>}
+          </div>
+
+          <div className="mb-8">
+            <label className="text-[10px] uppercase tracking-widest font-mono text-stone-500 block mb-4">External Resources</label>
+            <div className="space-y-3 max-h-48 overflow-y-auto no-scrollbar pr-2">
+              {externalLinks.map((link, i) => (
+                <div key={i} className="flex items-center justify-between text-xs font-mono border-l-2 border-stone-300 dark:border-stone-600 pl-3 py-1">
+                  <input value={link.url} onChange={e => {
+                      const newLinks = [...externalLinks];
+                      newLinks[i].url = e.target.value;
+                      setExternalLinks(newLinks);
+                  }} className="bg-transparent w-full focus:outline-none" placeholder="URL..." />
+                  <button onClick={() => setExternalLinks(externalLinks.filter((_, idx) => idx !== i))} className="text-red-500 ml-2"><Trash2 size={12}/></button>
                 </div>
-                <input 
-                    type="file" 
-                    id="avatarUpload" 
-                    name="avatarUpload" 
-                    ref={avatarInputRef} 
-                    className="hidden" 
-                    accept="image/*" 
-                    onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (file && profile) {
-                            try {
-                                const url = await uploadBlob(file, `avatars/${user?.uid}_${Date.now()}`);
-                                await updateProfile({ ...profile, photoURL: url });
-                                setMessage({ text: "Identity Visual Anchored.", type: 'success' });
-                                setTimeout(() => setMessage(null), 3000);
-                            } catch (err) {
-                                setMessage({ text: "Upload Failed.", type: 'error' });
-                                setTimeout(() => setMessage(null), 3000);
-                            }
-                        }
-                    }} 
-                />
+              ))}
+              <button onClick={() => setExternalLinks([...externalLinks, { title: 'Link', url: '' }])} className="w-full py-2 border border-dashed border-stone-300 dark:border-stone-700 text-[10px] uppercase tracking-widest hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
+                  Add Resource
+              </button>
             </div>
+          </div>
 
-            <div className="space-y-4 w-full">
-                <div className="flex flex-col items-center">
-                    <span className="font-sans text-[7px] uppercase tracking-[0.6em] text-stone-400 font-black mb-1 italic">Global Registry Handle</span>
-                    <div className="relative inline-flex flex-col items-center gap-2">
-                        <div className="flex items-center gap-3">
-                            <span className="font-header text-2xl md:text-4xl text-stone-200">@</span>
-                            <input 
-                                type="text" 
-                                id="userHandle" 
-                                name="userHandle" 
-                                value={handle} 
-                                onChange={(e) => {
-                                    setHandle(e.target.value.toLowerCase());
-                                    setShowHandleConfirm(false);
-                                }} 
-                                className={`bg-transparent border-none p-0 font-header text-3xl md:text-6xl italic tracking-tighter focus:outline-none leading-none text-center ${handleAvailable === false ? 'text-red-500' : 'text-nous-text dark:text-white'}`} 
-                            />
-                        </div>
-                        
-                        <button 
-                            onClick={handleGenerateDescription}
-                            disabled={isGeneratingDescription}
-                            className="mt-2 text-[8px] uppercase tracking-widest font-black text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 transition-colors flex items-center gap-2"
-                        >
-                            {isGeneratingDescription ? <Loader2 size={10} className="animate-spin" /> : <Sparkles size={10} />}
-                            {isGeneratingDescription ? 'Generating...' : 'Generate Description'}
-                        </button>
-                        
-                        {showHandleConfirm && (
-                            <motion.div 
-                                initial={{ opacity: 0, scale: 0.9 }} 
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="mt-4 p-4 bg-amber-500/5 border border-amber-500/20 rounded-sm space-y-3 max-w-xs"
-                            >
-                                <p className="font-sans text-[8px] uppercase tracking-widest text-amber-600 dark:text-amber-400 font-black">Confirm Registry Handle Change?</p>
-                                <div className="flex gap-3 justify-center">
-                                    <button 
-                                        onClick={handleSave}
-                                        className="px-4 py-1.5 bg-amber-500 text-white text-[8px] uppercase tracking-widest font-black rounded-full hover:bg-amber-600 transition-colors shadow-lg"
-                                    >
-                                        Confirm
-                                    </button>
-                                    <button 
-                                        onClick={() => { setHandle(profile?.handle || ''); setShowHandleConfirm(false); }}
-                                        className="px-4 py-1.5 bg-stone-100 dark:bg-stone-800 text-stone-500 text-[8px] uppercase tracking-widest font-black rounded-full hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </motion.div>
-                        )}
-                    </div>
-                </div>
-                
-                {/* DISCRETE GOOGLE ANCHOR / AGENT PROTOCOLS / SOVEREIGN KEY */}
-                <div className="flex flex-col items-center gap-4">
-                    <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 w-full max-w-4xl">
-                        {!isIframe && (
-                          <button 
-                            onClick={() => !user || user.isAnonymous ? linkAccount(false) : null} 
-                            className={`h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap ${!user || user.isAnonymous ? 'text-stone-500 hover:text-emerald-600 hover:border-emerald-500/50' : 'text-emerald-500 border-emerald-500/50 cursor-default'}`}
-                          >
-                             <Link size={10} /> {!user || user.isAnonymous ? 'Sign in with Google' : 'Swan Signed On'}
-                          </button>
-                        )}
-                        
-                        <button 
-                          onClick={() => setShowWard(true)}
-                          className="h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black text-stone-500 hover:text-emerald-500 hover:border-emerald-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap"
-                        >
-                           <Activity size={10} /> The Ward
-                        </button>
-                        
-                        <button 
-                          onClick={() => setShowDevSettings(true)}
-                          className="h-9 px-4 rounded-full border border-stone-200 dark:border-stone-800 font-sans text-[7px] uppercase tracking-widest font-black text-stone-500 hover:text-indigo-500 hover:border-indigo-500/50 transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap"
-                        >
-                           <Cpu size={10} /> Protocols
-                        </button>
-
-                        <button 
-                          onClick={() => setShowKeyRing(!showKeyRing)}
-                          className={`h-9 px-4 rounded-full border font-sans text-[7px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-white dark:bg-stone-900 shadow-sm whitespace-nowrap ${showKeyRing || keyRing.length > 0 ? 'border-amber-500/50 text-amber-600 dark:text-amber-500' : 'border-stone-200 dark:border-stone-800 text-stone-500 hover:text-amber-500 hover:border-amber-500/50'}`}
-                        >
-                           <Key size={10} /> Key Ring ({keyRing.length})
-                        </button>
-                    </div>
-                </div>
-                
-                {/* KEY RING EXPANDER */}
-                <AnimatePresence>
-                    {showKeyRing && (
-                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                            <div className="bg-stone-50 dark:bg-stone-900 border border-stone-100 dark:border-stone-800 p-6 rounded-sm max-w-lg mx-auto space-y-4">
-                                <div className="space-y-1 text-center">
-                                    <h4 className="font-serif italic text-lg text-nous-text dark:text-white">The Key Ring.</h4>
-                                    <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400 font-black">Multi-Key Resilience Architecture</p>
-                                </div>
-                                <div className="space-y-2 max-h-32 overflow-y-auto no-scrollbar border-y border-stone-200 dark:border-stone-800 py-2">
-                                    {keyRing.length === 0 && <p className="text-center font-serif italic text-xs text-stone-400 py-2">No keys anchored. Operating on default limits.</p>}
-                                    {keyRing.map((k, i) => (
-                                        <div key={i} className="flex justify-between items-center bg-white dark:bg-black/20 p-2 rounded-sm border border-stone-100 dark:border-stone-800">
-                                            <span className="font-mono text-[9px] text-stone-500">••••••••{k.slice(-4)}</span>
-                                            <button onClick={() => removeKeyFromRing(k)} className="text-stone-300 hover:text-red-500"><Trash2 size={10}/></button>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="flex gap-2">
-                                    <input type="password" value={newRingKey} onChange={e => setNewRingKey(e.target.value)} placeholder="Paste AI Studio Key..." className="flex-1 bg-white dark:bg-black border border-stone-200 dark:border-stone-800 p-2 font-mono text-xs focus:outline-none focus:border-amber-500 rounded-sm" />
-                                    <button onClick={handleAddRingKey} className="px-4 bg-amber-500 text-white font-sans text-[8px] uppercase font-black rounded-sm hover:bg-amber-600 transition-colors">Add</button>
-                                </div>
-                                <div className="pt-2">
-                                    <button 
-                                        onClick={openKeySelector}
-                                        className="w-full py-3 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-sans text-[8px] uppercase tracking-widest font-black rounded-sm hover:bg-amber-500/10 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        <Sparkles size={10} /> Select Sovereign Key (Paid Registry)
-                                    </button>
-                                </div>
-                                <p className="text-[9px] text-stone-400 text-center px-4 leading-tight">
-                                    Adding multiple keys enables automatic rotation if one frequency becomes saturated (429/Quota Limit). Keys are stored locally.
-                                </p>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
-        </section>
-
-        {/* THE TASTE GRAPH */}
-        <section className="space-y-12">
-            <div className="flex flex-col items-center gap-2 text-center">
-               <div className="flex items-center gap-3 text-stone-400">
-                 <Activity size={18} />
-                 <span className="font-sans text-[9px] uppercase tracking-[0.5em] font-black italic">Aesthetic Intelligence</span>
-               </div>
-               <p className="font-serif italic text-sm text-stone-500 max-w-md">
-                 Your semantic taste vector, mapped from your saved fragments and generated artifacts.
-               </p>
-            </div>
-            <div className="max-w-3xl mx-auto w-full px-4">
-                <TasteGraph tasteVector={profile?.tasteVector} variant="portrait" />
-            </div>
-        </section>
-
-        {/* AESTHETIC SIGNATURE */}
-        <section className="space-y-12">
-            <div className="flex flex-col items-center gap-2 text-center">
-               <div className="flex items-center gap-3 text-stone-400">
-                 <Fingerprint size={18} />
-                 <span className="font-sans text-[9px] uppercase tracking-[0.5em] font-black italic">Aesthetic Signature</span>
-               </div>
-            </div>
-            <div className="max-w-md mx-auto w-full px-4">
-              {profile?.tasteProfile?.aestheticSignature ? (
-                <button 
-                  onClick={() => {
-                    const event = new CustomEvent('mimi:change_view', { detail: 'signature' });
-                    window.dispatchEvent(event);
-                  }}
-                  className="w-full py-4 bg-stone-800 text-stone-100 rounded-full font-sans text-[10px] uppercase tracking-widest font-black hover:bg-stone-700 transition-all"
-                >
-                  View Aesthetic Dashboard
+          <div className="mt-auto">
+            {user?.isAnonymous ? (
+                <button onClick={() => handleGoogleLink()} className="w-full flex items-center justify-center gap-2 py-3 border border-stone-800 dark:border-stone-200 text-[10px] uppercase tracking-widest hover:bg-stone-800 hover:text-white dark:hover:bg-stone-200 dark:hover:text-black transition-all">
+                    Sign in with Google
                 </button>
-              ) : (
-                <button 
-                  onClick={async () => {
-                    if (!user) return;
-                    const zines = await fetchUserZines(user.uid);
-                    const sig = await generateSignature(zines);
-                    await updateProfile({
-                      ...profile!,
-                      tasteProfile: {
-                        ...profile!.tasteProfile!,
-                        aestheticSignature: sig
-                      }
-                    });
-                  }}
-                  className="w-full py-4 bg-emerald-500 text-white rounded-full font-sans text-[10px] uppercase tracking-widest font-black"
-                >
-                  Generate Aesthetic Signature
-                </button>
-              )}
-            </div>
+            ) : (
+                <div className="w-full flex items-center justify-center gap-2 py-3 border border-emerald-500/30 bg-emerald-500/10 text-[10px] uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                    <Check size={14} /> Google Anchored
+                </div>
+            )}
+          </div>
         </section>
 
-        {/* SOVEREIGN IDENTITY CARD */}
-        {profile?.tasteProfile?.sovereignIdentity && (
-            <section className="space-y-12">
-                <div className="flex flex-col items-center gap-2 text-center">
-                   <div className="flex items-center gap-3 text-stone-400">
-                     <Fingerprint size={18} />
-                     <span className="font-sans text-[9px] uppercase tracking-[0.5em] font-black italic">Sovereign Identity</span>
-                   </div>
-                </div>
-                <div className="max-w-md mx-auto w-full px-4">
-                    <SovereignIdentityCardView card={profile.tasteProfile.sovereignIdentity} />
-                </div>
-            </section>
-        )}
+        {/* Aesthetic Intelligence */}
+        <section className="col-span-12 lg:col-span-6 lg:row-span-2 order-3 lg:order-2 bg-[#F9F7F2] dark:bg-stone-900 p-6 flex flex-col min-h-[400px]">
+          <div className="flex justify-between items-start mb-6">
+            <h2 className="font-serif text-2xl italic">Aesthetic Intelligence</h2>
+            <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'thimble' }))} className="text-[10px] uppercase tracking-widest border-b border-stone-800 dark:border-stone-200 pb-0.5">Taste Dashboard</button>
+          </div>
+          
+          <div className="flex-grow flex flex-col items-center justify-center border border-dashed border-stone-300 dark:border-stone-700 relative group bg-stone-50/50 dark:bg-stone-800/50">
+            <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+              <span className="material-symbols-outlined text-[120px]">hub</span>
+            </div>
+            <div className="text-center z-10 p-8">
+              <p className="font-mono text-xs text-stone-400 mb-6 uppercase tracking-widest">No Graph Data Detected</p>
+              <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'taste-graph' }))} className="px-8 py-3 bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[10px] uppercase tracking-[0.2em] hover:bg-stone-700 dark:hover:bg-white transition-colors">
+                  Extract Graph
+              </button>
+            </div>
+          </div>
 
-        {/* SOVEREIGN MASK SLIDER */}
-        <section className="space-y-12">
-            <div className="flex flex-col md:flex-row justify-between items-center px-4 gap-6">
-               <div className="space-y-1 text-center md:text-left">
-                  <div className="flex items-center justify-center md:justify-start gap-3 text-emerald-500">
-                    <Layers size={18} className="animate-pulse" />
-                    <h3 className="font-sans text-[9px] uppercase tracking-[0.4em] font-black">Sovereign Mask Slider</h3>
-                  </div>
-                  <p className="font-serif italic text-lg text-stone-500">Rotate across sectoral identities. Each mask is a separate strategic unit.</p>
-               </div>
-               <button onClick={() => setIsAddingPersona(true)} className="flex items-center gap-3 px-8 py-3 bg-white dark:bg-stone-900 text-stone-400 dark:text-stone-500 rounded-full font-sans text-[9px] uppercase tracking-widest font-black shadow-lg hover:shadow-xl hover:text-stone-600 dark:hover:text-stone-300 active:scale-95 transition-all border border-stone-100 dark:border-stone-800">
-                  <Plus size={14} /> Mint New Mask
-               </button>
+          <div className="grid grid-cols-2 gap-4 mt-6">
+            <div className="p-4 border border-stone-200 dark:border-stone-700">
+              <h4 className="font-mono text-[10px] uppercase tracking-widest text-stone-500 mb-2">Taste Graph</h4>
+              <p className="text-xs text-stone-400 leading-relaxed italic">Visualizing sensory benchmarks across ingested artifacts.</p>
+            </div>
+            <div className="p-4 border border-stone-200 dark:border-stone-700">
+              <h4 className="font-mono text-[10px] uppercase tracking-widest text-stone-500 mb-2">Semantic Network</h4>
+              <p className="text-xs text-stone-400 leading-relaxed italic">Mapping relationships between disparate creative nodes.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* The Ward */}
+        <section className="col-span-12 md:col-span-6 lg:col-span-3 order-2 lg:order-3 bg-[#F9F7F2] dark:bg-stone-900 p-6 flex flex-col">
+          <div className="flex justify-between items-start mb-6">
+            <h2 className="font-serif text-xl">The Ward</h2>
+            <button onClick={() => setShowWard(true)} className="text-stone-400 hover:text-stone-800 dark:hover:text-stone-200"><Settings size={16} /></button>
+          </div>
+          
+          <div className="space-y-6">
+            <div>
+              <label className="text-[10px] uppercase tracking-widest font-mono text-stone-500 block mb-2">Protocols</label>
+              <div className="space-y-1 max-h-48 overflow-y-auto no-scrollbar pr-2">
+                {Object.entries(featureFlags).map(([key, value]) => (
+                    <div key={key} className="flex justify-between text-[11px] font-mono py-1 border-b border-stone-100 dark:border-stone-800">
+                        <span className="uppercase truncate mr-2" title={key.replace(/_/g, ' ')}>{key.replace(/_/g, ' ')}</span>
+                        <span className={`flex-shrink-0 ${value ? "text-emerald-500" : "text-stone-400"}`}>{value ? 'ON' : 'OFF'}</span>
+                    </div>
+                ))}
+              </div>
             </div>
             
-            <div className="relative">
-                <div ref={maskSliderRef} className="flex gap-8 overflow-x-auto no-scrollbar snap-x px-4 md:px-12 py-10">
-                    {personas.map(p => (
-                        <MaskCard 
-                            key={p.id} 
-                            persona={p} 
-                            isActive={p.id === activePersonaId} 
-                            onSelect={() => {
-                                switchPersona(p.id);
-                                window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: `Mask Alignment: ${p.name}`, icon: <Layers size={14} /> } }));
-                            }}
-                            onDelete={() => deletePersona(p.id)}
-                            onUpdate={updatePersona}
-                            userUid={user?.uid || 'ghost'}
-                        />
-                    ))}
+            <div>
+              <label className="text-[10px] uppercase tracking-widest font-mono text-stone-500 block mb-2">Key Ring ({keyRing.length})</label>
+              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto no-scrollbar pr-2">
+                {keyRing.map((k, i) => (
+                    <div key={i} className="h-8 w-8 rounded-full border border-stone-300 dark:border-stone-600 flex items-center justify-center" title={k.name}>
+                        <Key size={12} className="text-stone-400" />
+                    </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Sovereign Mask System (AI Personas) */}
+        <section className="col-span-12 md:col-span-6 lg:col-span-3 order-4 bg-[#F9F7F2] dark:bg-stone-900 p-6 flex flex-col">
+          <div className="flex justify-between items-start mb-6">
+            <h2 className="font-serif text-xl">Sovereign Mask System</h2>
+            <span className="material-symbols-outlined text-stone-400 text-sm">masks</span>
+          </div>
+          
+          <div className="flex-grow flex flex-col justify-center py-6">
+            {isAddingPersona ? (
+                <div className="space-y-4">
+                    <input value={newPersonaName} onChange={e => setNewPersonaName(e.target.value)} placeholder="Mask Name" className="w-full bg-transparent border-b border-stone-300 dark:border-stone-600 p-2 font-serif italic focus:outline-none" />
+                    <input value={newPersonaKey} onChange={e => setNewPersonaKey(e.target.value)} placeholder="API Key (Optional)" type="password" className="w-full bg-transparent border-b border-stone-300 dark:border-stone-600 p-2 font-mono text-xs focus:outline-none" />
+                    <div className="flex gap-2">
+                        <button onClick={handleCreateMask} className="flex-1 py-2 bg-stone-800 text-white text-[10px] uppercase tracking-widest">Mint</button>
+                        <button onClick={() => setIsAddingPersona(false)} className="flex-1 py-2 border border-stone-300 text-[10px] uppercase tracking-widest">Cancel</button>
+                    </div>
                 </div>
-                <div className="absolute top-0 left-0 bottom-0 w-20 bg-gradient-to-r from-nous-base dark:from-stone-950 to-transparent pointer-events-none" />
-                <div className="absolute top-0 right-0 bottom-0 w-20 bg-gradient-to-l from-nous-base dark:from-stone-900 to-transparent pointer-events-none" />
-            </div>
-
-            <AnimatePresence>
-               {isAddingPersona && (
-                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed inset-0 z-[11000] flex items-center justify-center p-6 bg-stone-950/80 backdrop-blur-md">
-                     <div className="w-full max-w-lg bg-white dark:bg-stone-900 p-12 rounded-sm border border-stone-200 dark:border-stone-800 shadow-2xl space-y-10 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-8 opacity-5">
-                            <Sparkles size={120} />
+            ) : isEditingMask && activePersona ? (
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <span className="font-serif italic text-xl">{activePersona.name}</span>
+                        <button onClick={() => setIsEditingMask(false)} className="text-stone-400"><Settings size={14}/></button>
+                    </div>
+                    <div>
+                        <label className="text-[10px] uppercase tracking-widest font-mono text-stone-500 block mb-2">Temperature: {editingMaskTemp}</label>
+                        <input type="range" min="0" max="2" step="0.1" value={editingMaskTemp} onChange={e => setEditingMaskTemp(parseFloat(e.target.value))} className="w-full" />
+                    </div>
+                    <button onClick={handleUpdateActiveMask} className="w-full py-2 bg-stone-800 text-white text-[10px] uppercase tracking-widest">Save Parameters</button>
+                </div>
+            ) : (
+                <>
+                    <div className="text-center mb-6">
+                        <span className="text-[10px] uppercase tracking-widest font-mono text-stone-400">Active Mask</span>
+                        <div className="flex items-center justify-between mt-2">
+                            <button onClick={prevMask} className="material-symbols-outlined text-stone-400">chevron_left</button>
+                            <span className="font-serif text-3xl italic truncate px-2">{activePersona?.name || 'Personal'}</span>
+                            <button onClick={nextMask} className="material-symbols-outlined text-stone-400">chevron_right</button>
                         </div>
-                        <div className="space-y-3">
-                           <h3 className="font-serif text-4xl italic tracking-tighter">Mint Logic.</h3>
-                           <p className="font-sans text-[9px] uppercase tracking-widest text-stone-400 font-black">Establish a new compartmentalized identity.</p>
+                    </div>
+                    
+                    <div className="border-t border-stone-200 dark:border-stone-700 pt-4 mb-6">
+                        <div className="flex justify-between text-[10px] font-mono mb-1">
+                            <span className="text-stone-500">Identity Namespace</span>
+                            <span>{activePersona?.id.substring(0, 8).toUpperCase() || 'PN-8821'}</span>
                         </div>
-                        
-                        <div className="space-y-8">
-                           <div className="space-y-2">
-                              <label htmlFor="personaName" className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Mask Identity Name</label>
-                              <input id="personaName" name="personaName" value={newPersonaName} onChange={e => setNewPersonaName(e.target.value)} className="w-full bg-stone-50 dark:bg-black/20 border border-stone-100 dark:border-stone-800 p-4 font-serif text-xl italic focus:outline-none focus:border-emerald-500 rounded-sm" placeholder="e.g. Freelance Studio..." autoFocus />
-                           </div>
-                           <div className="space-y-4">
-                              <div className="flex justify-between items-center">
-                                <label htmlFor="personaKey" className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 flex items-center gap-2"><Wallet size={12} /> Specific API Key (Optional)</label>
-                                <a href="https://aistudio.google.com/app/apikey" target="_blank" className="flex items-center gap-1.5 font-sans text-[7px] uppercase tracking-widest font-black text-emerald-500 hover:text-emerald-400 transition-colors">
-                                    Get Key <ExternalLink size={8} />
-                                </a>
-                              </div>
-                              <input type="password" id="personaKey" name="personaKey" value={newPersonaKey} onChange={e => setNewPersonaKey(e.target.value)} className="w-full bg-stone-50 dark:bg-black/20 border border-stone-100 dark:border-stone-800 p-4 font-mono text-xs focus:outline-none focus:border-emerald-500 rounded-sm" placeholder="AIza..." />
-                              <p className="font-serif italic text-xs text-stone-400">Essential for corporate billing or project isolation. <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" className="underline decoration-emerald-500/30">Billing Docs</a></p>
-                           </div>
+                        <div className="flex justify-between text-[10px] font-mono mb-1 mt-2">
+                            <span className="text-stone-500">Parameters</span>
+                            <button onClick={() => {
+                                setEditingMaskTemp(activePersona?.operationalParameters?.temperature || 0.7);
+                                setIsEditingMask(true);
+                            }} className="underline">Edit</button>
                         </div>
-
-                        <div className="flex gap-4 pt-6">
-                           <button onClick={() => setIsAddingPersona(false)} className="flex-1 py-4 font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 hover:text-stone-600">Abort</button>
-                           <button onClick={handleCreateMask} className="flex-[2] py-4 bg-nous-text dark:bg-white text-white dark:text-black rounded-full font-sans text-[9px] uppercase tracking-widest font-black shadow-xl active:scale-95 transition-all">Manifest Mask</button>
-                        </div>
-                     </div>
-                  </motion.div>
-               )}
-            </AnimatePresence>
-        </section>
-        
-        {/* ARCHETYPE INDEX */}
-        <section className="space-y-12">
-            <div className="flex flex-col items-center gap-2 text-center">
-               <div className="flex items-center gap-3 text-stone-400">
-                  <BookOpen size={18} />
-                  <h3 className="font-sans text-[9px] uppercase tracking-[0.4em] font-black">Archetype Index</h3>
-               </div>
-               <p className="font-serif italic text-lg text-stone-500 max-w-md">The compendium of detected states across the collective registry.</p>
-            </div>
-            <div className="bg-white dark:bg-stone-900/20 border border-stone-100 dark:border-stone-800 rounded-sm overflow-hidden">
-                <ArchetypeIndex onSelectZine={(zine) => {
-                    window.dispatchEvent(new CustomEvent('mimi:select_zine', { detail: { zine } }));
-                }} />
-            </div>
-        </section>
-
-        {/* SOCIAL GRAPH / CONNECTIONS */}
-        <section className="space-y-12">
-            <div className="flex flex-col items-center gap-2 text-center">
-               <div className="flex items-center gap-3 text-stone-400">
-                  <Users size={18} />
-                  <h3 className="font-sans text-[9px] uppercase tracking-[0.4em] font-black">Social Resonance Graph</h3>
-               </div>
-               <p className="font-serif italic text-lg text-stone-500 max-w-md">Manage your network of resonators and established connections.</p>
-            </div>
-            <ConnectionsManager />
-        </section>
-
-        {/* TYPOGRAPHIC ARCHETYPE */}
-        <section className="space-y-12">
-            <div className="flex items-center justify-center gap-4">
-               <div className="h-px w-12 bg-stone-100 dark:bg-stone-900" />
-               <h3 className="font-sans text-[8px] md:text-[9px] uppercase tracking-[0.4em] font-black text-stone-400">Global Structural Logic</h3>
-               <div className="h-px w-12 bg-stone-100 dark:bg-stone-900" />
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-                <DNAButton active={archetype === 'editorial-serif'} onClick={() => setArchetype('editorial-serif')} icon={<PenTool size={20} />} label="Editorial" />
-                <DNAButton active={archetype === 'minimalist-sans'} onClick={() => setArchetype('minimalist-sans')} icon={<Type size={20} />} label="Minimalist" />
-                <DNAButton active={archetype === 'brutalist-mono'} onClick={() => setArchetype('brutalist-mono')} icon={<Layers size={20} />} label="Brutalist" />
-            </div>
-        </section>
-
-        {/* TASTE DEFINITION: THE ERASER LINE */}
-        <section className="space-y-10">
-            <div className="flex flex-col items-center gap-4 text-center">
-               <div className="flex items-center gap-3 text-stone-400">
-                  <Eraser size={16} />
-                  <h3 className="font-sans text-[9px] uppercase tracking-[0.4em] font-black">The Eraser Line</h3>
-               </div>
-               <p className="font-serif italic text-lg text-stone-500 max-w-md">Your grounding logic. This informs the Oracle whenever specific Mask data is unavailable—your aesthetic floor.</p>
-            </div>
-            <div className="p-10 bg-stone-50/50 dark:bg-stone-900/30 rounded-sm border border-black/5 dark:border-white/5 space-y-8 shadow-inner">
-                <textarea id="tasteDefinition" name="tasteDefinition" value={tasteDefinition} onChange={e => setTasteDefinition(e.target.value)} placeholder="Describe your baseline era, inspirations, and scotopic preferences. e.g. Editorial flat flash, 16mm grain, direct lighting..." className="w-full bg-white dark:bg-stone-900 border border-black/5 dark:border-white/5 p-8 font-serif text-xl italic text-nous-text dark:text-white focus:outline-none focus:border-emerald-500/50 transition-all resize-none h-64 rounded-sm shadow-sm" />
-                <div className="flex justify-between items-center">
-                    <p className="font-serif italic text-xs text-stone-400 max-w-sm">"This threshold ensures consistent quality across all your creative accounts."</p>
-                    <button onClick={handleSave} className="px-5 py-2.5 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/30 rounded-full font-sans text-[8px] uppercase tracking-widest font-black text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-all flex items-center gap-2 shadow-sm">
-                        <Anchor size={12} /> Anchor Registry
+                    </div>
+                    
+                    <button onClick={() => setIsAddingPersona(true)} className="w-full py-2 bg-stone-100 dark:bg-stone-800 text-[10px] uppercase tracking-widest hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors">
+                        Mint New Mask
                     </button>
-                </div>
-            </div>
+                </>
+            )}
+          </div>
         </section>
 
-        {/* SOVEREIGN BACKUP (NEW) */}
-        <section className="space-y-10 pt-8 border-t border-black/5 dark:border-white/5">
-            <div className="flex flex-col items-center gap-2 text-center">
-               <div className="flex items-center gap-3 text-stone-400">
-                  <Database size={16} />
-                  <h3 className="font-sans text-[9px] uppercase tracking-[0.4em] font-black">Sovereign Backup</h3>
-               </div>
-               <p className="font-serif italic text-sm text-stone-500 max-w-md">
-                  Download your entire digital footprint (Manifests & Artifacts) as a structured JSON file.
-               </p>
+        {/* Billing Registry & Social Resonance */}
+        <section className="col-span-12 md:col-span-6 lg:col-span-3 order-5 bg-[#F9F7F2] dark:bg-stone-900 p-6 flex flex-col">
+          <div className="mb-8 pb-6 border-b border-stone-200 dark:border-stone-700">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="font-serif text-lg">Billing Registry</h3>
+              <span className="text-[10px] font-mono text-stone-400">Minted: {new Date(profile?.createdAt || Date.now()).toLocaleDateString()}</span>
             </div>
-            <div className="flex justify-center">
-               <button 
-                 onClick={handleExportData} 
-                 disabled={isExporting}
-                 className="px-10 py-4 bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-full font-sans text-[9px] uppercase tracking-widest font-black text-stone-500 hover:text-nous-text dark:hover:text-white transition-all flex items-center gap-3 shadow-sm hover:shadow-md disabled:opacity-50"
-               >
-                  {isExporting ? <Loader2 size={14} className="animate-spin" /> : <FileJson size={14} />}
-                  Export Archive
-               </button>
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-6 rounded-sm ${isPatronActive ? 'bg-emerald-500' : 'bg-stone-800 dark:bg-stone-200'}`}></div>
+              <span className="text-xs font-mono">{isPatronActive ? 'PATRON ACTIVE' : 'STANDARD'}</span>
             </div>
+            {!isPatronActive && (
+                <button onClick={() => setShowPatronageModal(true)} className="mt-4 w-full py-2 border border-stone-300 dark:border-stone-700 text-[10px] uppercase tracking-widest hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors">
+                    Upgrade to Patron
+                </button>
+            )}
+          </div>
+          
+          <div className="flex-grow flex flex-col">
+            <h3 className="font-serif text-lg mb-4">Social Resonance</h3>
+            <div className="flex-grow overflow-y-auto no-scrollbar min-h-[150px]">
+                <ConnectionsManager />
+            </div>
+          </div>
         </section>
 
-        <div className="pt-20 space-y-12 flex flex-col items-center">
-            <button onClick={handleSave} disabled={isSaving || handleAvailable === false} className="w-full max-w-sm py-6 bg-nous-text dark:bg-white text-white dark:text-stone-900 rounded-full font-sans text-[11px] tracking-[0.5em] uppercase font-black shadow-2xl active:scale-95 transition-all">
-                {isSaving ? "Syncing Logic..." : "Commit Global Handshake"}
-            </button>
-            <div className="h-px w-32 bg-stone-100 dark:bg-stone-900" />
-            <button onClick={logout} className="px-8 py-3 border border-red-200 dark:border-red-900/30 rounded-full font-sans text-[8px] uppercase tracking-[0.2em] text-red-500 font-black hover:bg-red-50 dark:hover:bg-red-900/10 transition-all">De-Anchor Account</button>
+        {/* Global Structural Logic (Agent Configuration) */}
+        <section className="col-span-12 order-6 bg-[#F9F7F2] dark:bg-stone-900 p-6 flex flex-col">
+          <div className="flex justify-between items-start mb-6">
+            <h2 className="font-serif text-xl italic">Global Structural Logic</h2>
+            <span className="text-[10px] uppercase tracking-widest font-mono px-2 py-0.5 border border-stone-800 dark:border-stone-200">Agent Configuration</span>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <label className="text-[10px] uppercase tracking-widest font-mono text-stone-500 block mb-3">Grounding Logic Tags</label>
+              <div className="flex flex-wrap gap-2 mb-6">
+                <button onClick={() => setArchetype('editorial-serif')} className={`text-[10px] font-mono border px-2 py-1 ${archetype === 'editorial-serif' ? 'bg-stone-800 text-white border-stone-800' : 'bg-white dark:bg-stone-800 border-stone-200 dark:border-stone-700'}`}>Editorial</button>
+                <button onClick={() => setArchetype('minimalist-sans')} className={`text-[10px] font-mono border px-2 py-1 ${archetype === 'minimalist-sans' ? 'bg-stone-800 text-white border-stone-800' : 'bg-white dark:bg-stone-800 border-stone-200 dark:border-stone-700'}`}>Minimalist</button>
+                <button onClick={() => setArchetype('brutalist-mono')} className={`text-[10px] font-mono border px-2 py-1 ${archetype === 'brutalist-mono' ? 'bg-stone-800 text-white border-stone-800' : 'bg-white dark:bg-stone-800 border-stone-200 dark:border-stone-700'}`}>Brutalist</button>
+              </div>
+              
+              <div className="space-y-4">
+                  <div>
+                      <div className="flex justify-between items-center mb-1">
+                          <label className="text-[10px] uppercase tracking-widest font-mono text-stone-500">Curator Agent</label>
+                          <button onClick={() => setCuratorEnabled(!curatorEnabled)} className={`text-[10px] font-mono ${curatorEnabled ? 'text-emerald-500' : 'text-stone-400'}`}>{curatorEnabled ? 'ENABLED' : 'DISABLED'}</button>
+                      </div>
+                      <input type="range" min="10" max="100" value={curatorBudget} onChange={e => setCuratorBudget(parseInt(e.target.value))} className="w-full" disabled={!curatorEnabled} />
+                      <div className="text-[8px] font-mono text-stone-400 text-right">Budget: {curatorBudget}</div>
+                  </div>
+                  <div>
+                      <div className="flex justify-between items-center mb-1">
+                          <label className="text-[10px] uppercase tracking-widest font-mono text-stone-500">Sentinel Agent</label>
+                          <button onClick={() => setSentinelEnabled(!sentinelEnabled)} className={`text-[10px] font-mono ${sentinelEnabled ? 'text-emerald-500' : 'text-stone-400'}`}>{sentinelEnabled ? 'ENABLED' : 'DISABLED'}</button>
+                      </div>
+                      <input type="range" min="10" max="100" value={sentinelBudget} onChange={e => setSentinelBudget(parseInt(e.target.value))} className="w-full" disabled={!sentinelEnabled} />
+                      <div className="text-[8px] font-mono text-stone-400 text-right">Budget: {sentinelBudget}</div>
+                  </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col justify-center">
+              <textarea 
+                  value={tasteDefinition}
+                  onChange={e => setTasteDefinition(e.target.value)}
+                  placeholder="The Eraser Line: Describe your baseline era, inspirations, and scotopic preferences..."
+                  className="font-serif text-lg leading-snug text-stone-600 dark:text-stone-300 border-l-2 border-stone-300 dark:border-stone-600 pl-4 bg-transparent resize-none h-48 focus:outline-none w-full"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Sovereign Backup */}
+        <section className="col-span-12 order-7 bg-[#F9F7F2] dark:bg-stone-900 p-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="flex items-center gap-8">
+              <div>
+                <h2 className="font-serif text-xl mb-1">Sovereign Backup</h2>
+                <p className="text-[10px] uppercase tracking-widest font-mono text-stone-500">Last commit: {new Date().toLocaleTimeString()} UTC</p>
+              </div>
+              <button onClick={handleExportData} disabled={isExporting} className="flex items-center gap-2 px-4 py-2 border border-stone-200 dark:border-stone-700 text-[10px] uppercase tracking-widest hover:border-stone-800 dark:hover:border-stone-200 transition-colors">
+                {isExporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                Export Archive (.json)
+              </button>
+            </div>
+            
+            <div className="flex gap-4 w-full md:w-auto">
+              <button onClick={handleSave} disabled={isSaving} className="flex-1 md:flex-none px-6 py-3 bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[10px] uppercase tracking-widest hover:bg-stone-700 dark:hover:bg-white transition-colors">
+                  {isSaving ? 'Committing...' : 'Commit Global Handshake'}
+              </button>
+              <button onClick={logout} className="flex-1 md:flex-none px-6 py-3 border border-red-200 text-red-800 text-[10px] uppercase tracking-widest hover:bg-red-50 transition-colors">
+                  De-Anchor Account
+              </button>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <footer className="max-w-7xl mx-auto mt-12 mb-8 flex flex-col md:flex-row justify-between items-center text-stone-400 font-mono text-[9px] uppercase tracking-widest">
+        <div>© {new Date().getFullYear()} Mimi Zine Logic Registry</div>
+        <div className="flex gap-8 mt-4 md:mt-0">
+          <a href="#" className="hover:text-stone-800 dark:hover:text-stone-200">Protocol Documentation</a>
+          <a href="#" className="hover:text-stone-800 dark:hover:text-stone-200">Identity FAQ</a>
+          <a href="#" className="hover:text-stone-800 dark:hover:text-stone-200">Terms of Sovereignty</a>
         </div>
-      </div>
+      </footer>
     </div>
   );
 };

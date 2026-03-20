@@ -20,7 +20,8 @@ export const Visualizer: React.FC<{
   isLite?: boolean; 
   delay?: number;
   artifacts?: any[];
-}> = ({ prompt, defaultAspectRatio = '1:1', defaultImageSize = '1K', initialImage, isArtifact, isLite, delay = 0, artifacts }) => {
+  onImageGenerated?: (base64: string) => void;
+}> = ({ prompt, defaultAspectRatio = '1:1', defaultImageSize = '1K', initialImage, isArtifact, isLite, delay = 0, artifacts, onImageGenerated }) => {
   const { user, profile, activePersona } = useUser();
   const [variants, setVariants] = useState<string[]>(initialImage ? [initialImage] : []);
   const [selectedIdx, setSelectedIdx] = useState(0);
@@ -58,6 +59,7 @@ export const Visualizer: React.FC<{
           setSelectedIdx(limited.length - 1);
           return limited;
       });
+      if (onImageGenerated) onImageGenerated(result);
     } catch (e) { 
         console.error("MIMI // Plate Development Failed:", e);
     } finally { setIsLoading(false); }
@@ -136,6 +138,12 @@ export const Visualizer: React.FC<{
     setAspectRatio(SUPPORTED_ASPECT_RATIOS[nextIdx]);
   };
 
+  const cycleSize = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nextIdx = (SUPPORTED_SIZES.indexOf(imageSize) + 1) % SUPPORTED_SIZES.length;
+    setImageSize(SUPPORTED_SIZES[nextIdx]);
+  };
+
   const handleSelectVariant = (idx: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (variants[idx]) {
@@ -181,7 +189,7 @@ export const Visualizer: React.FC<{
               <img 
                 src={variants[selectedIdx]} 
                 onLoad={() => setImgLoaded(true)}
-                className={`w-full h-full transition-all duration-[1s] group-hover/visualizer:grayscale-0 ${imgLoaded ? 'opacity-100 grayscale' : 'opacity-0 scale-110 blur-2xl'} ${isArtifact ? 'object-contain' : 'object-cover'}`} 
+                className={`w-full h-full transition-all duration-[1s] group-hover/visualizer:grayscale-0 ${imgLoaded ? 'opacity-100 grayscale' : 'opacity-0 scale-110 blur-2xl'} object-contain`} 
               />
             )}
 
@@ -205,6 +213,7 @@ export const Visualizer: React.FC<{
                <button onClick={handleAnimate} disabled={isAnimating} className="p-2.5 text-stone-400 hover:text-amber-400"><Film size={14}/></button>
                <div className="w-px h-6 bg-white/10 mx-1" />
                <button onClick={cycleRatio} className="p-2.5 text-stone-400 hover:text-white font-mono text-[8px]">{aspectRatio}</button>
+               <button onClick={cycleSize} className="p-2.5 text-stone-400 hover:text-white font-mono text-[8px]">{imageSize}</button>
                <button onClick={handleDevelop} className="p-2.5 text-stone-400 hover:text-emerald-400"><RefreshCw size={14}/></button>
             </div>
           </div>

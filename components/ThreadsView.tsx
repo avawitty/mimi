@@ -3,24 +3,47 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Compass, Activity, Route, Loader2 } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { fetchUserZines } from '../services/firebaseUtils';
-import { ZineMetadata } from '../types';
+import { ZineMetadata, NarrativeThread, TasteGraphNode, TasteGraphEdge } from '../types';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ScatterChart, Scatter, ZAxis } from 'recharts';
+import { saveNarrativeThread, fetchNarrativeThreads } from '../services/firebaseUtils';
+import { generateNarrativeThread, analyzeThreadPath } from '../services/geminiService';
+import { ThreadPathVisualization } from './ThreadPathVisualization';
 
 type ThreadMode = 'biographical' | 'influence' | 'emotional';
 
 export const ThreadsView: React.FC = () => {
   const { user } = useUser();
   const [zines, setZines] = useState<ZineMetadata[]>([]);
+  const [threads, setThreads] = useState<NarrativeThread[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeMode, setActiveMode] = useState<ThreadMode>('emotional');
+  const [activeThread, setActiveThread] = useState<NarrativeThread | null>(null);
+  const [newNote, setNewNote] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [graphData, setGraphData] = useState<{ nodes: TasteGraphNode[], edges: TasteGraphEdge[] } | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  useEffect(() => {
+    if (activeThread) {
+      setIsAnalyzing(true);
+      analyzeThreadPath(activeThread, zines).then(data => {
+        setGraphData(data);
+        setIsAnalyzing(false);
+      });
+    }
+  }, [activeThread, zines]);
 
   useEffect(() => {
     if (user?.uid) {
       setLoading(true);
-      fetchUserZines(user.uid).then(fetchedZines => {
+      Promise.all([
+        fetchUserZines(user.uid),
+        fetchNarrativeThreads(user.uid)
+      ]).then(([fetchedZines, fetchedThreads]) => {
         // Sort by timestamp ascending for timeline
         const sorted = fetchedZines.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
         setZines(sorted);
+        setThreads(fetchedThreads);
         setLoading(false);
       });
     }
@@ -43,7 +66,7 @@ export const ThreadsView: React.FC = () => {
     return zines.map((zine, index) => {
       const date = new Date(zine.timestamp || Date.now());
       return {
-        name: zine.title || `Artifact ${index + 1}`,
+        name: zine.content?.headlines?.[0] || zine.title || `Artifact ${index + 1}`,
         date: `${date.getMonth() + 1}/${date.getDate()}`,
         toneScore: toneMap[zine.tone] || 2, // Default to neutral/editorial
         tone: zine.tone
@@ -56,14 +79,14 @@ export const ThreadsView: React.FC = () => {
     const data: any[] = [];
     zines.forEach((zine, index) => {
       const date = new Date(zine.timestamp || Date.now());
-      const motifs = zine.content?.aesthetic_touchpoints?.map(t => t.motif) || [];
+      const motifs = zine.content?.semiotic_signals?.map(t => t.motif) || [];
       
       motifs.forEach((motif, mIndex) => {
         data.push({
           x: index, // Timeline index
           y: mIndex % 5, // Spread vertically
           z: 1, // Size
-          name: zine.title,
+          name: zine.content?.headlines?.[0] || zine.title,
           motif: motif,
           date: `${date.getMonth() + 1}/${date.getDate()}`
         });
@@ -77,7 +100,7 @@ export const ThreadsView: React.FC = () => {
     const motifCounts: Record<string, number> = {};
     let totalMotifs = 0;
     zines.forEach(zine => {
-      const motifs = zine.content?.aesthetic_touchpoints?.map(t => t.motif) || [];
+      const motifs = zine.content?.semiotic_signals?.map(t => t.motif) || [];
       motifs.forEach(motif => {
         motifCounts[motif] = (motifCounts[motif] || 0) + 1;
         totalMotifs++;
@@ -244,6 +267,120 @@ export const ThreadsView: React.FC = () => {
               )}
             </AnimatePresence>
           )}
+        </div>
+
+        {/* Thread Management Section */}
+        <div className="border-t border-stone-300 dark:border-stone-800 pt-12">
+          <h3 className="text-2xl italic mb-8">Narrative Threads</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Thread List */}
+            <div className="md:col-span-1 space-y-4">
+              {threads.map(thread => (
+                <button
+                  key={thread.id}
+                  onClick={() => setActiveThread(thread)}
+                  className={`w-full text-left p-4 border ${activeThread?.id === thread.id ? 'border-stone-900 dark:border-stone-100' : 'border-stone-200 dark:border-stone-800'} transition-all`}
+                >
+                  <h4 className="font-serif italic text-lg">{thread.title}</h4>
+                  <p className="font-sans text-[10px] uppercase tracking-widest text-stone-500">{thread.mode}</p>
+                </button>
+              ))}
+              <button
+                onClick={() => {
+                  setActiveThread({
+                    id: Date.now().toString(),
+                    userId: user?.uid || '',
+                    title: 'New Narrative Thread',
+                    narrative: '',
+                    mode: 'emotional',
+                    createdAt: Date.now(),
+                    updatedAt: Date.now()
+                  });
+                }}
+                className="w-full p-4 border border-dashed border-stone-400 text-stone-500 font-sans text-[10px] uppercase tracking-widest hover:border-stone-900 hover:text-stone-900 transition-all"
+              >
+                + Create New Thread
+              </button>
+            </div>
+
+            {/* Thread Editor */}
+            <div className="md:col-span-2 space-y-4">
+              {activeThread ? (
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    value={activeThread.title}
+                    onChange={(e) => setActiveThread({ ...activeThread, title: e.target.value })}
+                    className="w-full p-2 bg-transparent border-b border-stone-300 dark:border-stone-700 font-serif text-xl italic"
+                  />
+                  <textarea
+                    value={activeThread.narrative}
+                    onChange={(e) => setActiveThread({ ...activeThread, narrative: e.target.value })}
+                    className="w-full p-2 bg-transparent border border-stone-300 dark:border-stone-700 font-sans text-sm min-h-[200px]"
+                    placeholder="Narrative..."
+                  />
+                  <input
+                    type="text"
+                    value={activeThread.notes || ''}
+                    onChange={(e) => setActiveThread({ ...activeThread, notes: e.target.value })}
+                    className="w-full p-2 bg-transparent border border-stone-300 dark:border-stone-700 font-sans text-sm"
+                    placeholder="Notes for AI analysis..."
+                  />
+                  <div className="flex gap-4">
+                    <select
+                      value={activeThread.mode}
+                      onChange={(e) => setActiveThread({ ...activeThread, mode: e.target.value as 'emotional' | 'biographical' | 'influence' })}
+                      className="p-2 bg-transparent border border-stone-300 dark:border-stone-700 font-sans text-sm"
+                    >
+                      <option value="emotional">Emotional</option>
+                      <option value="biographical">Biographical</option>
+                      <option value="influence">Influence</option>
+                    </select>
+                  </div>
+                  {isAnalyzing ? (
+                    <div className="flex items-center justify-center h-[400px] text-stone-400 font-sans text-[10px] uppercase tracking-widest">
+                      <Loader2 size={24} className="animate-spin" />
+                      <span className="ml-2">Analyzing path...</span>
+                    </div>
+                  ) : graphData && (
+                    <div className="border border-stone-300 dark:border-stone-700">
+                      <ThreadPathVisualization nodes={graphData.nodes} edges={graphData.edges} />
+                    </div>
+                  )}
+                  <div className="flex gap-4">
+                    <button
+                      onClick={async () => {
+                        if (activeThread && user?.uid) {
+                          await saveNarrativeThread({ ...activeThread, updatedAt: Date.now() });
+                          const updatedThreads = await fetchNarrativeThreads(user.uid);
+                          setThreads(updatedThreads);
+                        }
+                      }}
+                      className="px-6 py-2 bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 font-sans text-[10px] uppercase tracking-widest"
+                    >
+                      Save Thread
+                    </button>
+                    <button
+                      onClick={async () => {
+                        setIsGenerating(true);
+                        const newNarrative = await generateNarrativeThread(activeThread.narrative, threads);
+                        setActiveThread({ ...activeThread, narrative: activeThread.narrative + '\n\n' + newNarrative });
+                        setIsGenerating(false);
+                      }}
+                      disabled={isGenerating}
+                      className="px-6 py-2 border border-stone-900 dark:border-stone-100 font-sans text-[10px] uppercase tracking-widest"
+                    >
+                      {isGenerating ? 'Generating...' : 'Generate Continuation'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center text-stone-400 font-sans text-[10px] uppercase tracking-widest">
+                  Select or create a thread to begin.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

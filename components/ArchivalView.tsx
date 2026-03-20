@@ -11,7 +11,7 @@ import { useUser } from '../contexts/UserContext';
 import { addToPocket, fetchUserZines, fetchPocketItems } from '../services/firebase';
 import { compressImage } from '../services/geminiService';
 import { getLocalPocket } from '../services/localArchive';
-import { fetchCommunityZines } from '../services/firebaseUtils';
+import { fetchCommunityZines, createNotification } from '../services/firebaseUtils';
 
 const InjectShardModal: React.FC<{ onClose: () => void, onInjected: () => void }> = ({ onClose, onInjected }) => {
     const { user, profile } = useUser();
@@ -56,6 +56,9 @@ const InjectShardModal: React.FC<{ onClose: () => void, onInjected: () => void }
                     origin: 'Archive_Injection'
                 });
             }
+            if (user?.uid) {
+                await createNotification(user.uid, 'Registry Update', 'New shards injected into the archive.', 'success');
+            }
             onInjected();
             onClose();
         } catch (err) { console.error(err); } finally { setLoading(false); }
@@ -71,6 +74,7 @@ const InjectShardModal: React.FC<{ onClose: () => void, onInjected: () => void }
                 timestamp: Date.now(),
                 origin: 'Zine_Extraction'
             });
+            await createNotification(user.uid, 'Registry Update', `Shard injected from zine: ${title}`, 'success');
             window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Shard Injected from Zine.", icon: <Check size={14} /> } }));
             onInjected();
         } catch (e) { console.error(e); } finally { setLoading(false); }
@@ -86,6 +90,7 @@ const InjectShardModal: React.FC<{ onClose: () => void, onInjected: () => void }
                 timestamp: Date.now(),
                 origin: 'URL_Injection'
             });
+            await createNotification(user.uid, 'Registry Update', 'New shard injected from URL.', 'success');
             onInjected();
             onClose();
         } catch (e) { console.error(e); } finally { setLoading(false); }
@@ -112,6 +117,19 @@ const InjectShardModal: React.FC<{ onClose: () => void, onInjected: () => void }
                     {mode === 'upload' && (
                         <div 
                             onClick={() => fileInputRef.current?.click()}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                                    handleFileUpload({ target: { files: e.dataTransfer.files } } as any);
+                                } else {
+                                    const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+                                    if (url) {
+                                        setMode('url');
+                                        setUrlInput(url);
+                                    }
+                                }
+                            }}
                             className="h-64 border-2 border-dashed border-stone-200 dark:border-stone-800 rounded-sm flex flex-col items-center justify-center gap-4 cursor-pointer hover:border-emerald-500 hover:bg-emerald-500/5 transition-all group"
                         >
                             <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" multiple accept="image/*,audio/*" />
@@ -131,7 +149,7 @@ const InjectShardModal: React.FC<{ onClose: () => void, onInjected: () => void }
                                         {(zine.coverImageUrl || zine.content?.hero_image_url) && <img src={zine.coverImageUrl || zine.content?.hero_image_url} className="w-full h-full object-cover grayscale group-hover:grayscale-0" />}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <h4 className="font-serif italic text-lg text-nous-text dark:text-white line-clamp-1">{zine.title}</h4>
+                                        <h4 className="font-serif italic text-lg text-nous-text dark:text-white line-clamp-1">{zine.content?.headlines?.[0] || zine.title}</h4>
                                         <p className="font-sans text-[7px] uppercase tracking-widest text-stone-400">{new Date(zine.timestamp).toLocaleDateString()}</p>
                                     </div>
                                     <ArrowRight size={16} className="text-stone-300 self-center" />

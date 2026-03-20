@@ -117,6 +117,7 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
   
   // Export State
   const [isExporting, setIsExporting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -195,7 +196,12 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
   }, [selectedId, elements]);
 
   const addTrace = useCallback((note: string) => { setTrace(prev => [...prev, { timestamp: Date.now(), note }]); }, []);
-  const handleCommit = () => { const imgEl = elements.find(el => el.type === 'image'); onSave(elements, trace, { negativePrompt: imgEl?.negativePrompt, title: zineTitle, materialityConfig }); };
+  const handleCommit = async () => { 
+    setIsSaving(true);
+    const imgEl = elements.find(el => el.type === 'image'); 
+    await onSave(elements, trace, { negativePrompt: imgEl?.negativePrompt, title: zineTitle, materialityConfig }); 
+    setTimeout(() => setIsSaving(false), 1500);
+  };
   
   const handleGenerateSignals = async () => { 
     if (isGeneratingSignals) return; 
@@ -432,8 +438,9 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
                     )}
                 </div>
                 
-                <button onClick={handleCommit} className="px-4 md:px-8 py-1.5 md:py-3 bg-nous-text dark:bg-white text-white dark:text-black font-sans text-[7px] md:text-[10px] uppercase tracking-[0.3em] font-black rounded-full shadow-lg flex items-center gap-1.5 md:gap-3 shrink-0 hover:scale-105 active:scale-95 transition-all">
-                    <Sparkles size={8} className="animate-pulse" />Commit
+                <button onClick={handleCommit} className={`px-4 md:px-8 py-1.5 md:py-3 ${isSaving ? 'bg-emerald-500' : 'bg-nous-text dark:bg-white'} text-white dark:text-black font-sans text-[7px] md:text-[10px] uppercase tracking-[0.3em] font-black rounded-full shadow-lg flex items-center gap-1.5 md:gap-3 shrink-0 hover:scale-105 active:scale-95 transition-all`}>
+                    {isSaving ? <Check size={12} /> : <Sparkles size={8} className="animate-pulse" />}
+                    {isSaving ? 'Saved' : 'Commit'}
                 </button> 
             </div>
         </div>
@@ -443,34 +450,62 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
                     <motion.div key={el.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: el.style.opacity, scale: 1 }} onMouseDown={(e) => { e.stopPropagation(); setSelectedId(el.id); setDragStart({x: e.clientX, y: e.clientY}); setIsDragging(true); setInitialStyle({...el.style}); if(isMobile) setDrawerOpen(true); }} className={`absolute select-none group/el ${selectedId === el.id ? 'ring-2 ring-emerald-500 z-50' : ''} cursor-move`} style={{ top: `${el.style.top}%`, left: `${el.style.left}%`, width: `${el.style.width}%`, height: el.style.height ? `${el.style.height}%` : undefined, rotate: `${el.style.rotation}deg`, zIndex: el.style.zIndex }}>
                          {el.type === 'image' && <img src={el.content} className="w-full h-full object-cover pointer-events-none" style={{ filter: el.style.filter || 'none' }}/>}
                          {el.type === 'text' && (
-                            <div className="relative group/text">
-                                <div 
-                                    className="leading-tight break-words transition-all" 
-                                    style={{ 
-                                        fontSize: `${el.style.fontSize || 1.2}rem`, 
-                                        fontFamily: el.style.fontFamily, 
-                                        color: el.style.color || 'inherit', 
-                                        textAlign: el.style.textAlign || 'left', 
-                                        fontStyle: el.style.fontStyle, 
-                                        fontWeight: el.style.fontWeight,
-                                        borderStyle: el.style.borderStyle || 'none',
-                                        borderWidth: `${el.style.borderWidth || 0}px`,
-                                        borderColor: el.style.borderColor || 'transparent',
-                                        borderRadius: `${el.style.borderRadius || 0}px`,
-                                        padding: `${el.style.padding !== undefined ? el.style.padding : 8}px`,
-                                        backgroundColor: el.style.backgroundColor || 'transparent',
-                                        backgroundImage: el.style.backgroundImage,
-                                        mixBlendMode: el.style.mixBlendMode as any
-                                    }}
-                                >
-                                    {el.content}
+                            el.link ? (
+                                <a href={el.link} target="_blank" rel="noopener noreferrer" className="block hover:opacity-70 transition-opacity">
+                                    <div className="relative group/text">
+                                        <div 
+                                            className="leading-tight break-words transition-all" 
+                                            style={{ 
+                                                fontSize: `${el.style.fontSize || 1.2}rem`, 
+                                                fontFamily: el.style.fontFamily, 
+                                                color: el.style.color || 'inherit', 
+                                                textAlign: el.style.textAlign || 'left', 
+                                                fontStyle: el.style.fontStyle, 
+                                                fontWeight: el.style.fontWeight,
+                                                borderStyle: el.style.borderStyle || 'none',
+                                                borderWidth: `${el.style.borderWidth || 0}px`,
+                                                borderColor: el.style.borderColor || 'transparent',
+                                                borderRadius: `${el.style.borderRadius || 0}px`,
+                                                padding: `${el.style.padding !== undefined ? el.style.padding : 8}px`,
+                                                backgroundColor: el.style.backgroundColor || 'transparent',
+                                                backgroundImage: el.style.backgroundImage,
+                                                mixBlendMode: el.style.mixBlendMode as any
+                                            }}
+                                        >
+                                            {el.content}
+                                        </div>
+                                    </div>
+                                </a>
+                            ) : (
+                                <div className="relative group/text">
+                                    <div 
+                                        className="leading-tight break-words transition-all" 
+                                        style={{ 
+                                            fontSize: `${el.style.fontSize || 1.2}rem`, 
+                                            fontFamily: el.style.fontFamily, 
+                                            color: el.style.color || 'inherit', 
+                                            textAlign: el.style.textAlign || 'left', 
+                                            fontStyle: el.style.fontStyle, 
+                                            fontWeight: el.style.fontWeight,
+                                            borderStyle: el.style.borderStyle || 'none',
+                                            borderWidth: `${el.style.borderWidth || 0}px`,
+                                            borderColor: el.style.borderColor || 'transparent',
+                                            borderRadius: `${el.style.borderRadius || 0}px`,
+                                            padding: `${el.style.padding !== undefined ? el.style.padding : 8}px`,
+                                            backgroundColor: el.style.backgroundColor || 'transparent',
+                                            backgroundImage: el.style.backgroundImage,
+                                            mixBlendMode: el.style.mixBlendMode as any
+                                        }}
+                                    >
+                                        {el.content}
+                                    </div>
+                                    {el.link && (
+                                        <a href={el.link} target="_blank" onClick={e => e.stopPropagation()} className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/text:opacity-100 transition-opacity bg-black text-white px-2 py-1 rounded-sm flex items-center gap-1.5 shadow-xl whitespace-nowrap z-[100]">
+                                            <ExternalLink size={8} /> <span className="font-sans text-[6px] uppercase tracking-widest font-black">Verify Resonance</span>
+                                        </a>
+                                    )}
                                 </div>
-                                {el.link && (
-                                    <a href={el.link} target="_blank" onClick={e => e.stopPropagation()} className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/text:opacity-100 transition-opacity bg-black text-white px-2 py-1 rounded-sm flex items-center gap-1.5 shadow-xl whitespace-nowrap z-[100]">
-                                        <ExternalLink size={8} /> <span className="font-sans text-[6px] uppercase tracking-widest font-black">Verify Resonance</span>
-                                    </a>
-                                )}
-                            </div>
+                            )
                          )}
                          {selectedId === el.id && <div className="absolute inset-0 pointer-events-none"><div onMouseDown={(e) => { e.stopPropagation(); setDragStart({x: e.clientX, y: e.clientY}); setIsResizing(true); setInitialStyle({...el.style}); }} className="pointer-events-auto absolute -bottom-3 -right-3 w-6 h-6 bg-white dark:bg-stone-800 rounded-full cursor-se-resize flex items-center justify-center shadow-lg border border-black/10 z-[60]"><Maximize size={12} /></div></div>}
                     </motion.div>

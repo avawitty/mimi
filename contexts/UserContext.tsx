@@ -6,7 +6,7 @@ import {
   bootstrapAuth, ensureAuth, getUserProfile, saveUserProfile, 
   anchorIdentity, linkIdentity, handleAuthRedirect, startGhostSession, 
   initializeAuthPersistence, getUserPreferences, saveUserPreferences, 
-  subscribeToUserProfile, subscribeToUserPreferences, migrateLocalToCloud, db,
+  subscribeToUserProfile, subscribeToUserPreferences, migrateLocalToCloud, db, auth,
   isCaptiveInWebview
 } from '../services/firebase';
 import { recordSession as recordSessionService } from '../services/retentionService';
@@ -32,6 +32,8 @@ interface UserContextType {
   user: { uid: string, isAnonymous: boolean, email?: string | null } | null;
   profile: UserProfile | null;
   loading: boolean;
+  isElevatorLoading: boolean;
+  setElevatorLoading: (loading: boolean) => void;
   updateProfile: (profile: UserProfile) => Promise<void>;
   toggleZineStar: (zineId: string) => Promise<void>;
   isOnboardingComplete: boolean;
@@ -47,7 +49,7 @@ interface UserContextType {
   authError: string | null;
   hasApiKey: boolean;
   openKeySelector: () => Promise<void>;
-  logout: () => Promise<void>;
+  logout: () => void;
   refreshHasApiKey: () => Promise<void>;
   systemStatus: SystemStatus;
   setOracleStatus: (status: SystemStatus['oracle']) => void;
@@ -93,7 +95,7 @@ const DEFAULT_FLAGS: FeatureFlags = {
 
 const DEFAULT_DRAFT: TailorLogicDraft = {
   positioningCore: {
-    anchors: { culturalReferences: [], ideologicalBias: [] },
+    anchors: { culturalReferences: ['Brutalism', 'Cyber-Noir', 'Analog-Glitch'], ideologicalBias: [] },
     aestheticCore: { silhouettes: [], materiality: [], eraBias: 'Post-Digital', density: 5, entropy: 5 },
     positioningAxis: 'Signal vs Noise',
     authorityClaim: 'Aesthetic infrastructure for long-term cultural positioning.',
@@ -132,10 +134,12 @@ const DEFAULT_DRAFT: TailorLogicDraft = {
 };
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  console.info("MIMI // UserProvider Rendering");
   const [isInitializing, setIsInitializing] = useState(true);
   const [user, setUser] = useState<{ uid: string, isAnonymous: boolean, email?: string | null } | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isElevatorLoading, setElevatorLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isEnvironmentRestricted, setIsEnvironmentRestricted] = useState(false);
   const [isDatabaseMissing, setIsDatabaseMissing] = useState(false);
@@ -159,6 +163,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Listeners Ref
   const unsubscribeProfile = useRef<(() => void) | null>(null);
   const unsubscribePrefs = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error("MIMI // Unhandled Rejection:", event.reason);
+    };
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    return () => window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+  }, []);
 
   useEffect(() => {
     try {
@@ -264,21 +276,23 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const reconcileProfile = useCallback(async (fbUser: any) => {
-    if (!fbUser) {
-      console.warn("MIMI // Reconcile: No user provided.");
+    const uid = auth.currentUser?.uid || fbUser.uid;
+    if (!uid) {
+      console.warn("MIMI // Reconcile: No UID available.");
       setUser(null); setProfile(null); setLoading(false);
       setSystemStatus(prev => ({ ...prev, auth: 'offline' }));
       if (unsubscribeProfile.current) unsubscribeProfile.current();
       if (unsubscribePrefs.current) unsubscribePrefs.current();
+      reconciliationInProgress.current = null;
       return;
     }
     
-    console.info("MIMI // Reconciling Profile for:", fbUser.uid, fbUser.isAnonymous ? "(Ghost)" : "(Swan)");
-    if (reconciliationInProgress.current === fbUser.uid) {
+    console.info("MIMI // Reconciling Profile for:", uid, fbUser.isAnonymous ? "(Ghost)" : "(Swan)");
+    if (reconciliationInProgress.current === uid) {
       console.info("MIMI // Reconciliation already in progress for this UID. Skipping.");
       return;
     }
-    reconciliationInProgress.current = fbUser.uid;
+    reconciliationInProgress.current = uid;
     setSystemStatus(prev => ({ ...prev, auth: 'syncing' }));
 
     // Clear existing listeners to prevent duplication
@@ -298,8 +312,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       while (retries > 0) {
           try {
               [cloudProfileSnap, cloudPrefsSnap] = await Promise.all([
-                  getUserProfile(fbUser.uid),
-                  getUserPreferences(fbUser.uid)
+                  getUserProfile(uid),
+                  getUserPreferences(uid)
               ]);
               break; 
           } catch (err: any) {
@@ -313,17 +327,22 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
       }
       
+      if (reconciliationInProgress.current !== uid) {
+          console.info("MIMI // User changed during reconciliation. Aborting.");
+          return;
+      }
+      
       // If no cloud data exists, but we have local data (fresh sign-up or first sync)
       
       // 2. Setup Real-time Listeners
-      unsubscribeProfile.current = subscribeToUserProfile(fbUser.uid, (pData) => {
+      unsubscribeProfile.current = subscribeToUserProfile(uid, (pData) => {
          setProfile(prev => {
-             const merged = { ...(prev || {}), ...pData, uid: fbUser.uid } as UserProfile;
+             const merged = { ...(prev || {}), ...pData, uid: uid } as UserProfile;
              return ensurePersonas(merged);
          });
       });
 
-      unsubscribePrefs.current = subscribeToUserPreferences(fbUser.uid, (prefsData) => {
+      unsubscribePrefs.current = subscribeToUserPreferences(uid, (prefsData) => {
          setProfile(prev => {
              const merged = { ...(prev || {}), ...prefsData } as UserProfile;
              return ensurePersonas(merged);
@@ -335,7 +354,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const mergedCloud = { 
           ...(cloudProfileSnap || {}), 
           ...(cloudPrefsSnap || {}),
-          uid: fbUser.uid,
+          uid: uid,
           isSwan: !fbUser.isAnonymous,
           email: fbUser.email,
           photoURL: (cloudProfileSnap?.photoURL) || fbUser.photoURL || null
@@ -348,7 +367,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (currentLocal) {
           initialProfile = { 
             ...currentLocal, 
-            uid: fbUser.uid, 
+            uid: uid, 
             isSwan: !fbUser.isAnonymous, 
             email: fbUser.email,
             photoURL: currentLocal.photoURL || fbUser.photoURL || null
@@ -356,8 +375,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
           // Brand new user, no local data either
           initialProfile = {
-              uid: fbUser.uid,
-              handle: (fbUser.isAnonymous ? 'Ghost_' : 'Swan_') + fbUser.uid.slice(-4),
+              uid: uid,
+              handle: (fbUser.isAnonymous ? 'Ghost_' : 'Swan_') + uid.slice(-4),
               isSwan: !fbUser.isAnonymous,
               email: fbUser.email,
               photoURL: fbUser.photoURL || null,
@@ -434,13 +453,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const ghostLogin = useCallback(async () => {
-    setLoading(true);
+    setElevatorLoading(true);
     try {
       const result = await startGhostSession();
       await reconcileProfile(result.user);
     } catch (e: any) {
       if (e.code === 'auth/unauthorized-domain') setIsEnvironmentRestricted(true);
       await speedGhostEntrance();
+    } finally {
+      setElevatorLoading(false);
     }
   }, [reconcileProfile, speedGhostEntrance]);
 
@@ -453,6 +474,24 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         await initializeAuthPersistence();
         const authInstance = await ensureAuth();
+
+        // 1. Handle Email Link Sign-In
+        const emailForSignIn = window.localStorage.getItem('emailForSignIn');
+        if (emailForSignIn) {
+            try {
+                const { checkAndSignInWithEmailLink } = await import('../services/firebaseUtils');
+                const result = await checkAndSignInWithEmailLink(emailForSignIn, window.location.href);
+                if (result) {
+                    console.info("MIMI // Email Link Sign-In Successful");
+                    window.localStorage.removeItem('emailForSignIn');
+                    window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+                        detail: { message: "Identity Anchored via Email Link.", type: 'success' } 
+                    }));
+                }
+            } catch (e) {
+                console.warn("MIMI // Email Link Sign-In Error:", e);
+            }
+        }
 
         // 1. Handle Redirect Result FIRST
         // We wait for this to resolve before we trust the onAuthStateChanged(null) signal
@@ -478,6 +517,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // 2. Setup Observer
         const unsubscribe = onAuthStateChanged(authInstance, async (fbUser) => {
+          console.info("MIMI // onAuthStateChanged called with:", fbUser ? fbUser.uid : "null", fbUser ? "isAnonymous: " + fbUser.isAnonymous : "");
           if (fbUser) {
             console.info("MIMI // Auth State Changed: Active", fbUser.uid);
             await reconcileProfile(fbUser);
@@ -541,7 +581,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         
         await Promise.all([
-            saveUserProfile(identity as UserProfile), // Writes to 'profiles'
+            saveUserProfile(identity as UserProfile), // Writes to 'profiles_public'
             saveUserPreferences(currentUid, preferences) // Writes to 'userPreferences'
         ]);
       }
@@ -597,6 +637,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthError(null);
     try { 
       await anchorIdentity(forceRedirect); 
+      
+      // Get the ID token
+      const user = auth.currentUser;
+      if (user) {
+        const idToken = await user.getIdToken();
+        // Call the backend to set the session cookie
+        await fetch('/api/sessionLogin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken })
+        });
+      }
+
       // For popup flow, auth state change fires immediately — navigate to profile
       if (!forceRedirect) {
         window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }));
@@ -608,34 +661,41 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signInWithGoogleRedirect = async () => {
     setAuthError(null);
     try { 
-      await import('../services/firebaseUtils').then(m => m.signInWithGoogleRedirect()); 
+      await import('../services/firebaseUtils').then(m => m.anchorIdentity(true)); 
       window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }));
     } catch (e: any) { setAuthError(e.code || e.message); throw e; }
   };
 
   const linkAccount = async (forceRedirect = false) => {
+    console.log("MIMI // linkAccount called, user:", user);
     setAuthError(null);
     try { 
         const authInstance = await ensureAuth();
+        console.log("MIMI // authInstance:", authInstance);
         if (user?.isAnonymous) {
             if (!authInstance.currentUser) {
+                console.log("MIMI // User is Speed Ghost, signing in with Google");
                 // User is a Speed Ghost (local only), no Firebase Auth session to link.
                 // Just sign in, and reconcileProfile will migrate local data.
                 await signInWithGoogleRedirect();
                 return;
             }
+            console.log("MIMI // User is anonymous, linking identity");
             await linkIdentity(forceRedirect);
             // If it was a popup, we need to manually reconcile to propagate the "Swan" state
             if (!forceRedirect && !isCaptiveInWebview()) {
                 if (authInstance.currentUser) {
+                    console.log("MIMI // Reconciling profile after link");
                     await reconcileProfile(authInstance.currentUser);
                 }
             }
         } else {
+            console.log("MIMI // Already anchored, signing in with Google");
             // Already anchored, or switching
             await signInWithGoogleRedirect(); 
         }
     } catch (e: any) { 
+        console.error("MIMI // linkAccount error:", e);
         setAuthError(e.code || e.message); 
         throw e; 
     }
@@ -713,6 +773,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const authInstance = await ensureAuth();
       await authInstance.signOut();
+      
+      // Call the backend to clear the session cookie
+      await fetch('/api/sessionLogout', { method: 'POST' });
+      
       setUser(null); setProfile(null);
       await speedGhostEntrance();
     } catch (e) { setLoading(false); }
@@ -745,7 +809,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <UserContext.Provider value={{ 
-      user, profile, loading, updateProfile, toggleZineStar, isOnboardingComplete: !!profile?.onboardingComplete, 
+      user, profile, loading, isElevatorLoading, setElevatorLoading, updateProfile, toggleZineStar, isOnboardingComplete: !!profile?.onboardingComplete, 
       login, signInWithGoogleRedirect, ghostLogin, speedGhostEntrance, linkAccount, keyLogin, verifyIdentity, isEnvironmentRestricted, isDatabaseMissing, authError,
       hasApiKey, openKeySelector, logout, refreshHasApiKey, systemStatus, setOracleStatus,
       keyRing, addKeyToRing, removeKeyFromRing,

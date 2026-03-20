@@ -1,9 +1,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ImageIcon, Loader2, Sparkles, RefreshCw, Maximize2 } from 'lucide-react';
+import { ImageIcon, Loader2, Sparkles, RefreshCw, Maximize2, Download } from 'lucide-react';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 import { TailorLogicDraft } from '../types';
 import { generateZineImage } from '../services/geminiService';
+import { addToPocket } from '../services/firebaseUtils';
+import { useUser } from '../contexts/UserContext';
 
 interface TailorPreviewProps {
   draft: TailorLogicDraft;
@@ -12,8 +15,11 @@ interface TailorPreviewProps {
 }
 
 export const TailorPreview: React.FC<TailorPreviewProps> = ({ draft, activePersonaId, apiKey }) => {
+  const { user } = useUser();
+  const { handleError } = useErrorHandler();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
   const lastGeneratedDraft = useRef<string>('');
@@ -49,10 +55,32 @@ export const TailorPreview: React.FC<TailorPreviewProps> = ({ draft, activePerso
       
       setPreviewUrl(url);
     } catch (err: any) {
-      console.error("Preview Generation Failed:", err);
-      setError("Failed to manifest preview.");
+      handleError(err, "Failed to manifest preview.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSaveToPocket = async () => {
+    if (!previewUrl || !user) return;
+    setIsSaving(true);
+    try {
+      await addToPocket(user.uid, 'image', {
+        imageUrl: previewUrl,
+        prompt: `Tailor Preview: ${draft.positioningCore.aestheticCore.eraBias}`
+      });
+      // Show temporary success state
+      const btn = document.getElementById('save-preview-btn');
+      if (btn) {
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-emerald-500"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+        setTimeout(() => {
+          btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>';
+        }, 2000);
+      }
+    } catch (err) {
+      console.error("Failed to save preview:", err);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -95,6 +123,17 @@ export const TailorPreview: React.FC<TailorPreviewProps> = ({ draft, activePerso
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors pointer-events-none" />
       
       <div className="absolute top-3 right-3 flex gap-2">
+        {previewUrl && (
+          <button 
+            id="save-preview-btn"
+            onClick={handleSaveToPocket}
+            disabled={isSaving}
+            className="p-2 bg-white/80 dark:bg-black/80 backdrop-blur-md rounded-full text-stone-600 dark:text-stone-300 shadow-sm hover:scale-110 active:scale-95 transition-all disabled:opacity-50"
+            title="Save to Archive"
+          >
+            {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
+          </button>
+        )}
         <button 
           onClick={() => generatePreview(true)}
           disabled={isLoading}

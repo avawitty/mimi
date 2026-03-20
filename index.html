@@ -48,6 +48,13 @@
       if (typeof window.process === 'undefined') {
         window.process = { env: { API_KEY: "", GEMINI_API_KEY: "" } };
       }
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for(let registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
     </script>
 </head>
   <body>

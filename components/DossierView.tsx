@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
 import { fetchDossierFolders, fetchDossierArtifacts, createDossierFolder, createDossierArtifactFromImage, createDossierArtifactFromText, updateDossierFolder, fetchPocketItems } from '../services/firebase';
@@ -7,11 +7,13 @@ import { DossierFolder, DossierArtifact, FruitionTrajectory, Task, UserProfile }
 import { Briefcase, Folder, Plus, ChevronRight, FileText, Share2, Layout, ArrowRight, Loader2, X, Archive, Eye, Trash2, Globe, ExternalLink, Upload, ImageIcon, HeartHandshake, FolderOpen, LayoutGrid, FolderPlus, PenTool, Save, Quote, Info, StickyNote, Compass, Map, Terminal, Check, Calendar, AlertTriangle, ListChecks, Sparkles, Clock, Target, CalendarDays, GripVertical, Users, UserPlus, Search, Cpu, Activity, Lock } from 'lucide-react';
 import { DossierArtifactView } from './DossierArtifactView';
 import { MoodboardComposer } from './MoodboardComposer';
-import { generateStrategicBlueprint, generateProjectTasks } from '../services/geminiService';
+import { CollabModal } from './CollabModal';
+import { generateStrategicBlueprint, generateProjectTasks, generateFolderTasks } from '../services/geminiService';
 import { db } from '../services/firebaseInit';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+import { handleFirestoreError, OperationType } from '../services/firebaseUtils';
 
-export const DossierView: React.FC = () => {
+export default function DossierView() {
   const { user, profile } = useUser();
   const [folders, setFolders] = useState<DossierFolder[]>([]);
   const [activeFolder, setActiveFolder] = useState<DossierFolder | null>(null);
@@ -27,6 +29,12 @@ export const DossierView: React.FC = () => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [pocketItems, setPocketItems] = useState<any[]>([]);
   const [isImporting, setIsImporting] = useState(false);
+  const [selectedArtifactIds, setSelectedArtifactIds] = useState<string[]>([]);
+  const [selectedPocketItemIds, setSelectedPocketItemIds] = useState<string[]>([]);
+  const [isSelectingForMoodboard, setIsSelectingForMoodboard] = useState(false);
+  const [isSelectingFromPocketForMoodboard, setIsSelectingFromPocketForMoodboard] = useState(false);
+  const [moodboardTitle, setMoodboardTitle] = useState('');
+  const [isSavingMoodboard, setIsSavingMoodboard] = useState(false);
 
   // Collaborator State
   const [showCollabModal, setShowCollabModal] = useState(false);
@@ -48,6 +56,7 @@ export const DossierView: React.FC = () => {
   // Strategic Blueprint State
   const [isGeneratingBlueprint, setIsGeneratingBlueprint] = useState(false);
   const [activeBlueprint, setActiveBlueprint] = useState<FruitionTrajectory | null>(null);
+  const [showBlueprintModal, setShowBlueprintModal] = useState(false);
 
   // Task Management State
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -111,8 +120,12 @@ export const DossierView: React.FC = () => {
           let profiles: UserProfile[] = [];
           for (const chunk of chunks) {
               const q = query(collection(db, 'profiles'), where('uid', 'in', chunk));
-              const snap = await getDocs(q);
-              profiles = [...profiles, ...snap.docs.map(d => d.data() as UserProfile)];
+              try {
+                const snap = await getDocs(q);
+                profiles = [...profiles, ...snap.docs.map(d => d.data() as UserProfile)];
+              } catch (e) {
+                handleFirestoreError(e, OperationType.LIST, 'profiles');
+              }
           }
           setCollabProfiles(profiles);
       } catch (e) {
@@ -130,9 +143,13 @@ export const DossierView: React.FC = () => {
               where('handle', '>=', collabSearchTerm.toLowerCase()),
               where('handle', '<=', collabSearchTerm.toLowerCase() + '\uf8ff')
           );
-          const snap = await getDocs(q);
-          const results = snap.docs.map(d => d.data() as UserProfile).filter(p => p.uid !== user?.uid);
-          setCollabSearchResults(results);
+          try {
+            const snap = await getDocs(q);
+            const results = snap.docs.map(d => d.data() as UserProfile).filter(p => p.uid !== user?.uid);
+            setCollabSearchResults(results);
+          } catch (e) {
+            handleFirestoreError(e, OperationType.LIST, 'profiles');
+          }
       } catch (e) {
           console.error(e);
       } finally {
@@ -241,6 +258,7 @@ export const DossierView: React.FC = () => {
       try {
           const res = await generateStrategicBlueprint(artifacts, folderMemo, profile);
           setActiveBlueprint(res);
+          setShowBlueprintModal(true);
       } catch (e) {
           console.error(e);
           window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Blueprint Generation Failed.", type: 'error' } }));
@@ -312,6 +330,33 @@ export const DossierView: React.FC = () => {
           }
       } catch (e) {
           console.error("Auto Plan Failed", e);
+          window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "The Strategist was obstructed.", type: 'error' } }));
+      } finally {
+          setIsPlanning(false);
+      }
+  };
+
+  const handleGenerateTasks = async () => {
+      if (!activeFolder || isPlanning) return;
+      setIsPlanning(true);
+      try {
+          const generatedTasks = await generateFolderTasks(activeFolder.name, folderMemo, artifacts);
+          if (generatedTasks && generatedTasks.length > 0) {
+              const newTasks = generatedTasks.map(t => ({
+                  id: `task_${Date.now()}_${Math.random()}`,
+                  text: t.title + ': ' + t.description,
+                  completed: false,
+                  dueDate: t.dueDate,
+                  createdAt: Date.now()
+              }));
+              const mergedTasks = [...tasks, ...newTasks];
+              setTasks(mergedTasks);
+              await updateDossierFolder(activeFolder.id, { tasks: mergedTasks });
+              setFolders(prev => prev.map(f => f.id === activeFolder.id ? { ...f, tasks: mergedTasks } : f));
+              window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Tasks Manifested.", icon: <Sparkles size={14} /> } }));
+          }
+      } catch (e) {
+          console.error("Task Generation Failed", e);
           window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "The Strategist was obstructed.", type: 'error' } }));
       } finally {
           setIsPlanning(false);
@@ -418,6 +463,91 @@ export const DossierView: React.FC = () => {
       });
       return groups;
   }, [tasks]);
+
+  const handleFinalizeMoodboard = async (elements: any[], config: any) => {
+    if (!user) return;
+    setIsSavingMoodboard(true);
+    try {
+      const moodboardItem: any = {
+        id: `mood_${Date.now()}`,
+        userId: user.uid,
+        title: moodboardTitle || 'Untitled Moodboard',
+        source: 'Dossier Composer',
+        timestamp: Date.now(),
+        savedAt: Date.now(),
+        type: 'moodboard',
+        content: {
+          title: moodboardTitle || 'Untitled Moodboard',
+          artifactIds: selectedArtifactIds,
+          pocketItemIds: selectedPocketItemIds,
+          elements,
+          config
+        }
+      };
+      
+      const { savePocketItem } = await import('../services/firebase');
+      await savePocketItem(moodboardItem);
+      
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+        detail: { message: "Moodboard Manifested in Archive.", icon: <Check size={14} className="text-emerald-500" /> } 
+      }));
+      
+      setViewMode('grid');
+      setIsSelectingForMoodboard(false);
+      setIsSelectingFromPocketForMoodboard(false);
+      setSelectedArtifactIds([]);
+      setSelectedPocketItemIds([]);
+      setMoodboardTitle('');
+    } catch (e) {
+      console.error("MIMI // Moodboard Manifestation Failed:", e);
+    } finally {
+      setIsSavingMoodboard(false);
+    }
+  };
+
+  const toggleArtifactSelection = (id: string) => {
+    setSelectedArtifactIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const togglePocketItemSelection = (id: string) => {
+    setSelectedPocketItemIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const startMoodboardCreation = () => {
+    if (selectedArtifactIds.length === 0 && selectedPocketItemIds.length === 0) {
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+        detail: { message: "Select fragments first.", icon: <X size={14} className="text-red-500" /> } 
+      }));
+      return;
+    }
+    setViewMode('moodboard');
+  };
+
+  const selectedArtifactsAsPocketItems = React.useMemo(() => {
+    const fromArtifacts = artifacts
+      .filter(a => selectedArtifactIds.includes(a.id))
+      .map(a => ({
+        id: a.id,
+        userId: a.userId,
+        title: a.title,
+        source: 'Dossier',
+        timestamp: a.createdAt,
+        savedAt: a.createdAt,
+        type: a.elements[0]?.type === 'image' ? 'image' : 'text',
+        content: a.elements[0]?.type === 'image' ? { imageUrl: a.elements[0].content } : { text: a.elements[0].content },
+        notes: a.elements[0]?.notes
+      }));
+
+    const fromPocket = pocketItems
+      .filter(p => selectedPocketItemIds.includes(p.id))
+      .map(p => ({ ...p }));
+
+    return [...fromArtifacts, ...fromPocket];
+  }, [artifacts, selectedArtifactIds, pocketItems, selectedPocketItemIds]);
 
   return (
     <div className="w-full h-full flex flex-col bg-[#0a0a0a] text-stone-200 font-mono transition-colors duration-1000 overflow-hidden relative">
@@ -530,6 +660,9 @@ export const DossierView: React.FC = () => {
                       <h2 className="font-serif text-4xl md:text-6xl italic tracking-tighter text-stone-100 leading-none">{activeFolder.name}</h2>
                    </div>
                    <div className="flex flex-wrap gap-2 md:gap-4">
+                      <button onClick={() => setShowCollabModal(true)} className="p-3 border border-stone-800 rounded-full hover:border-emerald-500 hover:text-emerald-500 text-stone-500 transition-all" title="Manage Collaborators">
+                         <Users size={16} />
+                      </button>
                       <button onClick={handleOpenImport} className="p-3 border border-stone-800 rounded-full hover:border-emerald-500 hover:text-emerald-500 text-stone-500 transition-all" title="Import from Archival">
                          <Archive size={16} />
                       </button>
@@ -584,6 +717,9 @@ export const DossierView: React.FC = () => {
                                 </button>
                                 <button onClick={handleAutoPlan} disabled={isPlanning} className={`text-stone-600 hover:text-emerald-500 transition-colors ${isPlanning ? 'animate-pulse' : ''}`} title="Manifest Plan with AI">
                                     <Sparkles size={12} />
+                                </button>
+                                <button onClick={handleGenerateTasks} disabled={isPlanning} className={`text-stone-600 hover:text-emerald-500 transition-colors ${isPlanning ? 'animate-pulse' : ''}`} title="Generate Tasks with AI">
+                                    <ListChecks size={12} />
                                 </button>
                             </div>
                          </div>
@@ -660,9 +796,52 @@ export const DossierView: React.FC = () => {
                    {/* RIGHT COL: ARTIFACT GRID */}
                    <div className="lg:col-span-8">
                       <div className="flex justify-between items-center border-b border-stone-800 pb-4 mb-8">
-                         <span className="font-mono text-[9px] uppercase tracking-widest font-bold text-stone-500">Visual Evidence ({artifacts.length})</span>
+                         <div className="flex items-center gap-4">
+                            <span className="font-mono text-[9px] uppercase tracking-widest font-bold text-stone-500">Visual Evidence ({artifacts.length})</span>
+                            {isSelectingForMoodboard && (
+                                <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full">
+                                    <span className="font-mono text-[8px] text-emerald-500 uppercase tracking-widest font-bold">
+                                        {selectedArtifactIds.length + selectedPocketItemIds.length} Selected
+                                    </span>
+                                </div>
+                            )}
+                          </div>
                          <div className="flex items-center gap-4">
                             {loadingArtifacts && <Loader2 size={14} className="animate-spin text-stone-500" />}
+                            
+                            {isSelectingForMoodboard ? (
+                              <div className="flex items-center gap-2">
+                                <input 
+                                  value={moodboardTitle}
+                                  onChange={e => setMoodboardTitle(e.target.value)}
+                                  placeholder="Moodboard Title..."
+                                  className="bg-transparent border-b border-stone-800 py-1 font-mono text-[10px] focus:outline-none focus:border-emerald-500 text-stone-300 w-32"
+                                />
+                                <button 
+                                  onClick={startMoodboardCreation}
+                                  disabled={selectedArtifactIds.length === 0 && selectedPocketItemIds.length === 0}
+                                  className="px-3 py-1 bg-emerald-500 text-black rounded-sm font-mono text-[8px] uppercase font-bold tracking-widest disabled:opacity-30"
+                                >
+                                  Compose ({selectedArtifactIds.length + selectedPocketItemIds.length})
+                                </button>
+                                <button 
+                                  onClick={() => { setIsSelectingForMoodboard(false); setSelectedArtifactIds([]); }}
+                                  className="p-2 text-stone-500 hover:text-stone-300"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </div>
+                            ) : (
+                              <button 
+                                onClick={() => setIsSelectingForMoodboard(true)}
+                                className="flex items-center gap-2 px-3 py-1 border border-stone-800 rounded-sm text-stone-500 hover:text-emerald-500 hover:border-emerald-500/50 transition-all font-mono text-[8px] uppercase tracking-widest"
+                              >
+                                <Plus size={12} /> Create Moodboard
+                              </button>
+                            )}
+
+                            <div className="w-px h-4 bg-stone-800 mx-2" />
+
                             <button 
                               onClick={() => setViewMode('grid')}
                               className={`p-2 rounded-sm transition-all ${viewMode === 'grid' ? 'bg-stone-800 text-emerald-500' : 'text-stone-600 hover:text-stone-400'}`}
@@ -687,9 +866,20 @@ export const DossierView: React.FC = () => {
                                    layout
                                    initial={{ opacity: 0, scale: 0.9 }} 
                                    animate={{ opacity: 1, scale: 1 }}
-                                   onClick={() => setActiveArtifact(art)}
-                                   className="group relative aspect-[3/4] bg-stone-900 cursor-pointer overflow-hidden rounded-sm border border-stone-800 hover:border-emerald-500/50 transition-all"
+                                   onClick={() => isSelectingForMoodboard ? toggleArtifactSelection(art.id) : setActiveArtifact(art)}
+                                   className={`group relative aspect-[3/4] bg-stone-900 cursor-pointer overflow-hidden rounded-sm border transition-all ${
+                                     isSelectingForMoodboard && selectedArtifactIds.includes(art.id) 
+                                       ? 'border-emerald-500 ring-1 ring-emerald-500/50' 
+                                       : 'border-stone-800 hover:border-emerald-500/50'
+                                   }`}
                                  >
+                                    {isSelectingForMoodboard && (
+                                      <div className={`absolute top-2 right-2 z-20 w-4 h-4 rounded-full border flex items-center justify-center transition-all ${
+                                        selectedArtifactIds.includes(art.id) ? 'bg-emerald-500 border-emerald-500' : 'bg-black/40 border-white/20'
+                                      }`}>
+                                        {selectedArtifactIds.includes(art.id) && <Check size={10} className="text-black" />}
+                                      </div>
+                                    )}
                                     {art.elements[0].type === 'image' ? (
                                        <img src={art.elements[0].content} className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" />
                                     ) : (
@@ -713,9 +903,9 @@ export const DossierView: React.FC = () => {
                         </div>
                       ) : (
                         <MoodboardComposer 
-                            selectedItems={artifacts.flatMap(a => a.elements.map(e => ({ id: a.id, type: e.type, content: { imageUrl: e.content, prompt: e.content, name: e.content, omenText: e.content }, notes: e.notes })))} 
+                            selectedItems={selectedArtifactsAsPocketItems} 
                             onCancel={() => setViewMode('grid')}
-                            onFinalize={(elements, config) => { console.log('Finalized', elements, config); setViewMode('grid'); }}
+                            onFinalize={handleFinalizeMoodboard}
                         />
                       )}
                    </div>
@@ -766,6 +956,24 @@ export const DossierView: React.FC = () => {
                    <button onClick={handleSaveNote} disabled={isSavingNote || !noteContent.trim()} className="w-full py-4 bg-emerald-900/20 border border-emerald-500/50 text-emerald-500 rounded-sm font-mono text-[9px] uppercase font-bold tracking-widest shadow-lg flex items-center justify-center gap-2 hover:bg-emerald-900/40 transition-colors disabled:opacity-50">
                       {isSavingNote ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Anchor Note
                    </button>
+                </div>
+            </motion.div>
+         )}
+
+         {showBlueprintModal && activeBlueprint && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[7000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
+                <div className="bg-[#111] p-8 rounded-sm shadow-2xl max-w-2xl w-full space-y-6 border border-stone-800 max-h-[80vh] overflow-y-auto">
+                   <div className="flex justify-between items-center border-b border-stone-800 pb-4">
+                      <h3 className="font-serif italic text-2xl text-emerald-500">Strategic Blueprint.</h3>
+                      <button onClick={() => setShowBlueprintModal(false)}><X size={20} className="text-stone-500 hover:text-stone-300" /></button>
+                   </div>
+                   <div className="space-y-6 font-mono text-xs text-stone-300">
+                      <div><h4 className="text-emerald-500 uppercase tracking-widest mb-1">Inciting Debris</h4><p>{activeBlueprint.inciting_debris}</p></div>
+                      <div><h4 className="text-emerald-500 uppercase tracking-widest mb-1">Structural Pivot</h4><p>{activeBlueprint.structural_pivot}</p></div>
+                      <div><h4 className="text-emerald-500 uppercase tracking-widest mb-1">Climax Manifest</h4><p>{activeBlueprint.climax_manifest}</p></div>
+                      <div><h4 className="text-emerald-500 uppercase tracking-widest mb-1">End Product Spec</h4><p>{activeBlueprint.end_product_spec}</p></div>
+                   </div>
+                   <button onClick={() => setShowBlueprintModal(false)} className="w-full py-3 border border-stone-800 text-stone-500 hover:text-stone-300 font-mono text-[9px] uppercase font-bold tracking-widest hover:border-stone-600 transition-all">Close</button>
                 </div>
             </motion.div>
          )}

@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 export interface AestheticSignature {
   primaryAxis: string;
   secondaryAxis: string;
@@ -13,11 +15,11 @@ export interface AestheticSignature {
 export interface InfluenceLineageItem {
   artist: string;
   movement: string;
-  connectionStrength: number; // 0-1
+  connectionStrength: number;
 }
 
 export interface CreativeCycle {
-  period: string; // e.g., "2026-03"
+  period: string;
   mood: string;
   motifSpikes: string[];
   outputCount: number;
@@ -26,13 +28,14 @@ export interface CreativeCycle {
 export interface MotifFrequency {
   motif: string;
   frequency: number;
-  date: number; // timestamp
+  date: number;
 }
 
 export interface MaterialityConfig {
   paperStock: 'newsprint' | 'cold-press' | 'vellum' | 'raw-cardboard';
   typographyLineage: 'brutalist' | 'editorial-serif' | 'technical-mono';
   negativeSpaceDensity: number; // 1-10
+  colorScheme: 'monochrome' | 'high-contrast' | 'earth-tones';
 }
 
 export interface ZineGenerationOptions {
@@ -42,12 +45,13 @@ export interface ZineGenerationOptions {
   artStyle?: string;
   aestheticTone?: 'Cinematic' | 'Editorial' | 'Dreamy' | 'Industrial' | 'Noir';
   goals?: string;
+  tags?: string[];
 }
 
 export type ZodiacSign = 'aries' | 'taurus' | 'gemini' | 'cancer' | 'leo' | 'virgo' | 'libra' | 'scorpio' | 'sagittarius' | 'capricorn' | 'aquarius' | 'pisces';
 
 export interface MediaFile {
-  type: 'image' | 'audio';
+  type: 'image' | 'audio' | 'video';
   url: string;
   data: string; // base64
   mimeType: string;
@@ -78,6 +82,55 @@ export interface Stack {
   createdAt: number;
 }
 
+export interface TasteReflection {
+  alignmentScore: number;
+  analysis: {
+    pros: string[];
+    cons: string[];
+  };
+  prediction: string;
+  evolution: {
+    reinforces: string;
+    introduces: string;
+    trajectory: string;
+  };
+  extractedSignals: {
+    brand?: string;
+    silhouette?: string;
+    palette?: string[];
+    category?: string;
+    material?: string;
+    tags: string[];
+  };
+  metrics?: {
+    density: {
+      score: number;
+      signals: string;
+      reasoning: string;
+    };
+    entropy: {
+      score: number;
+      signals: string;
+      reasoning: string;
+    };
+    attractionAnalysis: string;
+  };
+}
+
+export interface TasteCluster {
+  id: string;
+  centerEmbedding: number[];
+  label: string;
+  memberArtifactIds: string[];
+  strength: number;
+}
+
+export interface TasteProfile {
+  profileEmbedding: number[];
+  dominantClusters: string[];
+  lastUpdated: number;
+}
+
 export interface PocketItem {
   id: string;
   userId: string;
@@ -88,7 +141,7 @@ export interface PocketItem {
   price?: number;
   tags?: string[];
   stackIds?: string[]; // NEW: Reference to stacks
-  type: 'image' | 'video' | 'zine_card' | 'omen' | 'voicenote' | 'moodboard' | 'roadmap' | 'script' | 'analysis_report' | 'link';
+  type: 'image' | 'video' | 'zine_card' | 'omen' | 'voicenote' | 'moodboard' | 'roadmap' | 'script' | 'analysis_report' | 'link' | 'text';
   savedAt: number;
   content: any;
   notes?: string;
@@ -220,6 +273,11 @@ export interface Persona {
   themePreference?: string;
   photoURL?: string; // Visual representation for the mask
   createdAt: number;
+  operationalParameters?: {
+    temperature?: number;
+    maxTokens?: number;
+    topP?: number;
+  };
 }
 
 export interface ZineSpec {
@@ -250,7 +308,8 @@ export interface ZineSpec {
   header_image_prompt?: string;
   the_reading?: string;
   strategic_hypothesis?: string;
-  aesthetic_touchpoints?: SemioticSignal[];
+  semiotic_signals?: SemioticSignal[];
+  aesthetic_touchpoints?: AestheticTouchpoint[];
   celestial_calibration?: string;
   visual_plates?: string[];
   the_roadmap?: string;
@@ -262,6 +321,7 @@ export interface ZineSpec {
   poetic_interpretation?: string;
   blueprint?: FruitionTrajectory;
   roadmap?: Roadmap;
+  archetype_weights?: ArchetypeWeights;
 }
 
 export type RoadmapPhaseType = "establish" | "differentiate" | "operationalize" | "expand" | "evolve";
@@ -305,6 +365,7 @@ export interface ZinePageSpec {
   pageNumber: number;
   headline: string;
   bodyCopy: string;
+  supportingText?: string;
   imagePrompt: string;
   pageType?: 'standard' | 'thread_timeline';
   threadData?: {
@@ -314,7 +375,8 @@ export interface ZinePageSpec {
 }
 
 export interface ZineContent extends ZineSpec {
-  pages: ZinePageSpec[];
+  pages?: ZinePageSpec[];
+  pagesJson?: string;
 }
 
 export interface ZineMetadata {
@@ -342,6 +404,7 @@ export interface ZineMetadata {
   artifacts?: MediaFile[];
   lineage?: string[];
   embedding?: number[]; // NEW
+  tags?: string[];
 }
 
 export interface SemioticSignal {
@@ -350,6 +413,13 @@ export interface SemioticSignal {
   visual_directive?: string; 
   type?: 'acquisition' | 'conceptual' | 'lexical'; // NEW: Referential types
   link?: string; // NEW: Grounding link for acquisition
+  semantic_trigger?: string; // The specific keyword/concept from the user's profile that triggered this
+  targeting_rationale?: string; // Why this specific "ad/suggestion" is being served to them
+}
+
+export interface AestheticTouchpoint {
+  type: 'visual' | 'lexical' | 'sonic';
+  motif: string;
 }
 
 export interface FruitionTrajectory {
@@ -402,6 +472,40 @@ export interface TasteProfile {
   sovereignIdentity?: SovereignIdentityCard; // NEW
 }
 
+export interface AestheticVector {
+  // FORM
+  entropy: number;       // 0.0 (Minimal) → 1.0 (Complex)
+  density: number;       // 0.0 (Light/Airy) → 1.0 (Dense/Layered)
+  silhouette: number;    // 0.0 (Fluid) → 1.0 (Structured)
+  texture: number;       // 0.0 (Smooth) → 1.0 (Coarse)
+  contrast: number;      // 0.0 (Tonal) → 1.0 (High Contrast)
+
+  // TEMPORAL
+  temporalSignal: number; // 0.0 (Timeless/Placeless) → 1.0 (Time-specific / Trend-coded)
+
+  // EXPRESSION
+  expressiveness: number; // 0.0 (Restrained) → 1.0 (Expressive)
+
+  // PERCEPTUAL DYNAMICS (NEW)
+  novelty: number;       // 0.0 (Expected/Familiar) → 1.0 (Unexpected/Surprising)
+  tension: number;       // 0.0 (Harmonious) → 1.0 (Conflicting/Dynamic)
+}
+
+export interface ThimbleTasteEvent {
+  userId: string;
+  artifactId: string;
+
+  aestheticVector: AestheticVector;
+
+  similarityScore: number; // cosine similarity (0–1)
+  trajectoryLabel: 'aligned' | 'adjacent' | 'divergent' | 'latent';
+
+  interpretation: string; // generated insight
+  confidence: number;     // NEW: model confidence (0–1)
+
+  timestamp: number;
+}
+
 export interface TasteEvent {
   userId: string;
   event_type: 'view' | 'tweak' | 'save' | 'scry';
@@ -419,8 +523,34 @@ export interface TasteEvent {
     taste_snapshot?: TasteProfile;
     layout_type?: string;
   };
+  behavioral_signal?: {
+    dwellMs: number;
+    scrollDepth: number;
+    revisitCount: number;
+    interactionType: 'glance' | 'linger' | 'study' | 'return';
+  };
   timestamp: number;
   sessionId?: string;
+}
+
+export interface ProductTasteEvent {
+  userId: string;
+  itemId: string;
+  dwellTime: number;
+  interactionType: 'view' | 'like' | 'save';
+  tags?: string[];
+  timestamp: number;
+}
+
+export interface EditIssue {
+  trajectoryId: string;
+  thesis: string;
+  codexReading: string;
+  sequence: Array<{
+    productId: string;
+    caption: string;
+    placement: 'hero' | 'supporting' | 'footnote';
+  }>;
 }
 
 export interface AuditEntry {
@@ -617,6 +747,12 @@ export interface UserPreferences {
   lastAuditReport?: TailorAuditReport;
   enabledAlgos?: string[]; // NEW: User-defined firewalls for specific functions
   zineOptions?: ZineGenerationOptions;
+  agentConfig?: {
+    curatorEnabled: boolean;
+    sentinelEnabled: boolean;
+    curatorBudget: number;
+    sentinelBudget: number;
+  };
 }
 
 export interface UserProfile extends UserPreferences {
@@ -645,9 +781,32 @@ export interface UserProfile extends UserPreferences {
   lastVisitAt?: number;
   visitCount?: number;
   sessionDates?: number[];
+  bio?: string;
+  displayName?: string;
+  externalLinks?: { title: string; url: string }[];
 }
 
-// -- PROPOSAL SYSTEM -- //
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  read: boolean;
+  timestamp: number;
+}
+
+export interface NarrativeThread {
+  id: string;
+  userId: string;
+  title: string;
+  narrative: string;
+  notes?: string;
+  artifacts?: string[]; // IDs of associated artifacts
+  mode: 'emotional' | 'biographical' | 'influence';
+  createdAt: number;
+  updatedAt: number;
+}
 
 export type ProposalStatus = "draft" | "locked" | "exported";
 
@@ -722,6 +881,16 @@ export interface Transmission {
   vibeNotes?: VibeNote[];
 }
 
+export interface LineageEntry {
+  id?: string;
+  userId: string;
+  artifact_id: string;
+  thought_signature: string;
+  fragment_ids: string[];
+  archetype_weights: ArchetypeWeights;
+  timestamp: number;
+}
+
 export interface ContextEntry {
   id: string;
   userId: string;
@@ -740,4 +909,72 @@ export interface Fragment {
   createdAt: number;
   sourceId?: string; // Reference to parent or source
   status: 'active' | 'dormant'; // NEW: For Dormant Vision System
+}
+
+export type Archetype = 'Architect' | 'Dreamer' | 'Archivist' | 'Catalyst';
+export type ArchetypeWeights = Record<Archetype, number>;
+
+export interface Constellation {
+  id: string;
+  userId: string;
+  title: string;
+  description?: string;
+  artifactIds: string[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  message: string;
+  link?: string;
+  timestamp: number;
+  read: boolean;
+}
+
+export interface TasteGraphNode {
+  id: string;
+  label: string;
+  type: 'concept' | 'motif' | 'era';
+  weight: number;
+  explanation?: string;
+}
+
+export interface TasteGraphEdge {
+  source: string;
+  target: string;
+  strength: number;
+  type: 'relates_to' | 'evolves_from' | 'contrasts_with';
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  brand: string;
+  image: string;
+  price: number;
+  affiliateLink: string;
+  embedding: number[];
+  category: string;
+  tags: string[];
+}
+
+export interface PressIssue {
+  id: string;
+  title: string;
+  narrative: string;
+  matchedProductIds: string[];
+  createdAt: number;
+  userId: string;
+  signalStrength: string;
+  trajectoryId: string;
+}
+
+export interface PageDefinition {
+  id: string;
+  title: string;
+  description: string;
+  component: React.ReactNode;
+  path: string;
 }

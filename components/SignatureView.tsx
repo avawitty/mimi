@@ -48,7 +48,7 @@ const GeometricLoader = () => (
 );
 
 export const SignatureView: React.FC = () => {
-  const { user } = useUser();
+  const { user, profile, updateProfile } = useUser();
   const [signature, setSignature] = useState<AestheticSignature | null>(null);
   const [loading, setLoading] = useState(true);
   const dnaCardRef = useRef<HTMLDivElement>(null);
@@ -56,15 +56,35 @@ export const SignatureView: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       if (!user) return;
+      
+      if (profile?.tasteProfile?.aestheticSignature) {
+        setSignature(profile.tasteProfile.aestheticSignature);
+        setLoading(false);
+        return;
+      }
+
       const zines = await fetchUserZines(user.uid);
+      console.info("MIMI // SignatureView: Fetched zines:", zines);
       if (zines.length > 0) {
         const sig = await generateSignature(zines);
+        console.info("MIMI // SignatureView: Generated signature:", sig);
         setSignature(sig);
+        if (profile) {
+          await updateProfile({
+            ...profile,
+            tasteProfile: {
+              ...profile.tasteProfile!,
+              aestheticSignature: sig
+            }
+          });
+        }
+      } else {
+        console.info("MIMI // SignatureView: No zines found.");
       }
       setLoading(false);
     };
     init();
-  }, [user]);
+  }, [user, profile, updateProfile]);
 
   const handleExport = async () => {
     if (!dnaCardRef.current) return;
@@ -90,7 +110,33 @@ export const SignatureView: React.FC = () => {
       <div className="flex-1 flex flex-col items-center justify-center p-12 text-center h-full bg-[#f5f2ed] dark:bg-[#050505]">
         <Fingerprint size={48} className="text-stone-300 dark:text-stone-800 mb-6" />
         <h2 className="font-serif italic text-3xl text-stone-900 dark:text-stone-100 mb-2">No Signature Found</h2>
-        <p className="text-stone-500 max-w-md">Your archive is currently empty. Create more artifacts in the Studio to generate your aesthetic fingerprint.</p>
+        <p className="text-stone-500 max-w-md mb-6">Your archive is currently empty. Create more artifacts in the Studio to generate your aesthetic fingerprint.</p>
+        <button 
+          onClick={async () => {
+            if (!user) return;
+            setLoading(true);
+            const zines = await fetchUserZines(user.uid, true);
+            if (zines.length > 0) {
+              const sig = await generateSignature(zines);
+              setSignature(sig);
+              if (profile) {
+                await updateProfile({
+                  ...profile,
+                  tasteProfile: {
+                    ...profile.tasteProfile!,
+                    aestheticSignature: sig
+                  }
+                });
+              }
+            } else {
+              alert("You need to create at least one zine first.");
+            }
+            setLoading(false);
+          }}
+          className="px-6 py-3 bg-stone-900 dark:bg-stone-100 text-stone-100 dark:text-stone-900 rounded-full text-xs uppercase tracking-widest hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors"
+        >
+          Generate Signature
+        </button>
       </div>
     );
   }
@@ -105,13 +151,39 @@ export const SignatureView: React.FC = () => {
             <h1 className="text-5xl md:text-7xl font-light italic tracking-tight">Signature</h1>
             <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-stone-500 mt-4">Aesthetic Fingerprint & Lineage</p>
           </div>
-          <button 
-            onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 border border-stone-300 dark:border-stone-800 rounded-full text-xs uppercase tracking-widest hover:bg-stone-200 dark:hover:bg-stone-900 transition-colors"
-          >
-            <Download size={14} />
-            Export DNA
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={async () => {
+                if (!user) return;
+                setLoading(true);
+                const zines = await fetchUserZines(user.uid, true);
+                if (zines.length > 0) {
+                  const sig = await generateSignature(zines);
+                  setSignature(sig);
+                  if (profile) {
+                    await updateProfile({
+                      ...profile,
+                      tasteProfile: {
+                        ...profile.tasteProfile!,
+                        aestheticSignature: sig
+                      }
+                    });
+                  }
+                }
+                setLoading(false);
+              }}
+              className="flex items-center gap-2 px-4 py-2 border border-stone-300 dark:border-stone-800 rounded-full text-xs uppercase tracking-widest hover:bg-stone-200 dark:hover:bg-stone-900 transition-colors"
+            >
+              Regenerate
+            </button>
+            <button 
+              onClick={handleExport}
+              className="flex items-center gap-2 px-4 py-2 border border-stone-300 dark:border-stone-800 rounded-full text-xs uppercase tracking-widest hover:bg-stone-200 dark:hover:bg-stone-900 transition-colors"
+            >
+              <Download size={14} />
+              Export DNA
+            </button>
+          </div>
         </div>
 
         {/* Top Section: DNA Card & Engine Output */}

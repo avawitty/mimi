@@ -13,6 +13,7 @@ export type ThreadMode = 'biographical' | 'influence' | 'emotion' | 'time';
 
 export interface Thread {
   id: string;
+  title?: string;
   startArtifactId: string;
   path: ThreadNode[];
   artifacts: any[];
@@ -34,6 +35,77 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
   if (magA === 0 || magB === 0) return 0;
   return dotProduct / (magA * magB);
 }
+
+export const generateThreadFromConstellation = async (
+  constellationId: string,
+  constellationTitle: string,
+  artifacts: any[]
+): Promise<Thread | null> => {
+  if (artifacts.length < 2) return null;
+
+  const { ai } = getClient();
+  let narrative = "A thread connecting your thoughts.";
+  
+  if (ai) {
+    const artSummaries = artifacts.map(a => a.content || a.title || 'Untitled artifact').join('\n- ');
+
+    const prompt = `You are The Thimble, an aesthetic editor.
+The user has manually grouped the following artifacts into a constellation named "${constellationTitle}":
+ 
+Artifacts:
+- ${artSummaries}
+
+Explain the narrative thread connecting them.
+Use 2-4 sentences.
+Tone: reflective, observant, poetic.
+Do not use quotes or introductory phrases. Speak directly to the user.`;
+
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3.1-pro-preview",
+        contents: prompt,
+      });
+      if (response.text) {
+        narrative = response.text.trim();
+      }
+    } catch (e) {
+      console.error("MIMI // Thread Narrative Error:", e);
+    }
+  }
+
+  const threadId = `thread_${Date.now()}`;
+  const path: ThreadNode[] = artifacts.map(a => ({ type: 'artifact', id: a.id }));
+  
+  const thread: Thread = {
+    id: threadId,
+    title: constellationTitle,
+    startArtifactId: artifacts[0].id,
+    path,
+    artifacts: artifacts,
+    themes: [],
+    narrative,
+    created_at: Date.now(),
+    mode: 'emotion'
+  };
+
+  try {
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+      console.log("MIMI // Saving thread to Firestore:", threadId);
+      await setDoc(doc(db, `users/${uid}/threads`, threadId), {
+        ...thread,
+        artifacts: artifacts.map(a => a.id),
+        themes: []
+      });
+      console.log("MIMI // Thread saved successfully.");
+    }
+  } catch (e) {
+    console.error("MIMI // Thread save failed:", e);
+    handleFirestoreError(e, OperationType.CREATE, `users/${auth.currentUser?.uid}/threads`);
+  }
+
+  return thread;
+};
 
 export const findThread = async (
   startArtifactId: string,
@@ -178,4 +250,19 @@ Do not use quotes or introductory phrases. Speak directly to the user.`;
   }
 
   return thread;
+};
+
+export const updateThread = async (thread: Thread): Promise<void> => {
+  try {
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+      await setDoc(doc(db, `users/${uid}/threads`, thread.id), {
+        ...thread,
+        artifacts: thread.artifacts.map(a => a.id || a),
+        themes: thread.themes.map(t => t.id || t)
+      });
+    }
+  } catch (e) {
+    handleFirestoreError(e, OperationType.UPDATE, `users/${auth.currentUser?.uid}/threads/${thread.id}`);
+  }
 };

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Sparkles, Loader2, Plus } from 'lucide-react';
-import { scryLink, generateTags } from '../services/geminiService';
+import { scryLink, generateTagsFromMedia } from '../services/geminiService';
 import { useUser } from '../contexts/UserContext';
 
 export const ScryLinkInput: React.FC<{ onAddImages: (urls: string[]) => void }> = ({ onAddImages }) => {
@@ -15,7 +15,7 @@ export const ScryLinkInput: React.FC<{ onAddImages: (urls: string[]) => void }> 
             const result = await scryLink(url, profile);
             if (result && result.imageUrls) {
                 // Generate tags for the scryed images
-                const tags = await generateTags(`Scryed images from: ${url}`);
+                const tags = await generateTagsFromMedia(`Scryed images from: ${url}`, []);
                 console.log("MIMI // Scryed tags:", tags);
                 
                 onAddImages(result.imageUrls);

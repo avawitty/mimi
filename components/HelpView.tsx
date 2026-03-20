@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { BookOpen, Sparkles, Scissors, ShieldCheck, Camera, FlaskConical, Archive, Compass, LayoutGrid, Briefcase, Activity } from 'lucide-react';
 import { Diagnostics } from './Diagnostics';
+import { FeatureChecklist } from './FeatureChecklist';
 
 export const HelpView: React.FC = () => {
   return (
@@ -230,6 +231,27 @@ export const HelpView: React.FC = () => {
                 </p>
               </div>
 
+            </div>
+          </div>
+        </section>
+
+        {/* Game Plan */}
+        <section className="mb-32 relative">
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 dark:bg-white/10" />
+          <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
+            <div className="md:col-span-3">
+              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">07. Game Plan</h2>
+            </div>
+            <div className="md:col-span-9">
+              <p className="font-serif text-xl leading-relaxed text-stone-700 dark:text-stone-300 mb-8">
+                Our current development focus is on refining "The Edit" page, ensuring seamless integration of real product data, and preparing for future ad-targeting concepts.
+              </p>
+              <FeatureChecklist />
+              <ul className="font-sans text-sm text-stone-600 dark:text-stone-400 leading-relaxed space-y-4 mt-8">
+                <li><span className="font-bold text-stone-800 dark:text-stone-200">1. Affiliate Link Integration:</span> Implement logic to display and handle affiliate links within product cards in the "Market" view.</li>
+                <li><span className="font-bold text-stone-800 dark:text-stone-200">2. Synthesis Element Refinement:</span> Enhance the "Synthesis_Portal" for dynamic, visually integrated content.</li>
+                <li><span className="font-bold text-stone-800 dark:text-stone-200">3. Ad Integration Strategy:</span> Connect the "Sponsored Aesthetic Cluster" placeholder to a backend service for ad selection based on user taste vectors.</li>
+              </ul>
             </div>
           </div>
         </section>

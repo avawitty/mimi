@@ -52,6 +52,7 @@ export const GlobalSearchOverlay: React.FC<{ isOpen: boolean; onClose: () => voi
     return {
       zines: allData.zines.filter(z => 
         z.title.toLowerCase().includes(q) || 
+        (z.content?.headlines?.[0] && z.content.headlines[0].toLowerCase().includes(q)) ||
         z.tone.toLowerCase().includes(q) ||
         JSON.stringify(z.content).toLowerCase().includes(q)
       ).slice(0, 10),
@@ -109,7 +110,7 @@ export const GlobalSearchOverlay: React.FC<{ isOpen: boolean; onClose: () => voi
                         className="w-full text-left p-6 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-sm hover:border-emerald-500 transition-all flex justify-between items-center group"
                       >
                          <div className="space-y-1">
-                            <h4 className="font-serif italic text-xl text-nous-text dark:text-white">{z.title}</h4>
+                            <h4 className="font-serif italic text-xl text-nous-text dark:text-white">{z.content?.headlines?.[0] || z.title || "Untitled"}</h4>
                             <span className="font-sans text-[8px] uppercase tracking-widest text-stone-400">{z.tone} // {new Date(z.timestamp).toLocaleDateString()}</span>
                          </div>
                          <ChevronRight size={14} className="text-stone-300 group-hover:translate-x-1 transition-transform" />

@@ -4,6 +4,7 @@ import { MessageSquare, Send, User, Clock, Loader2, X } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { db } from '../services/firebaseInit';
 import { collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { handleFirestoreError, OperationType } from '../services/firebaseUtils';
 
 interface Comment {
   id: string;
@@ -26,8 +27,7 @@ export const ZineComments: React.FC<{ zineId: string; onClose?: () => void }> = 
     
     const q = query(
       collection(db, 'zine_comments'),
-      where('zineId', '==', zineId),
-      orderBy('timestamp', 'asc')
+      where('zineId', '==', zineId)
     );
 
     console.log("MIMI // Fetching comments for zineId:", zineId);
@@ -38,10 +38,10 @@ export const ZineComments: React.FC<{ zineId: string; onClose?: () => void }> = 
         id: doc.id,
         ...doc.data()
       })) as Comment[];
-      setComments(fetchedComments);
+      setComments(fetchedComments.sort((a, b) => a.timestamp - b.timestamp));
       setIsLoading(false);
     }, (error) => {
-      console.error("MIMI // Error fetching comments:", error);
+      handleFirestoreError(error, OperationType.LIST, 'zine_comments');
       setIsLoading(false);
     });
 
@@ -63,7 +63,7 @@ export const ZineComments: React.FC<{ zineId: string; onClose?: () => void }> = 
       });
       setNewComment('');
     } catch (error) {
-      console.error("Error adding comment:", error);
+      handleFirestoreError(error, OperationType.CREATE, 'zine_comments');
     } finally {
       setIsSubmitting(false);
     }

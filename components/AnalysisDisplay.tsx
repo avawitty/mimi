@@ -1,9 +1,11 @@
 
 // @ts-nocheck
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { ZineMetadata, PocketItem } from '../types';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { ZineMetadata, PocketItem, LineageEntry } from '../types';
 import { generateAudio, animateShardWithVeo, transcribeAudio } from '../services/geminiService';
-import { addToPocket, subscribeToPocketItems } from '../services/firebase';
+import { addToPocket, subscribeToPocketItems, fetchLineageEntry, uploadBase64Image } from '../services/firebaseUtils';
 import { Loader2, X, Volume2, Orbit, Eye, Target, Layers, Moon, Sparkles, Terminal, Quote, ArrowDown, Grid3X3, Printer, Bookmark, Check, Play, Pause, ExternalLink, Download, Share2, Star, FileText, Map, Compass, Zap, RefreshCw, PenTool, Save, Mic, Square, AlertCircle, StickyNote, History, MessageSquareQuote, Radar, Maximize2, Activity, Archive, FolderPlus, Compass as RoadmapIcon, Stars as CelestialIcon, ArrowRight, CornerDownRight, Image as ImageIcon, Film, MousePointer2, Briefcase, BookOpen, ChevronDown, Hash, Search, Menu, Plus, Radio } from 'lucide-react';
 import { VisualLanguageReflection } from './VisualLanguageReflection';
 import { Visualizer } from './Visualizer';
@@ -40,6 +42,38 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [isBroadcasted, setIsBroadcasted] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [lineageEntry, setLineageEntry] = useState<LineageEntry | null>(null);
+  const [showLineage, setShowLineage] = useState(false);
+  
+  const handleResonanceFlip = async () => {
+    if (!showLineage) {
+      const entry = await fetchLineageEntry(metadata.id);
+      setLineageEntry(entry);
+    }
+    setShowLineage(!showLineage);
+  };
+  
+  const exportZine = async (format: 'pdf' | 'png') => {
+      const element = document.getElementById('zine-content');
+      if (!element) return;
+      
+      const displayTitle = metadata.content?.headlines?.[0] || metadata.title || "Untitled";
+      const canvas = await html2canvas(element);
+      if (format === 'png') {
+          const link = document.createElement('a');
+          link.download = `${displayTitle}.png`;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+      } else {
+          const imgData = canvas.toDataURL('image/png');
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          const imgProps = pdf.getImageProperties(imgData);
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+          pdf.save(`${displayTitle}.pdf`);
+      }
+  };
   
   // TAILOR INTEGRATION: Fetch styling from the active persona's draft
   const tailor = activePersona?.tailorDraft || profile?.tailorDraft;
@@ -72,6 +106,64 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
       onUpdateMetadata(updatedMetadata);
       setIsEditing(false);
   };
+
+  const handleHeroImageGenerated = async (base64: string) => {
+      if (!user?.uid) return;
+      try {
+          const url = await uploadBase64Image(base64, `zines/${user.uid}/${metadata.id}/hero.png`);
+          const updatedMetadata = {
+              ...metadata,
+              coverImageUrl: url,
+              content: {
+                  ...metadata.content,
+                  hero_image_url: url
+              }
+          };
+          onUpdateMetadata(updatedMetadata);
+      } catch (e) {
+          console.error("Failed to upload hero image", e);
+      }
+  };
+
+  const handlePageImageGenerated = async (base64: string, pageIndex: number) => {
+      if (!user?.uid || !metadata.content.pages) return;
+      try {
+          const url = await uploadBase64Image(base64, `zines/${user.uid}/${metadata.id}/page_${pageIndex}.png`);
+          const updatedPages = [...metadata.content.pages];
+          updatedPages[pageIndex] = {
+              ...updatedPages[pageIndex],
+              image_url: url
+          };
+          const updatedMetadata = {
+              ...metadata,
+              content: {
+                  ...metadata.content,
+                  pages: updatedPages
+              }
+          };
+          onUpdateMetadata(updatedMetadata);
+      } catch (e) {
+          console.error("Failed to upload page image", e);
+      }
+  };
+
+  const handleHypothesisImageGenerated = async (base64: string) => {
+      if (!user?.uid) return;
+      try {
+          const url = await uploadBase64Image(base64, `zines/${user.uid}/${metadata.id}/hypothesis.png`);
+          const updatedMetadata = {
+              ...metadata,
+              content: {
+                  ...metadata.content,
+                  hypothesis_image_url: url
+              }
+          };
+          onUpdateMetadata(updatedMetadata);
+      } catch (e) {
+          console.error("Failed to upload hypothesis image", e);
+      }
+  };
+
   const sourceRef = useRef<AudioBufferSourceNode | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const { isRecording, startRecording, stopRecording, audioBlob } = useRecorder();
@@ -129,7 +221,8 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
         await audioCtxRef.current.resume();
       }
       
-      const narrationText = (vocalSummary || poeticInterpretation || metadata.title).trim();
+      const displayTitle = metadata.content?.headlines?.[0] || metadata.title || "Untitled";
+      const narrationText = (vocalSummary || poeticInterpretation || displayTitle).trim();
       const personaKey = activePersona?.apiKey ? activePersona.apiKey : undefined;
       const bytes = await generateAudio(narrationText, personaKey);
       
@@ -175,9 +268,10 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
       setIsAnimatingManifest(true);
       window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Manifesting Motion Refraction...", icon: <Film size={14} style={{ color: accentColor }} /> } }));
       try {
+          const displayTitle = metadata.content?.headlines?.[0] || metadata.title || "Untitled";
           const targetImage = metadata.coverImageUrl || metadata.content.pages?.[0]?.image_url;
-          const res = await animateShardWithVeo(targetImage, metadata.title, '9:16');
-          await addToPocket(user?.uid || 'ghost', 'video', { videoUrl: res, title: `${metadata.title} // Motion`, timestamp: Date.now() });
+          const res = await animateShardWithVeo(targetImage, displayTitle, '9:16');
+          await addToPocket(user?.uid || 'ghost', 'video', { videoUrl: res, title: `${displayTitle} // Motion`, timestamp: Date.now() });
       } catch (e) {} finally { setIsAnimatingManifest(false); }
   };
 
@@ -188,9 +282,10 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
     setIsSaved(true);
     
     try {
+      const displayTitle = metadata.content?.headlines?.[0] || metadata.title || "Untitled";
       await addToPocket(user?.uid || 'ghost', 'zine_card', { 
           zineId: metadata.id, 
-          title: metadata.title, 
+          title: displayTitle, 
           analysis: {
              ...metadata.content,
              design_brief: metadata.content.strategic_hypothesis || metadata.content.designBrief
@@ -217,10 +312,11 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
           const { collection, addDoc } = await import('firebase/firestore');
           const { db } = await import('../services/firebase');
           
+          const displayTitle = metadata.content?.headlines?.[0] || metadata.title || "Untitled";
           const transmission = {
               userId: user?.uid || 'ghost',
               userHandle: profile?.handle || 'Ghost',
-              content: metadata.title,
+              content: displayTitle,
               imageUrl: metadata.coverImageUrl || metadata.content.hero_image_url || '',
               timestamp: Date.now(),
               type: 'manifest',
@@ -244,10 +340,11 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
   const handleContinuum = () => {
       // Pass provocation AND original artifacts as context to input
       const provocation = metadata.content.poetic_provocation;
+      const displayTitle = metadata.content?.headlines?.[0] || metadata.title || "Untitled";
       window.dispatchEvent(new CustomEvent('mimi:change_view', { 
           detail: 'studio', 
           detail_data: { 
-              context: `Continuing thread from "${metadata.title}".\n\nPROVOCATION: "${provocation}"\n\nRESPONSE:`,
+              context: `Continuing thread from "${displayTitle}".\n\nPROVOCATION: "${provocation}"\n\nRESPONSE:`,
               provocation: provocation,
               initialMedia: metadata.artifacts || [] 
           }
@@ -277,8 +374,17 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
               <ZineComments zineId={metadata.id} onClose={() => setShowComments(false)} />
             </motion.div>
           )}
-          {/* Visual Language Reflection Modal removed */}
       </AnimatePresence>
+
+      {/* Export Buttons */}
+      <div className="fixed top-8 right-24 z-[5001] flex gap-2">
+        <button onClick={() => exportZine('png')} className="p-4 bg-white/40 dark:bg-black/40 backdrop-blur-md border border-stone-200 dark:border-white/10 rounded-full text-stone-400 hover:text-emerald-500 transition-all shadow-xl">
+            <ImageIcon size={20} />
+        </button>
+        <button onClick={() => exportZine('pdf')} className="p-4 bg-white/40 dark:bg-black/40 backdrop-blur-md border border-stone-200 dark:border-white/10 rounded-full text-stone-400 hover:text-emerald-500 transition-all shadow-xl">
+            <FileText size={20} />
+        </button>
+      </div>
 
       {/* TOP-LEFT EXIT BUTTON */}
       <button 
@@ -301,9 +407,12 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                    <div className="flex items-center gap-4">
                       <span className="font-mono text-[9px] uppercase tracking-[0.5em] text-stone-400">Issue_0{Math.floor(Math.random() * 10)}</span>
                       {metadata.isDeepThinking && <div className="flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-500 font-sans text-[7px] font-black uppercase tracking-widest"><Radar size={10} className="animate-pulse" /> Deep Refraction</div>}
+                      <button onClick={handleResonanceFlip} className="p-2 bg-stone-100 dark:bg-stone-800 rounded-full hover:bg-emerald-500 transition-colors">
+                          <Layers size={14} className="text-stone-500 dark:text-stone-400" />
+                      </button>
                    </div>
                    <h1 className={`${fontStyle} text-7xl md:text-[11rem] tracking-tighter leading-[0.8] text-nous-text dark:text-stone-100 uppercase italic break-words hyphens-auto`}>
-                      {metadata.title}
+                      {metadata.content?.headlines?.[0] || metadata.title}
                    </h1>
                    <div className="flex flex-col md:flex-row md:items-center gap-12 pt-12 border-t border-stone-100 dark:border-stone-900">
                       <div className="flex flex-col gap-1">
@@ -362,7 +471,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
 
               {/* 3. HEADER IMAGE */}
               <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-black overflow-hidden relative group print:min-h-0 print:py-12">
-                 <Visualizer prompt={metadata.content.hero_image_prompt || metadata.title} defaultAspectRatio="16:9" defaultImageSize={metadata.isHighFidelity ? '2K' : '1K'} isArtifact isLite={metadata.isLite} initialImage={metadata.coverImageUrl} artifacts={metadata.artifacts} />
+                 <Visualizer prompt={metadata.content.hero_image_prompt || metadata.content?.headlines?.[0] || metadata.title} defaultAspectRatio="16:9" defaultImageSize={metadata.isHighFidelity ? '2K' : '1K'} isArtifact isLite={metadata.isLite} initialImage={metadata.coverImageUrl} artifacts={metadata.artifacts} onImageGenerated={handleHeroImageGenerated} />
                  <div className="absolute bottom-12 left-12 p-4 bg-white/5 backdrop-blur-md rounded-sm border border-white/10">
                     <span className="font-mono text-[7px] text-white uppercase tracking-widest">FIG_01: PRIMARY_VISUAL</span>
                  </div>
@@ -396,6 +505,8 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                                 isLite={metadata.isLite} 
                                 delay={400}
                                 artifacts={metadata.artifacts}
+                                initialImage={(metadata.content as any).hypothesis_image_url}
+                                onImageGenerated={handleHypothesisImageGenerated}
                             />
                             <div className="absolute bottom-4 right-4 bg-black/80 text-white px-2 py-1 text-[8px] font-mono rounded-sm">FIG 2.1 — ABSTRACT</div>
                         </div>
@@ -419,7 +530,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                  <div className="max-w-7xl w-full space-y-16">
                     <SectionHeader label="Semiotics & Visual Directives" icon={Radar} style={{ color: accentColor }} />
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {metadata.content.aesthetic_touchpoints?.map((t, i) => {
+                        {metadata.content.semiotic_signals?.map((t, i) => {
                            const Icon = t.type === 'acquisition' ? Briefcase : t.type === 'lexical' ? BookOpen : Sparkles;
                            const label = t.type === 'acquisition' ? 'Buy this' : t.type === 'lexical' ? 'Add to Lexicon' : 'Imagine this';
                            
@@ -442,6 +553,27 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                                       <div className="mt-4 pt-4 border-t border-stone-100 dark:border-stone-800">
                                          <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 block mb-2">Directive</span>
                                          <p className="font-mono text-[9px] text-stone-500">{t.visual_directive}</p>
+                                      </div>
+                                   )}
+                                   
+                                   {/* SOVEREIGN AD TARGETING LOGIC */}
+                                   {(t.semantic_trigger || t.targeting_rationale) && (
+                                      <div className="mt-4 pt-4 border-t border-stone-100 dark:border-stone-800">
+                                         <div className="flex items-center gap-2 mb-2">
+                                            <Target size={10} className="text-stone-400" />
+                                            <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Targeting Rationale</span>
+                                         </div>
+                                         {t.semantic_trigger && (
+                                            <div className="mb-2">
+                                               <span className="font-mono text-[8px] text-stone-400">Trigger: </span>
+                                               <span className="font-mono text-[9px] text-[var(--hover-accent)] bg-[var(--hover-accent)]/10 px-1 py-0.5 rounded-sm">{t.semantic_trigger}</span>
+                                            </div>
+                                         )}
+                                         {t.targeting_rationale && (
+                                            <p className="font-sans text-[10px] text-stone-500 leading-relaxed">
+                                               {t.targeting_rationale}
+                                            </p>
+                                         )}
                                       </div>
                                    )}
                                 </div>
@@ -518,6 +650,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                                         initialImage={page.image_url} 
                                         delay={800 + (i * 1200)}
                                         artifacts={metadata.artifacts}
+                                        onImageGenerated={(base64) => handlePageImageGenerated(base64, i)}
                                       />
                                       {/* PLATE METADATA OVERLAY */}
                                       <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end pointer-events-none mix-blend-difference text-white opacity-0 group-hover:opacity-100 transition-opacity duration-700">
@@ -543,6 +676,11 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                                       <p className="font-serif italic text-lg md:text-xl text-stone-500 dark:text-stone-400 leading-relaxed text-balance">
                                           {page.bodyCopy}
                                       </p>
+                                      {page.supportingText && (i >= metadata.content.pages.length - 3) && (
+                                          <p className="mt-4 font-mono text-xs text-stone-400 dark:text-stone-500 uppercase tracking-widest">
+                                              {page.supportingText}
+                                          </p>
+                                      )}
                                   </div>
                                   
                                   {/* CAPTION STYLE FOOTNOTE */}
@@ -886,6 +1024,17 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                      <span className="bg-black/80 text-white px-2 py-1 rounded text-[9px] uppercase font-black tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Share</span>
                      <div className="w-12 h-12 bg-white dark:bg-stone-800 rounded-full shadow-lg border border-stone-200 dark:border-stone-700 flex items-center justify-center text-stone-500 hover:text-emerald-500 transition-colors">
                         <Share2 size={18} />
+                     </div>
+                  </motion.button>
+
+                  <motion.button 
+                    initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.12 }}
+                    onClick={() => { /* TODO: Implement folder selection modal */ }} 
+                    className="flex items-center gap-4 group"
+                  >
+                     <span className="bg-black/80 text-white px-2 py-1 rounded text-[9px] uppercase font-black tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Refract to Pocket</span>
+                     <div className="w-12 h-12 bg-white dark:bg-stone-800 rounded-full shadow-lg border border-stone-200 dark:border-stone-700 flex items-center justify-center text-stone-500 hover:text-emerald-500 transition-colors">
+                        <FolderPlus size={18} />
                      </div>
                   </motion.button>
 

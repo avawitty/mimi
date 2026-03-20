@@ -8,9 +8,10 @@ import { fetchFollowing, Connection } from '../services/connections';
 import { getUserProfile } from '../services/firebaseUtils';
 import { ZineMetadata, ToneTag, UserProfile } from '../types';
 import { useUser } from '../contexts/UserContext';
-import { Archive, Search, Hash, X, Eye, Folder, Loader2, Radio, Zap, Wind, Ghost, Star, Info, Layers, Target, Compass, Sparkles, User, Network } from 'lucide-react';
+import { Archive, Search, Hash, X, Eye, Folder, Loader2, Radio, Zap, Wind, Ghost, Star, Info, Layers, Target, Compass, Sparkles, User, Network, BrainCircuit, LayoutGrid, Maximize2 } from 'lucide-react';
 import { VibeGraph } from './VibeGraph';
 import { PublicProfileModal } from './PublicProfileModal';
+import { analyzeCollectionIntent } from '../services/geminiService';
 
 const TONE_MAP: Record<ToneTag, { bg: string, text: string, accent: string }> = {
   'Cinematic Witness': { bg: 'bg-[#F5F5F0]', text: 'text-stone-900', accent: 'border-stone-300' },
@@ -35,8 +36,23 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [nebulaMode, setNebulaMode] = useState<'strategist' | 'shadow' | 'starred' | 'network' | 'vibe'>('strategist');
+  const [showcaseMode, setShowcaseMode] = useState<'bento' | 'dossier' | 'minimalist'>('dossier');
   const [followingProfiles, setFollowingProfiles] = useState<UserProfile[]>([]);
   const [viewingProfileId, setViewingProfileId] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<any>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const handleAnalyze = async () => {
+    setIsAnalyzing(true);
+    try {
+      const result = await analyzeCollectionIntent(filteredZines, profile);
+      setAnalysis(result);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   useEffect(() => {
     // 1. Subscribe to Real-time Community Feed
@@ -135,6 +151,15 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
                        <Radio size={14} />
                        <span className="font-sans text-[8px] uppercase tracking-widest font-black">Network</span>
                     </button>
+                    <div className="w-px h-8 bg-stone-200 dark:bg-stone-800" />
+                    <button 
+                      onClick={handleAnalyze}
+                      disabled={isAnalyzing}
+                      className={`flex items-center gap-3 px-6 md:px-8 py-3 transition-all ${isAnalyzing ? 'bg-emerald-500 text-white' : 'text-stone-400 hover:text-emerald-500'}`}
+                    >
+                       {isAnalyzing ? <Loader2 size={14} className="animate-spin" /> : <BrainCircuit size={14} />}
+                       <span className="font-sans text-[8px] uppercase tracking-widest font-black">Analyze</span>
+                    </button>
                  </div>
               </div>
            </div>
@@ -170,20 +195,44 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
            </div>
         </header>
 
-        <div className="w-full relative group">
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-3 pl-8 pointer-events-none">
-             <Search size={16} className="text-stone-300 group-focus-within:text-emerald-500 transition-colors" />
-             <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black text-stone-300/50">Audit_Log</span>
+        <div className="flex flex-col lg:flex-row gap-4 mb-8">
+          <div className="w-full relative group flex-grow">
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-3 pl-8 pointer-events-none">
+               <Search size={16} className="text-stone-300 group-focus-within:text-emerald-500 transition-colors" />
+               <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black text-stone-300/50">Audit_Log</span>
+            </div>
+            <input 
+              id="archiveSearch"
+              name="archiveSearch"
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Trace an issue by title, theme, or frequency..."
+              className="w-full bg-stone-50/50 dark:bg-stone-900/50 border-b-2 border-stone-100 dark:border-stone-800 py-10 pl-40 pr-8 font-serif italic text-2xl md:text-3xl focus:outline-none focus:border-emerald-500 transition-all placeholder:text-stone-200 placeholder:opacity-50 text-nous-text dark:text-white shadow-inner"
+            />
           </div>
-          <input 
-            id="archiveSearch"
-            name="archiveSearch"
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Trace an issue by title, theme, or frequency..."
-            className="w-full bg-stone-50/50 dark:bg-stone-900/50 border-b-2 border-stone-100 dark:border-stone-800 py-10 pl-40 pr-8 font-serif italic text-2xl md:text-3xl focus:outline-none focus:border-emerald-500 transition-all placeholder:text-stone-200 placeholder:opacity-50 text-nous-text dark:text-white shadow-inner"
-          />
+          {nebulaMode === 'strategist' && (
+            <div className="flex border border-stone-200 dark:border-stone-800 bg-white/50 dark:bg-stone-900/50 p-2 gap-2 self-start lg:self-center">
+              <button 
+                onClick={() => setShowcaseMode('bento')}
+                className={`px-4 py-2 flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono transition-colors ${showcaseMode === 'bento' ? 'bg-stone-200 dark:bg-stone-800 text-stone-800 dark:text-white' : 'text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800'}`}
+              >
+                <LayoutGrid size={14} /> Bento Archive
+              </button>
+              <button 
+                onClick={() => setShowcaseMode('dossier')}
+                className={`px-4 py-2 flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono transition-colors ${showcaseMode === 'dossier' ? 'bg-stone-200 dark:bg-stone-800 text-stone-800 dark:text-white' : 'text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800'}`}
+              >
+                <Archive size={14} /> Archival Dossier
+              </button>
+              <button 
+                onClick={() => setShowcaseMode('minimalist')}
+                className={`px-4 py-2 flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono transition-colors ${showcaseMode === 'minimalist' ? 'bg-stone-200 dark:bg-stone-800 text-stone-800 dark:text-white' : 'text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800'}`}
+              >
+                <Maximize2 size={14} /> Minimalist
+              </button>
+            </div>
+          )}
         </div>
 
         {nebulaMode === 'network' ? (
@@ -204,7 +253,7 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
                     className="bg-white dark:bg-[#1C1C1C] border border-stone-200 dark:border-stone-800 p-6 flex flex-col items-center text-center cursor-pointer hover:border-indigo-500 transition-colors group"
                   >
                     <div className="w-16 h-16 rounded-full overflow-hidden mb-4 bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800">
-                      <img src={p.photoURL || `https://ui-avatars.com/api/?name=${p.handle || 'U'}&background=1c1917&color=fff`} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" alt="" />
+                      <img src={p.photoURL || `https://ui-avatars.com/api/?name=${p.handle || 'U'}&background=1c1917&color=fff`} className="w-full h-full object-cover transition-all" alt="" />
                     </div>
                     <h4 className="font-serif text-2xl italic text-nous-text dark:text-white group-hover:text-indigo-500 transition-colors">@{p.handle}</h4>
                     {p.tasteProfile?.definition && (
@@ -220,7 +269,11 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
             <VibeGraph onGenerateZine={onGenerateThreadZine} />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 pt-12">
+          <div className={`pt-12 ${
+            showcaseMode === 'dossier' ? 'grid grid-cols-1 md:grid-cols-12 gap-[1px] bg-stone-300 dark:bg-stone-800 border border-stone-300 dark:border-stone-800' : 
+            showcaseMode === 'bento' ? 'grid grid-cols-1 md:grid-cols-12 gap-4' : 
+            'grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-16'
+          }`}>
             {filteredZines.map(zine => (
               <ZineShelfItem 
                 key={zine.id} 
@@ -229,10 +282,12 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
                 isCloud={zine.userId && !zine.userId.startsWith('ghost')} 
                 isStarred={profile?.starredZineIds?.includes(zine.id)}
                 onToggleStar={() => toggleZineStar(zine.id)}
+                mode={showcaseMode}
               />
             ))}
+            <InitSequenceCard mode={showcaseMode} />
             {filteredZines.length === 0 && (
-              <div className="col-span-full py-48 text-center opacity-30 space-y-8">
+              <div className="col-span-full py-48 text-center opacity-30 space-y-8 bg-nous-base dark:bg-stone-950">
                  <Ghost size={64} className="mx-auto" />
                  <p className="font-serif italic text-3xl">“This frequency is currently void.”</p>
                  <button onClick={() => setNebulaMode('strategist')} className="font-sans text-[9px] uppercase tracking-widest font-black text-emerald-500 border-b border-emerald-500">Return to Strategist</button>
@@ -255,34 +310,197 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
   );
 };
 
-const ZineShelfItem: React.FC<{ zine: ZineMetadata, onSelect: () => void, isCloud?: boolean, isStarred?: boolean, onToggleStar: () => void }> = ({ zine, onSelect, isCloud, isStarred, onToggleStar }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className="group relative bg-white dark:bg-[#1C1C1C] border border-stone-200 dark:border-stone-800 p-8 md:p-12 shadow-sm hover:shadow-2xl hover:border-stone-300 dark:hover:border-stone-700 transition-all flex flex-col gap-10 rounded-sm pt-14"
-    >
-       <div className="absolute top-0 left-0 right-0 flex px-8 justify-between items-start pointer-events-none">
-          <div className="bg-stone-50 dark:bg-stone-900 px-4 py-1.5 border-x border-b border-stone-100 dark:border-stone-800 flex items-center gap-2">
-              <Hash size={10} className="text-stone-400" />
-              <span className="font-sans text-[7px] font-black uppercase tracking-widest text-stone-500">{zine.tone}</span>
+const ZineShelfItem: React.FC<{ zine: ZineMetadata, onSelect: () => void, isCloud?: boolean, isStarred?: boolean, onToggleStar: () => void, mode?: string }> = ({ zine, onSelect, isCloud, isStarred, onToggleStar, mode = 'dossier' }) => {
+  const dateStr = new Date(zine.timestamp).toISOString().split('T')[0];
+  const shortId = zine.id.slice(-4);
+  const synthesisScore = (Math.random() * (0.99 - 0.70) + 0.70).toFixed(2); // Mock score for aesthetics
+
+  const hasNote = Math.random() > 0.7;
+  const noteRotation = Math.random() > 0.5 ? 'rotate-3' : '-rotate-2';
+  const notePosition = Math.random() > 0.5 ? 'bottom-16 right-4' : 'top-24 left-4';
+
+  if (mode === 'dossier') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="col-span-1 md:col-span-6 lg:col-span-4 bg-[#F9F7F2] dark:bg-stone-900 flex flex-col relative overflow-hidden"
+      >
+        <div className="p-6 pb-0 flex justify-between items-start border-b border-stone-200 dark:border-stone-800 pb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] uppercase tracking-widest font-mono text-stone-500 bg-stone-100 dark:bg-stone-800 px-2 py-1"># {zine.tone}</span>
           </div>
           <button 
             onClick={(e) => { e.stopPropagation(); onToggleStar(); }}
-            className={`pointer-events-auto p-2 mt-2 -mr-2 rounded-full transition-all ${isStarred ? 'text-amber-500 scale-110' : 'text-stone-300 hover:text-stone-500 dark:text-stone-600 dark:hover:text-stone-400'}`}
+            className={`transition-colors z-20 ${isStarred ? 'text-amber-500' : 'text-stone-300 hover:text-amber-500'}`}
           >
-             <Star size={16} fill={isStarred ? "currentColor" : "none"} strokeWidth={isStarred ? 0 : 1.5} />
+            <Star size={16} fill={isStarred ? "currentColor" : "none"} />
           </button>
-       </div>
-       <div className="flex flex-col gap-10 flex-1 cursor-pointer" onClick={onSelect}>
-           <span className="font-mono text-[8px] uppercase tracking-widest opacity-40 text-stone-500 dark:text-stone-400">REF_{zine.id.slice(-4)}</span>
-           <h3 className="font-serif text-3xl md:text-4xl italic tracking-tighter leading-[0.9] text-nous-text dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{zine.title}</h3>
-       </div>
-       <div className="flex justify-between items-center z-10 opacity-30 pt-4 border-t border-stone-100 dark:border-stone-800 cursor-pointer" onClick={onSelect}>
-         <span className="font-mono text-[8px] uppercase tracking-widest text-stone-500">{new Date(zine.timestamp).toLocaleDateString()}</span>
-         {isCloud && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
-       </div>
-    </motion.div>
-  );
+        </div>
+        <div className="p-6 flex-grow flex flex-col justify-center cursor-pointer z-10" onClick={onSelect}>
+          <div className="text-[10px] uppercase tracking-widest font-mono text-stone-400 mb-4">REF_{shortId}</div>
+          <h2 className="font-serif text-4xl italic leading-tight mb-2 text-stone-900 dark:text-white hover:text-emerald-600 transition-colors">{zine.title}</h2>
+          <p className="font-mono text-xs text-stone-500 mt-4">SYNTHESIS_SCORE: {synthesisScore}</p>
+        </div>
+        <div className="border-t border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 p-4 grid grid-cols-2 gap-4 font-mono text-[9px] uppercase tracking-widest text-stone-500 cursor-pointer z-10" onClick={onSelect}>
+          <div>
+            <span className="block text-stone-400 mb-1">Anchored</span>
+            <span className="text-stone-800 dark:text-stone-300">{dateStr}</span>
+          </div>
+          <div className="flex justify-between items-end">
+            <div>
+              <span className="block text-stone-400 mb-1">Frequency</span>
+              <span className="text-stone-800 dark:text-stone-300">Alpha-Decay</span>
+            </div>
+            {isCloud && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse mb-1" />}
+          </div>
+        </div>
+        
+        {hasNote && (
+          <div className={`absolute bg-[#F9F7F2]/90 dark:bg-stone-800/90 border border-[#D4D1C9] dark:border-stone-700 shadow-sm backdrop-blur-sm p-3 w-36 z-20 ${notePosition} ${noteRotation}`}>
+            <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 -rotate-2 w-10 h-3 bg-white/40 dark:bg-white/10 border border-black/10 dark:border-white/10 shadow-sm"></div>
+            <p className="font-serif italic text-xs text-stone-600 dark:text-stone-300 leading-tight">Aesthetic resonance detected in recent scans.</p>
+          </div>
+        )}
+      </motion.div>
+    );
+  } else if (mode === 'bento') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="col-span-1 md:col-span-6 lg:col-span-4 bg-[#F4F1E8] dark:bg-stone-900 border border-stone-300 dark:border-stone-700 rounded-sm flex flex-col p-6 shadow-sm hover:shadow-md transition-shadow"
+      >
+        <div className="flex justify-between items-start mb-8">
+          <span className="text-[9px] uppercase tracking-widest font-mono text-stone-500 border border-stone-300 dark:border-stone-700 px-2 py-1 rounded-sm"># {zine.tone}</span>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onToggleStar(); }}
+            className={`transition-colors ${isStarred ? 'text-amber-500' : 'text-stone-400 hover:text-amber-500'}`}
+          >
+            <Star size={14} fill={isStarred ? "currentColor" : "none"} />
+          </button>
+        </div>
+        <div className="flex-grow cursor-pointer" onClick={onSelect}>
+          <div className="text-[9px] uppercase tracking-widest font-mono text-stone-400 mb-2">REF_{shortId}</div>
+          <h2 className="font-serif text-3xl italic leading-tight text-stone-800 dark:text-white hover:text-emerald-600 transition-colors">{zine.title}</h2>
+        </div>
+        <div className="mt-8 pt-4 border-t border-stone-300/50 dark:border-stone-700/50 flex justify-between items-end cursor-pointer" onClick={onSelect}>
+           <div className="font-mono text-[9px] uppercase tracking-widest text-stone-500">
+             <span className="block mb-1">Score</span>
+             <span className="text-stone-800 dark:text-stone-300">{synthesisScore}</span>
+           </div>
+           <div className="font-mono text-[9px] uppercase tracking-widest text-stone-500 text-right flex items-center gap-2">
+             {isCloud && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+             <div>
+               <span className="block mb-1">Alpha-Decay</span>
+               <span className="text-stone-800 dark:text-stone-300">{dateStr}</span>
+             </div>
+           </div>
+        </div>
+      </motion.div>
+    );
+  } else {
+    // minimalist
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="col-span-1 md:col-span-6 lg:col-span-4 group cursor-pointer flex flex-col"
+        onClick={onSelect}
+      >
+        <div className="flex-grow flex items-center justify-between">
+          <h2 className="font-serif text-4xl md:text-5xl italic leading-tight text-stone-800 dark:text-stone-200 group-hover:text-black dark:group-hover:text-white transition-colors">{zine.title}</h2>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onToggleStar(); }}
+            className={`ml-4 opacity-0 group-hover:opacity-100 transition-all ${isStarred ? 'text-amber-500 opacity-100' : 'text-stone-300 hover:text-amber-500'}`}
+          >
+            <Star size={18} fill={isStarred ? "currentColor" : "none"} />
+          </button>
+        </div>
+        <div className="mt-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex justify-between items-center border-t border-stone-200 dark:border-stone-800 pt-4">
+           <span className="text-[9px] uppercase tracking-widest font-mono text-stone-400">REF_{shortId} // {zine.tone}</span>
+           <div className="flex items-center gap-2">
+             {isCloud && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+             <span className="text-[9px] uppercase tracking-widest font-mono text-stone-400">{dateStr}</span>
+           </div>
+        </div>
+      </motion.div>
+    );
+  }
+};
+
+const InitSequenceCard: React.FC<{ mode: string }> = ({ mode }) => {
+  const handleInit = () => {
+    window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'studio' }));
+  };
+
+  if (mode === 'dossier') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="col-span-1 md:col-span-6 lg:col-span-4 bg-stone-900 text-stone-300 p-8 flex flex-col justify-between"
+      >
+        <div>
+          <h3 className="font-serif text-2xl italic text-white mb-4">Initialize Sequence</h3>
+          <p className="font-sans text-xs text-stone-400 mb-8 leading-relaxed">
+            Begin a new manifestation. Connect disparate nodes to form a cohesive dossier.
+          </p>
+        </div>
+        <button 
+          onClick={handleInit}
+          className="w-full py-4 border border-stone-700 text-white font-mono text-[10px] uppercase tracking-[0.2em] hover:bg-white hover:text-stone-900 transition-colors flex items-center justify-center gap-2"
+        >
+          <Zap size={14} />
+          Draft New Protocol
+        </button>
+      </motion.div>
+    );
+  } else if (mode === 'bento') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="col-span-1 md:col-span-6 lg:col-span-4 bg-stone-800 text-stone-200 p-8 flex flex-col justify-between rounded-sm shadow-sm hover:shadow-md transition-shadow"
+      >
+        <div>
+          <div className="flex items-center gap-2 mb-6">
+            <span className="w-2 h-2 rounded-full bg-stone-400 animate-pulse"></span>
+            <span className="font-mono text-[9px] uppercase tracking-widest text-stone-400">System Ready</span>
+          </div>
+          <h3 className="font-serif text-3xl italic text-white mb-4">New Archive Entry</h3>
+          <p className="font-sans text-sm text-stone-400 mb-8 leading-relaxed">
+            Catalog a new module into the canon.
+          </p>
+        </div>
+        <button 
+          onClick={handleInit}
+          className="w-full py-3 bg-stone-700 text-white font-mono text-[9px] uppercase tracking-widest hover:bg-stone-600 transition-colors rounded-sm flex items-center justify-center gap-2"
+        >
+          <Zap size={12} />
+          Initialize
+        </button>
+      </motion.div>
+    );
+  } else {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        onClick={handleInit}
+        className="col-span-1 md:col-span-6 lg:col-span-4 flex items-center justify-center border border-dashed border-stone-300 dark:border-stone-800 hover:border-stone-400 dark:hover:border-stone-600 transition-colors min-h-[200px] group cursor-pointer"
+      >
+         <div className="text-center opacity-50 group-hover:opacity-100 transition-opacity">
+            <Zap size={24} className="mx-auto mb-4 text-stone-400 group-hover:text-stone-800 dark:group-hover:text-stone-200 transition-colors" />
+            <span className="font-mono text-[9px] uppercase tracking-widest text-stone-500 group-hover:text-stone-800 dark:group-hover:text-stone-200 transition-colors">Draft Protocol</span>
+         </div>
+      </motion.div>
+    );
+  }
 };

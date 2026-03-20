@@ -24,6 +24,7 @@ const SECTION_DEFS = [
 
 const EXPORT_MODES = [
   { id: 'scroll', label: 'Master Scroll (PNG)', desc: 'Continuous vertical image. Optimized for mobile witnessing and long screenshots.', icon: <Scroll size={16} /> },
+  { id: 'scroll_jpg', label: 'Master Scroll (JPG)', desc: 'Continuous vertical image. Optimized for mobile witnessing and long screenshots.', icon: <Scroll size={16} /> },
   { id: 'pdf', label: 'Document (PDF)', desc: 'Standard architectural layout calibrated for physical ink manifestation and archival binding.', icon: <Printer size={16} /> },
   { id: 'assets', label: 'Asset Stack (PDF)', desc: 'Separated high-fidelity cards. Designed for individual saving or social carousel processing.', icon: <Image size={16} /> }
 ];
@@ -166,17 +167,19 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
       if (exportMode === 'pdf' || exportMode === 'assets') {
         await generatePDF();
       } else {
-        // Scroll Mode (PNG)
+        // Scroll Mode (PNG/JPG)
         const canvas = await html2canvas(element, {
           scale: 2,
           useCORS: true,
-          backgroundColor: null, 
+          backgroundColor: exportMode === 'scroll_jpg' ? '#ffffff' : null, 
           logging: false
         });
 
         const link = document.createElement('a');
-        link.download = `Mimi_${metadata.title.replace(/[^a-z0-9]/gi, '_')}_scroll.png`;
-        link.href = canvas.toDataURL('image/png');
+        const ext = exportMode === 'scroll_jpg' ? 'jpg' : 'png';
+        const mime = exportMode === 'scroll_jpg' ? 'image/jpeg' : 'image/png';
+        link.download = `Mimi_${metadata.title.replace(/[^a-z0-9]/gi, '_')}_scroll.${ext}`;
+        link.href = canvas.toDataURL(mime, exportMode === 'scroll_jpg' ? 0.9 : 1.0);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -310,11 +313,11 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
              )}
 
              {/* 3. SIGNALS (ARCHETYPE) */}
-             {selectedSections.has('signals') && metadata.content.aesthetic_touchpoints && (
+             {selectedSections.has('signals') && metadata.content.semiotic_signals && (
                 <div className={`${blockClass} bg-stone-900 text-white dark:bg-black`}>
                     <SectionHeader label="Archetype Index" icon={<Layers />} />
                     <div className="flex-1 flex flex-col justify-center space-y-8">
-                        {metadata.content.aesthetic_touchpoints.slice(0, 4).map((t, i) => (
+                        {metadata.content.semiotic_signals.slice(0, 4).map((t, i) => (
                             <div key={i} className="border-l-2 border-white/20 pl-6 space-y-1">
                                 <h4 className="font-serif text-2xl italic text-white">{t.motif}</h4>
                                 <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400 leading-relaxed">{t.context}</p>

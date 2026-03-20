@@ -6,6 +6,7 @@ import { PocketItem, ZineMetadata, TasteAuditReport, TrendSynthesisReport, Color
 import { fetchPocketItems, deleteFromPocket, addToPocket, updatePocketItem, createMoodboard } from '../services/firebase';
 import { getLocalPocket } from '../services/localArchive';
 import { useUser } from '../contexts/UserContext';
+import { searchGrounding } from '../services/searchService';
 import { analyzeCollectionIntent, scryTrendSynthesis, generateInvestmentStrategy, compressImage, applyAestheticRefraction } from '../services/geminiService';
 import { Loader2, Trash2, Sparkles, RefreshCw, X, CheckCircle2, Filter, Search, Link as LinkIcon, Anchor, Info, Compass, ShieldCheck, Target, ChevronRight, Binary, Orbit, Zap, Activity, Fingerprint, Waves, Play, Pause, Volume2, Shield, Plus, Layers, PenTool, Layout, Save, Wand2, Pencil, FolderPlus, FolderOpen, ArrowLeft, Copy, Check, Send, Radio, Briefcase, Eye, EyeOff, Globe2, Radar, ExternalLink, ImageIcon, Wallet, ScrollText, DollarSign, PieChart, Coins, AlertTriangle, LayoutGrid, Upload, FileText, Share2, Wand } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -279,7 +280,7 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
                                     ...(item.content.analysis?.visual_shards?.map(s => s.imageUrl) || [])
                                 ].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).map((url, i) => (
                                     <div key={i} className="group relative aspect-square bg-stone-50 dark:bg-stone-950 rounded-sm overflow-hidden border border-stone-100 dark:border-stone-800">
-                                        <img src={url} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" />
+                                        <img src={url} className="w-full h-full object-cover transition-all" />
                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
                                             <button 
                                                 onClick={async () => {
@@ -481,6 +482,12 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
   const [newFolderName, setNewFolderName] = useState('');
   const [activeShard, setActiveShard] = useState<PocketItem | null>(null);
   
+  // Search State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchSummary, setSearchSummary] = useState<string | null>(null);
+  const [searchResults, setSearchResults] = useState<{ id: string; type: string; relevanceScore: number }[]>([]);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadPocket = useCallback(async (silent = false) => {
@@ -511,15 +518,22 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
   }, [loadPocket]);
 
   const filteredItems = useMemo(() => {
+    if (searchQuery && searchResults.length > 0) {
+      const resultIds = new Set(searchResults.map(r => r.id));
+      return items.filter(i => resultIds.has(i.id));
+    }
+    
     if (activeBoard) return items.filter(i => activeBoard.content.itemIds?.includes(i.id));
+    
     return items.filter(item => {
       // If we are at root, allow items that are NOT in a folder OR are folders themselves
       const isFolder = item.type === 'moodboard';
+      if (isFolder) return true;
+      
       const isInAnyFolder = items.some(mb => mb.type === 'moodboard' && mb.content.itemIds?.includes(item.id));
-      // Show everything for simplicity in archive, filtering logic can be enhanced later
-      return true;
+      return !isInAnyFolder;
     });
-  }, [items, activeBoard]);
+  }, [items, activeBoard, searchQuery, searchResults]);
 
   // --- ACTIONS ---
 
@@ -658,6 +672,33 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
     }
   };
 
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setSearchSummary(null);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const { results, summary } = await searchGrounding(searchQuery);
+      setSearchResults(results || []);
+      setSearchSummary(summary || null);
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Search Grounded.", icon: <Search size={14} /> } }));
+    } catch (err) {
+      console.error("Search failed", err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setSearchResults([]);
+    setSearchSummary(null);
+  };
+
   return (
     <div className="w-full h-full flex flex-col bg-nous-base dark:bg-stone-950 transition-colors duration-1000 overflow-hidden relative">
       <AnimatePresence>
@@ -676,28 +717,41 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
           )}
       </AnimatePresence>
 
-      <header className="px-4 md:px-8 lg:px-12 pt-12 md:pt-16 pb-8 border-b border-stone-100 dark:border-stone-900 bg-white/50 dark:bg-stone-900/50 backdrop-blur-xl shrink-0">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                 {activeBoard && <button onClick={() => setActiveBoard(null)} className="p-2 -ml-2 text-stone-400 hover:text-nous-text transition-all"><ArrowLeft size={20}/></button>}
-                 <span className="font-sans text-[10px] uppercase tracking-[0.5em] text-stone-400 font-black italic">{activeBoard ? 'Collection Focus' : 'Archive: Sovereign Material'}</span>
-              </div>
-              <h1 className="font-serif text-5xl md:text-7xl italic tracking-tighter text-nous-text dark:text-white leading-none">
-                 {activeBoard ? activeBoard.content.name : 'The Pocket.'}
-              </h1>
-            </div>
+      <header className="px-4 md:px-8 lg:px-12 py-4 border-b border-stone-100 dark:border-stone-900 bg-white/50 dark:bg-stone-900/50 backdrop-blur-xl shrink-0">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             
-            <div className="flex items-center gap-6">
+            <div className="flex-1" />
+            
+            {/* Middle: Search Bar */}
+            <form onSubmit={handleSearch} className="relative w-full md:max-w-sm group">
+              <input 
+                type="text" 
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search fragments..."
+                className="w-full bg-stone-100 dark:bg-stone-800 border-none py-2 pl-10 pr-10 font-sans text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all rounded-full"
+              />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-emerald-500 transition-colors" />
+              {searchQuery && (
+                <button type="button" onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-red-500">
+                  <X size={14} />
+                </button>
+              )}
+            </form>
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-4">
                 <button 
                     onClick={() => setShowInjectModal(true)}
-                    className="flex items-center gap-2 px-6 py-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full font-sans text-[9px] uppercase tracking-widest font-black hover:bg-emerald-500 hover:text-white transition-all"
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-full font-sans text-[9px] uppercase tracking-widest font-black hover:bg-emerald-600 transition-all"
                 >
-                    <Plus size={14} /> Inject Shard
+                    <Plus size={12} /> Inject
                 </button>
-                <div className="flex items-center gap-3 px-4 py-2 bg-stone-50 dark:bg-stone-800 rounded-full border border-black/5">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-stone-100 dark:bg-stone-800 rounded-full border border-black/5">
                     <Shield size={10} className={systemStatus.auth === 'anchored' ? 'text-emerald-500' : 'text-stone-300'} />
-                    <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">{systemStatus.auth === 'anchored' ? 'SYNC ACTIVE' : 'LOCAL'}</span>
+                    <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">
+                      {systemStatus.auth === 'anchored' ? 'SYNC' : 'LOCAL'}
+                    </span>
                 </div>
             </div>
           </div>
@@ -728,6 +782,26 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
       </AnimatePresence>
 
       <div className="flex-1 overflow-y-auto no-scrollbar px-4 md:px-8 lg:px-12 pt-12 pb-64">
+         {/* SEARCH SUMMARY */}
+         <AnimatePresence>
+            {searchSummary && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }} 
+                animate={{ opacity: 1, height: 'auto' }} 
+                exit={{ opacity: 0, height: 0 }}
+                className="mb-12 p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-sm overflow-hidden"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <Sparkles size={16} className="text-emerald-500" />
+                  <span className="font-sans text-[9px] uppercase tracking-widest font-black text-emerald-600 dark:text-emerald-400">AI Search Insight</span>
+                </div>
+                <p className="font-serif italic text-xl text-stone-700 dark:text-stone-300 leading-relaxed">
+                  {searchSummary}
+                </p>
+              </motion.div>
+            )}
+         </AnimatePresence>
+
          {/* REPORT OVERLAYS */}
          <AnimatePresence>
             {activeTrendReport && (
@@ -790,7 +864,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
             {filteredItems?.map(item => (
               <motion.div key={item.id} layout onClick={() => handleItemClick(item)} className={`group relative bg-white dark:bg-stone-900 border p-1 shadow-sm rounded-sm flex flex-col transition-all cursor-pointer ${isSelectionMode && selectedIds.has(item.id) ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-stone-100 dark:border-stone-800'}`}>
                   <div className="relative aspect-[3/4] bg-stone-50 dark:bg-stone-950 overflow-hidden">
-                     {item.type === 'image' && <img src={item.content.imageUrl} className="w-full h-full object-cover grayscale transition-all group-hover:grayscale-0 duration-[2s]" />}
+                     {item.type === 'image' && <img src={item.content.thumbnailUrl || item.content.imageUrl} className="w-full h-full object-cover transition-all duration-[2s]" loading="lazy" />}
                      {item.type === 'analysis_report' && (
                         <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-stone-900 text-white gap-4 text-center border border-emerald-500/20">
                            <Radar size={32} className="text-emerald-500 opacity-50" />
@@ -827,7 +901,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
                      {(item.type === 'voicenote' || item.type === 'audio') && <SonicShardPlayer url={item.content.audioUrl} />}
                      {item.type === 'zine_card' && (
                         <div className="w-full h-full pointer-events-auto" onClick={(e) => { e.stopPropagation(); if(item.content.analysis && onSelectZine) onSelectZine({ id: item.content.zineId, title: item.content.title, content: item.content.analysis, tone: 'default', timestamp: item.timestamp, userHandle: 'Ghost' } as ZineMetadata); }}>
-                           <img src={item.content.imageUrl} className="w-full h-full object-cover grayscale transition-all group-hover:grayscale-0 duration-[2s]" />
+                           <img src={item.content.imageUrl} className="w-full h-full object-cover transition-all duration-[2s]" />
                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                               <span className="font-sans text-[8px] uppercase tracking-widest text-white font-black">Absorb Zine</span>
                            </div>

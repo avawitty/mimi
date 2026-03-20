@@ -1,5 +1,6 @@
 import { collection, doc, setDoc, deleteDoc, query, where, getDocs, onSnapshot, updateDoc, getDoc } from "firebase/firestore";
 import { db, auth } from "./firebaseInit";
+import { handleFirestoreError, OperationType } from "./firebaseUtils";
 
 export interface Connection {
   id: string;
@@ -47,21 +48,33 @@ export const unfollowUser = async (followingId: string) => {
 };
 
 export const fetchFollowers = async (userId: string) => {
-  const q = query(collection(db, "connections"), where("followingId", "==", userId));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => d.data() as Connection);
+  try {
+    const q = query(collection(db, "connections"), where("followingId", "==", userId));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => d.data() as Connection);
+  } catch (e) {
+    handleFirestoreError(e, OperationType.LIST, "connections");
+    return [];
+  }
 };
 
 export const fetchFollowing = async (userId: string) => {
-  const q = query(collection(db, "connections"), where("followerId", "==", userId));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => d.data() as Connection);
+  try {
+    const q = query(collection(db, "connections"), where("followerId", "==", userId));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => d.data() as Connection);
+  } catch (e) {
+    handleFirestoreError(e, OperationType.LIST, "connections");
+    return [];
+  }
 };
 
 export const subscribeToFollowing = (userId: string, callback: (connections: Connection[]) => void) => {
   const q = query(collection(db, "connections"), where("followerId", "==", userId));
   return onSnapshot(q, (snap) => {
     callback(snap.docs.map(d => d.data() as Connection));
+  }, (error) => {
+    handleFirestoreError(error, OperationType.LIST, "connections");
   });
 };
 
@@ -80,72 +93,102 @@ export const sendFriendRequest = async (receiverId: string) => {
     timestamp: Date.now()
   };
   
-  await setDoc(doc(db, "friend_requests", requestId), request);
+  try {
+    await setDoc(doc(db, "friend_requests", requestId), request);
+  } catch (e) {
+    handleFirestoreError(e, OperationType.CREATE, `friend_requests/${requestId}`);
+  }
 };
 
 export const acceptFriendRequest = async (requestId: string, senderId: string) => {
   const currentUser = auth.currentUser;
   if (!currentUser) throw new Error("Must be logged in to accept friend request");
   
-  // Update request status
-  await updateDoc(doc(db, "friend_requests", requestId), { status: 'accepted' });
-  
-  // Create friendship record
-  // Sort IDs to ensure consistent friendship ID regardless of who sent the request
-  const sortedIds = [currentUser.uid, senderId].sort();
-  const friendshipId = `${sortedIds[0]}_${sortedIds[1]}`;
-  
-  const friendship: Friendship = {
-    id: friendshipId,
-    user1: sortedIds[0],
-    user2: sortedIds[1],
-    timestamp: Date.now()
-  };
-  
-  await setDoc(doc(db, "friendships", friendshipId), friendship);
+  try {
+    // Update request status
+    await updateDoc(doc(db, "friend_requests", requestId), { status: 'accepted' });
+    
+    // Create friendship record
+    // Sort IDs to ensure consistent friendship ID regardless of who sent the request
+    const sortedIds = [currentUser.uid, senderId].sort();
+    const friendshipId = `${sortedIds[0]}_${sortedIds[1]}`;
+    
+    const friendship: Friendship = {
+      id: friendshipId,
+      user1: sortedIds[0],
+      user2: sortedIds[1],
+      timestamp: Date.now()
+    };
+    
+    await setDoc(doc(db, "friendships", friendshipId), friendship);
+  } catch (e) {
+    handleFirestoreError(e, OperationType.WRITE, `friend_requests/${requestId}`);
+  }
 };
 
 export const rejectFriendRequest = async (requestId: string) => {
   const currentUser = auth.currentUser;
   if (!currentUser) throw new Error("Must be logged in to reject friend request");
   
-  await updateDoc(doc(db, "friend_requests", requestId), { status: 'rejected' });
+  try {
+    await updateDoc(doc(db, "friend_requests", requestId), { status: 'rejected' });
+  } catch (e) {
+    handleFirestoreError(e, OperationType.UPDATE, `friend_requests/${requestId}`);
+  }
 };
 
 export const cancelFriendRequest = async (requestId: string) => {
   const currentUser = auth.currentUser;
   if (!currentUser) throw new Error("Must be logged in to cancel friend request");
   
-  await deleteDoc(doc(db, "friend_requests", requestId));
+  try {
+    await deleteDoc(doc(db, "friend_requests", requestId));
+  } catch (e) {
+    handleFirestoreError(e, OperationType.DELETE, `friend_requests/${requestId}`);
+  }
 };
 
 export const removeFriend = async (friendId: string) => {
   const currentUser = auth.currentUser;
   if (!currentUser) throw new Error("Must be logged in to remove friend");
   
-  const sortedIds = [currentUser.uid, friendId].sort();
-  const friendshipId = `${sortedIds[0]}_${sortedIds[1]}`;
-  
-  await deleteDoc(doc(db, "friendships", friendshipId));
+  try {
+    const sortedIds = [currentUser.uid, friendId].sort();
+    const friendshipId = `${sortedIds[0]}_${sortedIds[1]}`;
+    
+    await deleteDoc(doc(db, "friendships", friendshipId));
+  } catch (e) {
+    handleFirestoreError(e, OperationType.DELETE, `friendships`);
+  }
 };
 
 export const fetchFriendRequests = async (userId: string, type: 'incoming' | 'outgoing' = 'incoming') => {
   const field = type === 'incoming' ? 'receiverId' : 'senderId';
-  const q = query(collection(db, "friend_requests"), where(field, "==", userId), where("status", "==", "pending"));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => d.data() as FriendRequest);
+  try {
+    const q = query(collection(db, "friend_requests"), where(field, "==", userId), where("status", "==", "pending"));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => d.data() as FriendRequest);
+  } catch (e) {
+    handleFirestoreError(e, OperationType.LIST, "friend_requests");
+    return [];
+  }
 };
 
 export const fetchFriends = async (userId: string) => {
   const q1 = query(collection(db, "friendships"), where("user1", "==", userId));
   const q2 = query(collection(db, "friendships"), where("user2", "==", userId));
   
-  const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
-  
-  const friends1 = snap1.docs.map(d => ({ ...d.data(), friendId: d.data().user2 }));
-  const friends2 = snap2.docs.map(d => ({ ...d.data(), friendId: d.data().user1 }));
-  
-  return [...friends1, ...friends2] as (Friendship & { friendId: string })[];
+  try {
+    const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
+    
+    const friends1 = snap1.docs.map(d => ({ ...d.data(), friendId: d.data().user2 }));
+    const friends2 = snap2.docs.map(d => ({ ...d.data(), friendId: d.data().user1 }));
+    
+    return [...friends1, ...friends2] as (Friendship & { friendId: string })[];
+  } catch (e) {
+    handleFirestoreError(e, OperationType.LIST, "friendships");
+    return [];
+  }
 };
 
 export const checkConnectionStatus = async (otherUserId: string) => {
