@@ -323,9 +323,9 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
                                 >
                                   {t.userHandle}
                                 </button>
-                                {t.zineData?.mask?.typographyIntent?.archetype && (
+                                {(t.zineData?.mask as any)?.typographyIntent?.archetype && (
                                     <span className="font-mono text-[7px] uppercase tracking-widest text-white/30 ml-2">
-                                        [{t.zineData.mask.typographyIntent.archetype.replace('-', ' ')}]
+                                        [{(t.zineData?.mask as any).typographyIntent.archetype.replace('-', ' ')}]
                                     </span>
                                 )}
                             </div>

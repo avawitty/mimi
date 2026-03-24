@@ -51,8 +51,8 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ items, zines, 
         <tbody>
           {processedItems.map(item => (
             <tr key={item.id} className="border-b border-stone-100 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-900">
-              <td className="p-4">{item.prompt || item.title || 'Untitled'}</td>
-              <td className="p-4">{item.origin || item.source || 'Unknown'}</td>
+              <td className="p-4">{(item as any).prompt || item.title || 'Untitled'}</td>
+              <td className="p-4">{(item as any).origin || item.source || 'Unknown'}</td>
               <td className="p-4">{item.timestamp ? new Date(item.timestamp).toLocaleDateString() : 'N/A'}</td>
               <td className="p-4">{isUsedInZine(item.id) ? 'Yes' : 'No'}</td>
               <td className="p-4">

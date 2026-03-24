@@ -7,9 +7,10 @@ import { fetchPocketItems, deleteFromPocket, addToPocket, updatePocketItem, crea
 import { getLocalPocket } from '../services/localArchive';
 import { useUser } from '../contexts/UserContext';
 import { searchGrounding } from '../services/searchService';
-import { analyzeCollectionIntent, scryTrendSynthesis, generateInvestmentStrategy, compressImage, applyAestheticRefraction } from '../services/geminiService';
+import { analyzeCollectionIntent, scryTrendSynthesis, generateInvestmentStrategy, compressImage, applyAestheticRefraction, analyzeImageAesthetic, analyzeAestheticDelta } from '../services/geminiService';
 import { Loader2, Trash2, Sparkles, RefreshCw, X, CheckCircle2, Filter, Search, Link as LinkIcon, Anchor, Info, Compass, ShieldCheck, Target, ChevronRight, Binary, Orbit, Zap, Activity, Fingerprint, Waves, Play, Pause, Volume2, Shield, Plus, Layers, PenTool, Layout, Save, Wand2, Pencil, FolderPlus, FolderOpen, ArrowLeft, Copy, Check, Send, Radio, Briefcase, Eye, EyeOff, Globe2, Radar, ExternalLink, ImageIcon, Wallet, ScrollText, DollarSign, PieChart, Coins, AlertTriangle, LayoutGrid, Upload, FileText, Share2, Wand } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { DeltaVerdictCard } from './DeltaVerdictCard';
 
 // --- SUB-COMPONENTS ---
 
@@ -284,6 +285,17 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
                                             <button 
                                                 onClick={async () => {
+                                                    let deltaVerdict = undefined;
+                                                    if (profile?.tasteProfile?.aestheticSignature) {
+                                                        try {
+                                                            // For URL images, we'd need to fetch and convert to base64, but for now we'll skip delta for extracted zine images unless we have the base64
+                                                            // Or we can just pass the URL if analyzeImageAesthetic supports it (it expects base64).
+                                                            // We will skip delta for zine extraction for now to keep it fast, or we can fetch it.
+                                                            // Let's just do a basic add.
+                                                        } catch (e) {
+                                                            console.error(e);
+                                                        }
+                                                    }
                                                     await addToPocket(item.userId, 'image', {
                                                         imageUrl: url,
                                                         prompt: `Extracted from: ${item.content.title}`,
@@ -307,7 +319,7 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
                     {item.type === 'analysis_report' && (
                         <div className="w-full max-w-2xl bg-stone-900 text-white p-6 md:p-12 space-y-8 overflow-y-auto max-h-[80vh]">
                             <div className="space-y-2 border-b border-white/10 pb-6">
-                                <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-emerald-500 font-black">Mesopic Analysis</span>
+                                <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-emerald-500 font-black">The Lens Analysis</span>
                                 <h2 className="font-serif text-4xl italic">{item.content.title}</h2>
                             </div>
                             
@@ -400,6 +412,11 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
                     <div className="flex justify-between items-center border-b border-stone-100 dark:border-stone-800 pb-2">
                         <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">Interior Notes</span>
                     </div>
+                    {item.deltaVerdict && (
+                        <div className="mb-4">
+                            <DeltaVerdictCard verdict={item.deltaVerdict} />
+                        </div>
+                    )}
                     {isEditing ? (
                         <textarea 
                             value={notes} 
@@ -559,6 +576,41 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
     } finally { setIsAnalyzing(false); setActiveAgent(null); }
   };
 
+  const handleBatchRefract = async () => {
+    const targetItems = getSelection().filter(i => i.type === 'image');
+    if (targetItems.length === 0) {
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "No images selected for refraction.", type: 'error' } }));
+        return;
+    }
+    
+    setIsSelectionMode(false);
+    setSelectedIds(new Set());
+    window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Batch Refraction Initiated...", icon: <Wand2 size={14} /> } }));
+    
+    for (const item of targetItems) {
+        try {
+            const stylePrompt = item.agentEnrichment?.culturalReference || 'avant-garde';
+            const transformedUrl = await applyAestheticRefraction(item.content.imageUrl, stylePrompt, profile);
+            
+            const newItemContent = {
+                imageUrl: transformedUrl,
+                prompt: `Refracted: ${item.content.prompt || item.content.name || 'Untitled'}`,
+                timestamp: Date.now(),
+                origin: 'Batch_Refraction'
+            };
+            
+            const id = await addToPocket(user?.uid || 'ghost', 'image', newItemContent);
+            const fullItem: PocketItem = { id, userId: user?.uid || 'ghost', type: 'image', savedAt: Date.now(), content: newItemContent };
+            window.dispatchEvent(new CustomEvent('mimi:shard_added', { detail: fullItem }));
+        } catch (e) {
+            console.error("Refraction failed for item", item.id, e);
+        }
+    }
+    
+    window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Batch Refraction Complete.", icon: <CheckCircle2 size={14} /> } }));
+    await loadPocket(true);
+  };
+
   const handleFinancialAnalysis = async (singleItem?: PocketItem) => {
     const targetItems = singleItem ? [singleItem] : getSelection();
     if (targetItems.length === 0) return;
@@ -652,8 +704,21 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
             prompt: file.name,
             timestamp: Date.now()
         };
-        const id = await addToPocket(user?.uid || 'ghost', type, newItem);
-        const fullItem: PocketItem = { id, userId: user?.uid || 'ghost', type, savedAt: Date.now(), content: newItem };
+        
+        let deltaVerdict = undefined;
+        if (type === 'image' && profile?.tasteProfile?.aestheticSignature) {
+            try {
+                const aesthetic = await analyzeImageAesthetic(base64, 'image/png', profile);
+                if (aesthetic) {
+                    deltaVerdict = await analyzeAestheticDelta(profile.tasteProfile.aestheticSignature, aesthetic);
+                }
+            } catch (e) {
+                console.error("Failed to analyze delta for new pocket item", e);
+            }
+        }
+
+        const id = await addToPocket(user?.uid || 'ghost', type, newItem, undefined, deltaVerdict);
+        const fullItem: PocketItem = { id, userId: user?.uid || 'ghost', type, savedAt: Date.now(), content: newItem, deltaVerdict };
         window.dispatchEvent(new CustomEvent('mimi:shard_added', { detail: fullItem }));
       }
       await loadPocket(true);
@@ -666,6 +731,8 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
     } else {
       if (item.type === 'moodboard') {
         setActiveBoard(item);
+      } else if (item.type === 'zine_card' && item.content.analysis && onSelectZine) {
+        onSelectZine({ id: item.content.zineId, title: item.content.title, content: item.content.analysis, tone: 'default', timestamp: item.timestamp, userHandle: 'Ghost' } as ZineMetadata);
       } else {
         setActiveShard(item);
       }
@@ -869,7 +936,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
                         <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-stone-900 text-white gap-4 text-center border border-emerald-500/20">
                            <Radar size={32} className="text-emerald-500 opacity-50" />
                            <h3 className="font-serif italic text-xl text-white line-clamp-2">{item.content.title}</h3>
-                           <span className="font-sans text-[6px] uppercase tracking-widest text-emerald-500 font-black">Mesopic Analysis</span>
+                           <span className="font-sans text-[6px] uppercase tracking-widest text-emerald-500 font-black">The Lens Analysis</span>
                         </div>
                      )}
                      {item.type === 'moodboard' && (
@@ -955,6 +1022,14 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
                          <span className="font-sans text-[7px] uppercase tracking-widest font-black">Audit</span>
                      </button>
                      <button 
+                         onClick={handleBatchRefract}
+                         disabled={selectedIds.size === 0}
+                         className="flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-stone-400 hover:text-purple-400 hover:bg-purple-500/10 transition-all disabled:opacity-30"
+                     >
+                         <Wand2 size={18} />
+                         <span className="font-sans text-[7px] uppercase tracking-widest font-black">Refract</span>
+                     </button>
+                     <button 
                          onClick={handleFinancialAnalysis}
                          disabled={selectedIds.size === 0}
                          className="flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-stone-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all disabled:opacity-30"
@@ -1003,6 +1078,15 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
                  </div>
                  <div className="flex items-center gap-4 px-4 border-l border-white/10">
                      <span className="font-mono text-xs text-white hidden md:inline">{selectedIds.size} Selected</span>
+                     <button onClick={() => {
+                         if (selectedIds.size === filteredItems.length) {
+                             setSelectedIds(new Set());
+                         } else {
+                             setSelectedIds(new Set(filteredItems.map(i => i.id)));
+                         }
+                     }} className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 hover:text-white transition-colors">
+                         {selectedIds.size === filteredItems.length ? 'Deselect All' : 'Select All'}
+                     </button>
                      <button onClick={() => { setIsSelectionMode(!isSelectionMode); if(isSelectionMode) setSelectedIds(new Set()); }} className={`p-2 rounded-full transition-colors ${isSelectionMode ? 'bg-red-500 text-white' : 'bg-white/10 text-stone-400 hover:bg-white/20'}`}>
                          {isSelectionMode ? <X size={16} /> : <CheckCircle2 size={16} />}
                      </button>

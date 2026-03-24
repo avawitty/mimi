@@ -38,15 +38,17 @@ export const RegistryAlert: React.FC = () => {
             className={`pointer-events-auto min-w-[300px] p-4 rounded-sm border shadow-2xl flex items-center gap-4 backdrop-blur-xl ${
               alert.type === 'error' 
                 ? 'bg-red-950/90 border-red-500/50 text-red-200' 
+                : alert.type === 'announcement'
+                ? 'bg-blue-950/90 border-blue-500/50 text-blue-200'
                 : 'bg-stone-900/90 border-stone-700/50 text-stone-100'
             }`}
           >
-            <div className={`shrink-0 ${alert.type === 'error' ? 'text-red-500' : 'text-emerald-500'}`}>
-              {alert.icon || (alert.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle size={18} />)}
+            <div className={`shrink-0 ${alert.type === 'error' ? 'text-red-500' : alert.type === 'announcement' ? 'text-blue-500' : 'text-emerald-500'}`}>
+              {alert.icon || (alert.type === 'error' ? <AlertCircle size={18} /> : alert.type === 'announcement' ? <Info size={18} /> : <CheckCircle size={18} />)}
             </div>
             <div className="flex-1">
               <p className="font-sans text-[10px] uppercase tracking-widest font-black opacity-50 mb-1">
-                {alert.type === 'error' ? 'System Dissonance' : 'Registry Update'}
+                {alert.type === 'error' ? 'System Dissonance' : alert.type === 'announcement' ? 'Site Announcement' : 'Registry Update'}
               </p>
               <p className="font-serif italic text-sm">{alert.message}</p>
             </div>

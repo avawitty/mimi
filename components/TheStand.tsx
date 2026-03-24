@@ -6,7 +6,7 @@ import { fetchCommunityZines } from '../services/firebase';
 import { ZineMetadata } from '../types';
 import { useUser } from '../contexts/UserContext';
 import { Search, Globe, Radio, Zap, ArrowUpRight, Loader2, RefreshCw, Hash, Eye, LayoutGrid, Layers, Ghost } from 'lucide-react';
-import { ZineCard } from './ZineCard';
+import { ZineCoverCard } from './ZineCoverCard';
 
 const TICKER_ITEMS = [
   "SIGNAL_DENSITY: HIGH",
@@ -149,10 +149,9 @@ export const TheStand: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> 
                     <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
                         {filteredZines.map((zine, i) => (
                             <div key={zine.id} className="break-inside-avoid">
-                                <ZineCard 
+                                <ZineCoverCard 
                                     zine={zine} 
                                     onClick={() => onSelectZine(zine)} 
-                                    isMasonry 
                                 />
                             </div>
                         ))}

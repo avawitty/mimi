@@ -1,39 +1,92 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Compass, Activity, Route, Loader2 } from 'lucide-react';
+import { Compass, Loader2, Activity, Network, UserCircle } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { fetchUserZines } from '../services/firebaseUtils';
 import { ZineMetadata, NarrativeThread, TasteGraphNode, TasteGraphEdge } from '../types';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ScatterChart, Scatter, ZAxis } from 'recharts';
 import { saveNarrativeThread, fetchNarrativeThreads } from '../services/firebaseUtils';
-import { generateNarrativeThread, analyzeThreadPath } from '../services/geminiService';
+import { generateNarrativeThread, analyzeThreadPath, generateTrajectoryReadout } from '../services/geminiService';
 import { ThreadPathVisualization } from './ThreadPathVisualization';
 
 type ThreadMode = 'biographical' | 'influence' | 'emotional';
 
+const WEAVER_CONFIG = {
+  emotional: { bg: '#FDFBF7', accent: '#10B981', icon: Activity, label: 'Emotional' },
+  influence: { bg: '#050510', accent: '#06B6D4', icon: Network, label: 'Influence' },
+  biographical: { bg: '#080808', accent: '#A855F7', icon: UserCircle, label: 'Biography' }
+};
+
+const SegmentedControl: React.FC<{ mode: string, onChange: (mode: string) => void }> = ({ mode, onChange }) => {
+  return (
+    <div className="flex justify-center w-full my-8">
+      <div className="bg-stone-200/50 dark:bg-stone-800/50 p-1 rounded-full flex items-center gap-1 backdrop-blur-md border border-stone-300/50 dark:border-stone-700/50">
+        {(Object.keys(WEAVER_CONFIG) as Array<keyof typeof WEAVER_CONFIG>).map((key) => {
+          const config = WEAVER_CONFIG[key];
+          const isActive = mode === key;
+          const Icon = config.icon;
+          
+          return (
+            <button
+              key={key}
+              onClick={() => {
+                if (!isActive) {
+                  window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'click' } }));
+                  onChange(key);
+                }
+              }}
+              className={`relative flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-sans uppercase tracking-widest transition-colors z-10 ${
+                isActive ? 'text-stone-900 dark:text-stone-100' : 'text-stone-500 hover:text-stone-700 dark:hover:text-stone-300'
+              }`}
+            >
+              {isActive && (
+                <motion.div
+                  layoutId="active-segment"
+                  className="absolute inset-0 bg-white dark:bg-stone-900 rounded-full shadow-sm border border-stone-200 dark:border-stone-800"
+                  initial={false}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10 flex items-center gap-2">
+                <Icon size={14} style={{ color: isActive ? config.accent : undefined }} />
+                {config.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 export const ThreadsView: React.FC = () => {
-  const { user } = useUser();
+  const { user, loading: userLoading, activeThread, setActiveThread } = useUser();
   const [zines, setZines] = useState<ZineMetadata[]>([]);
   const [threads, setThreads] = useState<NarrativeThread[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeMode, setActiveMode] = useState<ThreadMode>('emotional');
-  const [activeThread, setActiveThread] = useState<NarrativeThread | null>(null);
   const [newNote, setNewNote] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [graphData, setGraphData] = useState<{ nodes: TasteGraphNode[], edges: TasteGraphEdge[] } | null>(null);
+  const [trajectoryReadout, setTrajectoryReadout] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
     if (activeThread) {
       setIsAnalyzing(true);
-      analyzeThreadPath(activeThread, zines).then(data => {
+      Promise.all([
+        analyzeThreadPath(activeThread, zines),
+        generateTrajectoryReadout(activeThread, zines)
+      ]).then(([data, readout]) => {
         setGraphData(data);
+        setTrajectoryReadout(readout);
         setIsAnalyzing(false);
       });
     }
   }, [activeThread, zines]);
 
   useEffect(() => {
+    if (userLoading) return;
     if (user?.uid) {
       setLoading(true);
       Promise.all([
@@ -46,8 +99,10 @@ export const ThreadsView: React.FC = () => {
         setThreads(fetchedThreads);
         setLoading(false);
       });
+    } else {
+      setLoading(false);
     }
-  }, [user]);
+  }, [user, userLoading]);
 
   // Emotional Thread Data (Tone mapping)
   const emotionalData = useMemo(() => {
@@ -119,12 +174,6 @@ export const ThreadsView: React.FC = () => {
     }));
   }, [zines]);
 
-  const tabs = [
-    { id: 'emotional', label: 'Emotional Thread', icon: Activity, desc: 'Analyze the tonal shifts in your artifacts.' },
-    { id: 'influence', label: 'Influence Thread', icon: Compass, desc: 'Map the lineage of external inspirations.' },
-    { id: 'biographical', label: 'Biographical Thread', icon: Route, desc: 'Trace the evolution of your motifs across time.' },
-  ] as const;
-
   return (
     <div className="flex-1 overflow-y-auto bg-[#f5f2ed] dark:bg-[#050505] text-stone-900 dark:text-stone-100 font-serif selection:bg-emerald-500/20 pb-32 custom-scrollbar">
       <div className="max-w-5xl mx-auto p-6 md:p-12 space-y-16">
@@ -136,29 +185,7 @@ export const ThreadsView: React.FC = () => {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex flex-col md:flex-row gap-8 md:gap-12 border-b border-stone-200 dark:border-stone-800 pb-8">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeMode === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveMode(tab.id as ThreadMode)}
-                className={`group flex flex-col items-start text-left transition-all ${isActive ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <Icon size={16} className={isActive ? 'text-stone-900 dark:text-stone-100' : 'text-stone-500'} />
-                  <h3 className={`text-xl italic ${isActive ? 'underline decoration-1 underline-offset-8' : ''}`}>
-                    {tab.label}
-                  </h3>
-                </div>
-                <p className="font-sans text-[10px] uppercase tracking-widest text-stone-500 max-w-[200px]">
-                  {tab.desc}
-                </p>
-              </button>
-            );
-          })}
-        </div>
+        <SegmentedControl mode={activeMode} onChange={(mode) => setActiveMode(mode as ThreadMode)} />
 
         {/* Content Area */}
         <div className="min-h-[400px] relative">
@@ -181,7 +208,7 @@ export const ThreadsView: React.FC = () => {
                     <h3 className="text-3xl italic text-stone-900 dark:text-stone-100">Tonal Trajectory</h3>
                   </div>
                   <div className="flex-1">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                       <LineChart data={emotionalData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                         <XAxis dataKey="date" stroke="#a8a29e" tick={{ fill: '#a8a29e', fontSize: 10, fontFamily: 'monospace' }} axisLine={false} tickLine={false} />
                         <YAxis stroke="#a8a29e" tick={false} axisLine={false} tickLine={false} domain={[-4, 6]} />
@@ -204,7 +231,7 @@ export const ThreadsView: React.FC = () => {
                     <h3 className="text-3xl italic text-stone-900 dark:text-stone-100">Motif Constellation</h3>
                   </div>
                   <div className="flex-1">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                       <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                         <XAxis type="number" dataKey="x" name="Timeline" stroke="#a8a29e" tick={false} axisLine={false} tickLine={false} />
                         <YAxis type="number" dataKey="y" name="Spread" stroke="#a8a29e" tick={false} axisLine={false} tickLine={false} domain={[-1, 6]} />
@@ -278,7 +305,7 @@ export const ThreadsView: React.FC = () => {
               {threads.map(thread => (
                 <button
                   key={thread.id}
-                  onClick={() => setActiveThread(thread)}
+                  onClick={() => setActiveThread(activeThread?.id === thread.id ? null : thread)}
                   className={`w-full text-left p-4 border ${activeThread?.id === thread.id ? 'border-stone-900 dark:border-stone-100' : 'border-stone-200 dark:border-stone-800'} transition-all`}
                 >
                   <h4 className="font-serif italic text-lg">{thread.title}</h4>
@@ -343,8 +370,24 @@ export const ThreadsView: React.FC = () => {
                       <span className="ml-2">Analyzing path...</span>
                     </div>
                   ) : graphData && (
-                    <div className="border border-stone-300 dark:border-stone-700">
-                      <ThreadPathVisualization nodes={graphData.nodes} edges={graphData.edges} />
+                    <div className="space-y-4">
+                      <div className="border border-stone-300 dark:border-stone-700">
+                        <ThreadPathVisualization nodes={graphData.nodes} edges={graphData.edges} />
+                      </div>
+                      {trajectoryReadout && (
+                        <div className="p-6 bg-stone-200/50 dark:bg-stone-800/50 border border-stone-300 dark:border-stone-700 rounded-xl space-y-4">
+                          <h4 className="font-serif italic text-xl text-stone-900 dark:text-stone-100">Trajectory Readout</h4>
+                          <p className="font-sans text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
+                            {trajectoryReadout}
+                          </p>
+                          <button
+                            onClick={() => window.dispatchEvent(new CustomEvent('mimi:nav', { detail: 'studio' }))}
+                            className="text-xs font-sans uppercase tracking-widest text-stone-900 dark:text-stone-100 hover:opacity-70 transition-opacity flex items-center gap-2"
+                          >
+                            Draft in Studio <Compass size={14} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                   <div className="flex gap-4">

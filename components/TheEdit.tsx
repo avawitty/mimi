@@ -43,12 +43,9 @@ export const TheEdit: React.FC = () => {
   const [tasteProfile, setTasteProfile] = useState<TasteProfile | null>(null);
   const [marketError, setMarketError] = useState<string | null>(null);
 
-  if (loading) {
-    return <div className="min-h-screen bg-[#F9F7F2] text-[#1A1A1A] font-sans flex items-center justify-center">Synchronizing aesthetic vectors...</div>;
-  }
-
   useEffect(() => {
-    if (user) {
+    if (loading) return;
+    if (user && !user.uid.startsWith('local_ghost_') && user.uid !== 'ghost') {
       const fetchData = async () => {
         try {
           const profileDoc = await getDoc(doc(db, 'users', user.uid, 'taste', 'profile'));
@@ -73,7 +70,11 @@ export const TheEdit: React.FC = () => {
       };
       fetchData();
     }
-  }, [user]);
+  }, [user, loading]);
+
+  if (loading) {
+    return <div className="min-h-screen bg-[#F9F7F2] text-[#1A1A1A] font-sans flex items-center justify-center">Synchronizing aesthetic vectors...</div>;
+  }
 
   const handleInteraction = (productId: string, signal: any) => {
     logProductTasteEvent({

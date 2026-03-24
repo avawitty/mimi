@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { getUserByHandle } from '../services/firebaseUtils';
-import { TasteGraph } from './TasteGraph';
+import { SovereignShard } from './SovereignShard';
 import { UserProfile } from '../types';
 import { Share2 } from 'lucide-react';
 
@@ -28,10 +28,18 @@ export const PublicSharePage: React.FC = () => {
       <div className="max-w-2xl w-full space-y-8">
         <div className="text-center space-y-2">
             <h1 className="font-header italic text-5xl text-stone-900 dark:text-white">@{profile.handle}</h1>
-            <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-stone-500 font-black">Taste Graph Manifest</p>
+            <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-stone-500 font-black">Sovereign Identity Shard</p>
         </div>
         
-        <TasteGraph tasteVector={profile.tasteVector} />
+        <div className="h-[400px] w-full bg-stone-100 dark:bg-stone-900 rounded-lg overflow-hidden border border-stone-200 dark:border-stone-800">
+            {profile.tasteProfile ? (
+                <SovereignShard tasteProfile={profile.tasteProfile} />
+            ) : (
+                <div className="h-full flex items-center justify-center font-serif italic text-stone-400">
+                    Aesthetic DNA not yet extracted.
+                </div>
+            )}
+        </div>
 
         <div className="p-6 border border-stone-100 dark:border-stone-800 rounded-sm bg-stone-50 dark:bg-stone-900/50">
             <h3 className="font-sans text-[10px] uppercase tracking-widest font-black text-stone-400 mb-4">Aesthetic Profile</h3>

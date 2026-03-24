@@ -63,7 +63,7 @@ export const ObsidianMirror: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const RITUAL_TEXTS = [
-    "Analyzing mesopic threshold...",
+    "Analyzing spatial threshold...",
     "Calibrating rod/cone resonance...",
     "Intercepting structural signals...",
     "Binding architectural omens...",
@@ -92,7 +92,7 @@ export const ObsidianMirror: React.FC = () => {
       setManifestationUrl(data.imageUrl);
 
     } catch (e: any) {
-      console.error("MIMI // Mesopic Signal Failure:", e);
+      console.error("MIMI // The Lens Signal Failure:", e);
       const errorMsg = e.message || "The signal was obscured by structural dissonance.";
       setError(errorMsg);
       setOmen(null);
@@ -111,12 +111,12 @@ export const ObsidianMirror: React.FC = () => {
         omenText: omen, 
         provenance: provenance,
         imageUrl: manifestationUrl || undefined,
-        metaphor: `Mesopic refraction captured for ${profile?.zodiacSign || "Ghost"}`,
+        metaphor: `Spatial refraction captured for ${profile?.zodiacSign || "Ghost"}`,
         zodiacSign: profile?.zodiacSign
       });
       setIsArchived(true);
     } catch (e) {
-      console.error("MIMI // Mesopic Archive failed:", e);
+      console.error("MIMI // The Lens Archive failed:", e);
     } finally {
       setIsArchiving(false);
     }
@@ -128,7 +128,7 @@ export const ObsidianMirror: React.FC = () => {
     <div className="w-full min-h-screen flex flex-col items-center justify-start pt-24 md:pt-32 p-4 md:p-6 bg-stone-50/30 dark:bg-[#080707] transition-colors duration-1000 pb-32">
       <div className="relative z-10 w-full max-w-4xl flex flex-col items-center text-center">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 space-y-2">
-              <h2 className="font-serif text-3xl md:text-5xl italic tracking-tighter luminescent-text text-nous-text dark:text-white">Mesopic Lens</h2>
+              <h2 className="font-serif text-3xl md:text-5xl italic tracking-tighter luminescent-text text-nous-text dark:text-white">The Lens</h2>
               <div className="flex items-center justify-center gap-4">
                 <span className="font-sans text-[7px] uppercase tracking-[1em] text-stone-400 font-black">Twilight Refraction</span>
                 {profile?.zodiacSign && (
@@ -183,7 +183,7 @@ export const ObsidianMirror: React.FC = () => {
                               >
                                 <div className="flex items-center gap-2 mb-2 text-stone-400">
                                    <Fingerprint size={10} />
-                                   <span className="font-sans text-[7px] uppercase tracking-widest font-black">Mesopic Provenance</span>
+                                   <span className="font-sans text-[7px] uppercase tracking-widest font-black">Lens Provenance</span>
                                 </div>
                                 <p className="font-serif italic text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
                                   {provenance}
@@ -219,9 +219,9 @@ export const ObsidianMirror: React.FC = () => {
               </div>
               
               <div className="space-y-6">
-                <div className="flex items-center gap-2 text-stone-400"><Orbit size={10} /><span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black">The Mesopic Registry</span></div>
+                <div className="flex items-center gap-2 text-stone-400"><Orbit size={10} /><span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black">The Lens Registry</span></div>
                 <button 
-                  onClick={() => alert("The Mesopic is for threshold reflection. To actively commit artifacts to the shadow registry, descend into the Obsidian Studio.")}
+                  onClick={() => alert("The Lens is for threshold reflection. To actively commit artifacts to the shadow registry, descend into the Obsidian Studio.")}
                   className="w-full flex items-center justify-between p-4 md:p-5 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-2xl group hover:border-nous-text dark:hover:border-white transition-all shadow-sm relative overflow-hidden"
                 >
                   <div className="flex items-center gap-4">

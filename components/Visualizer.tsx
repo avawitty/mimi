@@ -20,8 +20,9 @@ export const Visualizer: React.FC<{
   isLite?: boolean; 
   delay?: number;
   artifacts?: any[];
+  treatmentId?: string;
   onImageGenerated?: (base64: string) => void;
-}> = ({ prompt, defaultAspectRatio = '1:1', defaultImageSize = '1K', initialImage, isArtifact, isLite, delay = 0, artifacts, onImageGenerated }) => {
+}> = ({ prompt, defaultAspectRatio = '1:1', defaultImageSize = '1K', initialImage, isArtifact, isLite, delay = 0, artifacts, treatmentId, onImageGenerated }) => {
   const { user, profile, activePersona } = useUser();
   const [variants, setVariants] = useState<string[]>(initialImage ? [initialImage] : []);
   const [selectedIdx, setSelectedIdx] = useState(0);
@@ -52,7 +53,7 @@ export const Visualizer: React.FC<{
     setIsEditing(false);
     try {
       const personaKey = activePersona?.apiKey ? activePersona.apiKey : undefined;
-      const result = await generateZineImage(prompt, aspectRatio, imageSize, profile, isLite, personaKey, artifacts);
+      const result = await generateZineImage(prompt, aspectRatio, imageSize, profile, isLite, personaKey, artifacts, treatmentId);
       setVariants(prev => {
           const next = [...prev, result];
           const limited = next.slice(-3); // Keep only 3 most recent
@@ -114,9 +115,13 @@ export const Visualizer: React.FC<{
       const analysis = await analyzeMiseEnScene(base64, mimeType, profile);
       
       // Store in pocket
+      const { uploadBase64Image } = await import('../services/firebaseUtils');
+      const path = `pocket_images/${user?.uid || 'ghost'}_${Date.now()}.jpg`;
+      const url = await uploadBase64Image(currentSource, path);
+
       await addToPocket(user?.uid || 'ghost', 'text', {
           content: `Mise en Scène Analysis:\n\nDirector's Note: ${analysis.directors_note}\n\nLighting: ${analysis.lighting_analysis}\n\nCultural Parallel: ${analysis.cultural_parallel}\n\nSemiotic Touchpoints: ${analysis.semiotic_touchpoints?.join(', ')}`,
-          sourceImage: currentSource
+          sourceImage: url
       });
       
       window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
@@ -155,13 +160,25 @@ export const Visualizer: React.FC<{
   const saveToPocket = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!variants[selectedIdx]) return;
-    await addToPocket(user?.uid || 'ghost', 'image', { 
-        imageUrl: variants[selectedIdx], 
-        prompt,
-        aspectRatio 
-    });
-    setIsPocketSaved(true);
-    setTimeout(() => setIsPocketSaved(false), 3000);
+    
+    try {
+        const { uploadBase64Image } = await import('../services/firebaseUtils');
+        const path = `pocket_images/${user?.uid || 'ghost'}_${Date.now()}.jpg`;
+        const url = await uploadBase64Image(variants[selectedIdx], path);
+
+        await addToPocket(user?.uid || 'ghost', 'image', { 
+            imageUrl: url, 
+            prompt,
+            aspectRatio 
+        });
+        setIsPocketSaved(true);
+        setTimeout(() => setIsPocketSaved(false), 3000);
+    } catch (error) {
+        console.error("Failed to save image to pocket:", error);
+        window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+            detail: { message: "Failed to save image.", icon: <X size={14} className="text-red-500" /> } 
+        }));
+    }
   };
 
   return (

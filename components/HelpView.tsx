@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Sparkles, Scissors, ShieldCheck, Camera, FlaskConical, Archive, Compass, LayoutGrid, Briefcase, Activity } from 'lucide-react';
+import { BookOpen, Sparkles, Scissors, ShieldCheck, Camera, FlaskConical, Archive, Compass, LayoutGrid, Briefcase, Activity, Paperclip, Mic, Zap, BrainCircuit, Globe, MapPin, Wand2, Eraser, Target, ListChecks } from 'lucide-react';
 import { Diagnostics } from './Diagnostics';
 import { FeatureChecklist } from './FeatureChecklist';
 
@@ -116,12 +116,117 @@ export const HelpView: React.FC = () => {
           </div>
         </section>
 
+        {/* The Studio Toolbar */}
+        <section className="mb-32 relative">
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 dark:bg-white/10" />
+          <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
+            <div className="md:col-span-3">
+              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">03. The Studio Toolbar</h2>
+            </div>
+            <div className="md:col-span-9">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+                
+                <div className="group">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Paperclip size={16} className="text-stone-400 group-hover:text-stone-800 dark:group-hover:text-stone-200 transition-colors" />
+                    <h3 className="font-serif text-xl italic tracking-tight">Upload Media</h3>
+                  </div>
+                  <p className="font-sans text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                    Attach images, videos, or audio fragments to your zine. The engine will analyze these artifacts and weave their aesthetic DNA into the final manifest.
+                  </p>
+                </div>
+
+                <div className="group">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Mic size={16} className="text-stone-400 group-hover:text-red-500 transition-colors" />
+                    <h3 className="font-serif text-xl italic tracking-tight">Voice Transcription</h3>
+                  </div>
+                  <p className="font-sans text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                    Speak your thoughts directly into the engine. Perfect for capturing raw, unfiltered streams of consciousness before they dissipate.
+                  </p>
+                </div>
+
+                <div className="group">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Zap size={16} className="text-stone-400 group-hover:text-yellow-500 transition-colors" />
+                    <h3 className="font-serif text-xl italic tracking-tight">Lite Mode</h3>
+                  </div>
+                  <p className="font-sans text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                    Lightning-fast generations using the Flash Lite model. Ideal for quick thoughts, rapid iteration, and capturing fleeting aesthetic impulses.
+                  </p>
+                </div>
+
+                <div className="group">
+                  <div className="flex items-center gap-3 mb-3">
+                    <BrainCircuit size={16} className="text-stone-400 group-hover:text-purple-500 transition-colors" />
+                    <h3 className="font-serif text-xl italic tracking-tight">Deep Thinking</h3>
+                  </div>
+                  <p className="font-sans text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                    Engages the Pro model with high-level reasoning. Produces deep, semiotic explorations and complex, long-form zines with profound structural rigor.
+                  </p>
+                </div>
+
+                <div className="group">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Globe size={16} className="text-stone-400 group-hover:text-blue-500 transition-colors" />
+                    <h3 className="font-serif text-xl italic tracking-tight">Search Grounding</h3>
+                  </div>
+                  <p className="font-sans text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                    Anchors your zines with relevant, real-time search data from the web. Ensures your aesthetic musings are connected to current cultural events.
+                  </p>
+                </div>
+
+                <div className="group">
+                  <div className="flex items-center gap-3 mb-3">
+                    <MapPin size={16} className="text-stone-400 group-hover:text-orange-500 transition-colors" />
+                    <h3 className="font-serif text-xl italic tracking-tight">Maps Grounding</h3>
+                  </div>
+                  <p className="font-sans text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                    Integrates location-based intelligence and spatial context. Perfect for psychogeographic explorations and architectural critiques.
+                  </p>
+                </div>
+
+                <div className="group">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Sparkles size={16} className="text-stone-400 group-hover:text-emerald-500 transition-colors" />
+                    <h3 className="font-serif text-xl italic tracking-tight">Task Intelligence</h3>
+                  </div>
+                  <p className="font-sans text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                    Instructs Mimi to perform specific, high-precision tasks (e.g., analysis, identification) rather than open-ended generation, while maintaining her persona.
+                  </p>
+                </div>
+
+                <div className="group">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Wand2 size={16} className="text-stone-400 group-hover:text-red-500 transition-colors" />
+                    <h3 className="font-serif text-xl italic tracking-tight">Prompt Engine</h3>
+                  </div>
+                  <p className="font-sans text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                    Generates random, thought-provoking prompts to break creative block and push your aesthetic boundaries into uncharted territory.
+                  </p>
+                </div>
+
+                <div className="group">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Eraser size={16} className="text-stone-400 group-hover:text-stone-800 dark:group-hover:text-stone-200 transition-colors" />
+                    <h3 className="font-serif text-xl italic tracking-tight">Clear Input</h3>
+                  </div>
+                  <p className="font-sans text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                    Wipes the slate clean. A necessary destruction before new creation.
+                  </p>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Deep Systems */}
         <section className="mb-32 relative">
           <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 dark:bg-white/10" />
           <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
             <div className="md:col-span-3">
-              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">03. Deep Systems</h2>
+              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">04. Deep Systems</h2>
             </div>
             <div className="md:col-span-9">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
@@ -166,6 +271,26 @@ export const HelpView: React.FC = () => {
                   </p>
                 </div>
 
+                <div className="group">
+                  <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 dark:border-white/5">
+                    <Target size={18} className="text-stone-400 group-hover:text-emerald-500 transition-colors" />
+                    <h3 className="font-serif text-3xl italic tracking-tight">The Loom</h3>
+                  </div>
+                  <p className="font-sans text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
+                    <span className="text-stone-800 dark:text-stone-200 font-medium">Platform Strategy.</span> A multi-step diagnostic ritual that analyzes your intent, platform dynamics (Instagram, TikTok, YouTube, Substack, Facebook), and aesthetic identity to generate actionable, platform-specific content strategies.
+                  </p>
+                </div>
+
+                <div className="group">
+                  <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 dark:border-white/5">
+                    <ListChecks size={18} className="text-stone-400 group-hover:text-emerald-500 transition-colors" />
+                    <h3 className="font-serif text-3xl italic tracking-tight">Action Board</h3>
+                  </div>
+                  <p className="font-sans text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
+                    <span className="text-stone-800 dark:text-stone-200 font-medium">Strategic Imperatives.</span> A centralized hub for managing tasks exported from The Loom or created manually. Organize your content creation workflow with list and timeline views.
+                  </p>
+                </div>
+
               </div>
             </div>
           </div>
@@ -176,7 +301,7 @@ export const HelpView: React.FC = () => {
           <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 dark:bg-white/10" />
           <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
             <div className="md:col-span-3">
-              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">04. Advanced Protocols</h2>
+              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">05. Advanced Protocols</h2>
             </div>
             <div className="md:col-span-9 space-y-12">
               
@@ -211,12 +336,65 @@ export const HelpView: React.FC = () => {
           </div>
         </section>
 
+        {/* Platform Strategies */}
+        <section className="mb-32 relative">
+          <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 dark:bg-white/10" />
+          <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
+            <div className="md:col-span-3">
+              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">06. Platform Strategies</h2>
+            </div>
+            <div className="md:col-span-9 space-y-12">
+              
+              <div className="relative pl-8 md:pl-12">
+                <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-pink-500/30" />
+                <h4 className="font-serif italic text-2xl text-[#1A1A1A] dark:text-white mb-3">Instagram</h4>
+                <p className="font-sans text-sm text-stone-600 dark:text-stone-400 leading-relaxed max-w-2xl">
+                  Focuses on visual cohesion, grid aesthetics, and narrative storytelling through Stories and Reels. Emphasizes high-quality imagery, consistent color palettes, and community engagement via DMs and comments.
+                </p>
+              </div>
+
+              <div className="relative pl-8 md:pl-12">
+                <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-cyan-500/30" />
+                <h4 className="font-serif italic text-2xl text-[#1A1A1A] dark:text-white mb-3">TikTok</h4>
+                <p className="font-sans text-sm text-stone-600 dark:text-stone-400 leading-relaxed max-w-2xl">
+                  Prioritizes short-form video, retention loops, and rewatchability. Strategies revolve around trend participation, authentic "lo-fi" aesthetics, strong hooks within the first 3 seconds, and sound-driven content.
+                </p>
+              </div>
+
+              <div className="relative pl-8 md:pl-12">
+                <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-red-500/30" />
+                <h4 className="font-serif italic text-2xl text-[#1A1A1A] dark:text-white mb-3">YouTube</h4>
+                <p className="font-sans text-sm text-stone-600 dark:text-stone-400 leading-relaxed max-w-2xl">
+                  Centers on long-form value, click-through rate (CTR) optimization, and session time maximization. Requires effective thumbnail/title pairing, structured storytelling, and high-fidelity production value.
+                </p>
+              </div>
+
+              <div className="relative pl-8 md:pl-12">
+                <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-orange-500/30" />
+                <h4 className="font-serif italic text-2xl text-[#1A1A1A] dark:text-white mb-3">Substack</h4>
+                <p className="font-sans text-sm text-stone-600 dark:text-stone-400 leading-relaxed max-w-2xl">
+                  Built for deep-dive written content, intellectual exploration, and direct audience monetization. Emphasizes distinct editorial voice, consistent publishing schedules, and community building through comments and chat.
+                </p>
+              </div>
+
+              <div className="relative pl-8 md:pl-12">
+                <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-blue-500/30" />
+                <h4 className="font-serif italic text-2xl text-[#1A1A1A] dark:text-white mb-3">Facebook</h4>
+                <p className="font-sans text-sm text-stone-600 dark:text-stone-400 leading-relaxed max-w-2xl">
+                  Focuses on community building, consistent brand identity, and strategic use of formats (Reels, Stories, Feed). Leverages Groups for deep engagement and targeted advertising for reach.
+                </p>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
         {/* The Taste Graph */}
         <section className="mb-32 relative">
           <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 dark:bg-white/10" />
           <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
             <div className="md:col-span-3">
-              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">05. The Taste Graph</h2>
+              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">07. The Taste Graph</h2>
             </div>
             <div className="md:col-span-9 space-y-12">
               
@@ -240,7 +418,7 @@ export const HelpView: React.FC = () => {
           <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 dark:bg-white/10" />
           <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
             <div className="md:col-span-3">
-              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">07. Game Plan</h2>
+              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">08. Game Plan</h2>
             </div>
             <div className="md:col-span-9">
               <p className="font-serif text-xl leading-relaxed text-stone-700 dark:text-stone-300 mb-8">
@@ -261,7 +439,7 @@ export const HelpView: React.FC = () => {
           <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 dark:bg-white/10" />
           <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
             <div className="md:col-span-3">
-              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">06. System Status</h2>
+              <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400">09. System Status</h2>
             </div>
             <div className="md:col-span-9">
               <Diagnostics />

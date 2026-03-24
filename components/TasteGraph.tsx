@@ -19,9 +19,10 @@ export const TasteGraph: React.FC = () => {
   const [extracting, setExtracting] = useState(false);
 
   const loadGraph = async () => {
+    if (!user?.uid) return;
     setLoading(true);
     try {
-      const graph = await getTasteGraph();
+      const graph = await getTasteGraph(user.uid);
       setNodes(graph.nodes);
       setEdges(graph.edges);
     } catch (e) {
@@ -38,6 +39,7 @@ export const TasteGraph: React.FC = () => {
   }, [user]);
 
   const handleExtract = async () => {
+    if (!user?.uid) return;
     setExtracting(true);
     try {
       const artifacts = await getAllShadowMemory();
@@ -49,7 +51,7 @@ export const TasteGraph: React.FC = () => {
       
       const graph = await extractTasteGraphNodes(artifacts as any);
       if (graph.nodes.length > 0) {
-        await saveTasteGraph(graph.nodes, graph.edges);
+        await saveTasteGraph(user.uid, graph.nodes, graph.edges);
         setNodes(graph.nodes);
         setEdges(graph.edges);
       }

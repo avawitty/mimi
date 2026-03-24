@@ -16,7 +16,7 @@ export const AestheticLineageChart: React.FC<Props> = ({ fragments }) => {
 
   return (
     <div className="h-64 w-full bg-stone-900/50 p-4 rounded-xl">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="#333" />
           <XAxis dataKey="date" stroke="#888" />

@@ -7,7 +7,7 @@ import { analytics } from "./firebaseInit";
 
 const COLLECTION_NAME = "taste_events";
 const PRODUCT_INTERACTION_COLLECTION = "product_interactions";
-const USER_COLLECTION = "users";
+const USER_COLLECTION = "profiles_public";
 
 export const logProductTasteEvent = async (event: ProductTasteEvent): Promise<void> => {
   try {

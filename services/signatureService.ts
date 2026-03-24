@@ -1,23 +1,29 @@
-import { ZineMetadata, AestheticSignature } from "../types";
+import { ZineMetadata, AestheticSignature, TailorLogicDraft } from "../types";
 import { withResilience, generateTagsFromMedia } from "./geminiService";
 
-export const generateSignature = async (zines: ZineMetadata[]): Promise<AestheticSignature> => {
-  const zineSummaries = await Promise.all(zines.map(async z => {
+export const generateSignature = async (zines: ZineMetadata[], tailorDraft: TailorLogicDraft | null = null): Promise<AestheticSignature> => {
+  const zineSummaries = [];
+  for (const z of zines.slice(0, 10)) {
     let tags = z.tags;
     if (!tags || tags.length === 0) {
       tags = await generateTagsFromMedia(z.content.vocal_summary_blurb || z.content.poetic_provocation || "", []);
     }
-    return {
+    zineSummaries.push({
       title: z.title,
       tone: z.tone,
       content: z.content.vocal_summary_blurb || z.content.poetic_provocation || "",
       tags: tags || []
-    };
-  })).then(summaries => summaries.slice(0, 10));
+    });
+  }
 
-  const prompt = `You are Mimi, an aesthetic editor.
-Analyze the user's recent zines to generate their "Aesthetic Signature":
-${JSON.stringify(zineSummaries)}
+  let prompt = `You are Mimi, an aesthetic editor.\n`;
+  if (tailorDraft) {
+    prompt += `Analyze the user's recent generated zines alongside their explicit Tailor Logic Directives (provided below). The zines represent manifested artifacts, while the Tailor Logic represents their deliberate brand positioning. Fuse these two signals to generate an Aesthetic Signature that bridges their output with their intent. Tailor Logic: ${JSON.stringify(tailorDraft)}\n\n`;
+  } else {
+    prompt += `Analyze the user's recent zines to generate their "Aesthetic Signature":\n`;
+  }
+  
+  prompt += `Recent Zines:\n${JSON.stringify(zineSummaries)}
 
 Return a JSON object with:
 - primaryAxis (string)
@@ -39,7 +45,11 @@ Ensure the output is strictly JSON.`;
       });
       
       if (response.text) {
-        const signature = JSON.parse(response.text);
+        let text = response.text;
+        if (text.startsWith('```json')) {
+          text = text.replace(/```json\n?/, '').replace(/```$/, '');
+        }
+        const signature = JSON.parse(text.trim());
         return { ...signature, generatedAt: Date.now() };
       }
       throw new Error("Empty response");

@@ -2,10 +2,9 @@
 // @ts-nocheck
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { subscribeToUserZines, subscribeToCommunityZines } from '../services/firebase';
+import { subscribeToUserZines, subscribeToCommunityZines, getUserProfile } from '../services/firebaseUtils';
 import { getLocalZines } from '../services/localArchive';
 import { fetchFollowing, Connection } from '../services/connections';
-import { getUserProfile } from '../services/firebaseUtils';
 import { ZineMetadata, ToneTag, UserProfile } from '../types';
 import { useUser } from '../contexts/UserContext';
 import { Archive, Search, Hash, X, Eye, Folder, Loader2, Radio, Zap, Wind, Ghost, Star, Info, Layers, Target, Compass, Sparkles, User, Network, BrainCircuit, LayoutGrid, Maximize2 } from 'lucide-react';

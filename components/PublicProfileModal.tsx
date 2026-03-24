@@ -159,10 +159,10 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
   };
 
   const getStatusIcon = () => {
-    if (connectionStatus === 'friends') return <Handshake size={20} className="text-emerald-500" title="Connected" />;
-    if (connectionStatus === 'request_sent' || connectionStatus === 'request_received') return <Clock size={20} className="text-amber-500 animate-pulse" title="Pending" />;
-    if (connectionStatus === 'none') return <Link2Off size={20} className="text-stone-300" title="Disconnected" />;
-    if (isFollowing) return <Zap size={20} className="text-indigo-500" title="Resonating" />;
+    if (connectionStatus === 'friends') return <span title="Connected"><Handshake size={20} className="text-emerald-500" /></span>;
+    if (connectionStatus === 'request_sent' || connectionStatus === 'request_received') return <span title="Pending"><Clock size={20} className="text-amber-500 animate-pulse" /></span>;
+    if (connectionStatus === 'none') return <span title="Disconnected"><Link2Off size={20} className="text-stone-300" /></span>;
+    if (isFollowing) return <span title="Resonating"><Zap size={20} className="text-indigo-500" /></span>;
     return null;
   };
 
@@ -242,17 +242,17 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
                 {getStatusIcon()}
               </div>
               
-              {profile.tailorDraft?.typographyIntent?.archetype && (
+              {(profile.tailorDraft as any)?.typographyIntent?.archetype && (
                 <div className="mt-2 px-3 py-1 bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-full inline-block">
                   <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-500">
-                    Archetype: {profile.tailorDraft.typographyIntent.archetype.replace('-', ' ')}
+                    Archetype: {(profile.tailorDraft as any).typographyIntent.archetype.replace('-', ' ')}
                   </span>
                 </div>
               )}
               
-              {profile.tasteProfile?.definition && (
+              {(profile.tasteProfile as any)?.definition && (
                 <p className="mt-4 font-serif italic text-sm text-stone-500 max-w-sm text-center">
-                  "{profile.tasteProfile.definition}"
+                  "{(profile.tasteProfile as any).definition}"
                 </p>
               )}
               

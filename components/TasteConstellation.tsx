@@ -24,13 +24,13 @@ const DraggableArtifact: React.FC<{ artifact: PocketItem }> = ({ artifact }) => 
 
   return (
     <div
-      ref={drag}
+      ref={drag as any}
       className={`p-3 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-md cursor-grab active:cursor-grabbing flex items-start gap-3 transition-opacity ${isDragging ? 'opacity-50' : 'opacity-100'}`}
     >
       <GripVertical size={16} className="text-stone-400 mt-1 shrink-0" />
       <div className="flex-1 min-w-0">
         <h4 className="font-serif italic text-sm truncate">{artifact.title || 'Untitled'}</h4>
-        <p className="font-sans text-[10px] text-stone-500 truncate mt-1">{artifact.url || 'No URL'}</p>
+        <p className="font-sans text-[10px] text-stone-500 truncate mt-1">{(artifact as any).url || 'No URL'}</p>
       </div>
     </div>
   );
@@ -58,7 +58,7 @@ const ConstellationDropZone: React.FC<{
 
   return (
     <div
-      ref={drop}
+      ref={drop as any}
       className={`p-6 border-2 border-dashed rounded-xl transition-colors flex flex-col h-full ${
         isOver ? 'border-emerald-500 bg-emerald-500/5' : 'border-stone-200 dark:border-stone-800 bg-white/50 dark:bg-stone-900/50'
       }`}
@@ -142,7 +142,7 @@ export const TasteConstellation: React.FC = () => {
           getAllShadowMemory(),
           getConstellations()
         ]);
-        setArtifacts(loadedArtifacts);
+        setArtifacts(loadedArtifacts as any);
         setConstellations(loadedConstellations);
       } catch (e) {
         console.error("Failed to load data:", e);

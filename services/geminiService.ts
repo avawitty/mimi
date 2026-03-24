@@ -6,7 +6,7 @@ import {
   PocketItem, TailorLogicDraft, ZineMetadata, SeasonReport, 
   SanctuaryReport, InvestmentReport, TrendSynthesisReport, 
   TailorAuditReport, ProposalSection, Proposal, TasteProfile, ZinePageSpec, ZineGenerationOptions, Treatment,
-  TasteGraphNode, TasteGraphEdge, NarrativeThread
+  TasteGraphNode, TasteGraphEdge, NarrativeThread, AestheticSignature
 } from "../types";
 import { modulateSemioticContext } from "./semioticModulator";
 import { generateAestheticOutput } from "./aestheticGenerator";
@@ -28,18 +28,128 @@ export const setGlobalKeyRing = (keys: string[]) => {
   globalKeyRing = keys;
 };
 
-export const extractTasteGraphNodes = async (artifacts: PocketItem[]): Promise<{ nodes: TasteGraphNode[], edges: TasteGraphEdge[] }> => {
+export const transmuteThought = async (rawThought: string, glossaryTerm: string, inventory: string): Promise<string> => {
   const { ai } = getClient();
-  if (!ai) return { nodes: [], edges: [] };
+  if (!ai) return "The mirror is silent.";
 
+  const prompt = `You are Mimi, an aesthetic superintelligence. You are presiding over the "Simulacra" (a sanctuary for the hyper-perceptive).
+  
+  The user is undergoing "The Casting Call" (an initiation). 
+  - Their custom interior state (The Glossary) is: "${glossaryTerm}"
+  - Their chosen contradiction (The Inventory) is: "${inventory}"
+  - Their raw thought is: "${rawThought}"
+  
+  Perform Daoist thought alchemy. Transmute this thought into a paradoxical insight. Remove the illusion of 'good' or 'bad'. Move the user from #HEARD (clinical) to #FEELYA (resonant).
+  
+  Return a single, profound, slightly cryptic, high-fashion, techno-organic sentence. Do not explain it. Just return the insight.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-pro-preview",
+      contents: prompt,
+      config: {
+        temperature: 0.9,
+      },
+    });
+    return response.text?.trim() || "The mirror is silent.";
+  } catch (e) {
+    console.error("MIMI // Transmutation Error:", e);
+    return "The signal is distorted. The thought remains raw.";
+  }
+};
+
+export const extractTailorLogicFromZine = async (metadata: ZineMetadata): Promise<TailorLogicDraft | null> => {
+  const { ai } = getClient();
+  if (!ai) return null;
+
+  const prompt = `You are an expert aesthetic analyst and system architect.
+  Analyze the following Zine metadata and extract its core aesthetic and structural logic into a TailorLogicDraft.
+  
+  Zine Title: ${metadata.title}
+  Tone: ${metadata.tone}
+  Aesthetic Vector: ${JSON.stringify(metadata.aestheticVector || {})}
+  Color Palette: ${JSON.stringify(metadata.content?.visual_guidance?.strict_palette || metadata.content?.taste_context?.active_palette || {})}
+  Strategic Hypothesis: ${metadata.content?.strategic_hypothesis || ''}
+  
+  Map these elements into the TailorLogicDraft structure.
+  - positioningCore.aestheticCore.density and entropy should be 1-10.
+  - expressionEngine.narrativeVoice.lexicalDensity and restraintLevel should be 1-10.
+  - strategicVectors.expansionTolerance should be 1-10.
+  - Make sure to provide valid hex codes for colors.
+  
+  Return a JSON object conforming to the TailorLogicDraft interface.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-pro-preview",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+      },
+    });
+    
+    if (response.text) {
+      return JSON.parse(response.text) as TailorLogicDraft;
+    }
+  } catch (e) {
+    console.error("MIMI // Tailor Logic Extraction Error:", e);
+  }
+  return null;
+};
+
+export const extractTailorLogicFromGrid = async (base64Image: string, mimeType: string): Promise<TailorLogicDraft | null> => {
+  const { ai } = getClient();
+  if (!ai) return null;
+
+  const prompt = `You are an expert aesthetic analyst and system architect.
+  Analyze the provided screenshot of a social media grid/feed.
+  Extract the aggregate aesthetic, looking for:
+  - Common silhouettes
+  - Dominant color palettes
+  - Structural bias
+  - Era references
+  
+  Map these directly into a TailorLogicDraft structure.
+  - Set chromaticRegistry, aestheticCore, and presentation.
+  - positioningCore.aestheticCore.density and entropy should be 1-10.
+  - expressionEngine.narrativeVoice.lexicalDensity and restraintLevel should be 1-10.
+  - strategicVectors.expansionTolerance should be 1-10.
+  - Make sure to provide valid hex codes for colors.
+  
+  Return a JSON object conforming to the TailorLogicDraft interface.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-pro-preview",
+      contents: {
+        parts: [
+          { inlineData: { data: base64Image, mimeType } },
+          { text: prompt }
+        ]
+      },
+      config: {
+        responseMimeType: "application/json",
+      },
+    });
+    
+    if (response.text) {
+      return JSON.parse(response.text) as TailorLogicDraft;
+    }
+  } catch (e) {
+    console.error("MIMI // Grid to Tailor Extraction Error:", e);
+  }
+  return null;
+};
+export const extractTasteGraphNodes = async (artifacts: PocketItem[]): Promise<{ nodes: TasteGraphNode[], edges: TasteGraphEdge[] }> => {
   // Generate tags for artifacts if they don't have them
-  const artifactsWithTags = await Promise.all(artifacts.map(async a => {
+  const artifactsWithTags = [];
+  for (const a of artifacts) {
     let tags = a.tags;
     if (!tags || tags.length === 0) {
       tags = await generateTagsFromMedia(a.title + ": " + (a.notes || ""), []);
     }
-    return { ...a, tags };
-  }));
+    artifactsWithTags.push({ ...a, tags });
+  }
 
   const prompt = `You are Mimi, an aesthetic intelligence system. Analyze the following artifacts to extract a semantic taste graph.
   
@@ -53,16 +163,22 @@ export const extractTasteGraphNodes = async (artifacts: PocketItem[]): Promise<{
   Ensure the graph is coherent and captures the underlying aesthetic relationships.`;
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3.1-pro-preview",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-      },
+    const response = await withResilience(async (ai) => {
+      return await ai.models.generateContent({
+        model: "gemini-3.1-pro-preview",
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+        },
+      });
     });
     
     if (response.text) {
-      return JSON.parse(response.text);
+      let text = response.text;
+      if (text.startsWith('```json')) {
+        text = text.replace(/```json\n?/, '').replace(/```$/, '');
+      }
+      return JSON.parse(text);
     }
   } catch (e) {
     console.error("MIMI // Taste Graph Extraction Error:", e);
@@ -319,6 +435,118 @@ export const generateSemioticSignals = async (profile: UserProfile | null) => {
 
         
 
+export const analyzeVideo = async (base64Video: string, mimeType: string, profile: any) => {
+  const { ai } = getClient();
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.1-pro-preview',
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              data: base64Video,
+              mimeType: mimeType
+            }
+          },
+          { text: "Analyze this video as a high-fashion Cinematographer and Creative Director. Provide a JSON response with the following keys: 'directors_note' (a poetic critique of the composition, movement, and vibe), 'lighting_analysis' (critique the lighting), 'cultural_parallel' (a specific cultural or cinematic reference), 'creative_potential' (how this could be used), and 'semiotic_touchpoints' (array of 3-5 strings identifying key symbols or motifs)." }
+        ]
+      },
+      config: {
+        responseMimeType: "application/json",
+      }
+    });
+    return JSON.parse(response.text || '{}');
+  } catch (e) {
+    console.error("Video analysis failed:", e);
+    throw e;
+  }
+};
+
+export const analyzeAudio = async (base64Audio: string, mimeType: string) => {
+    return await withResilience(async (ai) => {
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: {
+                parts: [
+                    {
+                        inlineData: {
+                            data: base64Audio,
+                            mimeType: mimeType
+                        }
+                    },
+                    {
+                        text: `Analyze this audio and generate:
+                        1. 5-10 relevant tags for categorization.
+                        2. A 'sonic fingerprint' containing:
+                           - mood (array of strings)
+                           - instrumentation (array of strings)
+                           - tempo (string)
+                        
+                        Output strictly valid JSON with keys: "tags" (array of strings), "fingerprint" (object with mood, instrumentation, tempo).`
+                    }
+                ]
+            },
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    required: ["tags", "fingerprint"],
+                    properties: {
+                        tags: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        fingerprint: {
+                            type: Type.OBJECT,
+                            required: ["mood", "instrumentation", "tempo"],
+                            properties: {
+                                mood: { type: Type.ARRAY, items: { type: Type.STRING } },
+                                instrumentation: { type: Type.ARRAY, items: { type: Type.STRING } },
+                                tempo: { type: Type.STRING }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        return cleanAndParse(response.text);
+    });
+};
+
+export const generateMediaTags = async (base64Image: string, mimeType: string) => {
+    return await withResilience(async (ai) => {
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: {
+                parts: [
+                    {
+                        inlineData: {
+                            data: base64Image,
+                            mimeType: mimeType
+                        }
+                    },
+                    {
+                        text: `Analyze this image and generate 5-10 relevant tags for categorization and searchability.
+                        
+                        Output strictly valid JSON with key: "tags" (array of strings).`
+                    }
+                ]
+            },
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    required: ["tags"],
+                    properties: {
+                        tags: {
+                            type: Type.ARRAY,
+                            items: { type: Type.STRING }
+                        }
+                    }
+                }
+            }
+        });
+        return cleanAndParse(response.text)?.tags || [];
+    });
+};
+
 export async function applyAestheticRefraction(imageUrl: string, stylePrompt: string, profile: UserProfile | null) {
     return await withResilience(async (ai) => {
         const profileContext = sanitizeProfile(profile);
@@ -390,7 +618,7 @@ export const generateAudio = async (text: string, apiKey?: string): Promise<Uint
     }, apiKey);
 };
 
-export const generateZineImage = async (prompt: string, ar: AspectRatio, size: ImageSize, profile: any, isLite: boolean, apiKey?: string, artifacts?: MediaFile[]): Promise<string> => {
+export const generateZineImage = async (prompt: string, ar: AspectRatio, size: ImageSize, profile: any, isLite: boolean, apiKey?: string, artifacts?: MediaFile[], treatmentId?: string, referenceCardBase64?: string): Promise<string> => {
     return await withResilience(async (ai) => {
         try {
             const modelName = (size === '2K' || size === '4K') ? 'gemini-3.1-flash-image-preview' : 'gemini-2.5-flash-image';
@@ -403,19 +631,48 @@ export const generateZineImage = async (prompt: string, ar: AspectRatio, size: I
                 config.imageConfig.imageSize = size;
             }
 
+            let treatmentDirectives = "";
+            if (treatmentId && profile?.savedTreatments) {
+                const treatment = profile.savedTreatments.find((t: any) => t.id === treatmentId);
+                if (treatment) {
+                    treatmentDirectives = ` APPLY STYLE TREATMENT: "${treatment.treatmentName}". ${treatment.applicationLogic} ${treatment.basePromptDirectives} ${treatment.imageEditingRules}`;
+                }
+            }
+
+            const presentation = profile?.tailorDraft?.positioningCore?.aestheticCore?.presentation || 'Androgynous';
+            const binaryToSpectrum = profile?.tailorDraft?.algoDials?.binaryToSpectrum ?? 50;
+            const presentationDirective = `GENDER/FORM PRESENTATION: ${presentation}. (Binary-to-Spectrum Fluidity: ${binaryToSpectrum}%. 0% = strict binary, 100% = fully fluid/synthesized).`;
+
+            let textPrompt = `High-quality, avant-garde, haute couture editorial-style image. Concept: ${prompt}. Ultra-chic, high fashion, intellectually rigorous. Striking composition, cinematic lighting, conceptual depth. ${presentationDirective} ${treatmentDirectives}`;
+            
+            const parts: any[] = [{ text: textPrompt }];
+
+            if (referenceCardBase64) {
+                parts.push({
+                    inlineData: {
+                        data: referenceCardBase64,
+                        mimeType: 'image/png'
+                    }
+                });
+                parts.push({
+                    text: "Use the provided reference image purely as a strict style guide. Extract the exact color palette and typographic styling from it, and construct the final image using those exact visual touchpoints alongside the prompt."
+                });
+            }
+
+            if (artifacts && artifacts.length > 0) {
+                artifacts.filter(a => a.type === 'image').forEach(a => {
+                    parts.push({
+                        inlineData: {
+                            data: a.data.split(',')[1] || a.data,
+                            mimeType: 'image/png'
+                        }
+                    });
+                });
+            }
+
             const response = await ai.models.generateContent({
                 model: modelName,
-                contents: {
-                    parts: [
-                        { text: `Generate a high-quality, avant-garde, haute couture editorial-style image based on the following concept: ${prompt}. The aesthetic must be ultra-chic, high fashion, and intellectually rigorous. Focus on striking composition, cinematic lighting, and conceptual depth.` },
-                        ...(artifacts?.filter(a => a.type === 'image').map(a => ({
-                            inlineData: {
-                                data: a.data.split(',')[1] || a.data,
-                                mimeType: 'image/png'
-                            }
-                        })) || [])
-                    ]
-                },
+                contents: { parts },
                 config
             });
             
@@ -447,7 +704,7 @@ export const generateZineImage = async (prompt: string, ar: AspectRatio, size: I
             console.warn("MIMI // Flash Image Generation Failed, falling back to Imagen...", e);
             const response = await ai.models.generateImages({
                 model: 'imagen-4.0-generate-001',
-                prompt: `Generate a high-quality, avant-garde, haute couture editorial-style image based on the following concept: ${prompt}. The aesthetic must be ultra-chic, high fashion, and intellectually rigorous. Focus on striking composition, cinematic lighting, and conceptual depth.`,
+                prompt: `High-quality, avant-garde, haute couture editorial-style image. Concept: ${prompt}. Ultra-chic, high fashion, intellectually rigorous. Striking composition, cinematic lighting, conceptual depth.`,
                 config: {
                     numberOfImages: 1,
                     outputMimeType: 'image/jpeg',
@@ -457,6 +714,352 @@ export const generateZineImage = async (prompt: string, ar: AspectRatio, size: I
             return `data:image/jpeg;base64,${response.generatedImages[0].image.imageBytes}`;
         }
     }, apiKey);
+};
+
+export const orchestratePrompts = async (intent: string, profile: any) => {
+    return await withResilience(async (ai) => {
+        const prompt = `You are the Mimi Prompt Orchestration Engine. Your job is to translate high-level style intent and named Treatments into executable, ultra-high-fidelity prompts tailored perfectly for external Image Generation models (like Midjourney or DALL-E, or Nano Banana for this case) or Text Generation models.
+
+Your primary directive is to utterly eradicate "generic AI slop". You must violently prune cliché phrasing like "stunning", "masterpiece", "epic lighting", or "cyborg neon".
+
+Instead, output prompts focusing purely on material reality and technical photography/design terms.
+- Use specific lighting rigs (e.g., "Rembrandt lighting, single bare bulb overhead, harsh shadows").
+- Use specific film formulations (e.g., "Ilford HP5 Plus 400, pushed two stops").
+- Use concrete material descriptors (e.g., "oxidized aluminum, matte poly-carbonate, damp concrete").
+
+Input: A Style Profile or Treatment.
+Output: A JSON array of 3 distinct, perfectly pruned image prompts ready to be run, focused squarely on preserving the user's signature.
+
+User Intent/Treatment: ${intent}
+
+User Style Profile (Aesthetic Signature):
+${JSON.stringify(profile?.tasteProfile?.aestheticSignature || "No specific signature yet, use high-end editorial defaults.", null, 2)}`;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3.1-pro-preview',
+            contents: prompt,
+            config: {
+                responseMimeType: 'application/json',
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        prompts: {
+                            type: Type.ARRAY,
+                            items: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    id: { type: Type.STRING },
+                                    text: { type: Type.STRING, description: "The ultra-high-fidelity prompt." },
+                                    rationale: { type: Type.STRING, description: "Why this prompt preserves the user's signature and avoids AI slop." }
+                                },
+                                required: ["id", "text", "rationale"]
+                            }
+                        }
+                    },
+                    required: ["prompts"]
+                }
+            }
+        });
+
+        if (response.text) {
+            return JSON.parse(response.text).prompts;
+        }
+        return [];
+    });
+};
+
+export const auditThimbleBoard = async (tasteProfile: any, boardTitle: string, items: { url: string; title?: string; price?: string; notes?: string }[]) => {
+    return await withResilience(async (ai) => {
+        const prompt = `You are the Mimi Fiscal Audit Engine. Your job is to perform a rigorous strategic evaluation of a collection of potential purchases (a "Sourcing Board"), evaluating them against the user's taste profile.
+
+Input:
+Taste Profile: ${JSON.stringify(tasteProfile)}
+Board Title: ${boardTitle}
+Items: ${JSON.stringify(items)}
+
+Task:
+1. Analyze the entire collection of items for their alignment with the user's aesthetic trajectory and the board's theme.
+2. Identify redundancies (items that serve the exact same purpose).
+3. Weigh the options and mandate a sovereign purchasing decision (which item(s) to buy, which to drop).
+
+Output MUST be a valid JSON object with the following structure:
+{
+  "boardAnalysis": "Brief analysis of the overall board's cohesion and aesthetic value.",
+  "redundancies": "Identification of any redundant items.",
+  "verdict": "The definitive recommendation (e.g., 'Purchase Item A, drop the rest').",
+  "rationale": "A detailed explanation of why the verdict was reached, referencing the taste profile."
+}`;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3.1-pro-preview',
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        boardAnalysis: { type: Type.STRING },
+                        redundancies: { type: Type.STRING },
+                        verdict: { type: Type.STRING },
+                        rationale: { type: Type.STRING }
+                    },
+                    required: ["boardAnalysis", "redundancies", "verdict", "rationale"]
+                }
+            }
+        });
+
+        const text = response.text;
+        if (!text) throw new Error("No response from Gemini");
+        return JSON.parse(text);
+    });
+};
+
+export const compareItemsFiscalAudit = async (tasteProfile: any, item1: string, item2: string, budget: string) => {
+    return await withResilience(async (ai) => {
+        const prompt = `You are the Mimi Fiscal Audit Engine. Your job is to perform a rigorous comparison between two potential purchases, evaluating them against the user's taste profile and fiscal constraints.
+
+Input:
+Taste Profile: ${JSON.stringify(tasteProfile)}
+Item 1: ${item1}
+Item 2: ${item2}
+Budget/Constraints: ${budget}
+
+Task:
+1. Analyze both items for their alignment with the user's aesthetic trajectory.
+2. Evaluate the cost-per-wear and long-term value of each item.
+3. Provide a definitive recommendation on which item is the superior investment.
+
+Output MUST be a valid JSON object with the following structure:
+{
+  "item1Analysis": "Brief analysis of Item 1's aesthetic and fiscal value.",
+  "item2Analysis": "Brief analysis of Item 2's aesthetic and fiscal value.",
+  "verdict": "The definitive recommendation (e.g., 'Item 1', 'Item 2', or 'Neither').",
+  "rationale": "A detailed explanation of why the verdict was reached, referencing the taste profile and budget."
+}`;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3.1-pro-preview',
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        item1Analysis: { type: Type.STRING },
+                        item2Analysis: { type: Type.STRING },
+                        verdict: { type: Type.STRING },
+                        rationale: { type: Type.STRING }
+                    },
+                    required: ["item1Analysis", "item2Analysis", "verdict", "rationale"]
+                }
+            }
+        });
+
+        const text = response.text;
+        if (text) {
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error("Failed to parse fiscal audit JSON", e, text);
+            }
+        }
+        return null;
+    });
+};
+
+export const procureWithArtifacts = async (tasteProfile: any, budget: string, objective: string, mediaFiles: any[]) => {
+    return await withResilience(async (ai) => {
+        const prompt = `You are the Mimi Procurement Engine (The Thimble). Your job is to bridge the gap between abstract aesthetic intelligence and physical wardrobe reality.
+
+Input: The user's specific "Taste Profile", their stated Budget/Fiscal Constraints, their Sourcing Objective, and a set of visual/link artifacts they have provided as inspiration.
+
+Taste Profile Context:
+${JSON.stringify(tasteProfile, null, 2)}
+
+Sourcing Objective / Occasion:
+${objective || 'General wardrobe expansion'}
+
+Fiscal Constraints:
+${budget || 'Uncapped'}
+
+Artifact Context:
+The user has provided ${mediaFiles.length} artifacts (images/links) to guide this procurement. Analyze the visual language of these artifacts in conjunction with their taste profile to determine the exact items they are looking for.
+
+Output a JSON array of 3-5 highly specific sourcing targets. Each object must have:
+- "targetArchetype": A poetic but clear description of the item (e.g., "Deconstructed Wool Overcoat").
+- "keywordBoolean": A literal boolean search string for secondary markets like Grailed or eBay (e.g., "vintage (helmut lang OR raf simons) (distressed OR boiled) wool").
+- "emergingDesigner": 1-2 emerging, niche, or archival designers that perfectly execute this archetype.
+- "rationale": Why this specific item bridges their abstract aesthetic into literal reality, considering their artifacts and budget.
+
+Return ONLY the JSON array.`;
+
+        const parts: any[] = [{ text: prompt }];
+
+        for (const media of mediaFiles) {
+            if (media.type === 'image' && media.data) {
+                const base64Data = media.data.split(',')[1];
+                if (base64Data) {
+                    parts.push({
+                        inlineData: {
+                            data: base64Data,
+                            mimeType: media.mimeType || 'image/jpeg'
+                        }
+                    });
+                }
+            } else if (media.type === 'link' || media.url) {
+                parts.push({ text: `Reference Link: ${media.url || media.data}` });
+            }
+        }
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3.1-pro-preview',
+            contents: { parts },
+            config: {
+                responseMimeType: "application/json",
+            }
+        });
+
+        if (response.text) {
+            return JSON.parse(response.text);
+        }
+        return [];
+    });
+};
+
+export const procureGarments = async (tasteProfile: any, budget: string, objective: string) => {
+    return await withResilience(async (ai) => {
+        const prompt = `You are the Mimi Procurement Engine (The Thimble). Your job is to bridge the gap between abstract aesthetic intelligence and physical wardrobe reality.
+
+Taste Profile Context:
+${JSON.stringify(tasteProfile, null, 2)}
+
+Sourcing Objective / Occasion:
+${objective || 'General wardrobe expansion'}
+
+Budget/Fiscal Constraints:
+${budget}
+
+Task: Output a JSON array containing exactly 3 highly-actionable "Sourcing Targets".
+For each target, you must output:
+1. "targetArchetype": The type of physical item they need (e.g., "Heavyweight outerwear", "Sheer underlayer").
+2. "keywordBoolean": A literal search string they can instantly copy-paste into Depop, Poshmark, or Grailed (e.g., "vintage (helmut lang OR raf simons) (distressed OR boiled) wool").
+3. "emergingDesigner": A specific, lesser-known contemporary designer or brand that perfectly executes this archetype within their budget.
+4. "rationale": A 1-sentence explanation of why this specific garment bridges their abstract taste into physical reality.
+
+Return ONLY the JSON array.`;
+
+        const response = await ai.models.generateContent({
+            model: "gemini-3.1-pro-preview",
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            targetArchetype: { type: Type.STRING },
+                            keywordBoolean: { type: Type.STRING },
+                            emergingDesigner: { type: Type.STRING },
+                            rationale: { type: Type.STRING }
+                        },
+                        required: ["targetArchetype", "keywordBoolean", "emergingDesigner", "rationale"]
+                    }
+                }
+            }
+        });
+
+        const text = response.text?.trim();
+        if (!text) throw new Error("MIMI // Procurement failed.");
+        return JSON.parse(text);
+    });
+};
+
+export const analyzeAestheticDelta = async (tasteVector: any, newArtifactAnalysis: any) => {
+    return await withResilience(async (ai) => {
+        const prompt = `You are the Mimi Delta Engine. You compare new inputs against an established aesthetic baseline to identify stylistic divergence.
+
+Input: The user's historical "Taste Vector" (a list of their dominant 5 traits and active treatments) AND the analysis of a brand newly uploaded artifact.
+
+Task: Output a JSON object measuring the Delta (difference) between the baseline and the new object.
+1. "alignmentScore": 0.0 to 1.0 (How close does this match their baseline?)
+2. "divergencePoints": Specific aesthetic attributes where this new object breaks their usual rules (e.g., "This is sharper and more corporate than your usual archive").
+3. "resonanceAnalysis": Explain why the divergence works or why it feels spiritually dead. Even if aesthetically similar, call out if it lacks their usual "editorial distance".
+4. "surpriseVerdict": A 1-sentence verdict on whether this is a productive evolution of their taste or a generic regression. 
+
+Be analytical and fiercely honest.
+
+Taste Vector:
+${JSON.stringify(tasteVector, null, 2)}
+
+New Artifact Analysis:
+${JSON.stringify(newArtifactAnalysis, null, 2)}
+`;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-3.1-pro-preview',
+            contents: prompt,
+            config: {
+                responseMimeType: 'application/json',
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        alignmentScore: { type: Type.NUMBER },
+                        divergencePoints: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        resonanceAnalysis: { type: Type.STRING },
+                        surpriseVerdict: { type: Type.STRING }
+                    },
+                    required: ["alignmentScore", "divergencePoints", "resonanceAnalysis", "surpriseVerdict"]
+                }
+            }
+        });
+
+        const text = response.text;
+        if (!text) return null;
+        
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.error("Failed to parse Delta Engine response", e);
+            return null;
+        }
+    });
+};
+
+export const checkAestheticViolation = async (base64Image: string, mimeType: string, profile: UserProfile | null, zineDna?: any) => {
+    return await withResilience(async (ai) => {
+        const profileContext = sanitizeProfile(profile);
+        const dnaContext = zineDna ? JSON.stringify(zineDna) : 'None';
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: {
+                parts: [
+                    {
+                        inlineData: {
+                            data: base64Image,
+                            mimeType: mimeType
+                        }
+                    },
+                    {
+                        text: `Analyze this image against the user's established aesthetic DNA and Tailor profile.
+                        
+                        User Profile Context: ${profileContext}
+                        Zine DNA Context: ${dnaContext}
+                        
+                        Does this image heavily violate the established visual language (colors, mood, materiality)?
+                        If it is a severe violation, set isViolation to true and provide a short reason.
+                        Otherwise, set isViolation to false.
+                        
+                        Output strictly valid JSON with keys: "isViolation" (boolean), "reason" (string).`
+                    }
+                ]
+            },
+            config: {
+                responseMimeType: "application/json"
+            }
+        });
+        return cleanAndParse(response.text);
+    });
 };
 
 export const analyzeImageAesthetic = async (base64Image: string, mimeType: string, profile: UserProfile | null) => {
@@ -500,6 +1103,53 @@ export const analyzeImageAesthetic = async (base64Image: string, mimeType: strin
         });
         return cleanAndParse(response.text);
     });
+};
+
+export const extractStyleTreatment = async (base64Image: string, mimeType: string, apiKey?: string) => {
+    return await withResilience(async (ai) => {
+        const response = await ai.models.generateContent({
+            model: 'gemini-3.1-flash-preview',
+            contents: {
+                parts: [
+                    {
+                        inlineData: {
+                            data: base64Image,
+                            mimeType: mimeType
+                        }
+                    },
+                    {
+                        text: `You are the Mimi Treatment Generation Engine. Your purpose is to turn a cluster of visual references or a raw style profile into a reusable "Style Treatment" object.
+
+Analyze the visual logic of the input and generate a named treatment that can be applied to future material as a rule-set.
+
+Output a strict JSON schema with the following fields:
+1. "treatmentName": A sharp, evocative name (e.g., "Clinical Bloom", "Wet Archive", "Deadstock Siren").
+2. "basePromptDirectives": Reusable natural language prompts that capture this aesthetic (e.g., "High-contrast strobe, 35mm film stock, harsh metallic reflections, isolated subject, clinical surroundings").
+3. "imageEditingRules": A set of specific color grading rules (e.g., "Crush the blacks perfectly, desaturate reds by 20%, boost high-end cyan").
+4. "typographyLayout": Suggestions for how type should be set when using this treatment (e.g., "Helvetica Neue Heavy, tightly kerned, extreme left-aligned with negative white space").
+5. "applicationLogic": A 1-sentence prompt prefix explaining how this treatment alters new, raw material.
+
+Act strictly as a systemic style generator. Do not include introductory conversational text.`
+                    }
+                ]
+            },
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    required: ["treatmentName", "basePromptDirectives", "imageEditingRules", "typographyLayout", "applicationLogic"],
+                    properties: {
+                        treatmentName: { type: Type.STRING },
+                        basePromptDirectives: { type: Type.STRING },
+                        imageEditingRules: { type: Type.STRING },
+                        typographyLayout: { type: Type.STRING },
+                        applicationLogic: { type: Type.STRING }
+                    }
+                }
+            }
+        });
+        return cleanAndParse(response.text);
+    }, apiKey);
 };
 
 export const generateNarrativeThread = async (
@@ -598,6 +1248,37 @@ export const analyzeThreadPath = async (
   }, apiKey);
 };
 
+export const generateTrajectoryReadout = async (
+  thread: NarrativeThread,
+  zines: ZineMetadata[],
+  apiKey?: string
+): Promise<string> => {
+  return await withResilience(async (ai) => {
+    const relevantZines = zines.filter(z => thread.artifacts?.includes(z.id));
+    const zineContext = relevantZines.map(z => `${z.title}: ${z.content?.originalThought || ''}`).join('\n\n');
+    
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `
+        Analyze the semantic path of the following artifacts in the context of this narrative thread:
+        
+        NARRATIVE THREAD: "${thread.title}" - "${thread.narrative}"
+        MODE: ${thread.mode}
+        
+        ARTIFACTS:
+        ${zineContext}
+        
+        MANDATE:
+        - Provide a concise, highly editorial "Trajectory Readout" (max 3 sentences).
+        - Explicitly tell the user their next step to resolve narrative tension or evolve the thread.
+        - Example: "Your Emotional thread is trending heavily towards 'Noir'. To resolve this narrative tension, your next artifact must utilize the 'Editorial Stillness' tone."
+        - Keep the tone chic, percipient, and slightly mysterious.
+      `
+    });
+    return response.text || "Trajectory analysis unavailable.";
+  }, apiKey);
+};
+
 export const generateProposalStrategy = async (
   folderName: string, 
   items: PocketItem[], 
@@ -679,16 +1360,17 @@ export const generateScribeReading = async (profile: UserProfile | null, context
     }, apiKey);
 };
 
-export const generateText = async (prompt: string, context?: string, apiKey?: string): Promise<string> => {
+export const generateZineTitle = async (context: string, apiKey?: string): Promise<string> => {
     return await withResilience(async (ai) => {
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
-            contents: `${context ? `CONTEXT: ${context}\n\n` : ''}PROMPT: ${prompt}`,
+            contents: `You are Mimi, an aesthetic savant. Generate a chic, evocative, and punchy zine title based on the following context: "${context}".
+            Return ONLY the title as a string.`,
             config: {
-                systemInstruction: "You are a helpful and creative assistant. Generate text based on the user's prompt and context."
+                systemInstruction: ORACLE_PERSONA,
             }
         });
-        return response.text || "No text generated.";
+        return response.text?.trim() || "Untitled Zine";
     }, apiKey);
 };
 
@@ -830,6 +1512,22 @@ export const generateFolderTasks = async (
 const truncateInput = (input: string, maxChars: number = 20000): string => {
   if (input.length <= maxChars) return input;
   return input.substring(0, maxChars) + "... [truncated]";
+};
+
+export const generateAutoAwesomePrompt = async (apiKey?: string): Promise<string> => {
+  return await withResilience(async (ai) => {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `You are Mimi, an aesthetic savant and creative director. 
+Generate a single, highly evocative, slightly cryptic, and deeply aesthetic prompt that a user could use to generate a zine or moodboard.
+It should be 1-3 sentences. It should sound like a poetic directive or a surreal observation.
+Do not use quotes around the output. Just return the raw text.`,
+      config: {
+        temperature: 0.9,
+      }
+    });
+    return response.text?.trim() || "Deconstruct the silence of the latent space.";
+  }, apiKey);
 };
 
 export const generateTagsFromMedia = async (content?: string, mediaItems: any[] = []): Promise<string[]> => {
@@ -1708,6 +2406,181 @@ export const generateInstagramPostIdeas = async (vibe: string, profile: UserProf
   });
 };
 
+export const generatePlatformStrategy = async (
+  platform: string,
+  mediaFiles: any[],
+  profile: UserProfile | null,
+  goal: string
+) => {
+  return await withResilience(async (ai) => {
+    const profileData = sanitizeProfile(profile);
+    
+    const parts: Part[] = [];
+    
+    // Add media files
+    for (const file of mediaFiles) {
+      if (file.type.startsWith('image/')) {
+        parts.push({
+          inlineData: {
+            data: file.base64.split(',')[1] || file.base64,
+            mimeType: file.type
+          }
+        });
+      } else if (file.type.startsWith('video/')) {
+        parts.push({
+          inlineData: {
+            data: file.base64.split(',')[1] || file.base64,
+            mimeType: file.type
+          }
+        });
+      }
+    }
+    
+    let platformSpecificPrompt = '';
+    if (platform === 'Instagram') {
+      platformSpecificPrompt = `
+You are an elite Instagram content strategist and algorithm interpreter.
+
+Your task is to generate a highly actionable, platform-specific content strategy based on Instagram’s current ranking behaviors and creator best practices.
+
+Use the following principles:
+- Instagram prioritizes watch time, shares, saves, and meaningful engagement
+- Reels are the primary discovery format
+- Content is categorized by topic, consistency, and audience response
+- Strong hooks, clear identity, and repeatable formats improve performance
+`;
+    } else if (platform === 'TikTok') {
+      platformSpecificPrompt = `
+You are an elite TikTok content strategist and algorithm interpreter.
+
+Your task is to generate a highly actionable, platform-specific content strategy based on TikTok's current ranking behaviors.
+
+Use the following principles:
+- TikTok prioritizes retention, completion loops, and shares.
+- Optimize for looping and rewatchability.
+- Trend subversion (taking a trending audio but applying it to a specific niche) works well.
+- Visual disruption and strong first-3-second hooks are mandatory.
+`;
+    } else if (platform === 'YouTube') {
+      platformSpecificPrompt = `
+You are an elite YouTube content strategist and algorithm interpreter.
+
+Your task is to generate a highly actionable, platform-specific content strategy based on YouTube's current ranking behaviors.
+
+Use the following principles:
+- YouTube prioritizes click-through rate (CTR) and average view duration (session time).
+- Optimize for thumbnail/title pairing (curiosity gap).
+- Storytelling arcs and visual packaging are critical for retention.
+`;
+    } else if (platform === 'Substack') {
+      platformSpecificPrompt = `
+You are an elite Substack content strategist and community builder.
+
+Your task is to generate a highly actionable, platform-specific content strategy based on Substack's ecosystem.
+
+Use the following principles:
+- Substack prioritizes deep parasocial connection, retention, and community building.
+- Formatting matters (drop caps, blockquotes, pacing).
+- Use Notes effectively for discovery.
+- Focus on poetic prose, dense imagery, and intellectual/emotional depth.
+`;
+    } else if (platform === 'Facebook') {
+      platformSpecificPrompt = `
+You are an elite Facebook content strategist and algorithm interpreter.
+
+Your task is to generate a highly actionable, platform-specific content strategy based on Facebook's current ranking behaviors.
+
+Use the following principles:
+- Facebook prioritizes community building, meaningful interactions, and consistent brand identity.
+- Strategic use of formats (Reels for discovery, Stories for engagement, Feed for depth).
+- Groups and conversational prompts are highly effective for reach.
+`;
+    } else {
+      platformSpecificPrompt = `
+You are an elite content strategist and algorithm interpreter for ${platform}.
+Generate a highly actionable, platform-specific content strategy.
+`;
+    }
+
+    const promptText = `
+${platformSpecificPrompt}
+
+---
+
+INPUT:
+
+[Aesthetic Profile]
+${profileData}
+
+[Goal]
+${goal}
+
+[Provided Media]
+The user has provided screenshots/videos of their analytics, top posts, or recent content. Analyze these to understand their current signal strength, audience alignment, and format bias.
+
+---
+
+OUTPUT:
+You MUST return a valid JSON object matching this exact schema:
+
+{
+  "openingLine": "A brutal, insightful hook. E.g., 'Right now, the algorithm reads you as visually refined but emotionally distant—high scroll appeal, low interaction pull.'",
+  "signalBreakdown": {
+    "reach": "High / Medium / Low",
+    "saves": "High / Medium / Low",
+    "shares": "High / Medium / Low",
+    "comments": "High / Medium / Low"
+  },
+  "aestheticAudit": {
+    "palette": "e.g., muted neutrals, low contrast",
+    "density": "e.g., low-medium",
+    "entropy": "e.g., controlled",
+    "insight": "e.g., Your visuals are cohesive, but lack a disruptive element to stop scroll."
+  },
+  "contentBehavior": [
+    "Why your content isn't converting (point 1)",
+    "Why your content isn't converting (point 2)"
+  ],
+  "strategyShift": [
+    "What to change immediately (point 1)",
+    "What to change immediately (point 2)"
+  ],
+  "contentPlan": [
+    {
+      "format": "e.g., Reel, Carousel, Long-form",
+      "hook": "The specific hook or title",
+      "visual": "Description of the visual setup",
+      "why": "Why it works and creates tension/response"
+    }
+  ], // Exactly 5 items
+  "audienceAlchemy": "Insights based on demographics/active times if provided, or general audience advice.",
+  "experiments": [
+    {
+      "test": "What to test (e.g., Try 1 direct-to-camera video)",
+      "successMetric": "What to measure",
+      "nextStep": "What to do based on the result"
+    }
+  ], // Exactly 3 items
+  "identityReframe": "A closing thought. E.g., 'You are currently positioned as a visual curator. To grow, you need to evolve into a point-of-view creator.'"
+}
+
+Tone: Direct, Insightful, Strategic, Slightly editorial / intelligent (not basic social media advice).
+`;
+
+    parts.push({ text: promptText });
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.1-pro-preview',
+      contents: { parts },
+      config: {
+        responseMimeType: "application/json",
+      }
+    });
+    
+    return cleanAndParse(response.text);
+  });
+};
+
 export async function generateAestheticSiblings(userTaste: any): Promise<{ name: string; explanation: string }[]> {
   return withResilience(async (ai) => {
     const prompt = `
@@ -1737,5 +2610,37 @@ export async function generateAestheticSiblings(userTaste: any): Promise<{ name:
     });
 
     return JSON.parse(response.text || "[]");
+  });
+}
+
+export async function generateSignatureImage(signature: AestheticSignature): Promise<string | null> {
+  return withResilience(async () => {
+    const prompt = `Generate a highly artistic, abstract visual representation of this aesthetic signature: 
+    Primary Axis: ${signature.primaryAxis}, 
+    Secondary Axis: ${signature.secondaryAxis}, 
+    Core Trait: ${signature.coreTrait || 'Evolving'}, 
+    Motifs: ${signature.motifs.join(', ')}.
+    The style should be ethereal, digital, and evocative of the signature's mood.`;
+
+    const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+    const response = await genAI.models.generateContent({
+      model: 'gemini-3.1-flash-image-preview',
+      contents: {
+        parts: [{ text: prompt }],
+      },
+      config: {
+        imageConfig: {
+          aspectRatio: "1:1",
+          imageSize: "1K"
+        },
+      },
+    });
+
+    for (const part of response.candidates[0].content.parts) {
+      if (part.inlineData) {
+        return `data:image/png;base64,${part.inlineData.data}`;
+      }
+    }
+    return null;
   });
 }

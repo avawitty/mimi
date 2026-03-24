@@ -4,51 +4,72 @@ import { useUser } from '../contexts/UserContext';
 import { fetchUserZines } from '../services/firebaseUtils';
 import { generateSignature } from '../services/signatureService';
 import { AestheticSignature } from '../types';
-import { Share2, Download, Fingerprint, Activity, GitCommit, Layers, Hexagon, Triangle, Circle, Square } from 'lucide-react';
+import { SignatureImageGenerator } from './SignatureImageGenerator';
+import { Share2, Download, Fingerprint, Activity, GitCommit, Layers, Hexagon, Triangle, Circle, Square, Sparkles } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, ScatterChart, Scatter, ZAxis } from 'recharts';
 import * as htmlToImage from 'html-to-image';
 
-const GeometricLoader = () => (
-  <div className="fixed inset-0 z-50 bg-[#f5f2ed] dark:bg-[#050505] flex flex-col items-center justify-center">
-    <div className="relative w-64 h-64 flex items-center justify-center">
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-        className="absolute inset-0 border border-stone-300 dark:border-stone-800 rounded-full"
-      />
-      <motion.div
-        animate={{ rotate: -360 }}
-        transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-        className="absolute inset-4 border border-stone-300 dark:border-stone-800 rounded-full border-dashed"
-      />
-      <motion.div
-        animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 180, 270, 360] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute w-32 h-32 border border-emerald-500/50 rotate-45"
-      />
-      <motion.div
-        animate={{ scale: [1.2, 1, 1.2], rotate: [360, 270, 180, 90, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute w-32 h-32 border border-indigo-500/50"
-      />
-      <div className="absolute flex items-center justify-center">
-        <Fingerprint className="text-stone-800 dark:text-stone-200 animate-pulse" size={48} />
+const SignatureSkeleton = () => (
+  <div className="flex-1 overflow-y-auto bg-[#f5f2ed] dark:bg-[#050505] text-stone-900 dark:text-stone-100 font-serif pb-32 custom-scrollbar">
+    <div className="max-w-6xl mx-auto p-6 md:p-12 space-y-16 animate-pulse">
+      
+      {/* Header Skeleton */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-stone-300 dark:border-stone-800 pb-8">
+        <div>
+          <div className="h-16 w-64 bg-stone-200 dark:bg-stone-800 rounded mb-4"></div>
+          <div className="h-4 w-48 bg-stone-200 dark:bg-stone-800 rounded"></div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-32 bg-stone-200 dark:bg-stone-800 rounded-full"></div>
+          <div className="h-10 w-32 bg-stone-200 dark:bg-stone-800 rounded-full"></div>
+        </div>
+      </div>
+
+      {/* Top Section Skeleton */}
+      <div className="grid md:grid-cols-12 gap-8 mt-12">
+        {/* DNA Card Skeleton */}
+        <div className="md:col-span-5">
+          <div className="bg-white dark:bg-[#111] border border-stone-200 dark:border-stone-800 p-8 shadow-2xl h-[400px]">
+            <div className="flex justify-between items-start mb-12">
+              <div>
+                <div className="h-8 w-48 bg-stone-200 dark:bg-stone-800 rounded mb-2"></div>
+                <div className="h-3 w-32 bg-stone-200 dark:bg-stone-800 rounded"></div>
+              </div>
+              <div className="h-8 w-8 bg-stone-200 dark:bg-stone-800 rounded-full"></div>
+            </div>
+            <div className="space-y-8">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="h-3 w-20 bg-stone-200 dark:bg-stone-800 rounded mb-2"></div>
+                  <div className="h-6 w-32 bg-stone-200 dark:bg-stone-800 rounded"></div>
+                </div>
+                <div>
+                  <div className="h-3 w-20 bg-stone-200 dark:bg-stone-800 rounded mb-2"></div>
+                  <div className="h-6 w-32 bg-stone-200 dark:bg-stone-800 rounded"></div>
+                </div>
+              </div>
+              <div>
+                <div className="h-3 w-24 bg-stone-200 dark:bg-stone-800 rounded mb-2"></div>
+                <div className="flex gap-2">
+                  <div className="h-6 w-16 bg-stone-200 dark:bg-stone-800 rounded"></div>
+                  <div className="h-6 w-20 bg-stone-200 dark:bg-stone-800 rounded"></div>
+                  <div className="h-6 w-16 bg-stone-200 dark:bg-stone-800 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Image Gen Skeleton */}
+        <div className="md:col-span-7">
+          <div className="bg-stone-200 dark:bg-stone-800 w-full h-[400px] rounded-xl"></div>
+        </div>
       </div>
     </div>
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.5 }}
-      className="mt-12 text-center space-y-2"
-    >
-      <h2 className="font-serif italic text-2xl text-stone-900 dark:text-stone-100">Synthesizing Signature</h2>
-      <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-stone-500">Extracting aesthetic DNA from the archive...</p>
-    </motion.div>
   </div>
 );
 
 export const SignatureView: React.FC = () => {
-  const { user, profile, updateProfile } = useUser();
+  const { user, profile, updateProfile, activePersona } = useUser();
   const [signature, setSignature] = useState<AestheticSignature | null>(null);
   const [loading, setLoading] = useState(true);
   const dnaCardRef = useRef<HTMLDivElement>(null);
@@ -66,7 +87,7 @@ export const SignatureView: React.FC = () => {
       const zines = await fetchUserZines(user.uid);
       console.info("MIMI // SignatureView: Fetched zines:", zines);
       if (zines.length > 0) {
-        const sig = await generateSignature(zines);
+        const sig = await generateSignature(zines, activePersona?.tailorDraft || null);
         console.info("MIMI // SignatureView: Generated signature:", sig);
         setSignature(sig);
         if (profile) {
@@ -84,7 +105,7 @@ export const SignatureView: React.FC = () => {
       setLoading(false);
     };
     init();
-  }, [user, profile, updateProfile]);
+  }, [user, profile, updateProfile, activePersona]);
 
   const handleExport = async () => {
     if (!dnaCardRef.current) return;
@@ -103,7 +124,7 @@ export const SignatureView: React.FC = () => {
     }
   };
 
-  if (loading) return <GeometricLoader />;
+  if (loading) return <SignatureSkeleton />;
 
   if (!signature) {
     return (
@@ -117,7 +138,7 @@ export const SignatureView: React.FC = () => {
             setLoading(true);
             const zines = await fetchUserZines(user.uid, true);
             if (zines.length > 0) {
-              const sig = await generateSignature(zines);
+              const sig = await generateSignature(zines, activePersona?.tailorDraft || null);
               setSignature(sig);
               if (profile) {
                 await updateProfile({
@@ -150,6 +171,11 @@ export const SignatureView: React.FC = () => {
           <div>
             <h1 className="text-5xl md:text-7xl font-light italic tracking-tight">Signature</h1>
             <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-stone-500 mt-4">Aesthetic Fingerprint & Lineage</p>
+            {activePersona?.tailorDraft && (
+              <p className="font-sans text-[10px] uppercase tracking-widest text-emerald-500 mt-2 flex items-center gap-1">
+                <Sparkles size={10} /> Signature influenced by active Tailor Directives
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <button 
@@ -158,7 +184,7 @@ export const SignatureView: React.FC = () => {
                 setLoading(true);
                 const zines = await fetchUserZines(user.uid, true);
                 if (zines.length > 0) {
-                  const sig = await generateSignature(zines);
+                  const sig = await generateSignature(zines, activePersona?.tailorDraft || null);
                   setSignature(sig);
                   if (profile) {
                     await updateProfile({
@@ -169,6 +195,8 @@ export const SignatureView: React.FC = () => {
                       }
                     });
                   }
+                } else {
+                  alert("You need to create at least one zine first.");
                 }
                 setLoading(false);
               }}
@@ -186,8 +214,8 @@ export const SignatureView: React.FC = () => {
           </div>
         </div>
 
-        {/* Top Section: DNA Card & Engine Output */}
-        <div className="grid md:grid-cols-12 gap-8">
+        {/* Top Section: DNA Card & Image Gen */}
+        <div className="grid md:grid-cols-12 gap-8 mt-12">
           
           {/* Aesthetic DNA Card (Exportable) */}
           <div className="md:col-span-5 relative group">
@@ -246,36 +274,41 @@ export const SignatureView: React.FC = () => {
             </div>
           </div>
 
-          {/* Influence Lineage */}
-          <div className="md:col-span-7 space-y-6">
-            <div className="flex items-center gap-3 mb-6">
-              <GitCommit className="text-indigo-500" size={20} />
-              <h3 className="text-2xl italic">Influence Lineage</h3>
-            </div>
-            
-            <div className="grid gap-4">
-              {signature.influenceLineage.map((item, idx) => (
-                <div key={idx} className="bg-white/50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 p-4 flex items-center justify-between group hover:border-indigo-500/50 transition-colors">
-                  <div>
-                    <h4 className="font-serif text-lg text-stone-900 dark:text-stone-100">{item.artist}</h4>
-                    <p className="font-sans text-[10px] uppercase tracking-widest text-stone-500">{item.movement}</p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-32 h-1 bg-stone-200 dark:bg-stone-800 relative overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${item.connectionStrength * 100}%` }}
-                        transition={{ duration: 1, delay: idx * 0.2 }}
-                        className="absolute top-0 left-0 h-full bg-indigo-500"
-                      />
-                    </div>
-                    <span className="font-mono text-xs text-stone-400 w-8 text-right">
-                      {Math.round(item.connectionStrength * 100)}%
-                    </span>
-                  </div>
+          {/* Image Generation */}
+          <div className="md:col-span-7">
+            <SignatureImageGenerator signature={signature} />
+          </div>
+        </div>
+
+        {/* Influence Lineage (Moved down) */}
+        <div className="space-y-6 pt-8 border-t border-stone-300 dark:border-stone-800">
+          <div className="flex items-center gap-3 mb-6">
+            <GitCommit className="text-indigo-500" size={20} />
+            <h3 className="text-2xl italic">Influence Lineage</h3>
+          </div>
+          
+          <div className="grid gap-4">
+            {signature.influenceLineage.map((item, idx) => (
+              <div key={idx} className="bg-white/50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 p-4 flex items-center justify-between group hover:border-indigo-500/50 transition-colors">
+                <div>
+                  <h4 className="font-serif text-lg text-stone-900 dark:text-stone-100">{item.artist}</h4>
+                  <p className="font-sans text-[10px] uppercase tracking-widest text-stone-500">{item.movement}</p>
                 </div>
-              ))}
-            </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-32 h-1 bg-stone-200 dark:bg-stone-800 relative overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${item.connectionStrength * 100}%` }}
+                      transition={{ duration: 1, delay: idx * 0.2 }}
+                      className="absolute top-0 left-0 h-full bg-indigo-500"
+                    />
+                  </div>
+                  <span className="font-mono text-xs text-stone-400 w-8 text-right">
+                    {Math.round(item.connectionStrength * 100)}%
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -283,7 +316,7 @@ export const SignatureView: React.FC = () => {
         <div className="grid md:grid-cols-2 gap-8 pt-8 border-t border-stone-300 dark:border-stone-800">
           
           {/* Creative Cycles */}
-          <div className="space-y-6">
+          <div className="space-y-6 min-h-[300px]">
             <div className="flex items-center gap-3">
               <Activity className="text-rose-500" size={20} />
               <h3 className="text-2xl italic">Creative Cycles</h3>
@@ -291,7 +324,7 @@ export const SignatureView: React.FC = () => {
             <p className="font-sans text-[10px] uppercase tracking-widest text-stone-500 mb-6">Output volume & mood patterns</p>
             
             <div className="h-[300px] w-full bg-white/30 dark:bg-stone-900/30 border border-stone-200 dark:border-stone-800 p-4">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                 <AreaChart data={signature.creativeCycles} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorOutput" x1="0" y1="0" x2="0" y2="1">
@@ -313,7 +346,7 @@ export const SignatureView: React.FC = () => {
           </div>
 
           {/* Motif Frequency Analyzer */}
-          <div className="space-y-6">
+          <div className="space-y-6 min-h-[300px]">
             <div className="flex items-center gap-3">
               <Layers className="text-emerald-500" size={20} />
               <h3 className="text-2xl italic">Motif Frequency</h3>
@@ -321,7 +354,7 @@ export const SignatureView: React.FC = () => {
             <p className="font-sans text-[10px] uppercase tracking-widest text-stone-500 mb-6">Evolution of recurring visual elements</p>
             
             <div className="h-[300px] w-full bg-white/30 dark:bg-stone-900/30 border border-stone-200 dark:border-stone-800 p-4">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                 <ScatterChart margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <XAxis 
                     type="number" 
@@ -358,6 +391,22 @@ export const SignatureView: React.FC = () => {
             </div>
           </div>
 
+          {/* Motif Relationships */}
+          <div className="pt-8 border-t border-stone-300 dark:border-stone-800">
+            <h3 className="text-2xl italic mb-6">Motif Relationships</h3>
+            <div className="bg-stone-50 dark:bg-[#111] border border-stone-200 dark:border-stone-800 p-12 flex flex-wrap justify-center items-center gap-x-8 gap-y-6">
+              {signature.motifs.map((m, i) => (
+                <div key={m} className="flex items-center gap-8">
+                  <span className={`font-mono text-[10px] uppercase tracking-widest ${i % 2 === 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-stone-600 dark:text-stone-400'}`}>
+                    {m}
+                  </span>
+                  {i < signature.motifs.length - 1 && (
+                    <div className="w-8 h-[1px] bg-stone-300 dark:bg-stone-800" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

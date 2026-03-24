@@ -27,6 +27,7 @@ export const TailorPreview: React.FC<TailorPreviewProps> = ({ draft, activePerso
   const generatePreview = async (force = false) => {
     const currentDraftString = JSON.stringify({
       eraBias: draft.positioningCore.aestheticCore.eraBias,
+      presentation: draft.positioningCore.aestheticCore.presentation,
       silhouettes: draft.positioningCore.aestheticCore.silhouettes,
       materiality: draft.positioningCore.aestheticCore.materiality,
       chromatic: draft.expressionEngine.chromaticRegistry
@@ -39,7 +40,8 @@ export const TailorPreview: React.FC<TailorPreviewProps> = ({ draft, activePerso
     lastGeneratedDraft.current = currentDraftString;
 
     try {
-      const prompt = `A high-end editorial fashion photograph, centered composition, sharp focus, professional lighting, representing the aesthetic DNA: ${draft.positioningCore.aestheticCore.eraBias}, silhouettes: ${draft.positioningCore.aestheticCore.silhouettes.join(', ')}, materiality: ${draft.positioningCore.aestheticCore.materiality.join(', ')}.`;
+      const presentationStr = draft.positioningCore.aestheticCore.presentation ? ` Form & Presentation: ${draft.positioningCore.aestheticCore.presentation}.` : '';
+      const prompt = `A high-end editorial fashion photograph, centered composition, sharp focus, professional lighting, representing the aesthetic DNA: ${draft.positioningCore.aestheticCore.eraBias}.${presentationStr} silhouettes: ${draft.positioningCore.aestheticCore.silhouettes.join(', ')}, materiality: ${draft.positioningCore.aestheticCore.materiality.join(', ')}.`;
       
       // We pass a mock profile object that generateZineImage expects
       const mockProfile = { tailorDraft: draft };

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { db, auth } from '../services/firebase';
+import { handleFirestoreError, OperationType } from '../services/firebaseUtils';
 import { Notification } from '../types';
 
 export const NotificationsPanel: React.FC = () => {
@@ -21,6 +22,8 @@ export const NotificationsPanel: React.FC = () => {
         ...doc.data()
       } as Notification));
       setNotifications(fetchedNotifications);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'notifications');
     });
 
     return () => unsubscribe();

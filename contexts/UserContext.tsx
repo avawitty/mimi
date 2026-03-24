@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
-import { UserProfile, UserPreferences, Persona, TailorLogicDraft } from '../types';
+import { UserProfile, UserPreferences, Persona, TailorLogicDraft, NarrativeThread } from '../types';
 import { getLocalProfile, saveProfileLocally } from '../services/localArchive';
 import { 
   bootstrapAuth, ensureAuth, getUserProfile, saveUserProfile, 
@@ -23,7 +23,7 @@ interface SystemStatus {
 export interface FeatureFlags {
   scry: boolean;
   darkroom: boolean;
-  mesopic: boolean;
+  theLens: boolean;
   tailor: boolean;
   proposal: boolean;
 }
@@ -73,6 +73,8 @@ interface UserContextType {
   activatePatron: (key: string) => Promise<void>;
   incrementGeneration: () => Promise<void>;
   recordSession: () => Promise<void>;
+  activeThread: NarrativeThread | null;
+  setActiveThread: (thread: NarrativeThread | null) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -88,7 +90,7 @@ export const useUser = () => {
 const DEFAULT_FLAGS: FeatureFlags = {
   scry: true,
   darkroom: true,
-  mesopic: true,
+  theLens: true,
   tailor: true,
   proposal: true
 };
@@ -96,10 +98,15 @@ const DEFAULT_FLAGS: FeatureFlags = {
 const DEFAULT_DRAFT: TailorLogicDraft = {
   positioningCore: {
     anchors: { culturalReferences: ['Brutalism', 'Cyber-Noir', 'Analog-Glitch'], ideologicalBias: [] },
-    aestheticCore: { silhouettes: [], materiality: [], eraBias: 'Post-Digital', density: 5, entropy: 5 },
+    aestheticCore: { silhouettes: [], materiality: [], eraBias: 'Post-Digital', presentation: 'Androgynous', density: 5, entropy: 5, tags: [] },
     positioningAxis: 'Signal vs Noise',
     authorityClaim: 'Aesthetic infrastructure for long-term cultural positioning.',
     exclusionPrinciples: ['Avoid reactive trend commentary', 'Refuse cross-cluster dilution without thesis']
+  },
+  algoDials: {
+    webScry: 50,
+    memorySynthesis: 50,
+    dissonance: 10
   },
   expressionEngine: {
     chromaticRegistry: { primaryPalette: [], baseNeutral: '#F2F1ED', accentSignal: '#1C1917' },
@@ -149,6 +156,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     oracle: 'ready',
     storage: 'nominal'
   });
+  
+  const [activeThread, setActiveThread] = useState<NarrativeThread | null>(null);
   
   const [keyRing, setKeyRing] = useState<string[]>([]);
   const [featureFlags, setFeatureFlags] = useState<FeatureFlags>(() => {
@@ -569,10 +578,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (navigator.onLine && user && !currentUid.startsWith('local_')) {
         // Split data into Identity (Public) and Preferences (Private)
-        const { tailorDraft, personas, activePersonaId, tasteProfile, starredZineIds, lastAuditReport, ...identity } = updated;
+        const { tailorDraft, personas, activePersonaId, starredZineIds, lastAuditReport, ...identity } = updated;
         const preferences: UserPreferences = {
             tailorDraft,
-            tasteProfile,
             starredZineIds,
             lastAuditReport,
             personas,
@@ -827,7 +835,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       generationsRemaining,
       activatePatron,
       incrementGeneration,
-      recordSession
+      recordSession,
+      activeThread,
+      setActiveThread
     }}>
       {children}
     </UserContext.Provider>

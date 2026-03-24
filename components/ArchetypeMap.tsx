@@ -38,7 +38,7 @@ export const ArchetypeMap: React.FC = () => {
       <h2 className="text-xl font-serif italic mb-4">The Constellation</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
             <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
               <PolarGrid />
               <PolarAngleAxis dataKey="archetype" />
@@ -48,7 +48,7 @@ export const ArchetypeMap: React.FC = () => {
           </ResponsiveContainer>
         </div>
         <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
             <LineChart data={lineData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />

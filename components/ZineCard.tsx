@@ -72,7 +72,7 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
       if (!zine.content?.headlines?.[0]) return;
       setIsRegenerating(true);
       try {
-          const newImage = await generateZineImage(zine.content.headlines[0], '3:4', '1K', profile, false);
+          const newImage = await generateZineImage(zine.content.headlines[0], '3:4', '1K', profile, false, undefined, undefined, zine.treatmentId);
           setCurrentImageUrl(newImage);
           // TODO: Save new image to zine metadata
       } catch (err) {

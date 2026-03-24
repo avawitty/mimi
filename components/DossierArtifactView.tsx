@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { DossierArtifact } from '../types';
-import { X, Share2, Download, ExternalLink, Activity, Info, Briefcase, FileText, Check, Copy, Globe, Pin, LayoutGrid, Quote, Terminal, Cpu, ScanLine } from 'lucide-react';
+import { X, Share2, Download, ExternalLink, Activity, Info, Briefcase, FileText, Check, Copy, Globe, Pin, LayoutGrid, Quote, Terminal, Cpu, ScanLine, Target } from 'lucide-react';
 import { AestheticDNA } from './AestheticDNA';
 
 export const DossierArtifactView: React.FC<{ artifact: DossierArtifact; onClose: () => void }> = ({ artifact, onClose }) => {
@@ -52,8 +52,21 @@ export const DossierArtifactView: React.FC<{ artifact: DossierArtifact; onClose:
           </header>
           
           <div className="grid md:grid-cols-2 gap-12">
-              <div className="bg-stone-900 p-2 border border-stone-800">
-                  <img src={artifact.content} className="w-full h-auto object-contain" alt={artifact.title} />
+              <div className="bg-stone-900 p-2 border border-stone-800 flex items-center justify-center min-h-[300px]">
+                  {artifact.content ? (
+                      <img src={artifact.content} className="w-full h-auto object-contain" alt={artifact.title} />
+                  ) : artifact.type === 'strategy' ? (
+                      <div className="p-8 text-center space-y-4">
+                          <Target size={48} className="mx-auto text-emerald-500 opacity-50" />
+                          <h3 className="font-serif italic text-2xl text-stone-300">Strategy Audit</h3>
+                          <p className="font-mono text-[10px] text-stone-500 uppercase tracking-widest">Platform Analysis</p>
+                      </div>
+                  ) : (
+                      <div className="p-8 text-center space-y-4">
+                          <FileText size={48} className="mx-auto text-stone-700" />
+                          <p className="font-mono text-[10px] text-stone-500 uppercase tracking-widest">Text Document</p>
+                      </div>
+                  )}
               </div>
               <div className="space-y-8">
                   <p className="font-serif text-xl text-stone-300 leading-relaxed">
@@ -116,9 +129,46 @@ export const DossierArtifactView: React.FC<{ artifact: DossierArtifact; onClose:
                                </div>
                                <span className="font-mono text-[8px] text-stone-700">HEX_0{idx+1}</span>
                             </div>
-                            <p className={`font-serif italic tracking-tight text-stone-300 whitespace-pre-wrap ${el.type === 'analysis_pin' ? 'text-lg leading-relaxed' : 'text-2xl leading-snug'}`}>
-                               "{el.content}"
-                            </p>
+                            <div className={`font-serif tracking-tight text-stone-300 whitespace-pre-wrap ${el.type === 'analysis_pin' ? 'text-lg leading-relaxed' : 'text-xl leading-snug'}`}>
+                               {artifact.type === 'strategy' ? (
+                                  (() => {
+                                    try {
+                                      const data = JSON.parse(el.content);
+                                      return (
+                                        <div className="space-y-6 text-sm">
+                                          <div>
+                                            <h4 className="font-mono text-[10px] uppercase tracking-widest text-emerald-500 mb-2">Opening Line</h4>
+                                            <p className="italic text-stone-400">"{data.openingLine}"</p>
+                                          </div>
+                                          <div>
+                                            <h4 className="font-mono text-[10px] uppercase tracking-widest text-emerald-500 mb-2">Aesthetic Audit</h4>
+                                            <ul className="list-disc pl-4 space-y-1 text-stone-400">
+                                              <li><strong>Palette:</strong> {data.aestheticAudit.palette}</li>
+                                              <li><strong>Density:</strong> {data.aestheticAudit.density}</li>
+                                              <li><strong>Entropy:</strong> {data.aestheticAudit.entropy}</li>
+                                              <li className="italic mt-2">"{data.aestheticAudit.insight}"</li>
+                                            </ul>
+                                          </div>
+                                          <div>
+                                            <h4 className="font-mono text-[10px] uppercase tracking-widest text-emerald-500 mb-2">Strategy Shift</h4>
+                                            <ul className="list-disc pl-4 space-y-1 text-stone-400">
+                                              {data.strategyShift.map((s: string, i: number) => <li key={i}>{s}</li>)}
+                                            </ul>
+                                          </div>
+                                          <div>
+                                            <h4 className="font-mono text-[10px] uppercase tracking-widest text-emerald-500 mb-2">Identity Reframe</h4>
+                                            <p className="italic text-stone-400">"{data.identityReframe}"</p>
+                                          </div>
+                                        </div>
+                                      );
+                                    } catch (e) {
+                                      return <pre className="font-mono text-[10px] text-stone-400 overflow-x-auto p-4 bg-black/50 rounded-sm border border-stone-800">{el.content}</pre>;
+                                    }
+                                  })()
+                               ) : (
+                                  `"${el.content}"`
+                               )}
+                            </div>
                         </div>
                      </div>
                    )}

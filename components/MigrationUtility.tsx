@@ -1,15 +1,24 @@
 import React, { useState } from 'react';
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, writeBatch, doc } from 'firebase/firestore';
-import firebaseConfig from '../firebase-applet-config.json';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA5ugvWqsO63IKlXDDeADLBr_aNRDMG5O8",
+  authDomain: "gen-lang-client-02106746-1e8ee.firebaseapp.com",
+  databaseURL: "https://gen-lang-client-0210674664-default-rtdb.firebaseio.com",
+  projectId: "gen-lang-client-0210674664",
+  storageBucket: "gen-lang-client-0210674664.firebasestorage.app",
+  messagingSenderId: "98167672430",
+  appId: "1:98167672430:web:2ab61bd54e3bbc298fe07f"
+};
 
 // Initialize the app
-const app = initializeApp(firebaseConfig);
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
 // Old database ID
 const OLD_DB_ID = "ai-studio-6d7c4a54-8086-473c-9ba1-b64d035b37c5";
 // New database ID (from config)
-const NEW_DB_ID = firebaseConfig.firestoreDatabaseId;
+const NEW_DB_ID = "(default)";
 
 const oldDb = getFirestore(app, OLD_DB_ID);
 const newDb = getFirestore(app, NEW_DB_ID);

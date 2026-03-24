@@ -4,6 +4,7 @@ import React from 'react';
 export interface AestheticSignature {
   primaryAxis: string;
   secondaryAxis: string;
+  coreTrait?: string;
   motifs: string[];
   moodCluster: string;
   generatedAt: number;
@@ -40,12 +41,14 @@ export interface MaterialityConfig {
 
 export interface ZineGenerationOptions {
   style: 'minimalist' | 'maximalist' | 'experimental' | 'balanced';
-  theme: 'dark' | 'light' | 'vibrant' | 'muted';
+  theme: 'organic' | 'synthetic' | 'latent';
   contentFocus: 'visual-heavy' | 'text-heavy' | 'balanced';
   artStyle?: string;
   aestheticTone?: 'Cinematic' | 'Editorial' | 'Dreamy' | 'Industrial' | 'Noir';
   goals?: string;
   tags?: string[];
+  customTitle?: string;
+  selectedTreatmentId?: string;
 }
 
 export type ZodiacSign = 'aries' | 'taurus' | 'gemini' | 'cancer' | 'leo' | 'virgo' | 'libra' | 'scorpio' | 'sagittarius' | 'capricorn' | 'aquarius' | 'pisces';
@@ -57,6 +60,7 @@ export interface MediaFile {
   mimeType: string;
   name?: string;
   tags?: string[];
+  file?: File;
 }
 
 export interface ColorShard {
@@ -131,6 +135,13 @@ export interface TasteProfile {
   lastUpdated: number;
 }
 
+export interface DeltaVerdict {
+  alignmentScore: number;
+  divergencePoints: string[];
+  resonanceAnalysis: string;
+  surpriseVerdict: string;
+}
+
 export interface PocketItem {
   id: string;
   userId: string;
@@ -148,6 +159,7 @@ export interface PocketItem {
   treatmentApplied?: string;
   parentShardId?: string;
   agentEnrichment?: AgentEnrichment;
+  deltaVerdict?: DeltaVerdict;
 }
 
 export interface TailorLogicDraft {
@@ -163,6 +175,7 @@ export interface TailorLogicDraft {
       silhouettes: string[];
       materiality: string[];
       eraBias: string;
+      presentation?: string; // Feminine, Masculine, Androgynous, or custom
       density: number;  // 1–10
       entropy: number;  // 1–10
       tags: string[];
@@ -171,6 +184,19 @@ export interface TailorLogicDraft {
     positioningAxis: string;
     authorityClaim: string;
     exclusionPrinciples: string[];
+  };
+
+  algoDials?: {
+    webScry: number;
+    memorySynthesis: number;
+    dissonance: number;
+    binaryToSpectrum?: number;
+  };
+
+  visual_guidance?: {
+    strict_palette: string[];
+    negative_prompt?: string;
+    composition_density?: number;
   };
 
   expressionEngine: {
@@ -204,6 +230,7 @@ export interface TailorLogicDraft {
       lexicalDensity: number;  // 1–10
       restraintLevel: number;  // 1–10
       voiceNotes?: string;
+      tone?: string;
     };
     brandIdentity?: {
       fonts: {
@@ -379,6 +406,13 @@ export interface ZineContent extends ZineSpec {
   pagesJson?: string;
 }
 
+export interface ZineFolder {
+  id: string;
+  userId: string;
+  name: string;
+  createdAt: number;
+}
+
 export interface ZineMetadata {
   id: string;
   fragmentsUsed: string[];
@@ -399,12 +433,19 @@ export interface ZineMetadata {
   isHighFidelity?: boolean;
   isPublic?: boolean;
   isLocked?: boolean;
+  mask?: string;
+  useSearch?: boolean;
+  useMaps?: boolean;
+  taskMode?: boolean;
+  transmissionsUsed?: string[];
   authorship?: string;
   originalInput?: string; 
   artifacts?: MediaFile[];
   lineage?: string[];
   embedding?: number[]; // NEW
   tags?: string[];
+  treatmentId?: string;
+  folderId?: string; // NEW: For organizing zines into folders
 }
 
 export interface SemioticSignal {
@@ -504,6 +545,26 @@ export interface ThimbleTasteEvent {
   confidence: number;     // NEW: model confidence (0–1)
 
   timestamp: number;
+}
+
+export interface ThimbleBoard {
+  id: string;
+  userId: string;
+  title: string;
+  description?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface ThimbleItem {
+  id: string;
+  boardId: string;
+  userId: string;
+  url: string;
+  title?: string;
+  price?: string;
+  notes?: string;
+  createdAt: number;
 }
 
 export interface TasteEvent {
@@ -657,6 +718,8 @@ export interface EditorElement {
   notes?: string;
   style: EditorElementStyle;
   sourceRef?: string;
+  aestheticViolation?: { isViolation: boolean; reason: string };
+  harmonizing?: boolean;
 }
 
 export interface ZinePage extends ZinePageSpec {
@@ -686,6 +749,47 @@ export interface Task {
   completed: boolean;
   dueDate?: string;
   createdAt: number;
+  platform?: string;
+  tags?: string[];
+  position?: { x: number; y: number };
+}
+
+export interface StrategyAudit {
+  id: string;
+  platform: string;
+  intent: string;
+  identitySeed: string;
+  timestamp: number;
+  read: {
+    openingLine: string;
+    signalBreakdown: {
+      reach: string;
+      saves: string;
+      shares: string;
+      comments: string;
+    };
+    aestheticAudit: {
+      palette: string;
+      density: string;
+      entropy: string;
+      insight: string;
+    };
+    contentBehavior: string[];
+    strategyShift: string[];
+    contentPlan: {
+      format: string;
+      hook: string;
+      visual: string;
+      why: string;
+    }[];
+    audienceAlchemy: string;
+    experiments: {
+      test: string;
+      successMetric: string;
+      nextStep: string;
+    }[];
+    identityReframe: string;
+  };
 }
 
 export interface DossierFolder {
@@ -723,6 +827,7 @@ export interface DossierArtifact {
   tags?: string[];
   stackIds?: string[]; // NEW: For clustering
   status?: 'active' | 'dormant'; // NEW: For Dormant Vision System
+  deltaVerdict?: DeltaVerdict;
 }
 
 export interface SlideBlock {
@@ -738,11 +843,22 @@ export interface DarkroomLayer extends Treatment {
   isVisible: boolean;
 }
 
+export interface StyleTreatment {
+  id: string;
+  createdAt: number;
+  treatmentName: string;
+  basePromptDirectives: string;
+  imageEditingRules: string;
+  typographyLayout: string;
+  applicationLogic: string;
+}
+
 export interface UserPreferences {
   tailorDraft?: TailorLogicDraft; 
   personas?: Persona[]; 
   activePersonaId?: string;
   tasteProfile?: TasteProfile;
+  savedTreatments?: StyleTreatment[];
   starredZineIds?: string[];
   lastAuditReport?: TailorAuditReport;
   enabledAlgos?: string[]; // NEW: User-defined firewalls for specific functions

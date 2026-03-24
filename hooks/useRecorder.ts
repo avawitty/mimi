@@ -68,13 +68,13 @@ export const useRecorder = (): UseRecorderReturn => {
       if (isPermissionDenied) {
         console.warn("MIMI // Mic Access: Permission Denied by User/Policy.");
       } else {
-        console.error("MIMI // Mic Access Failure:", err.name, err.message);
+        console.warn("MIMI // Mic Access Failure:", err.name, err.message);
       }
 
       let msg = "Audio input initialization failed.";
       if (isPermissionDenied) {
         msg = "Microphone access denied. Enable permissions in browser settings.";
-      } else if (err.name === 'NotFoundError' || err.message === 'ENVIRONMENT_INCOMPATIBLE') {
+      } else if (err.name === 'NotFoundError' || err.message === 'ENVIRONMENT_INCOMPATIBLE' || (err.message && err.message.includes('Requested device not found'))) {
         msg = "No compatible microphone detected on this frequency.";
       } else if (err.name === 'NotReadableError') {
         msg = "Microphone is busy or obstructed by another application.";

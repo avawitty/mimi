@@ -4,11 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Key, ExternalLink, Loader2, Check, Crown, Lock, Star, Fingerprint } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
+import { createCheckoutSession } from '../services/stripe';
+import { ManifestIdentityGate } from './ManifestIdentityGate';
 
 export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => void; prefillKey?: string; isLimitReached?: boolean }> = ({ isOpen, onClose, prefillKey, isLimitReached }) => {
-  const { activatePatron } = useUser();
+  const { activatePatron, user } = useUser();
   const [keyInput, setKeyInput] = useState(prefillKey || '');
   const [status, setStatus] = useState<'idle' | 'validating' | 'success' | 'error'>('idle');
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
   useEffect(() => {
       if (prefillKey) setKeyInput(prefillKey);
@@ -29,6 +32,18 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
     } catch (e) {
         setStatus('error');
         setTimeout(() => setStatus('idle'), 2000);
+    }
+  };
+
+  const handleSubscribe = async () => {
+    if (!user) return;
+    setIsCheckoutLoading(true);
+    try {
+      // Replace with your actual Stripe Price ID
+      await createCheckoutSession('price_1234567890', user.uid, user.email);
+    } catch (error) {
+      console.error('Checkout failed:', error);
+      setIsCheckoutLoading(false);
     }
   };
 
@@ -121,14 +136,17 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
                     <span>Ref: IMP-001</span>
                     <span>Status: {status === 'success' ? 'ACTIVE' : 'WAITING'}</span>
                 </div>
-                <a 
-                    href="https://buy.stripe.com/3cI4gtekA8L36kX3NDaEE00" 
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 font-serif italic text-xs text-stone-500 hover:text-[#1C1917] hover:underline decoration-[#1C1917]/30 underline-offset-4 transition-all"
-                >
-                    Purchase Key via Stripe <ExternalLink size={8} />
-                </a>
+                
+                <ManifestIdentityGate>
+                  <button 
+                      onClick={handleSubscribe}
+                      disabled={isCheckoutLoading}
+                      className="flex items-center justify-center gap-2 font-serif italic text-xs text-stone-500 hover:text-[#1C1917] hover:underline decoration-[#1C1917]/30 underline-offset-4 transition-all"
+                  >
+                      {isCheckoutLoading ? <Loader2 size={12} className="animate-spin" /> : 'Purchase Key via Stripe'} 
+                      {!isCheckoutLoading && <ExternalLink size={8} />}
+                  </button>
+                </ManifestIdentityGate>
             </div>
         </div>
       </motion.div>

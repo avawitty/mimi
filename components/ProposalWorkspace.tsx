@@ -14,6 +14,7 @@ import { Proposal, ProposalSection, EditorElement, UserProfile, BrandKit, Pocket
 import { saveProposalToRegistry, refineSectionContent } from '../services/proposalOrchestrator';
 import { refineProposalSection, generateRefinementVariations } from '../services/geminiService';
 import { SlideCanvas } from './SlideCanvas';
+import { SemanticSteps } from './SemanticSteps';
 import { useUser } from '../contexts/UserContext';
 import { fetchPocketItems } from '../services/firebase';
 import html2canvas from 'html2canvas';
@@ -961,12 +962,16 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
                                                     <span className="font-mono text-[9px] text-stone-500">OPACITY</span>
                                                     <span className="font-mono text-[9px] text-stone-500">{Math.round((selectedImageElement.style.opacity !== undefined ? selectedImageElement.style.opacity : 1) * 100)}%</span>
                                                 </div>
-                                                <input 
-                                                    type="range" 
-                                                    min="0" max="1" step="0.05"
+                                                <SemanticSteps 
+                                                    steps={[
+                                                        { label: '0%', value: 0 },
+                                                        { label: '25%', value: 0.25 },
+                                                        { label: '50%', value: 0.5 },
+                                                        { label: '75%', value: 0.75 },
+                                                        { label: '100%', value: 1 }
+                                                    ]}
                                                     value={selectedImageElement.style.opacity !== undefined ? selectedImageElement.style.opacity : 1}
-                                                    onChange={(e) => handleUpdateElementStyle(section.id, selectedImageElement.id, { opacity: parseFloat(e.target.value) })}
-                                                    className="w-full h-1 bg-stone-100 dark:bg-stone-900 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-emerald-500"
+                                                    onChange={(val) => handleUpdateElementStyle(section.id, selectedImageElement.id, { opacity: val })}
                                                 />
                                             </div>
 
@@ -976,12 +981,15 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
                                                     <span className="font-mono text-[9px] text-stone-500">RADIUS</span>
                                                     <span className="font-mono text-[9px] text-stone-500">{selectedImageElement.style.borderRadius || 0}px</span>
                                                 </div>
-                                                <input 
-                                                    type="range" 
-                                                    min="0" max="100" step="1"
+                                                <SemanticSteps 
+                                                    steps={[
+                                                        { label: 'Sharp', value: 0 },
+                                                        { label: 'Soft', value: 8 },
+                                                        { label: 'Round', value: 24 },
+                                                        { label: 'Pill', value: 100 }
+                                                    ]}
                                                     value={selectedImageElement.style.borderRadius || 0}
-                                                    onChange={(e) => handleUpdateElementStyle(section.id, selectedImageElement.id, { borderRadius: parseInt(e.target.value) })}
-                                                    className="w-full h-1 bg-stone-100 dark:bg-stone-900 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-emerald-500"
+                                                    onChange={(val) => handleUpdateElementStyle(section.id, selectedImageElement.id, { borderRadius: val })}
                                                 />
                                             </div>
 

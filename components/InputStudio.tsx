@@ -3,15 +3,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MediaFile, ToneTag, PocketItem, ZineGenerationOptions } from '../types';
 import { useRecorder } from '../hooks/useRecorder';
 import { useTasteLogging } from '../hooks/useTasteLogging';
-import { Plus, BrainCircuit, X, Globe, Mic, Loader2, Square, Check, Radio, Mail, Info, Sparkles, AlertCircle, Eraser, Zap, Image as ImageIcon, Link as LinkIcon, Twitter, Instagram, Shield, Users, ArrowUpRight, FolderOpen, Paperclip, ChevronLeft, ChevronRight, GripVertical, FileText, Filter, Wand2, ChevronDown } from 'lucide-react';
-import { transcribeAudio, compressImage, generateTagsFromMedia, analyzeImageAesthetic } from '../services/geminiService';
+import { Plus, BrainCircuit, X, Globe, MapPin, Mic, Loader2, Square, Check, Radio, Mail, Info, Sparkles, AlertCircle, Eraser, Zap, Image as ImageIcon, Link as LinkIcon, Twitter, Instagram, Shield, Users, ArrowUpRight, FolderOpen, Paperclip, ChevronLeft, ChevronRight, GripVertical, FileText, Filter, Wand2, ChevronDown, Scissors, ShoppingBag, FolderPlus, Radar, Trash2 } from 'lucide-react';
+import { transcribeAudio, compressImage, generateTagsFromMedia, analyzeImageAesthetic, generateZineTitle, analyzeAudio, applyAestheticRefraction, generateAutoAwesomePrompt, analyzeAestheticDelta } from '../services/geminiService';
+import { PromptOrchestrator } from './PromptOrchestrator';
+import { TheThimble } from './TheThimble';
+import { DeltaVerdictCard } from './DeltaVerdictCard';
 import { ZineConfiguration } from './ZineConfiguration';
 import { TagGenerator } from './TagGenerator';
+import { ZineInspoCarousel } from './ZineInspoCarousel';
 import { SUPERINTELLIGENCE_PROMPTS } from '../constants';
 import { CuratorNote } from './CuratorNote';
 import { useUser } from '../contexts/UserContext';
+import { addToPocket, createMoodboard } from '../services/firebase';
 import { LegalOverlay } from './LegalOverlay';
-import { fetchPocketItems } from '../services/firebase';
+import { GlossaryTooltip } from './GlossaryTooltip';
 
 const CATEGORIES: Record<string, ToneTag[]> = {
   STYLE: ['CONTENT', 'editorial', 'dream', 'unhinged', 'research'],
@@ -48,6 +53,19 @@ const DEFAULT_STARTERS = [
   "The architecture of..."
 ];
 
+const PROVOCATIONS = [
+  "What is the texture of the silence here?",
+  "Deconstruct the primary anchor.",
+  "Introduce a brutalist contradiction.",
+  "Consider the artifact as a ruin.",
+  "Bleed the colors into the semantic layer.",
+  "Obscure the obvious.",
+  "What if the subject is actually the background?",
+  "Elevate the mundane to the mythological.",
+  "Find the tension between the organic and the synthetic.",
+  "Let the negative space dictate the narrative."
+];
+
 export const InputStudio: React.FC<{
   onRefine: any, 
   isThinking: boolean, 
@@ -58,241 +76,217 @@ export const InputStudio: React.FC<{
   setZineOptions: (options: ZineGenerationOptions) => void,
   initialHighFidelity?: boolean
 }> = ({ onRefine, isThinking, initialValue, initialMedia, continuumContext, initialHighFidelity, zineOptions, setZineOptions }) => {
-  const { systemStatus, user: currentUser, updateProfile, profile } = useUser();
+  const { systemStatus, user: currentUser, updateProfile, profile, activeThread, setActiveThread } = useUser();
   const { logEvent } = useTasteLogging();
   
   // Initialize with a value if none provided
   const [input, setInput] = useState(() => {
     if (initialValue) return initialValue;
-    return DEFAULT_STARTERS[Math.floor(Math.random() * DEFAULT_STARTERS.length)];
+    return DEFAULT_STARTERS[Math.floor(Math.random() * DEFAULT_STARTERS.length)] || '';
   });
+  const [title, setTitle] = useState('');
+  const [provocationIndex, setProvocationIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProvocationIndex((prev) => (prev + 1) % PROVOCATIONS.length);
+    }, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleAutoGenerateTitle = async () => {
+      if (!input) return;
+      const generatedTitle = await generateZineTitle(input);
+      setTitle(generatedTitle);
+  };
 
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedMediaIndices, setSelectedMediaIndices] = useState<Set<number>>(new Set());
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [mediaAnalysis, setMediaAnalysis] = useState<Record<number, { tags: string[], aesthetic: any, deltaVerdict?: any }>>({});
+  const [isAnalyzing, setIsAnalyzing] = useState<Record<number, boolean>>({});
   const [deepThinking, setDeepThinking] = useState(false);
   const [liteMode, setLiteMode] = useState(false);
-  const [bypassLogic, setBypassLogic] = useState(false);
+  const [useTailorProfile, setUseTailorProfile] = useState(true);
   const [isHighFidelity, setIsHighFidelity] = useState(initialHighFidelity || false);
   const [freshState, setFreshState] = useState(false);
-  const [useSearch, setUseSearch] = useState(true); 
+  const [useSearch, setUseSearch] = useState(false); 
+  const [useMaps, setUseMaps] = useState(false);
+  const [taskMode, setTaskMode] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('STYLE');
   const [selectedTone, setSelectedTone] = useState<ToneTag | null>(null);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcriptionStatus, setTranscriptionStatus] = useState<'idle' | 'transcribing' | 'success' | 'error'>('idle');
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
   const [showColophon, setShowColophon] = useState(false);
   const [promptIndex, setPromptIndex] = useState(0);
   const [legalType, setLegalType] = useState<'privacy' | 'terms' | null>(null);
   const [activeTags, setActiveTags] = useState<string[]>([]);
+  const [activeTreatmentId, setActiveTreatmentId] = useState<string | null>(null);
   
-  // Sidebar State
-  const [isFolderOpen, setIsFolderOpen] = useState(false);
-  const [showTagGenerator, setShowTagGenerator] = useState(false);
-  const [savedComponents, setSavedComponents] = useState<PocketItem[]>([]);
-  const [selectedComponents, setSelectedComponents] = useState<PocketItem[]>([]);
-  const [folderTitle, setFolderTitle] = useState('PROJECT REF — PLATE 01');
-  
-  useEffect(() => {
-    const fetchComponents = async () => {
-        if (currentUser?.uid) {
-            const items = await fetchPocketItems(currentUser.uid);
-            // Filter for items that might be components (e.g., tagged as 'component' or 'logo')
-            setSavedComponents(items.filter(i => i.tags?.includes('component') || i.tags?.includes('logo')));
-        }
-    };
-    fetchComponents();
-  }, [currentUser?.uid]);
-  
-  // CONTINUUM STATE
-  const [activeProvocation, setActiveProvocation] = useState<string | null>(null);
-  
-  const { isRecording, startRecording, stopRecording, audioBlob, permissionError, resetRecording } = useRecorder();
   const mediaInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!selectedTone) {
-      const timer = setInterval(() => {
-        setPromptIndex(prev => {
-          let next;
-          do {
-            next = Math.floor(Math.random() * DEFAULT_PROMPTS.length);
-          } while (next === prev && DEFAULT_PROMPTS.length > 1);
-          return next;
-        });
-      }, 10000);
-      return () => clearInterval(timer);
-    }
-  }, [selectedTone]);
-
-  // Handle Incoming Signal
-  useEffect(() => {
-      if (initialValue && typeof initialValue === 'object') {
-          if (initialValue.includes('PROVOCATION:')) {
-              const parts = initialValue.split('PROVOCATION: "');
-              if (parts[1]) {
-                  const prov = parts[1].split('"')[0];
-                  setActiveProvocation(prov);
-                  setInput(''); 
-                  return;
-              }
-          }
-          setInput(initialValue);
-      } else if (initialValue) {
-          if (initialValue.includes('PROVOCATION: "')) {
-              const parts = initialValue.split('PROVOCATION: "');
-              if (parts[1]) {
-                  const prov = parts[1].split('"')[0];
-                  setActiveProvocation(prov);
-                  setInput(''); 
-              } else {
-                  setInput(initialValue);
-              }
-          } else {
-              setInput(initialValue);
-          }
-      }
-  }, [initialValue]);
-
-  useEffect(() => {
-    if (initialMedia && initialMedia.length > 0) {
-        setMediaFiles(initialMedia);
-        setIsFolderOpen(true); // Open folder if coming in with media
-    }
-  }, [initialMedia]);
-
-  useEffect(() => {
-    if (audioBlob) {
-      const handleTranscription = async () => {
-        setIsTranscribing(true);
-        setTranscriptionStatus('transcribing');
-        try {
-          const reader = new FileReader();
-          const base64 = await new Promise<string>((resolve) => {
-            reader.onload = () => resolve((reader.result as string).split(',')[1]);
-            reader.readAsDataURL(audioBlob);
-          });
-          // Pass the mimeType dynamically
-          const text = await transcribeAudio(base64, audioBlob.type);
-          setInput(prev => prev ? `${prev}\n\n${text}` : text);
-          setTranscriptionStatus('success');
-          window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Vocal shard transcribed.", icon: <Mic size={14} className="text-emerald-500" /> } }));
-          setTimeout(() => setTranscriptionStatus('idle'), 4000);
-        } catch (e) { 
-          console.error(e); 
-          setTranscriptionStatus('error');
-          window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Transcription failed.", type: 'error' } }));
-          setTimeout(() => setTranscriptionStatus('idle'), 4000);
-        } finally { 
-          setIsTranscribing(false); 
-          resetRecording();
-        }
-      };
-      handleTranscription();
-    }
-  }, [audioBlob, resetRecording]);
-
-  const triggerAccession = useCallback((e?: React.MouseEvent) => {
-    if (e) { e.preventDefault(); e.stopPropagation(); }
-    if ((input.trim() || mediaFiles.length > 0) && !isThinking) {
-      let finalInput = input.trim();
-      if (activeProvocation) {
-          finalInput = `[CONTEXT: Responding to Provocation: "${activeProvocation}"]\n\nRESPONSE: ${input}`;
-      }
-      onRefine(finalInput, [...mediaFiles], selectedTone, { 
-          useSearch: useSearch, 
-          deepThinking: deepThinking, 
-          isLite: liteMode, 
-          ignoreTailor: freshState, 
-          isPublic: true,
-          folderContext: folderTitle,
-          selectedComponents: selectedComponents,
-          isHighFidelity: isHighFidelity,
-          zineOptions: zineOptions,
-          tags: activeTags
-      });
-    }
-  }, [input, mediaFiles, isThinking, selectedTone, useSearch, deepThinking, liteMode, freshState, onRefine, activeProvocation, folderTitle, selectedComponents, isHighFidelity, zineOptions, activeTags]);
+  const { isRecording, startRecording: startRecordingHook, stopRecording, resetRecording } = useRecorder();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    
-    // Process files sequentially to ensure compression
-    for (const file of Array.from(files) as File[]) {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const rawBase64 = event.target?.result as string;
-        if (rawBase64) {
-          try {
-            // If image, compress it. Audio is kept as is.
-            let processedBase64 = rawBase64;
-            if (file.type.startsWith('image')) {
-               processedBase64 = await compressImage(rawBase64, 0.6, 1200);
-            }
-            
-            setMediaFiles(prev => [...prev, { 
-              type: file.type.startsWith('audio') ? 'audio' : file.type.startsWith('video') ? 'video' : 'image', 
-              url: URL.createObjectURL(file), // Keep preview URL lightweight
-              data: processedBase64.split(',')[1], 
-              mimeType: file.type,
-              name: file.name,
-              tags: []
-            }]);
-            
-            // Generate tags asynchronously
-            generateTagsFromMedia(`Artifact: ${file.name}`, []).then(tags => {
-                setMediaFiles(prev => prev.map(m => m.name === file.name ? { ...m, tags } : m));
-                setActiveTags(prev => [...new Set([...prev, ...tags])]);
-            });
+      if (e.target.files) {
+          const files = Array.from(e.target.files);
+          const newMedia = await Promise.all(files.map(async (f) => {
+              const data = await new Promise<string>((resolve) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => resolve(reader.result as string);
+                  reader.readAsDataURL(f);
+              });
+              return {
+                  file: f,
+                  type: (f.type.startsWith('image/') ? 'image' : f.type.startsWith('audio/') ? 'audio' : 'video') as 'image' | 'audio' | 'video',
+                  url: URL.createObjectURL(f),
+                  data,
+                  mimeType: f.type,
+                  name: f.name
+              };
+          }));
+          setMediaFiles(prev => [...prev, ...newMedia]);
+      }
+  };
 
-            // Analyze aesthetic
-            if (file.type.startsWith('image')) {
-                analyzeImageAesthetic(processedBase64.split(',')[1], file.type, currentUser).then(result => {
-                    if (result && result.culturalReferences) {
-                        const newRefs = result.culturalReferences;
-                        // Update profile
-                        if (currentUser) {
-                            const updatedProfile = {
-                                ...currentUser,
-                                tailorDraft: {
-                                    ...(currentUser.tailorDraft || {}),
-                                    positioningCore: {
-                                        ...(currentUser.tailorDraft?.positioningCore || {}),
-                                        anchors: {
-                                            ...(currentUser.tailorDraft?.positioningCore?.anchors || {}),
-                                            culturalReferences: [
-                                                ...new Set([
-                                                    ...(currentUser.tailorDraft?.positioningCore?.anchors?.culturalReferences || []),
-                                                    ...newRefs
-                                                ])
-                                            ]
-                                        }
-                                    }
-                                }
-                            };
-                            updateProfile(updatedProfile);
-                        }
-                    }
-                });
-            }
-            
-            setIsFolderOpen(true);
-          } catch (err) {
-            console.error("MIMI // Upload Error:", err);
-            window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
-              detail: { message: "Asset processing failed.", type: 'error' } 
-            }));
+  const triggerAccession = useCallback(() => {
+      let finalInput = input;
+      if (activeThread && activeThread.narrative) {
+          finalInput = `${input}\n\n[THREAD CONTEXT: ${activeThread.narrative}]`;
+      }
+
+      if (activeTreatmentId && profile?.savedTreatments) {
+          const treatment = profile.savedTreatments.find(t => t.id === activeTreatmentId);
+          if (treatment) {
+              finalInput = `[TREATMENT FILTER ACTIVE: ${treatment.treatmentName}]\nBase Directives: ${treatment.basePromptDirectives}\nTypography: ${treatment.typographyLayout}\nImage Rules: ${treatment.imageEditingRules}\n\n${finalInput}`;
           }
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-    
-    // Reset input
-    if (mediaInputRef.current) mediaInputRef.current.value = '';
+      }
+
+      onRefine(finalInput, mediaFiles, selectedTone || 'CONTENT', {
+          deepThinking,
+          isPublic: false,
+          isLite: liteMode,
+          bypassTailor: !useTailorProfile,
+          isHighFidelity,
+          useSearch,
+          useMaps,
+          taskMode,
+          zineOptions: { ...zineOptions, customTitle: title, selectedTreatmentId: activeTreatmentId || zineOptions.selectedTreatmentId }
+      });
+  }, [onRefine, input, mediaFiles, selectedTone, deepThinking, liteMode, useTailorProfile, isHighFidelity, useSearch, useMaps, taskMode, zineOptions, title, activeThread, activeTreatmentId, profile]);
+
+  const handleBatchAnalyze = async () => {
+      const indices = Array.from(selectedMediaIndices);
+      for (const index of indices) {
+          const media = mediaFiles[index];
+          if (media.type !== 'image') continue;
+          setIsAnalyzing(prev => ({ ...prev, [index]: true }));
+          try {
+              const base64 = media.data.split(',')[1] || media.data;
+              const [tags, aesthetic] = await Promise.all([
+                  generateTagsFromMedia(undefined, [{ type: 'image', data: base64, mimeType: 'image/png' }]),
+                  analyzeImageAesthetic(base64, 'image/png', profile)
+              ]);
+              let deltaVerdict = undefined;
+              if (profile?.tasteProfile?.aestheticSignature && aesthetic) {
+                  deltaVerdict = await analyzeAestheticDelta(profile.tasteProfile.aestheticSignature, aesthetic);
+              }
+              setMediaAnalysis(prev => ({ ...prev, [index]: { tags, aesthetic, deltaVerdict } }));
+          } catch (e) {
+              console.error(e);
+          } finally {
+              setIsAnalyzing(prev => ({ ...prev, [index]: false }));
+          }
+      }
+      setSelectedMediaIndices(new Set());
   };
 
-  const removeMedia = (idx: number) => {
-      setMediaFiles(prev => prev.filter((_, i) => i !== idx));
+  const handleBatchRefract = async () => {
+      const indices = Array.from(selectedMediaIndices);
+      for (const index of indices) {
+          const media = mediaFiles[index];
+          if (media.type !== 'image') continue;
+          try {
+              const base64 = media.data.split(',')[1] || media.data;
+              const stylePrompt = mediaAnalysis[index]?.aesthetic?.culturalReferences?.join(', ') || 'avant-garde';
+              const transformed = await applyAestheticRefraction(media.data, stylePrompt, profile);
+              setMediaFiles(prev => prev.map((m, i) => i === index ? { ...m, data: transformed } : m));
+          } catch (e) {
+              console.error(e);
+          }
+      }
+      setSelectedMediaIndices(new Set());
   };
+
+  const handleBatchExport = async () => {
+      const indices = Array.from(selectedMediaIndices);
+      const selectedMedia = indices.map(i => mediaFiles[i]);
+      
+      try {
+          const itemIds = [];
+          for (const media of selectedMedia) {
+              let finalUrl = media.url || media.data;
+              if (currentUser?.uid && media.data) {
+                  try {
+                      const { uploadBase64Image } = await import('../services/firebaseUtils');
+                      const path = `pocket_images/${currentUser.uid}_${Date.now()}_${media.name || 'batch'}`;
+                      finalUrl = await uploadBase64Image(media.data, path);
+                  } catch (e) {
+                      console.warn("Failed to upload batch media to storage", e);
+                      finalUrl = media.data; // fallback to base64
+                  }
+              }
+
+              const id = await addToPocket(currentUser?.uid || 'ghost', media.type as any, {
+                  imageUrl: media.type === 'image' ? finalUrl : undefined,
+                  audioUrl: media.type === 'audio' ? finalUrl : undefined,
+                  videoUrl: media.type === 'video' ? finalUrl : undefined,
+                  prompt: media.name || 'Batch Export',
+                  timestamp: Date.now(),
+                  origin: 'InputStudio_Batch'
+              });
+              if (id) itemIds.push(id);
+          }
+          
+          if (itemIds.length > 0) {
+              await createMoodboard(
+                  currentUser?.uid || 'ghost', 
+                  `Collection ${new Date().toLocaleDateString()}`,
+                  itemIds
+              );
+              window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Collection Saved to Pocket.", icon: <FolderPlus size={14} /> } }));
+          }
+      } catch (e) {
+          console.error(e);
+      }
+      setSelectedMediaIndices(new Set());
+  };
+
+  const startRecording = () => {
+      if (isRecording) {
+          stopRecording();
+      } else {
+          startRecordingHook();
+      }
+  };
+  
+  // ... (existing state)
+  const [activeProvocation, setActiveProvocation] = useState<string | null>(null);
+  const [activeMode, setActiveMode] = useState<'signal' | 'treatments' | 'orchestrator' | 'procurement'>('signal');
+  const [activePanel, setActivePanel] = useState<'signal' | 'treatments' | 'orchestrator' | 'procurement' | null>(null);
+  
+  const togglePanel = (mode: 'signal' | 'treatments' | 'orchestrator' | 'procurement') => {
+    if (activePanel === mode) {
+      setActivePanel(null);
+    } else {
+      setActivePanel(mode);
+      setActiveMode(mode);
+    }
+  };
+
+  // ... (rest of the component)
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -317,153 +311,610 @@ export const InputStudio: React.FC<{
               }
           }
       }}
-      className="w-full h-full flex flex-col items-center relative transition-all duration-1000 bg-nous-base dark:bg-background-dark"
+      className="w-full h-screen flex bg-nous-base dark:bg-background-dark overflow-hidden"
     >
-            {/* 1. MAIN WORKSPACE */}
-       <motion.div 
+      {/* LEFT COLUMN: Fixed width, Inspo/Config */}
+      <div className="w-[35%] max-w-[450px] border-r border-stone-200 dark:border-stone-800 p-12 flex flex-col gap-8 overflow-y-auto">
+        {/* ZineInspoCarousel Integration */}
+        <ZineInspoCarousel />
+
+        {/* Latent Telemetry & Provocations */}
+        <div className="mt-auto pt-8 border-t border-stone-200 dark:border-stone-800 flex flex-col gap-6 opacity-60 hover:opacity-100 transition-opacity">
+          <div className="flex justify-between items-center">
+            <GlossaryTooltip 
+              term="Latent Telemetry" 
+              poeticMeaning="The silent hum of the machine, listening to the space between your words." 
+              functionalMeaning="A visual indicator of the system's background processing and readiness to interpret your input."
+            >
+              <span className="text-[10px] uppercase tracking-[0.2em] text-stone-500">Latent Telemetry</span>
+            </GlossaryTooltip>
+            <div className="flex gap-[2px] items-end h-3">
+              {[...Array(5)].map((_, i) => (
+                <motion.div 
+                  key={i}
+                  animate={{ height: [`${Math.random() * 40 + 20}%`, `${Math.random() * 60 + 40}%`, `${Math.random() * 40 + 20}%`] }}
+                  transition={{ duration: 1 + Math.random(), repeat: Infinity, ease: "easeInOut" }}
+                  className="w-[2px] bg-primary dark:bg-white rounded-t-sm"
+                />
+              ))}
+            </div>
+          </div>
+          
+          <div className="font-mono text-[9px] uppercase tracking-widest flex flex-col gap-3 text-stone-400">
+            <div className="flex justify-between items-center">
+              <GlossaryTooltip 
+                term="Signal Density" 
+                poeticMeaning="The weight of your thoughts, measured in digital mass." 
+                functionalMeaning="The total character count of your input, scaled to a density metric."
+              >
+                <span>Signal_Density</span>
+              </GlossaryTooltip>
+              <span className="text-primary dark:text-white">{((input?.length || 0) / 100).toFixed(2)} ℌ</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <GlossaryTooltip 
+                term="Media Nodes" 
+                poeticMeaning="Anchors of visual truth scattered in the void." 
+                functionalMeaning="The number of images or videos currently attached to your input."
+              >
+                <span>Media_Nodes</span>
+              </GlossaryTooltip>
+              <span className="text-primary dark:text-white">{mediaFiles.length}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <GlossaryTooltip 
+                term="Entropy Level" 
+                poeticMeaning="How deeply the machine dreams into the chaotic unknown." 
+                functionalMeaning="Indicates if 'Deep Thinking' mode is active, increasing the randomness and complexity of the AI's response."
+              >
+                <span>Entropy_Level</span>
+              </GlossaryTooltip>
+              <span className="text-primary dark:text-white">{deepThinking ? 'Maximum' : 'Optimized'}</span>
+            </div>
+          </div>
+
+          <div className="p-5 bg-stone-100 dark:bg-stone-800/50 rounded-sm border border-stone-200 dark:border-stone-700/50 relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-1 h-full bg-stone-300 dark:bg-stone-600 group-hover:bg-primary dark:group-hover:bg-white transition-colors" />
+            <p className="text-[8px] uppercase tracking-[0.2em] text-stone-400 mb-3">Oblique Directive</p>
+            <AnimatePresence mode="wait">
+              <motion.p 
+                key={provocationIndex}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                transition={{ duration: 0.5 }}
+                className="font-serif italic text-sm text-primary dark:text-white leading-relaxed"
+              >
+                "{PROVOCATIONS[provocationIndex]}"
+              </motion.p>
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+
+      {/* RIGHT COLUMN: Main Workspace */}
+      <motion.div 
          animate={{ opacity: isThinking ? [0.5, 1, 0.5] : 1 }}
          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-         className={`w-full max-w-5xl flex-1 flex flex-col items-center justify-start relative min-h-full pb-32 px-4 md:px-8 z-10 transition-all duration-300 ease-out`}
+         className="flex-1 flex flex-col items-center justify-start relative h-full pb-32 px-12 z-10 overflow-x-hidden overflow-y-auto"
        >
-        {/* Title Input */}
-        <input 
-            type="text" 
-            placeholder="ENTER ZINE TITLE..."
-            className="w-full max-w-2xl bg-transparent border-b border-stone-300 dark:border-stone-700 pb-2 mb-8 mt-16 text-sm uppercase tracking-widest text-stone-500 placeholder:text-stone-400 outline-none text-center"
-        />
 
         {/* Prompt Cycle */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 mt-12 w-full">
+            {activeThread && (
+                <div className="mb-6 flex items-center justify-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold">
+                        Actively Weaving: {activeThread.title}
+                    </span>
+                    <button 
+                        onClick={() => setActiveThread(null)}
+                        className="text-stone-400 hover:text-red-500 transition-colors ml-2"
+                        title="Clear Active Thread"
+                    >
+                        <X size={12} />
+                    </button>
+                </div>
+            )}
+            <div className="flex items-center justify-center gap-2 mb-4 w-full max-w-lg mx-auto">
+                <Sparkles size={16} className="text-stone-400 cursor-pointer hover:text-primary dark:hover:text-white transition-colors flex-shrink-0" onClick={handleAutoGenerateTitle} />
+                <input 
+                    type="text" 
+                    placeholder="ENTER ZINE TITLE..."
+                    value={title || ''}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="w-full bg-transparent border-b border-stone-300 dark:border-stone-700 pb-2 text-sm uppercase tracking-widest text-stone-500 placeholder:text-stone-400 outline-none text-center"
+                />
+            </div>
             <p className="text-[8px] uppercase tracking-widest text-stone-400">PROMPT_CYCLE {promptIndex + 1}</p>
             <p className="text-[10px] uppercase tracking-widest text-stone-500">"{DEFAULT_PROMPTS[promptIndex]}"</p>
         </div>
 
         {/* Fragments of a conversation regarding... (textarea) */}
-        <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            className="w-full max-w-3xl bg-transparent border-none focus:ring-0 text-2xl font-serif italic text-center mb-12 text-primary dark:text-white outline-none resize-none p-12"
-            placeholder="Fragments of a conversation regarding..."
-        />
-
-        {/* Submit Button */}
-        <button onClick={triggerAccession} className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 dark:border-white/20 hover:border-primary dark:hover:border-white transition-colors text-primary dark:text-white mb-8">
-            → SUBMIT TO ISSUE
-        </button>
-
-        {/* Thumbnails */}
-        {mediaFiles.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-8">
-            {mediaFiles.map((file, idx) => (
-              <div key={idx} className="relative w-16 h-16">
-                <img src={file.url} alt={file.name} className="w-full h-full object-cover rounded" referrerPolicy="no-referrer" />
-                <button 
-                  onClick={() => removeMedia(idx)}
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+        <div className="w-full max-w-4xl flex flex-col items-center relative">
+            {taskMode && (
+                <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-4 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center gap-2"
                 >
-                  <X size={10} />
-                </button>
+                    <Sparkles size={10} className="text-emerald-500" />
+                    <span className="text-[9px] uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-bold">Task Intelligence Active</span>
+                </motion.div>
+            )}
+
+            <textarea
+                ref={textareaRef}
+                value={input || ''}
+                onChange={(e) => setInput(e.target.value)}
+                className="w-full bg-transparent border-none focus:ring-0 text-2xl md:text-3xl font-serif italic text-center mb-2 text-primary dark:text-white outline-none resize-none p-8 min-h-[200px]"
+                placeholder="Fragments of a conversation regarding..."
+            />
+
+            {/* Studio Toolbar - Neomorphic with Tooltips */}
+            <div className="flex items-center gap-2 p-1.5 px-4 mb-6 rounded-full bg-stone-100 dark:bg-stone-900 shadow-[4px_4px_8px_#d1d1d1,-4px_-4px_8px_#ffffff] dark:shadow-[4px_4px_8px_#0e0e0e,-4px_-4px_8px_#262626] border border-white/20 dark:border-black/20">
+                <div className="relative group flex items-center justify-center">
+                    <button onClick={() => mediaInputRef.current?.click()} className="p-1.5 text-stone-500 hover:text-primary dark:hover:text-white transition-colors">
+                        <Paperclip size={16} strokeWidth={1.0} />
+                    </button>
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded whitespace-nowrap">Upload Media</div>
+                    </div>
+                </div>
+
+                <div className="relative group flex items-center justify-center">
+                    <button onClick={startRecording} className={`p-1.5 transition-colors ${isRecording ? 'text-red-500' : 'text-stone-500 hover:text-primary dark:hover:text-white'}`}>
+                        <Mic size={16} strokeWidth={1.0} />
+                    </button>
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded whitespace-nowrap">Voice Transcription</div>
+                    </div>
+                </div>
+                
+                <div className="w-px h-3 bg-stone-300 dark:bg-stone-700 mx-1" />
+
+                <div className="relative group flex items-center justify-center">
+                    <button onClick={() => setLiteMode(!liteMode)} className={`p-1.5 transition-colors ${liteMode ? 'text-yellow-500' : 'text-stone-500 hover:text-yellow-500'}`}>
+                        <Zap size={16} strokeWidth={1.0} />
+                    </button>
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded whitespace-nowrap">Lite Mode</div>
+                    </div>
+                </div>
+
+                <div className="relative group flex items-center justify-center">
+                    <button onClick={() => setDeepThinking(!deepThinking)} className={`p-1.5 transition-colors ${deepThinking ? 'text-purple-500' : 'text-stone-500 hover:text-purple-500'}`}>
+                        <BrainCircuit size={16} strokeWidth={1.0} />
+                    </button>
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded whitespace-nowrap">Deep Thinking</div>
+                    </div>
+                </div>
+
+                <div className="relative group flex items-center justify-center">
+                    <button onClick={() => setUseSearch(!useSearch)} className={`p-1.5 transition-colors ${useSearch ? 'text-blue-500' : 'text-stone-500 hover:text-blue-500'}`}>
+                        <Globe size={16} strokeWidth={1.0} />
+                    </button>
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded whitespace-nowrap">Search Grounding</div>
+                    </div>
+                </div>
+
+                <div className="relative group flex items-center justify-center">
+                    <button onClick={() => setUseMaps(!useMaps)} className={`p-1.5 transition-colors ${useMaps ? 'text-orange-500' : 'text-stone-500 hover:text-orange-500'}`}>
+                        <MapPin size={16} strokeWidth={1.0} />
+                    </button>
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded whitespace-nowrap">Maps Grounding</div>
+                    </div>
+                </div>
+
+                <div className="relative group flex items-center justify-center">
+                    <button onClick={() => setTaskMode(!taskMode)} className={`p-1.5 transition-colors ${taskMode ? 'text-emerald-500' : 'text-stone-500 hover:text-emerald-500'}`}>
+                        <Sparkles size={16} strokeWidth={1.0} />
+                    </button>
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded whitespace-nowrap">Task Intelligence</div>
+                    </div>
+                </div>
+
+                <div className="relative group flex items-center justify-center">
+                    <button onClick={() => setUseTailorProfile(!useTailorProfile)} className={`p-1.5 transition-colors ${useTailorProfile ? 'text-indigo-500' : 'text-stone-500 hover:text-indigo-500'}`}>
+                        <Scissors size={16} strokeWidth={1.0} />
+                    </button>
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded whitespace-nowrap">Tailor Profile</div>
+                    </div>
+                </div>
+
+                <div className="w-px h-3 bg-stone-300 dark:bg-stone-700 mx-1" />
+
+                <div className="relative group flex items-center justify-center">
+                    <button 
+                        onClick={async () => {
+                          setIsGeneratingPrompt(true);
+                          try {
+                            const newPrompt = await generateAutoAwesomePrompt();
+                            setInput(newPrompt);
+                          } catch (e) {
+                            console.error(e);
+                          } finally {
+                            setIsGeneratingPrompt(false);
+                          }
+                        }} 
+                        disabled={isGeneratingPrompt}
+                        className={`p-1.5 transition-colors ${isGeneratingPrompt ? 'text-red-500 animate-pulse' : 'text-stone-500 hover:text-red-500'}`}
+                    >
+                        <Wand2 size={16} strokeWidth={1.0} />
+                    </button>
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded whitespace-nowrap">Mimi Prompt Engine</div>
+                    </div>
+                </div>
+
+                <div className="relative group flex items-center justify-center">
+                    <button onClick={() => setInput('')} className="p-1.5 text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 transition-colors">
+                        <Eraser size={16} strokeWidth={1.0} />
+                    </button>
+                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded whitespace-nowrap">Clear Input</div>
+                    </div>
+                </div>
+            </div>
+            
+            {/* Media Previews Area */}
+            <div className="flex flex-col items-center gap-6 w-full mb-12">
+                {mediaFiles.length > 0 && (
+                    <div className="flex flex-col items-center w-full">
+                        <div className="flex items-center justify-between w-full max-w-4xl mb-4 px-4">
+                            <h3 className="text-[10px] uppercase tracking-widest text-stone-500 font-bold">Artifacts ({mediaFiles.length})</h3>
+                            <button 
+                                onClick={() => {
+                                    setIsSelectionMode(!isSelectionMode);
+                                    if (isSelectionMode) setSelectedMediaIndices(new Set());
+                                }}
+                                className={`text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-full transition-colors ${isSelectionMode ? 'bg-emerald-500 text-white' : 'bg-stone-200 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-300 dark:hover:bg-stone-700'}`}
+                            >
+                                {isSelectionMode ? 'Cancel Selection' : 'Select'}
+                            </button>
+                        </div>
+                        
+                        <AnimatePresence>
+                            {selectedMediaIndices.size > 0 && (
+                                <motion.div 
+                                    initial={{ opacity: 0, y: -20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    className="flex flex-wrap items-center gap-4 bg-stone-900 dark:bg-stone-100 text-white dark:text-black px-6 py-3 rounded-full shadow-xl mb-6 z-50 sticky top-4"
+                                >
+                                    <span className="text-xs font-mono">{selectedMediaIndices.size} Selected</span>
+                                    <div className="h-4 w-px bg-white/20 dark:bg-black/20"></div>
+                                    <button onClick={() => {
+                                        if (selectedMediaIndices.size === mediaFiles.length) {
+                                            setSelectedMediaIndices(new Set());
+                                        } else {
+                                            setSelectedMediaIndices(new Set(mediaFiles.map((_, i) => i)));
+                                        }
+                                    }} className="text-[10px] uppercase tracking-widest hover:text-stone-300 dark:hover:text-stone-600 transition-colors">
+                                        {selectedMediaIndices.size === mediaFiles.length ? 'Deselect All' : 'Select All'}
+                                    </button>
+                                    <div className="h-4 w-px bg-white/20 dark:bg-black/20"></div>
+                                    <button onClick={handleBatchAnalyze} className="text-[10px] uppercase tracking-widest hover:text-emerald-400 dark:hover:text-emerald-600 transition-colors flex items-center gap-2">
+                                        <Radar size={14} /> Analyze
+                                    </button>
+                                    <button onClick={handleBatchRefract} className="text-[10px] uppercase tracking-widest hover:text-red-400 dark:hover:text-red-600 transition-colors flex items-center gap-2">
+                                        <Wand2 size={14} /> Refract
+                                    </button>
+                                    <button onClick={handleBatchExport} className="text-[10px] uppercase tracking-widest hover:text-blue-400 dark:hover:text-blue-600 transition-colors flex items-center gap-2">
+                                        <FolderPlus size={14} /> Collection
+                                    </button>
+                                    <button onClick={() => {
+                                        setMediaFiles(prev => prev.filter((_, i) => !selectedMediaIndices.has(i)));
+                                        setSelectedMediaIndices(new Set());
+                                    }} className="text-[10px] uppercase tracking-widest hover:text-red-500 transition-colors flex items-center gap-2">
+                                        <Trash2 size={14} /> Delete
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        <div className="flex flex-wrap gap-4 justify-center w-full">
+                            {mediaFiles.map((media, index) => (
+                                <motion.div 
+                                    key={index} 
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="relative group"
+                                >
+                                    {!isSelectionMode && (
+                                        <button 
+                                          onClick={() => setMediaFiles(prev => prev.filter((_, i) => i !== index))}
+                                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                        >
+                                          <X size={12} />
+                                        </button>
+                                    )}
+                                    {media.type === 'image' && (
+                                      <div 
+                                        className={`bg-white p-2 pb-6 shadow-md transform rotate-1 hover:rotate-0 transition-all duration-300 w-32 h-44 flex flex-col cursor-pointer relative ${isSelectionMode && selectedMediaIndices.has(index) ? 'ring-2 ring-emerald-500 scale-105' : ''}`}
+                                        onClick={() => {
+                                            if (isSelectionMode) {
+                                                setSelectedMediaIndices(prev => {
+                                                    const next = new Set(prev);
+                                                    if (next.has(index)) next.delete(index);
+                                                    else next.add(index);
+                                                    return next;
+                                                });
+                                            } else {
+                                                setSelectedImage(media.url || media.data);
+                                            }
+                                        }}
+                                      >
+                                        {isSelectionMode && (
+                                            <div className="absolute top-2 right-2 z-10">
+                                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedMediaIndices.has(index) ? 'bg-emerald-500 border-emerald-500' : 'bg-black/20 border-white'}`}>
+                                                    {selectedMediaIndices.has(index) && <Check size={12} className="text-white" />}
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div className="w-full h-24 bg-stone-100 overflow-hidden relative">
+                                          <img src={media.url || media.data} alt="upload" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                        </div>
+                                    <div className="mt-auto text-[8px] text-stone-400 uppercase truncate text-center font-mono">
+                                      {media.name || 'IMAGE_01'}
+                                    </div>
+                                    <button 
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        setIsAnalyzing(prev => ({ ...prev, [index]: true }));
+                                        const base64 = media.data.split(',')[1] || media.data;
+                                        const [tags, aesthetic] = await Promise.all([
+                                          generateTagsFromMedia(undefined, [{ type: 'image', data: base64, mimeType: 'image/png' }]),
+                                          analyzeImageAesthetic(base64, 'image/png', profile)
+                                        ]);
+                                        
+                                        let deltaVerdict = undefined;
+                                        if (profile?.tasteProfile?.aestheticSignature && aesthetic) {
+                                            deltaVerdict = await analyzeAestheticDelta(profile.tasteProfile.aestheticSignature, aesthetic);
+                                        }
+
+                                        setMediaAnalysis(prev => ({ ...prev, [index]: { tags, aesthetic, deltaVerdict } }));
+                                        setIsAnalyzing(prev => ({ ...prev, [index]: false }));
+                                      }}
+                                      className="mt-1 text-[8px] uppercase tracking-widest text-primary dark:text-white underline"
+                                    >
+                                      {isAnalyzing[index] ? 'Analyzing...' : 'Analyze'}
+                                    </button>
+                                    {mediaAnalysis[index] && (
+                                      <div className="mt-1 text-[7px] text-stone-500 leading-tight">
+                                        <p className="truncate">{mediaAnalysis[index].tags.slice(0, 3).join(', ')}</p>
+                                        <button 
+                                          onClick={async (e) => {
+                                            e.stopPropagation();
+                                            const base64 = media.data.split(',')[1] || media.data;
+                                            const stylePrompt = mediaAnalysis[index].aesthetic?.culturalReferences?.join(', ') || 'avant-garde';
+                                            const transformed = await applyAestheticRefraction(media.data, stylePrompt, profile);
+                                            setMediaFiles(prev => prev.map((m, i) => i === index ? { ...m, data: transformed } : m));
+                                          }}
+                                          className="mt-1 text-[7px] uppercase tracking-widest text-red-500 underline"
+                                        >
+                                          Refract
+                                        </button>
+                                        {mediaAnalysis[index].deltaVerdict && (
+                                            <div className="mt-2 text-left">
+                                                <DeltaVerdictCard verdict={mediaAnalysis[index].deltaVerdict} compact />
+                                            </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                {media.type === 'audio' && (
+                                  <div 
+                                    className={`bg-stone-100 dark:bg-stone-800 p-3 shadow-sm border border-stone-200 dark:border-stone-700 w-40 h-auto flex flex-col items-center gap-2 rounded-md cursor-pointer relative transition-all duration-300 ${isSelectionMode && selectedMediaIndices.has(index) ? 'ring-2 ring-emerald-500 scale-105' : ''}`}
+                                    onClick={() => {
+                                        if (isSelectionMode) {
+                                            setSelectedMediaIndices(prev => {
+                                                const next = new Set(prev);
+                                                if (next.has(index)) next.delete(index);
+                                                else next.add(index);
+                                                return next;
+                                            });
+                                        }
+                                    }}
+                                  >
+                                    {isSelectionMode && (
+                                        <div className="absolute top-2 right-2 z-10">
+                                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedMediaIndices.has(index) ? 'bg-emerald-500 border-emerald-500' : 'bg-black/20 border-white'}`}>
+                                                {selectedMediaIndices.has(index) && <Check size={12} className="text-white" />}
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div className="flex gap-1 items-center h-8 flex-1 justify-center">
+                                      {[...Array(12)].map((_, i) => (
+                                        <motion.div 
+                                          key={i}
+                                          animate={{ height: ['20%', '80%', '20%'] }}
+                                          transition={{ duration: 1 + Math.random(), repeat: Infinity, ease: "easeInOut", delay: Math.random() }}
+                                          className="w-0.5 bg-primary dark:bg-white rounded-full"
+                                        />
+                                      ))}
+                                    </div>
+                                    <button 
+                                      onClick={async () => {
+                                        setIsAnalyzing(prev => ({ ...prev, [index]: true }));
+                                        const base64 = media.data.split(',')[1] || media.data;
+                                        const analysis = await analyzeAudio(base64, 'audio/wav');
+                                        setMediaAnalysis(prev => ({ ...prev, [index]: { tags: analysis.tags, aesthetic: analysis.fingerprint } }));
+                                        setIsAnalyzing(prev => ({ ...prev, [index]: false }));
+                                      }}
+                                      className="text-[8px] uppercase tracking-widest text-primary dark:text-white underline"
+                                    >
+                                      {isAnalyzing[index] ? 'Analyzing...' : 'Analyze'}
+                                    </button>
+                                    {mediaAnalysis[index] && (
+                                      <div className="mt-1 text-[7px] text-stone-500 w-full leading-tight">
+                                        <p className="truncate">{mediaAnalysis[index].tags.slice(0, 3).join(', ')}</p>
+                                        <p className="truncate">Mood: {mediaAnalysis[index].aesthetic.mood[0]}</p>
+                                        {mediaAnalysis[index].deltaVerdict && (
+                                            <div className="mt-2 text-left">
+                                                <DeltaVerdictCard verdict={mediaAnalysis[index].deltaVerdict} compact />
+                                            </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+                )}
+            </div>
+
+            {/* Submit Button */}
+            <button onClick={triggerAccession} className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 dark:border-white/20 hover:border-primary dark:hover:border-white transition-colors text-primary dark:text-white mb-4">
+                → SUBMIT TO ISSUE
+            </button>
+        </div>
+      </motion.div>
+      
+      {/* ... (rest of the component) */}
+
+      {/* Manila Folder Sidebar */}
+      <motion.div 
+        className="fixed top-0 right-0 h-full flex z-40 pointer-events-none"
+        initial={false}
+        animate={{ x: activePanel ? 0 : 400 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+      >
+        {/* Tabs (sticking out) */}
+        <div className="flex flex-col justify-center gap-2 h-full pointer-events-auto pr-0">
+          {(['signal', 'treatments', 'orchestrator', 'procurement'] as const).map((mode) => {
+            const isActive = activePanel === mode;
+            return (
+              <button
+                key={mode}
+                onClick={() => togglePanel(mode)}
+                className={`
+                  relative flex items-center justify-center w-8 h-32 
+                  rounded-l-lg border-y border-l border-stone-300 dark:border-stone-700
+                  transition-colors duration-300
+                  ${isActive ? 'bg-background-light dark:bg-background-dark shadow-[-4px_0_15px_rgba(0,0,0,0.05)] border-r-transparent z-10' : 'bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 border-r-stone-300 dark:border-r-stone-700'}
+                `}
+                style={{
+                  marginRight: isActive ? '-1px' : '0' // Overlap the border
+                }}
+              >
+                <span 
+                  className={`inline-block text-[10px] uppercase tracking-[0.2em] ${isActive ? 'text-primary dark:text-white font-bold' : 'text-stone-500'}`}
+                  style={{
+                    writingMode: 'vertical-rl',
+                    textOrientation: 'mixed',
+                    transform: 'rotate(180deg)'
+                  }}
+                >
+                  {mode}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Panel Content */}
+        <div className="w-[400px] h-full bg-background-light dark:bg-background-dark border-l border-stone-300 dark:border-stone-700 shadow-2xl pointer-events-auto overflow-y-auto p-8 flex flex-col">
+            {activePanel && (
+              <div className="flex-1">
+                <div className="flex justify-between items-center mb-8 border-b border-stone-200 dark:border-stone-800 pb-4">
+                  <h2 className="font-serif italic text-2xl text-primary dark:text-white capitalize">{activePanel}</h2>
+                  <button onClick={() => setActivePanel(null)} className="text-stone-400 hover:text-primary dark:hover:text-white transition-colors"><X size={20} /></button>
+                </div>
+                
+                <div className="text-stone-600 dark:text-stone-400">
+                  {activePanel === 'signal' && (
+                    <div className="flex flex-col gap-6">
+                      <p className="text-xs uppercase tracking-widest text-stone-500">AI Tags</p>
+                      <TagGenerator 
+                        context={input} 
+                        onAddTags={(tags) => {
+                          setActiveTags(prev => [...new Set([...prev, ...tags])]);
+                        }} 
+                      />
+                      {activeTags.length > 0 && (
+                        <div className="mt-4">
+                          <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-2">Active Tags</p>
+                          <div className="flex flex-wrap gap-2">
+                            {activeTags.map(tag => (
+                              <span key={tag} className="px-2 py-1 bg-black/5 dark:bg-white/5 text-[10px] uppercase tracking-widest rounded-sm flex items-center gap-1">
+                                {tag}
+                                <button onClick={() => setActiveTags(prev => prev.filter(t => t !== tag))}><X size={10} /></button>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {activePanel === 'treatments' && (
+                    <div className="flex flex-col gap-6">
+                      <p className="text-xs uppercase tracking-widest text-stone-500 mb-4">Treatment Panel / Directives</p>
+                      <ZineConfiguration 
+                        zineOptions={zineOptions} 
+                        setZineOptions={setZineOptions} 
+                        profile={profile} 
+                        onSelectPrompt={(prompt) => {
+                          setInput(prompt);
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {activePanel === 'orchestrator' && (
+                    <div className="flex flex-col gap-6">
+                      <p className="text-xs uppercase tracking-widest text-stone-500 mb-4">Prompt Orchestrator</p>
+                      
+                      {/* Treatment Filters */}
+                      {profile?.savedTreatments && profile.savedTreatments.length > 0 && (
+                        <div className="flex flex-col gap-3 mb-6">
+                          <p className="text-[10px] uppercase tracking-widest text-stone-400">Treatment Filters</p>
+                          <div className="flex flex-wrap gap-2">
+                            {profile.savedTreatments.map(t => (
+                              <button
+                                key={t.id}
+                                onClick={() => setActiveTreatmentId(activeTreatmentId === t.id ? null : t.id)}
+                                className={`px-3 py-1.5 text-[10px] uppercase tracking-widest rounded-sm border transition-colors ${activeTreatmentId === t.id ? 'border-emerald-500 text-emerald-500 bg-emerald-500/10' : 'border-stone-300 dark:border-stone-700 text-stone-500 hover:border-stone-400 dark:hover:border-stone-500'}`}
+                              >
+                                [{t.treatmentName}]
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <PromptOrchestrator isOpen={true} onClose={() => setActivePanel(null)} />
+                    </div>
+                  )}
+
+                  {activePanel === 'procurement' && (
+                    <div className="flex flex-col gap-6 h-full">
+                      <TheThimble profile={profile} isOpen={true} />
+                    </div>
+                  )}
+                </div>
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* Toolbar */}
-        <div className="flex items-center gap-4 p-4 mb-12">
-            <button onClick={() => mediaInputRef.current?.click()} className="p-2 text-stone-400 hover:text-primary dark:hover:text-white rounded-full transition-colors" title="Image Upload"><ImageIcon size={16} /></button>
-            <button onClick={startRecording} className={`p-2 rounded-full transition-colors ${isRecording ? 'text-red-500' : 'text-stone-400 hover:text-primary dark:hover:text-white'}`} title="Voice Transcription"><Mic size={16} /></button>
-            <div className="w-px h-6 bg-stone-300 dark:bg-stone-700 mx-2" />
-            <button onClick={() => setLiteMode(!liteMode)} className={`p-2 rounded-full transition-colors ${liteMode ? 'text-primary dark:text-white bg-black/5 dark:bg-white/5' : 'text-stone-400'}`} title="Lite Zine"><Zap size={16} /></button>
-            <button onClick={() => setBypassLogic(!bypassLogic)} className={`p-2 rounded-full transition-colors ${bypassLogic ? 'text-primary dark:text-white bg-black/5 dark:bg-white/5' : 'text-stone-400'}`} title="Bypass Logic"><Shield size={16} /></button>
-            <button onClick={() => setDeepThinking(!deepThinking)} className={`p-2 rounded-full transition-colors ${deepThinking ? 'text-primary dark:text-white bg-black/5 dark:bg-white/5' : 'text-stone-400'}`} title="Deep Thinking"><BrainCircuit size={16} /></button>
-            <button onClick={() => setUseSearch(!useSearch)} className={`p-2 rounded-full transition-colors ${useSearch ? 'text-primary dark:text-white bg-black/5 dark:bg-white/5' : 'text-stone-400'}`} title="Grounding"><Globe size={16} /></button>
-            <button onClick={() => setIsHighFidelity(!isHighFidelity)} className={`p-2 rounded-full transition-colors ${isHighFidelity ? 'text-primary dark:text-white bg-black/5 dark:bg-white/5' : 'text-stone-400'}`} title="High Fidelity"><Sparkles size={16} /></button>
-        </div>
-
-        {/* AI Tags & Visual Directives Boxes */}
-        <div className="flex gap-8 mb-12">
-            <button onClick={() => setShowTagGenerator(true)} className="px-6 py-2 brutalist-border text-[10px] uppercase tracking-widest text-stone-500 hover:text-primary dark:hover:text-white transition-colors">SIGNAL</button>
-            <button onClick={() => setIsFolderOpen(true)} className="px-6 py-2 brutalist-border text-[10px] uppercase tracking-widest text-stone-500 hover:text-primary dark:hover:text-white transition-colors">TREATMENT</button>
-        </div>
-
-        {/* AI Tags Cloud */}
-        <div className="flex flex-wrap gap-2 justify-center max-w-3xl">
-            {activeTags.map(tag => (
-                <span key={tag} className="text-[10px] uppercase tracking-wider bg-black/5 dark:bg-white/5 px-2 py-1 brutalist-border">{tag}</span>
-            ))}
+            )}
         </div>
       </motion.div>
 
-      {/* Zine Configuration Drawer / Modal */}
-      <AnimatePresence>
-        {isFolderOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm"
-            onClick={() => setIsFolderOpen(false)}
-          >
-            <div 
-              className="bg-background-light dark:bg-background-dark brutalist-border w-full max-w-4xl max-h-[80vh] overflow-y-auto p-8"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-8">
-                <h2 className="font-display text-2xl text-primary dark:text-white">Configuration</h2>
-                <button onClick={() => setIsFolderOpen(false)} className="text-primary dark:text-white"><X size={24} /></button>
-              </div>
-              <ZineConfiguration 
-                zineOptions={zineOptions} 
-                setZineOptions={setZineOptions} 
-                profile={profile} 
-                onSelectPrompt={(prompt) => {
-                  setInput(prompt);
-                  setIsFolderOpen(false);
-                }}
-              />
-            </div>
-          </motion.div>
-        )}
-
-        {showTagGenerator && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm"
-            onClick={() => setShowTagGenerator(false)}
-          >
-            <div 
-              className="bg-background-light dark:bg-background-dark brutalist-border w-full max-w-2xl max-h-[80vh] overflow-y-auto p-8"
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="flex justify-between items-center mb-8 border-b border-black/10 dark:border-white/10 pb-4">
-                <h2 className="text-2xl font-display italic">AI Tags</h2>
-                <button onClick={() => setShowTagGenerator(false)} className="p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors">
-                  <X size={24} />
-                </button>
-              </div>
-              <TagGenerator 
-                context={input} 
-                onAddTags={(tags) => {
-                  setActiveTags(prev => [...new Set([...prev, ...tags])]);
-                  setShowTagGenerator(false);
-                }} 
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Footer Meta */}
-      <footer className="absolute bottom-0 left-0 w-full p-8 flex justify-between items-end pointer-events-none">
-        <div className="text-[10px] uppercase tracking-[0.3em] text-primary/40 dark:text-white/40 leading-loose pointer-events-auto">
-          <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'help' }))} className="hover:text-primary dark:hover:text-white transition-colors">Mimi Engine</button>
-          <div>Status: {isThinking ? 'Processing...' : 'Ready for Input'}</div>
-        </div>
-        <div className="flex gap-8 pointer-events-auto">
-          <button onClick={() => window.location.href = '/privacy'} className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 dark:border-white/20 hover:border-primary dark:hover:border-white transition-colors text-primary dark:text-white">Privacy</button>
+      <footer className="absolute bottom-0 left-0 w-full p-8 flex justify-end items-end pointer-events-none z-50">
+        <div className="flex gap-8 pointer-events-auto relative group">
+          <button 
+            onClick={() => setLegalType('privacy')} 
+            className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 dark:border-white/20 hover:border-primary dark:hover:border-white transition-colors text-primary dark:text-white"
+          >
+            Privacy
+          </button>
           <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'proscenium' }))} className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 dark:border-white/20 hover:border-primary dark:hover:border-white transition-colors text-primary dark:text-white">Community</button>
         </div>
       </footer>
@@ -473,6 +924,28 @@ export const InputStudio: React.FC<{
       <AnimatePresence>
         {legalType && <LegalOverlay type={legalType} onClose={() => setLegalType(null)} />}
       </AnimatePresence>
+      {/* Full-size Image Preview Modal */}
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+            onClick={() => setSelectedImage(null)}
+          >
+            <motion.img 
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              src={selectedImage} 
+              alt="Full preview" 
+              className="max-w-full max-h-full object-contain"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <input type="file" id="media-upload" name="mediaUpload" ref={mediaInputRef} onChange={handleFileChange} className="hidden" multiple accept="image/*,audio/*,video/*" />
     </div>
   );

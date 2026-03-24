@@ -3,10 +3,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useUser } from '../contexts/UserContext';
 import { UserProfile, TypographicArchetype, Persona } from '../types';
 import { isHandleAvailable, uploadBlob, fetchUserZines, fetchPocketItems } from '../services/firebaseUtils';
-import { Loader2, Camera, Trash2, Download, ExternalLink, Shield, Key, Settings, Plus, Check } from 'lucide-react';
+import { Loader2, Camera, Trash2, Download, ExternalLink, Shield, Key, Settings, Plus, Check, ChevronLeft, ChevronRight, UserCircle2 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DeveloperSettings } from './DeveloperSettings';
+import { SemanticSteps } from './SemanticSteps';
 import { TheWard } from './TheWard';
 import { ImperialPatronageModal } from './ImperialPatronageModal';
 import { ConnectionsManager } from './ConnectionsManager';
@@ -23,6 +24,8 @@ const detectIframeContext = (): boolean => {
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
   return isSocial && !isStandalone;
 };
+
+import { SovereignShard } from './SovereignShard';
 
 export const UserProfileView: React.FC = () => {
   const { user, profile, updateProfile, logout, personas, activePersonaId, switchPersona, createPersona, updatePersona, deletePersona, linkAccount, featureFlags, keyRing } = useUser();
@@ -360,27 +363,34 @@ export const UserProfileView: React.FC = () => {
             <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'thimble' }))} className="text-[10px] uppercase tracking-widest border-b border-stone-800 dark:border-stone-200 pb-0.5">Taste Dashboard</button>
           </div>
           
-          <div className="flex-grow flex flex-col items-center justify-center border border-dashed border-stone-300 dark:border-stone-700 relative group bg-stone-50/50 dark:bg-stone-800/50">
-            <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
-              <span className="material-symbols-outlined text-[120px]">hub</span>
-            </div>
-            <div className="text-center z-10 p-8">
-              <p className="font-mono text-xs text-stone-400 mb-6 uppercase tracking-widest">No Graph Data Detected</p>
-              <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'taste-graph' }))} className="px-8 py-3 bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[10px] uppercase tracking-[0.2em] hover:bg-stone-700 dark:hover:bg-white transition-colors">
-                  Extract Graph
-              </button>
-            </div>
+          <div className="flex-grow flex flex-col items-center justify-center border border-dashed border-stone-300 dark:border-stone-700 relative group bg-stone-50/50 dark:bg-stone-800/50 overflow-hidden">
+            {profile?.tasteProfile ? (
+              <SovereignShard tasteProfile={profile.tasteProfile} />
+            ) : (
+              <div className="text-center z-10 p-8">
+                <p className="font-mono text-xs text-stone-400 mb-6 uppercase tracking-widest">No Graph Data Detected</p>
+                <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'taste-graph' }))} className="px-8 py-3 bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[10px] uppercase tracking-[0.2em] hover:bg-stone-700 dark:hover:bg-white transition-colors">
+                    Extract Graph
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4 mt-6">
-            <div className="p-4 border border-stone-200 dark:border-stone-700">
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'taste-graph' }))}
+              className="p-4 border border-stone-200 dark:border-stone-700 text-left hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+            >
               <h4 className="font-mono text-[10px] uppercase tracking-widest text-stone-500 mb-2">Taste Graph</h4>
               <p className="text-xs text-stone-400 leading-relaxed italic">Visualizing sensory benchmarks across ingested artifacts.</p>
-            </div>
-            <div className="p-4 border border-stone-200 dark:border-stone-700">
+            </button>
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'taste-graph' }))}
+              className="p-4 border border-stone-200 dark:border-stone-700 text-left hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+            >
               <h4 className="font-mono text-[10px] uppercase tracking-widest text-stone-500 mb-2">Semantic Network</h4>
               <p className="text-xs text-stone-400 leading-relaxed italic">Mapping relationships between disparate creative nodes.</p>
-            </div>
+            </button>
           </div>
         </section>
 
@@ -421,7 +431,7 @@ export const UserProfileView: React.FC = () => {
         <section className="col-span-12 md:col-span-6 lg:col-span-3 order-4 bg-[#F9F7F2] dark:bg-stone-900 p-6 flex flex-col">
           <div className="flex justify-between items-start mb-6">
             <h2 className="font-serif text-xl">Sovereign Mask System</h2>
-            <span className="material-symbols-outlined text-stone-400 text-sm">masks</span>
+            <UserCircle2 className="text-stone-400" size={16} />
           </div>
           
           <div className="flex-grow flex flex-col justify-center py-6">
@@ -442,7 +452,17 @@ export const UserProfileView: React.FC = () => {
                     </div>
                     <div>
                         <label className="text-[10px] uppercase tracking-widest font-mono text-stone-500 block mb-2">Temperature: {editingMaskTemp}</label>
-                        <input type="range" min="0" max="2" step="0.1" value={editingMaskTemp} onChange={e => setEditingMaskTemp(parseFloat(e.target.value))} className="w-full" />
+                        <SemanticSteps 
+                            steps={[
+                                { label: '0.0', value: 0 },
+                                { label: '0.5', value: 0.5 },
+                                { label: '1.0', value: 1 },
+                                { label: '1.5', value: 1.5 },
+                                { label: '2.0', value: 2 }
+                            ]}
+                            value={editingMaskTemp}
+                            onChange={(val) => setEditingMaskTemp(val)}
+                        />
                     </div>
                     <button onClick={handleUpdateActiveMask} className="w-full py-2 bg-stone-800 text-white text-[10px] uppercase tracking-widest">Save Parameters</button>
                 </div>
@@ -451,9 +471,9 @@ export const UserProfileView: React.FC = () => {
                     <div className="text-center mb-6">
                         <span className="text-[10px] uppercase tracking-widest font-mono text-stone-400">Active Mask</span>
                         <div className="flex items-center justify-between mt-2">
-                            <button onClick={prevMask} className="material-symbols-outlined text-stone-400">chevron_left</button>
+                            <button onClick={prevMask} className="text-stone-400 hover:text-stone-800 dark:hover:text-stone-200"><ChevronLeft size={20} /></button>
                             <span className="font-serif text-3xl italic truncate px-2">{activePersona?.name || 'Personal'}</span>
-                            <button onClick={nextMask} className="material-symbols-outlined text-stone-400">chevron_right</button>
+                            <button onClick={nextMask} className="text-stone-400 hover:text-stone-800 dark:hover:text-stone-200"><ChevronRight size={20} /></button>
                         </div>
                     </div>
                     
@@ -527,7 +547,15 @@ export const UserProfileView: React.FC = () => {
                           <label className="text-[10px] uppercase tracking-widest font-mono text-stone-500">Curator Agent</label>
                           <button onClick={() => setCuratorEnabled(!curatorEnabled)} className={`text-[10px] font-mono ${curatorEnabled ? 'text-emerald-500' : 'text-stone-400'}`}>{curatorEnabled ? 'ENABLED' : 'DISABLED'}</button>
                       </div>
-                      <input type="range" min="10" max="100" value={curatorBudget} onChange={e => setCuratorBudget(parseInt(e.target.value))} className="w-full" disabled={!curatorEnabled} />
+                      <SemanticSteps 
+                          steps={[
+                              { label: 'Low', value: 10 },
+                              { label: 'Med', value: 50 },
+                              { label: 'High', value: 100 }
+                          ]}
+                          value={curatorBudget}
+                          onChange={(val) => setCuratorBudget(val)}
+                      />
                       <div className="text-[8px] font-mono text-stone-400 text-right">Budget: {curatorBudget}</div>
                   </div>
                   <div>
@@ -535,7 +563,15 @@ export const UserProfileView: React.FC = () => {
                           <label className="text-[10px] uppercase tracking-widest font-mono text-stone-500">Sentinel Agent</label>
                           <button onClick={() => setSentinelEnabled(!sentinelEnabled)} className={`text-[10px] font-mono ${sentinelEnabled ? 'text-emerald-500' : 'text-stone-400'}`}>{sentinelEnabled ? 'ENABLED' : 'DISABLED'}</button>
                       </div>
-                      <input type="range" min="10" max="100" value={sentinelBudget} onChange={e => setSentinelBudget(parseInt(e.target.value))} className="w-full" disabled={!sentinelEnabled} />
+                      <SemanticSteps 
+                          steps={[
+                              { label: 'Low', value: 10 },
+                              { label: 'Med', value: 50 },
+                              { label: 'High', value: 100 }
+                          ]}
+                          value={sentinelBudget}
+                          onChange={(val) => setSentinelBudget(val)}
+                      />
                       <div className="text-[8px] font-mono text-stone-400 text-right">Budget: {sentinelBudget}</div>
                   </div>
               </div>

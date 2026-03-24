@@ -5,16 +5,59 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { ZineMetadata, PocketItem, LineageEntry } from '../types';
 import { generateAudio, animateShardWithVeo, transcribeAudio } from '../services/geminiService';
-import { addToPocket, subscribeToPocketItems, fetchLineageEntry, uploadBase64Image } from '../services/firebaseUtils';
+import { addToPocket, subscribeToPocketItems, fetchLineageEntry, uploadBase64Image, saveNarrativeThread } from '../services/firebaseUtils';
 import { Loader2, X, Volume2, Orbit, Eye, Target, Layers, Moon, Sparkles, Terminal, Quote, ArrowDown, Grid3X3, Printer, Bookmark, Check, Play, Pause, ExternalLink, Download, Share2, Star, FileText, Map, Compass, Zap, RefreshCw, PenTool, Save, Mic, Square, AlertCircle, StickyNote, History, MessageSquareQuote, Radar, Maximize2, Activity, Archive, FolderPlus, Compass as RoadmapIcon, Stars as CelestialIcon, ArrowRight, CornerDownRight, Image as ImageIcon, Film, MousePointer2, Briefcase, BookOpen, ChevronDown, Hash, Search, Menu, Plus, Radio } from 'lucide-react';
 import { VisualLanguageReflection } from './VisualLanguageReflection';
 import { Visualizer } from './Visualizer';
 import { ExportChamber } from './ExportChamber';
 import { SocialShareModal } from './SocialShareModal';
 import { ZineComments } from './ZineComments';
+import { ThreadGraph } from './ThreadGraph';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
 import { useRecorder } from '../hooks/useRecorder';
+
+const THEMES = {
+  organic: { bg: '#FDFBF7', text: '#1C1917', accent: '#10B981', thread: '#E5E7EB', glow: 'transparent', surface: '#FFFFFF', border: '#F5F5F4' },
+  synthetic: { bg: '#050510', text: '#E0E7FF', accent: '#06B6D4', thread: '#1E1B4B', glow: '0 0 20px rgba(6, 182, 212, 0.8)', surface: '#020617', border: '#0F172A' },
+  latent: { bg: '#080808', text: '#E5E5E5', accent: '#A855F7', thread: '#262626', glow: '0 0 15px rgba(168, 85, 247, 0.4)', surface: '#0A0A0A', border: '#171717' }
+};
+
+const ChromaticDial: React.FC<{ activeTheme: string, onChange: (theme: string) => void, accent: string, className?: string }> = ({ activeTheme, onChange, accent, className }) => {
+  const themes = Object.keys(THEMES);
+  const currentIndex = themes.indexOf(activeTheme);
+  const [isFlipped, setIsFlipped] = React.useState(false);
+  
+  const handleRotate = () => {
+    const nextIndex = (currentIndex + 1) % themes.length;
+    setIsFlipped(!isFlipped);
+    onChange(themes[nextIndex]);
+    window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'click' } }));
+  };
+
+  const rotation = currentIndex * 90;
+
+  return (
+    <div className={`flex items-center gap-4 print:hidden ${className || ''}`}>
+      <span className="font-mono text-[8px] uppercase tracking-widest text-stone-400">Tune</span>
+      <div 
+        onClick={handleRotate}
+        className="w-12 h-12 rounded-full border border-stone-300 dark:border-stone-700 cursor-pointer relative flex items-center justify-center hover:scale-105 shadow-xl bg-white/5 backdrop-blur-md pointer-events-auto"
+        style={{ 
+          transform: `rotate(${rotation}deg) rotateY(${isFlipped ? 180 : 0}deg)`, 
+          transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' 
+        }}
+      >
+        {[...Array(12)].map((_, i) => (
+          <div key={i} className="absolute w-[1px] h-1.5 bg-stone-400/40" style={{ transform: `rotate(${i * 30}deg) translateY(-20px)` }} />
+        ))}
+        <div className="absolute w-1.5 h-3 rounded-full" style={{ transform: `translateY(-14px)`, backgroundColor: accent, boxShadow: `0 0 10px ${accent}` }} />
+        <div className="w-3 h-3 rounded-full border border-stone-400/50" />
+      </div>
+      <span className="font-mono text-[8px] uppercase tracking-widest" style={{ color: accent }}>{activeTheme}</span>
+    </div>
+  );
+};
 
 const SectionHeader: React.FC<{ label: string; icon: any; color?: string; style?: React.CSSProperties }> = ({ label, icon: Icon, color = "text-emerald-500", style }) => (
   <div className="flex items-center gap-4 mb-12 print:mb-4 opacity-50 hover:opacity-100 transition-opacity duration-700">
@@ -26,7 +69,12 @@ const SectionHeader: React.FC<{ label: string; icon: any; color?: string; style?
   </div>
 );
 
-export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => void, onUpdateMetadata: (updatedMetadata: ZineMetadata) => void }> = ({ metadata, onReset, onUpdateMetadata }) => {
+export const AnalysisDisplay: React.FC<{ 
+  metadata: ZineMetadata, 
+  onReset: () => void, 
+  onUpdateMetadata: (updatedMetadata: ZineMetadata) => void,
+  onExtractTailorLogic?: (logic: any) => void
+}> = ({ metadata, onReset, onUpdateMetadata, onExtractTailorLogic }) => {
   const { user, profile, activePersona, toggleZineStar } = useUser();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isVoiceLoading, setIsVoiceLoading] = useState(false);
@@ -44,6 +92,8 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
   const [isEditing, setIsEditing] = useState(false);
   const [lineageEntry, setLineageEntry] = useState<LineageEntry | null>(null);
   const [showLineage, setShowLineage] = useState(false);
+  const [isSavingThread, setIsSavingThread] = useState(false);
+  const [isThreadSaved, setIsThreadSaved] = useState(false);
   
   const handleResonanceFlip = async () => {
     if (!showLineage) {
@@ -76,17 +126,19 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
   };
   
   // TAILOR INTEGRATION: Fetch styling from the active persona's draft
+  const [activeTheme, setActiveTheme] = useState<'organic' | 'synthetic' | 'latent'>(
+    metadata.content?.meta?.theme || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? 'latent' : 'organic')
+  );
+  const themeConfig = THEMES[activeTheme as keyof typeof THEMES];
+
   const tailor = activePersona?.tailorDraft || profile?.tailorDraft;
-  const accentColor = tailor?.chromaticRegistry?.accentSignal || '#10B981'; // Default Emerald
-  const baseColor = tailor?.chromaticRegistry?.baseNeutral || '#FDFBF7';
+  const accentColor = activeTheme === 'synthetic' ? themeConfig.accent : (tailor?.chromaticRegistry?.accentSignal || themeConfig.accent);
+  const baseColor = tailor?.chromaticRegistry?.baseNeutral || themeConfig.bg;
   
-  // Determine dominant font family based on Tailor intent (simple heuristic)
-  const fontStyle = useMemo(() => {
-     const desc = tailor?.typographyIntent?.styleDescription?.toLowerCase() || '';
-     if (desc.includes('mono') || desc.includes('brutalist')) return 'font-mono';
-     if (desc.includes('sans') || desc.includes('minimal')) return 'font-sans';
-     return 'font-serif'; // Default to Editorial Serif
-  }, [tailor]);
+  // Determine dominant font family based on Tailor intent
+  const fontFamily = tailor?.typographyIntent?.styleDescription || 'Inter';
+  const fontUrl = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/ /g, '+')}&display=swap`;
+  const fontStyle = ''; // Inherit from root wrapper
 
   // Field Notes State - Fallback logic for Debris
   const originalDebris = metadata.originalInput || metadata.content.meta?.intent || '';
@@ -304,6 +356,32 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
     }
   };
 
+  const handleSaveThread = async () => {
+    if (isThreadSaved || isSavingThread || !user?.uid) return;
+    
+    setIsSavingThread(true);
+    try {
+      const displayTitle = metadata.content?.headlines?.[0] || metadata.title || "Untitled Thread";
+      const thread: NarrativeThread = {
+        id: `thread_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        userId: user.uid,
+        title: displayTitle,
+        narrative: originalDebris,
+        mode: 'influence', // Defaulting to influence for now, could be derived
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      };
+      await saveNarrativeThread(thread);
+      setIsThreadSaved(true);
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Thread Anchored.", icon: <Bookmark size={14} style={{ color: accentColor }} /> } }));
+    } catch (e) {
+      console.error("Failed to save thread", e);
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Failed to anchor thread.", icon: <AlertCircle size={14} className="text-red-500" /> } }));
+    } finally {
+      setIsSavingThread(false);
+    }
+  };
+
   const handleBroadcast = async () => {
       if (isBroadcasted || isBroadcasting) return;
       setIsBroadcasting(true);
@@ -359,8 +437,68 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
       }));
   };
 
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
   return (
-    <div className="w-full h-[100dvh] flex flex-col bg-[#FDFBF7] dark:bg-[#080808] relative overflow-hidden transition-colors duration-1000 print:bg-white text-nous-text dark:text-stone-200">
+    <>
+      <link href={fontUrl} rel="stylesheet" />
+      <div 
+        className="fixed inset-0 z-[9999] w-screen h-screen flex flex-col overflow-hidden transition-colors duration-1000 print:bg-white zine-theme-root"
+        style={{ 
+          fontFamily: `'${fontFamily}', sans-serif`,
+          '--zine-bg': baseColor, 
+          '--zine-text': themeConfig.text, 
+          '--zine-accent': accentColor, 
+          '--zine-thread': themeConfig.thread, 
+          '--zine-glow': themeConfig.glow,
+          '--zine-surface': themeConfig.surface,
+          '--zine-border': themeConfig.border,
+          backgroundColor: 'var(--zine-bg)',
+          color: 'var(--zine-text)'
+        } as React.CSSProperties}
+      >
+      <style>{`
+        .zine-theme-root section { background-color: transparent !important; }
+        .zine-theme-root .bg-white, .zine-theme-root .dark\\:bg-\\[\\#0A0A0A\\], .zine-theme-root .dark\\:bg-stone-900 { background-color: var(--zine-surface) !important; }
+        .zine-theme-root .border-stone-100, .zine-theme-root .dark\\:border-stone-900, .zine-theme-root .dark\\:border-stone-800 { border-color: var(--zine-border) !important; }
+        .zine-theme-root .text-stone-800, .zine-theme-root .dark\\:text-stone-200, .zine-theme-root .text-nous-text { color: var(--zine-text) !important; }
+        .zine-theme-root .bg-\\[\\#FDFBF7\\], .zine-theme-root .dark\\:bg-\\[\\#080808\\], .zine-theme-root .bg-\\[\\#FAFAFA\\] { background-color: var(--zine-bg) !important; }
+        .zine-theme-root .font-serif { font-family: inherit !important; }
+      `}</style>
+      {/* PORTFOLIO BINDING STITCH & LATENT THREAD */}
+      <div className="absolute left-8 top-0 bottom-0 w-8 z-[4000] pointer-events-none flex justify-center">
+         {/* The physical stitch (dashed thread) */}
+         <div 
+           className="w-[2px] h-full transition-colors duration-1000 opacity-60" 
+           style={{ 
+             backgroundImage: `repeating-linear-gradient(to bottom, ${themeConfig.thread} 0, ${themeConfig.thread} 16px, transparent 16px, transparent 32px)`,
+             boxShadow: themeConfig.glow 
+           }} 
+         />
+         {/* The fiber optic laser pulse */}
+         <motion.div 
+           key={activeTheme}
+           initial={{ top: 0, height: '0%', opacity: 1 }}
+           animate={{ top: '100%', height: '200px', opacity: 0 }}
+           transition={{ duration: 1.5, ease: "circOut" }}
+           className="absolute w-[4px] rounded-full"
+           style={{ backgroundColor: accentColor, boxShadow: `0 0 30px 4px ${accentColor}` }}
+         />
+         
+         {/* The Chromatic Dial positioned relative to the stitch */}
+         <ChromaticDial 
+           activeTheme={activeTheme} 
+           onChange={(t) => setActiveTheme(t as any)} 
+           accent={accentColor} 
+           className="absolute bottom-8 left-full ml-4"
+         />
+      </div>
+
       <AnimatePresence>
           {showExport && <ExportChamber metadata={metadata} onClose={() => setShowExport(false)} />}
           {showShare && <SocialShareModal metadata={metadata} onClose={() => setShowShare(false)} />}
@@ -376,24 +514,27 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
           )}
       </AnimatePresence>
 
-      {/* Export Buttons */}
-      <div className="fixed top-8 right-24 z-[5001] flex gap-2">
-        <button onClick={() => exportZine('png')} className="p-4 bg-white/40 dark:bg-black/40 backdrop-blur-md border border-stone-200 dark:border-white/10 rounded-full text-stone-400 hover:text-emerald-500 transition-all shadow-xl">
-            <ImageIcon size={20} />
+      {/* TOP IMMERSIVE CONTROLS */}
+      <div className="fixed top-0 left-0 right-0 h-32 z-[5001] flex justify-between items-start p-8 opacity-0 hover:opacity-100 transition-opacity duration-300 print:hidden bg-gradient-to-b from-black/50 to-transparent">
+        {/* TOP-LEFT EXIT BUTTON */}
+        <button 
+          onClick={onReset} 
+          className="p-4 bg-black/50 backdrop-blur-md border border-white/10 rounded-full text-white/70 hover:text-red-500 hover:scale-110 transition-all shadow-2xl active:scale-95 group"
+        >
+          <X size={24} />
+          <span className="absolute left-full ml-4 font-sans text-[8px] uppercase tracking-widest font-black opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-black text-white px-2 py-1 rounded">Purge View</span>
         </button>
-        <button onClick={() => exportZine('pdf')} className="p-4 bg-white/40 dark:bg-black/40 backdrop-blur-md border border-stone-200 dark:border-white/10 rounded-full text-stone-400 hover:text-emerald-500 transition-all shadow-xl">
-            <FileText size={20} />
-        </button>
-      </div>
 
-      {/* TOP-LEFT EXIT BUTTON */}
-      <button 
-        onClick={onReset} 
-        className="fixed top-8 left-8 z-[5001] p-4 bg-white/40 dark:bg-black/40 backdrop-blur-md border border-stone-200 dark:border-white/10 rounded-full text-stone-400 hover:text-red-500 hover:scale-110 transition-all shadow-xl active:scale-95 group print:hidden"
-      >
-        <X size={24} />
-        <span className="absolute left-full ml-4 font-sans text-[8px] uppercase tracking-widest font-black opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-black text-white px-2 py-1 rounded">Purge View</span>
-      </button>
+        {/* Export Buttons */}
+        <div className="flex gap-2">
+          <button onClick={() => exportZine('png')} className="p-4 bg-black/50 backdrop-blur-md border border-white/10 rounded-full text-white/70 hover:text-emerald-500 transition-all shadow-2xl">
+              <ImageIcon size={20} />
+          </button>
+          <button onClick={() => exportZine('pdf')} className="p-4 bg-black/50 backdrop-blur-md border border-white/10 rounded-full text-white/70 hover:text-emerald-500 transition-all shadow-2xl">
+              <FileText size={20} />
+          </button>
+        </div>
+      </div>
 
       {/* MAIN CONTENT LAYOUT - SPLIT WITH SIDEBAR */}
       <div className="flex flex-1 overflow-hidden relative">
@@ -402,8 +543,8 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
           <div className="flex-1 overflow-y-auto snap-y snap-mandatory no-scrollbar scroll-smooth print:overflow-visible print:snap-none">
               
               {/* 1. HEADLINES (TITLE/TONE) */}
-              <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start border-b border-stone-100 dark:border-stone-900 print:min-h-0 print:py-12 bg-[#FDFBF7] dark:bg-[#080808]">
-                <div className="max-w-7xl w-full space-y-16">
+              <section className="min-h-[100dvh] flex flex-col justify-center snap-start border-b border-stone-100 dark:border-stone-900 print:min-h-0 print:py-12 bg-[#FDFBF7] dark:bg-[#080808]">
+                <div className="w-full space-y-16 px-6 md:px-24">
                    <div className="flex items-center gap-4">
                       <span className="font-mono text-[9px] uppercase tracking-[0.5em] text-stone-400">Issue_0{Math.floor(Math.random() * 10)}</span>
                       {metadata.isDeepThinking && <div className="flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-500 font-sans text-[7px] font-black uppercase tracking-widest"><Radar size={10} className="animate-pulse" /> Deep Refraction</div>}
@@ -434,8 +575,8 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
               </section>
 
               {/* 2. SUMMARY (WITH VOCAL TRANSMISSION) */}
-              <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-white dark:bg-[#0A0A0A] print:min-h-0 print:py-12">
-                 <div className="max-w-5xl space-y-16">
+              <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-white dark:bg-[#0A0A0A] print:min-h-0 print:py-12">
+                 <div className="w-full space-y-16 px-6 md:px-24">
                     <SectionHeader label="Executive Summary" icon={Sparkles} style={{ color: accentColor }} />
                     <button onClick={() => setIsEditing(!isEditing)} className="text-[8px] uppercase tracking-widest font-black text-stone-400 hover:text-emerald-500 transition-colors">
                         {isEditing ? 'Cancel Edit' : 'Edit Summary'}
@@ -471,7 +612,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
 
               {/* 3. HEADER IMAGE */}
               <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-black overflow-hidden relative group print:min-h-0 print:py-12">
-                 <Visualizer prompt={metadata.content.hero_image_prompt || metadata.content?.headlines?.[0] || metadata.title} defaultAspectRatio="16:9" defaultImageSize={metadata.isHighFidelity ? '2K' : '1K'} isArtifact isLite={metadata.isLite} initialImage={metadata.coverImageUrl} artifacts={metadata.artifacts} onImageGenerated={handleHeroImageGenerated} />
+                 <Visualizer prompt={metadata.content.hero_image_prompt || metadata.content?.headlines?.[0] || metadata.title} defaultAspectRatio="16:9" defaultImageSize={metadata.isHighFidelity ? '2K' : '1K'} isArtifact isLite={metadata.isLite} initialImage={metadata.coverImageUrl} artifacts={metadata.artifacts} treatmentId={metadata.treatmentId} onImageGenerated={handleHeroImageGenerated} />
                  <div className="absolute bottom-12 left-12 p-4 bg-white/5 backdrop-blur-md rounded-sm border border-white/10">
                     <span className="font-mono text-[7px] text-white uppercase tracking-widest">FIG_01: PRIMARY_VISUAL</span>
                  </div>
@@ -481,8 +622,8 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
               </section>
 
               {/* 4. THE READING (ORACULAR MIRROR) */}
-              <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-[#F5F5F0] dark:bg-[#0E0E0E] print:min-h-0 print:py-12">
-                 <div className="max-w-4xl space-y-12">
+              <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-[#F5F5F0] dark:bg-[#0E0E0E] print:min-h-0 print:py-12">
+                 <div className="w-full space-y-12 px-6 md:px-24">
                     <SectionHeader label="Oracular Mirror" icon={Eye} style={{ color: accentColor }} />
                     <p className="font-serif italic text-3xl md:text-5xl text-nous-text dark:text-stone-200 leading-tight">
                        "{metadata.content.oracular_mirror || metadata.content.the_reading || "The mirror is silent."}"
@@ -491,20 +632,21 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
               </section>
 
               {/* 5. STRATEGIC HYPOTHESIS (VISUALIZED) */}
-              <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-white dark:bg-[#050505] print:min-h-0 print:py-12">
-                 <div className="max-w-7xl w-full space-y-12">
+              <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-white dark:bg-[#050505] print:min-h-0 print:py-12">
+                 <div className="w-full space-y-12 px-6 md:px-24">
                     <SectionHeader label="Strategic Hypothesis" icon={Target} style={{ color: accentColor }} />
                     <div className="grid md:grid-cols-2 gap-12 items-center">
                         <div className="aspect-square w-full relative border border-stone-100 dark:border-stone-800 shadow-2xl rounded-sm overflow-hidden bg-stone-50 dark:bg-stone-900">
                             {/* Use Visualizer to render the hypothesis visually */}
                             <Visualizer 
-                                prompt={`An abstract, conceptual, high-contrast editorial photograph representing the concept: "${metadata.content.strategic_hypothesis}". Focus on texture, lighting, and composition. No text, no typography. Cinematic, moody, architectural.`} 
+                                prompt={`A high-contrast, moody, abstract, conceptual editorial photograph representing the concept: "${metadata.content.strategic_hypothesis}". Focus on deep shadows, dramatic lighting, and texture. No text, no typography. Cinematic, architectural.`} 
                                 defaultAspectRatio="1:1" 
                                 defaultImageSize={metadata.isHighFidelity ? '2K' : '1K'}
                                 isArtifact 
                                 isLite={metadata.isLite} 
                                 delay={400}
                                 artifacts={metadata.artifacts}
+                                treatmentId={metadata.treatmentId}
                                 initialImage={(metadata.content as any).hypothesis_image_url}
                                 onImageGenerated={handleHypothesisImageGenerated}
                             />
@@ -526,8 +668,8 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
               </section>
 
               {/* 6. SEMIOTIC SIGNALS - REDESIGNED GRID */}
-              <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-[#FAFAFA] dark:bg-[#080808] print:min-h-0 print:py-12">
-                 <div className="max-w-7xl w-full space-y-16">
+              <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-[#FAFAFA] dark:bg-[#080808] print:min-h-0 print:py-12">
+                 <div className="w-full space-y-16 px-6 md:px-24">
                     <SectionHeader label="Semiotics & Visual Directives" icon={Radar} style={{ color: accentColor }} />
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {metadata.content.semiotic_signals?.map((t, i) => {
@@ -612,8 +754,8 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
               </section>
 
               {/* 7. CELESTIAL CALIBRATION */}
-              <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-[#050505] text-white print:min-h-0 print:py-12">
-                 <div className="max-w-4xl space-y-12">
+              <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-[#050505] text-white print:min-h-0 print:py-12">
+                 <div className="w-full space-y-12 px-6 md:px-24">
                     <SectionHeader label="Celestial Calibration" icon={Moon} color="text-white" />
                     <div className="flex flex-col items-center text-center space-y-12">
                        <div className="p-8 rounded-full border border-white/10 bg-white/5 animate-pulse-slow">
@@ -628,19 +770,19 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
 
               {/* 8. VISUAL PLATES - REDESIGNED AS EDITORIAL SPREADS */}
               <div className="bg-white dark:bg-stone-950 py-32 space-y-32">
-                 <div className="px-6 md:px-12 max-w-7xl mx-auto">
+                 <div className="px-6 md:px-24 w-full">
                     <SectionHeader label="Visual Plates" icon={Grid3X3} style={{ color: accentColor }} />
                  </div>
                  
                  {metadata.content.pages?.map((page, i) => {
                     const isEven = i % 2 === 0;
                     return (
-                      <section key={i} className="min-h-[100dvh] flex flex-col justify-center snap-start px-6 md:px-12 max-w-7xl mx-auto w-full">
-                          <div className={`flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} gap-12 md:gap-24 items-center`}>
+                      <section key={i} className="min-h-[100dvh] flex flex-col justify-center snap-start w-full">
+                          <div className={`flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} items-stretch h-[100dvh]`}>
                               
                               {/* VISUAL COMPONENT */}
-                              <div className="w-full md:w-1/2 relative group">
-                                  <div className="relative aspect-[3/4] bg-stone-100 dark:bg-stone-900 overflow-hidden shadow-2xl rounded-sm">
+                              <div className="w-full md:w-1/2 relative group h-[50dvh] md:h-full">
+                                  <div className="relative w-full h-full bg-stone-100 dark:bg-stone-900 overflow-hidden">
                                       <Visualizer 
                                         prompt={page.imagePrompt} 
                                         defaultAspectRatio="3:4" 
@@ -650,6 +792,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                                         initialImage={page.image_url} 
                                         delay={800 + (i * 1200)}
                                         artifacts={metadata.artifacts}
+                                        treatmentId={metadata.treatmentId}
                                         onImageGenerated={(base64) => handlePageImageGenerated(base64, i)}
                                       />
                                       {/* PLATE METADATA OVERLAY */}
@@ -698,13 +841,13 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
               </div>
 
               {/* 9. THE ROADMAP (BLUEPRINT) - ARCHITECTURAL REDESIGN */}
-              <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-[#050505] text-white print:min-h-0 print:py-12 relative overflow-hidden">
+              <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-[#050505] text-white print:min-h-0 print:py-12 relative overflow-hidden">
                  {/* TECHNICAL GRID BACKGROUND */}
                  <div className="absolute inset-0 opacity-10 pointer-events-none" 
                       style={{ backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize: '40px 40px' }} 
                  />
                  
-                 <div className="max-w-6xl w-full space-y-16 relative z-10">
+                 <div className="w-full space-y-16 relative z-10 px-6 md:px-24">
                      <SectionHeader label="Authority Roadmap" icon={RoadmapIcon} color="text-white" />
                                         <div className="border border-stone-800 bg-[#0A0A0A]/90 p-12 relative">
                        {/* CAD MARKERS */}
@@ -849,35 +992,70 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                   </section>
                )}
 
-               {/* 10. ORIGINAL THOUGHT (RAW INPUT + THUMBNAILS) */}
-              <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-stone-100 dark:bg-black text-nous-text dark:text-white print:min-h-0 print:py-12">
-                 <div className="max-w-4xl space-y-16">
-                    <SectionHeader label="Original Debris" icon={Zap} style={{ color: accentColor }} />
+               {/* 10. NARRATIVE THREAD (RAW INPUT + ANALYSIS + THUMBNAILS) */}
+              <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-stone-100 dark:bg-black text-nous-text dark:text-white print:min-h-0 print:py-12">
+                 <div className="w-full space-y-16 px-6 md:px-24">
+                    <SectionHeader label="Narrative Thread" icon={History} style={{ color: accentColor }} />
                     {originalDebris ? (
-                        <div className="space-y-8 pl-8 md:pl-12 border-l-4 border-stone-300 dark:border-stone-800">
-                           <div className="font-mono text-[10px] text-stone-400 mb-4 uppercase tracking-widest">
-                              // RAW_INPUT_LOG_{metadata.id.slice(-4)}
-                           </div>
-                           <p className="font-mono text-lg md:text-2xl text-stone-600 dark:text-stone-400 leading-relaxed whitespace-pre-wrap tracking-tight">
-                              "{originalDebris}"
-                           </p>
-                           
-                           {/* THUMBNAIL DISPLAY */}
-                           {metadata.artifacts && metadata.artifacts.length > 0 && (
-                               <div className="flex flex-wrap gap-4 pt-8 border-t border-stone-200 dark:border-stone-800">
-                                   {metadata.artifacts.map((art, idx) => (
-                                       <div key={idx} className="relative w-24 h-24 border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 rounded-sm overflow-hidden shadow-sm hover:scale-105 transition-transform">
-                                           {art.type === 'image' ? (
-                                               <img src={art.url || `data:${art.mimeType};base64,${art.data}`} className="w-full h-full object-cover" />
-                                           ) : (
-                                               <div className="w-full h-full flex items-center justify-center text-stone-400">
-                                                   <Volume2 size={24} />
-                                               </div>
-                                           )}
-                                       </div>
-                                   ))}
+                        <div className="space-y-12">
+                            <div className="space-y-8 pl-8 md:pl-12 border-l-4 border-stone-300 dark:border-stone-800">
+                               <div className="font-mono text-[10px] text-stone-400 mb-4 uppercase tracking-widest">
+                                  // RAW_INPUT_LOG_{metadata.id.slice(-4)}
                                </div>
-                           )}
+                               <p className="font-mono text-lg md:text-2xl text-stone-600 dark:text-stone-400 leading-relaxed whitespace-pre-wrap tracking-tight">
+                                  "{originalDebris}"
+                               </p>
+                               
+                               {/* THUMBNAIL DISPLAY */}
+                               {metadata.artifacts && metadata.artifacts.length > 0 && (
+                                   <div className="flex flex-wrap gap-4 pt-8 border-t border-stone-200 dark:border-stone-800">
+                                       {metadata.artifacts.map((art, idx) => (
+                                           <div key={idx} className="relative w-24 h-24 border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 rounded-sm overflow-hidden shadow-sm hover:scale-105 transition-transform">
+                                               {art.type === 'image' ? (
+                                                   <img src={art.url || `data:${art.mimeType};base64,${art.data}`} className="w-full h-full object-cover" />
+                                               ) : (
+                                                   <div className="w-full h-full flex items-center justify-center text-stone-400">
+                                                       <Volume2 size={24} />
+                                                   </div>
+                                               )}
+                                           </div>
+                                       ))}
+                                   </div>
+                               )}
+                            </div>
+
+                            {/* ANALYSIS GRAPH */}
+                            <div className="pt-8">
+                                <ThreadGraph metadata={metadata} accentColor={accentColor} />
+                            </div>
+
+                            {/* ACTIONS */}
+                            <div className="pt-8 flex flex-wrap gap-4 justify-start">
+                                <button 
+                                    onClick={handleSaveThread}
+                                    disabled={isThreadSaved || isSavingThread}
+                                    className={`flex items-center gap-3 px-6 py-3 rounded-full font-sans text-[10px] uppercase tracking-widest font-bold transition-all ${isThreadSaved ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-stone-900 dark:bg-white text-white dark:text-stone-900 hover:scale-105 shadow-md'}`}
+                                >
+                                    {isSavingThread ? <Loader2 size={14} className="animate-spin" /> : isThreadSaved ? <Check size={14} /> : <History size={14} />}
+                                    {isSavingThread ? 'Anchoring...' : isThreadSaved ? 'Thread Anchored' : 'Save to Threads'}
+                                </button>
+
+                                {onExtractTailorLogic && (
+                                    <button 
+                                        onClick={async () => {
+                                            const { extractTailorLogicFromZine } = await import('../services/geminiService');
+                                            const logic = await extractTailorLogicFromZine(metadata);
+                                            if (logic) {
+                                                onExtractTailorLogic(logic);
+                                            }
+                                        }}
+                                        className="flex items-center gap-3 px-6 py-3 rounded-full font-sans text-[10px] uppercase tracking-widest font-bold transition-all bg-stone-100 dark:bg-stone-800 text-stone-900 dark:text-white hover:scale-105 shadow-md border border-stone-200 dark:border-stone-700"
+                                    >
+                                        <Layers size={14} />
+                                        Extract Tailor Logic
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     ) : (
                         <div className="opacity-30 text-center py-12 border-2 border-dashed border-stone-300 dark:border-stone-800 rounded-sm">
@@ -892,7 +1070,7 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
 
               {/* 11. PROVOCATION + CONTINUUM */}
               <footer className="min-h-[100dvh] flex flex-col items-center justify-center p-12 snap-start print:hidden text-center space-y-16">
-                 <div className="space-y-6 max-w-2xl">
+                 <div className="space-y-6 w-full px-6 md:px-24">
                     <span className="font-sans text-[10px] uppercase tracking-[0.5em] font-black" style={{ color: accentColor }}>Mimi's Provocation</span>
                     <p className="font-serif italic text-3xl md:text-6xl leading-tight text-balance">
                        "{metadata.content.poetic_provocation || "Where does this frequency lead?"}"
@@ -999,10 +1177,10 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
       </div>
 
       {/* THE CONTROL DIAL */}
-      <div className="fixed bottom-8 right-8 z-[5000] print:hidden">
+      <div className="fixed bottom-0 right-0 p-8 z-[5000] print:hidden opacity-0 hover:opacity-100 transition-opacity duration-300">
          <AnimatePresence>
             {dialOpen && (
-               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute bottom-20 right-0 flex flex-col gap-3 items-end">
+               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute bottom-28 right-8 flex flex-col gap-3 items-end">
                   
                   {/* Actions Stack */}
                   <motion.button 
@@ -1084,17 +1262,6 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
                   </motion.button>
 
                   <motion.button 
-                    initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.28 }}
-                    onClick={() => setShowComments(true)} 
-                    className="flex items-center gap-4 group"
-                  >
-                     <span className="bg-black/80 text-white px-2 py-1 rounded text-[9px] uppercase font-black tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Discourse</span>
-                     <div className={`w-12 h-12 bg-white dark:bg-stone-800 rounded-full shadow-lg border border-stone-200 dark:border-stone-700 flex items-center justify-center transition-colors text-stone-500 hover:text-emerald-500`}>
-                        <MessageSquareQuote size={18} />
-                     </div>
-                  </motion.button>
-
-                  <motion.button 
                     initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.3 }}
                     onClick={handleVoiceToggle} 
                     className="flex items-center gap-4 group"
@@ -1120,5 +1287,6 @@ export const AnalysisDisplay: React.FC<{ metadata: ZineMetadata, onReset: () => 
          </button>
       </div>
     </div>
+    </>
   );
 };

@@ -13,6 +13,8 @@ import { compressImage } from '../services/geminiService';
 import { getLocalPocket } from '../services/localArchive';
 import { fetchCommunityZines, createNotification } from '../services/firebaseUtils';
 
+import { ZineFolders } from './ZineFolders';
+
 const InjectShardModal: React.FC<{ onClose: () => void, onInjected: () => void }> = ({ onClose, onInjected }) => {
     const { user, profile } = useUser();
     const [mode, setMode] = useState<'upload' | 'authored' | 'url'>('upload');
@@ -48,9 +50,21 @@ const InjectShardModal: React.FC<{ onClose: () => void, onInjected: () => void }
                     reader.readAsDataURL(file);
                 });
                 const type = file.type.startsWith('audio') ? 'voicenote' : 'image';
+                
+                let finalUrl = base64;
+                if (user?.uid) {
+                    try {
+                        const { uploadBase64Image } = await import('../services/firebaseUtils');
+                        const path = `pocket_images/${user.uid}_${Date.now()}_${file.name}`;
+                        finalUrl = await uploadBase64Image(base64, path);
+                    } catch (e) {
+                        console.warn("Failed to upload injected shard to storage", e);
+                    }
+                }
+
                 await addToPocket(user?.uid || 'ghost', type, {
-                    imageUrl: type === 'image' ? base64 : undefined,
-                    audioUrl: type === 'voicenote' ? base64 : undefined,
+                    imageUrl: type === 'image' ? finalUrl : undefined,
+                    audioUrl: type === 'voicenote' ? finalUrl : undefined,
                     prompt: file.name,
                     timestamp: Date.now(),
                     origin: 'Archive_Injection'
@@ -223,7 +237,7 @@ const InjectShardModal: React.FC<{ onClose: () => void, onInjected: () => void }
 };
 
 export const ArchivalView: React.FC<ArchivalViewProps> = ({ onSelectZine }) => {
-  const [activeTab, setActiveTab] = useState<'issues' | 'pocket' | 'list'>('issues');
+  const [activeTab, setActiveTab] = useState<'issues' | 'folders' | 'pocket' | 'list'>('issues');
   const [showInjectModal, setShowInjectModal] = useState(false);
   const [items, setItems] = useState<PocketItem[]>([]);
   const [zines, setZines] = useState<ZineMetadata[]>([]);
@@ -263,7 +277,7 @@ export const ArchivalView: React.FC<ArchivalViewProps> = ({ onSelectZine }) => {
            <div className="space-y-4">
                <h2 className="font-[Cormorant] font-light text-7xl md:text-9xl italic text-nous-text dark:text-white tracking-tighter luminescent-text leading-none">The Archive.</h2>
                <p className="font-sans text-[10px] uppercase tracking-[1em] text-stone-400 font-black">
-                 {activeTab === 'issues' ? 'Manifestations of Form' : activeTab === 'pocket' ? 'Curated Physical Debris' : 'List View'}
+                 {activeTab === 'issues' ? 'Manifestations of Form' : activeTab === 'folders' ? 'Curated Directories' : activeTab === 'pocket' ? 'Curated Physical Debris' : 'List View'}
                </p>
            </div>
 
@@ -280,6 +294,12 @@ export const ArchivalView: React.FC<ArchivalViewProps> = ({ onSelectZine }) => {
                      className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'issues' ? 'text-nous-text dark:text-white border-nous-text dark:border-white' : 'text-stone-300 border-transparent hover:text-stone-500'}`}
                    >
                       Authored
+                   </button>
+                   <button 
+                     onClick={() => setActiveTab('folders')}
+                     className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'folders' ? 'text-nous-text dark:text-white border-nous-text dark:border-white' : 'text-stone-300 border-transparent hover:text-stone-500'}`}
+                   >
+                      Folders
                    </button>
                    <button 
                      onClick={() => setActiveTab('pocket')}
@@ -309,6 +329,10 @@ export const ArchivalView: React.FC<ArchivalViewProps> = ({ onSelectZine }) => {
             {activeTab === 'issues' ? (
                <motion.div key="issues" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.8 }}>
                  <Shelf variant="personal" onSelectZine={onSelectZine} />
+               </motion.div>
+            ) : activeTab === 'folders' ? (
+               <motion.div key="folders" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.8 }}>
+                 <ZineFolders onSelectZine={onSelectZine} />
                </motion.div>
             ) : activeTab === 'pocket' ? (
                <motion.div key="pocket" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.8 }}>

@@ -1,15 +1,26 @@
-import { Part, Type } from "@google/genai";
+import { Part, Type, ThinkingLevel } from "@google/genai";
 import { ToneTag, ZineGenerationOptions, UserProfile } from "../types";
 import { withResilience } from "./geminiClient";
 import { generateTagsFromMedia } from "./geminiService";
 import { modulateSemioticContext } from "./semioticModulator";
+import { triggerAlert } from "./errorHandling";
 import { fetchUserZines, fetchLatestLineageEntry } from "./firebaseUtils";
 import { fetchFragmentsByStackId } from "./firebase";
 import { scryShadowMemory } from "./vectorSearch";
 
 function sanitizeProfile(profile: UserProfile | null): string {
     if (!profile) return "No user profile available.";
-    return JSON.stringify(profile);
+    const tailor = profile.tailorDraft;
+    return JSON.stringify({
+        positioningCore: tailor?.positioningCore,
+        expressionEngine: tailor?.expressionEngine,
+        strategicVectors: tailor?.strategicVectors,
+        strategicSummary: tailor?.strategicSummary,
+        archetype: profile.tasteProfile?.dominant_archetypes,
+        directives: profile.lastAuditReport?.aestheticDirectives,
+        strategicOpportunity: profile.lastAuditReport?.strategicOpportunity,
+        lastAuditSummary: profile.tasteProfile?.semantic_signature || profile.lastAuditReport?.profileManifesto
+    });
 }
 
 function cleanAndParse(text: string | undefined): any {
@@ -57,12 +68,23 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
 
             const isLite = !!opts.isLite;
             const useDeep = !!opts.deepThinking && !isLite;
-            const model = useDeep ? 'gemini-3.1-pro-preview' : 'gemini-3-flash-preview';
-            
+            const useSearch = !!opts.useSearch;
+            const useMaps = !!opts.useMaps;
+            const isTaskMode = !!opts.taskMode;
+
+            let model = 'gemini-3-flash-preview';
+            if (isLite) {
+                model = 'gemini-3.1-flash-lite-preview';
+            } else if (useDeep) {
+                model = 'gemini-3.1-pro-preview';
+            } else if (useMaps) {
+                model = 'gemini-2.5-flash';
+            }
+
             const profileToUse = opts.bypassTailor ? null : profile;
             const profileContext = sanitizeProfile(profileToUse);
             
-            const zineOptionsContext = zineOptions ? `Zine Style: ${zineOptions.style}, Theme: ${zineOptions.theme}, Content Focus: ${zineOptions.contentFocus}, Art Style: ${zineOptions.artStyle || 'Default'}, Aesthetic Tone: ${zineOptions.aestheticTone || 'Default'}, Goals: ${zineOptions.goals || 'None'}` : 'Standard';
+            const zineOptionsContext = zineOptions ? `Zine Style: ${zineOptions.style}, Theme: ${zineOptions.theme}, Content Focus: ${zineOptions.contentFocus}, Art Style: ${zineOptions.artStyle || 'Default'}, Aesthetic Tone: ${zineOptions.aestheticTone || 'Default'}, Goals: ${zineOptions.goals || 'None'}, Custom Title: ${zineOptions.customTitle || 'Generate a title'}` : 'Standard';
             const modulationContext = modulateSemioticContext(text, profile, tone);
             
             // Fetch context in parallel
@@ -117,13 +139,31 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
                 ? "\nTONE: CONTRARY. Apply inverted logic and absurdist perspectives. Challenge the user's stated beliefs with high-theory twists. Represent 'Intrusive Thoughts' as a high-fashion editorial artifact."
                 : `\nTONE: ${tone || 'Standard'}.`;
 
+            let treatmentContext = "";
+            if (zineOptions?.selectedTreatmentId && profile?.savedTreatments) {
+                const treatment = profile.savedTreatments.find((t: any) => t.id === zineOptions.selectedTreatmentId);
+                if (treatment) {
+                    treatmentContext = `
+            TREATMENT OVERRIDE ACTIVE: "${treatment.treatmentName}"
+            Application Logic: ${treatment.applicationLogic}
+            Base Prompt Directives: ${treatment.basePromptDirectives}
+            Image Editing Rules: ${treatment.imageEditingRules}
+            Typography Layout: ${treatment.typographyLayout}
+            
+            CRITICAL INSTRUCTION: You MUST apply this treatment to all visual prompts ('header_image_prompt', 'visual_plates', 'pages.imagePrompt'). The aesthetic described in this treatment OVERRIDES the baseline aesthetic directive.
+            `;
+                }
+            }
+
             const zineManifestoPrompt = `
-            IDENTITY: You are an aesthetic intelligence system. Your goal is not to fill templates, but to manifest resonance. When presented with debris (text, images, fragments), do not merely categorize them. Synthesize them. Draw upon the deep history of human thought—mythology, philosophy, semiotics, and art history—to find the hidden threads between the fragments. Your output should be poetic, respectful of the user's intent, and intellectually rigorous. Prioritize the 'why' over the 'what.' When in doubt, favor the archetypal over the literal.
+            IDENTITY: You are an aesthetic intelligence system. ${isTaskMode ? `The user has provided a task-based query: "${text}". Perform the task with high precision.` : `Your goal is not to fill templates, but to manifest resonance. When presented with debris (text, images, fragments), do not merely categorize them. Synthesize them. Draw upon the deep history of human thought—mythology, philosophy, semiotics, and art history—to find the hidden threads between the fragments. Your output should be poetic, respectful of the user's intent, and intellectually rigorous. Prioritize the 'why' over the 'what.' When in doubt, favor the archetypal over the literal.`}
             
             CRITICAL PERSONA CONSTRAINT: While your analysis is deeply intellectual and rooted in high theory, your voice must remain ultra-chic, effortlessly cool, and high-fashion editorial. You are an aesthetic savant—delivering profound philosophical insights with the sharp, curated elegance of a luxury fashion magazine. Do not sound like a dry academic; sound like a visionary creative director.
             
             Zine Configuration: ${zineOptionsContext}
+            ${zineOptions?.customTitle ? `CRITICAL INSTRUCTION: The user has provided a custom title: "${zineOptions.customTitle}". You MUST use this exact string as the 'title' of the zine.` : ''}
             ${toneInstruction}
+            ${treatmentContext}
             ${modulationContext}
             ${recentZinesContext}
             ${lineageContext}
@@ -136,25 +176,30 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
             
             CORE DIRECTIVE:
             - BASELINE AESTHETIC DIRECTIVE: The visual output must adhere to the following aesthetic: Editorial, architectural, cinematic minimalism. Stark, high-contrast lighting. Muted, desaturated palettes punctuated by sharp, precise accent colors (emerald, crimson). Uncanny, surreal elements integrated into clean, brutalist or classical spaces. Sophisticated, tactile textures (velvet, concrete, aged paper). Composition should prioritize negative space, structural rigor, and a high-fashion editorial sensibility.
+            - FORM & PRESENTATION: ${profileToUse?.tailorDraft?.positioningCore?.aestheticCore?.presentation || 'Androgynous'}. Ensure all visual prompts and stylistic language reflect this gender expression or structural presentation.
             - PRIORITIZE GROUNDING: If 'useSearch' is enabled, you MUST utilize Google Search to anchor your insights in real-world cultural history, emerging movements, and verified facts. Move beyond the user's immediate profile to provide external perspective.
             - EDUCATIONAL DEPTH: Your responses must be insightful and informative. Do not just repeat the user's preferences; explain the *why* behind the aesthetic connections.
             - TAILOR LOGIC AS FILTER: Use the user's Tailor Logic (Aesthetic Core, Chromatic Registry, etc.) primarily to refine the **Visual Logic** and **Materiality** of the image prompts. It is a lens through which you view the world, not the world itself.
             - AESTHETIC EVOLUTION: Analyze the RECENT ZINES and PAST THOUGHTS provided. Compare them to the user's Tailor Logic and stated Goals. Act as a guide, building off their thoughts and getting to know their taste. If the user's creative output is drifting, gently but firmly steer them back or refine their Tailor Logic to incorporate the new direction. The zine should be a step forward in their aesthetic evolution, not just a repetition of the past.
             - ARTIFACT SYNTHESIS: If visual artifacts are provided, your 'header_image_prompt' and 'visual_plates' MUST be cohesive with them. Do not generate random imagery. Refract the user's uploaded images through the 'Tailor Logic'.
             
-            INTENSITY & DENSITY CONTROL:
-            - DENSITY (${profile?.tailorDraft?.positioningCore?.aestheticCore?.density}/10): ${profile?.tailorDraft?.positioningCore?.aestheticCore?.densityDescription || 'Control the information density.'} 
+            ALGORITHMIC DIALS & INTENSITY CONTROL:
+            - MEMORY SYNTHESIS (${profileToUse?.tailorDraft?.algoDials?.memorySynthesis ?? 50}%): At higher percentages, heavily contextualize the output using the RECENT ZINES and PAST THOUGHTS. At lower percentages, treat this artifact as an isolated, standalone creation.
+            - DISSONANCE ENGINE (${profileToUse?.tailorDraft?.algoDials?.dissonance ?? 10}%): At higher percentages, actively inject opposing, subversive, or contrasting aesthetic concepts into the visual plates and narrative to force creative breakthroughs. Mutate their safe aesthetic choices.
+            - BINARY-TO-SPECTRUM DIAL (${profileToUse?.tailorDraft?.algoDials?.binaryToSpectrum ?? 50}%): At 0%, strictly adhere to binary categories (e.g., hyper-masculine/feminine). At 100%, aggressively synthesize and blur these boundaries into a fluid, post-binary aesthetic.
+            - AESTHETIC DRIFT VULNERABILITY (${profileToUse?.tailorDraft?.diagnostics?.driftVulnerability ?? 5}/10): At lower values, strictly enforce the user's established Tailor Logic. At higher values, allow external inputs (artifacts, web scry) to heavily influence and shift the aesthetic output.
+            - DENSITY (${profileToUse?.tailorDraft?.positioningCore?.aestheticCore?.density}/10): ${profileToUse?.tailorDraft?.positioningCore?.aestheticCore?.densityDescription || 'Control the information density.'} 
               Higher density means more complex, layered, and information-rich content. Lower density means minimalist, sparse, and focused content.
-            - ENTROPY (${profile?.tailorDraft?.positioningCore?.aestheticCore?.entropy}/10): ${profile?.tailorDraft?.positioningCore?.aestheticCore?.entropyDescription || 'Control the complexity and chaos.'}
+            - ENTROPY (${profileToUse?.tailorDraft?.positioningCore?.aestheticCore?.entropy}/10): ${profileToUse?.tailorDraft?.positioningCore?.aestheticCore?.entropyDescription || 'Control the complexity and chaos.'}
               Higher entropy means more unpredictable, chaotic, and unconventional logic. Lower entropy means stable, predictable, and grounded logic.
-            - GENERATION TEMPERATURE (${((profile?.tailorDraft?.generationTemperature ?? 0.8) * 100).toFixed(0)}/100): ${profile?.tailorDraft?.temperatureDescription || 'Control the wildness of AI generation.'}
+            - GENERATION TEMPERATURE (${((profileToUse?.tailorDraft?.generationTemperature ?? 0.8) * 100).toFixed(0)}/100): ${profileToUse?.tailorDraft?.temperatureDescription || 'Control the wildness of AI generation.'}
             
             VOICE DIRECTIVES:
-            - Emotional Temperature: ${profile?.tailorDraft?.expressionEngine?.narrativeVoice?.emotionalTemperature || 'OBSERVATIONAL'}
-            - Structure Bias: ${profile?.tailorDraft?.expressionEngine?.narrativeVoice?.structureBias || 'FLOWING'}
-            - Lexical Density: ${profile?.tailorDraft?.expressionEngine?.narrativeVoice?.lexicalDensity}/10
-            - Restraint Level: ${profile?.tailorDraft?.expressionEngine?.narrativeVoice?.restraintLevel}/10
-            - Voice Notes: ${profile?.tailorDraft?.expressionEngine?.narrativeVoice?.voiceNotes || 'No specific notes.'}
+            - Emotional Temperature: ${profileToUse?.tailorDraft?.expressionEngine?.narrativeVoice?.emotionalTemperature || 'OBSERVATIONAL'}
+            - Structure Bias: ${profileToUse?.tailorDraft?.expressionEngine?.narrativeVoice?.structureBias || 'FLOWING'}
+            - Lexical Density: ${profileToUse?.tailorDraft?.expressionEngine?.narrativeVoice?.lexicalDensity}/10
+            - Restraint Level: ${profileToUse?.tailorDraft?.expressionEngine?.narrativeVoice?.restraintLevel}/10
+            - Voice Notes: ${profileToUse?.tailorDraft?.expressionEngine?.narrativeVoice?.voiceNotes || 'No specific notes.'}
             
             ZINE STRUCTURE & OUTPUT SPECIFICATION:
             You must generate a highly structured, editorial artifact. Every field must be meticulously crafted.
@@ -186,7 +231,8 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
             13. originalThought: The raw "debris" that started it (a brief summary of the user's input).
             14. poetic_provocation: A final, stinging, and insightful question to leave the user with.
             15. pages: 3-5 distinct "pages" of the zine, each containing a 'headline', 'bodyCopy', an 'imagePrompt', and a 'supportingText' (REQUIRED for the last three pages). These should expand on the themes in the oracular_mirror. Keep each 'bodyCopy' under 200 words.
-            16. archetype_weights: An object with keys 'Architect', 'Dreamer', 'Archivist', 'Catalyst' and numeric values summing to 1.
+            16. sonic_layer: A detailed, evocative prompt for an ambient soundscape that reflects the zine's aesthetic. Describe the textures, instruments, mood, and temporal qualities (e.g., "A low-frequency industrial hum layered with the distant, reverb-soaked sound of a cello playing a minor key melody, punctuated by the sharp, metallic click of a typewriter").
+            17. archetype_weights: An object with keys 'Architect', 'Dreamer', 'Archivist', 'Catalyst' and numeric values summing to 1.
             
             Ensure the output is sophisticated, editorial, and intellectually grounded. Avoid all business jargon. Keep the 'oracular_mirror' under 500 words.`;
 
@@ -194,18 +240,25 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
                 Tone: ${tone}.
                 User Context: ${profileContext}.
                 Input: "${text}".
+                ${isTaskMode ? `CRITICAL: This is a TASK-BASED QUERY. Prioritize completing the task described in the input.` : ''}
                 
                 ${zineManifestoPrompt}`;
             
             // Add text prompt as the last part
             parts.push({ text: textPrompt });
 
+            const tools: any[] = [];
+            if (useSearch) tools.push({ googleSearch: {} });
+            if (useMaps) tools.push({ googleMaps: {} });
+
             const response = await ai.models.generateContent({
                 model: model,
                 contents: parts,
                 config: {
-                    temperature: profile?.tailorDraft?.generationTemperature ?? 0.8,
+                    temperature: profileToUse?.tailorDraft?.generationTemperature ?? 0.8,
                     responseMimeType: "application/json",
+                    thinkingConfig: useDeep ? { thinkingLevel: ThinkingLevel.HIGH } : undefined,
+                    tools: tools.length > 0 ? tools : undefined,
                     responseSchema: {
                         type: Type.OBJECT,
                         properties: {
@@ -278,9 +331,10 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
                                     required: ["headline", "bodyCopy", "imagePrompt", "supportingText"]
                                 } 
                             },
+                            sonic_layer: { type: Type.STRING },
                             archetype_weights: { type: Type.OBJECT }
                         },
-                        required: ["title", "headlines", "vocal_summary_blurb", "header_image_prompt", "oracular_mirror", "strategic_hypothesis", "resonance_score", "semiotic_signals", "aesthetic_touchpoints", "celestial_calibration", "visual_plates", "roadmap", "originalThought", "poetic_provocation", "pages", "archetype_weights"]
+                        required: ["title", "headlines", "vocal_summary_blurb", "header_image_prompt", "oracular_mirror", "strategic_hypothesis", "resonance_score", "semiotic_signals", "aesthetic_touchpoints", "celestial_calibration", "visual_plates", "roadmap", "originalThought", "poetic_provocation", "pages", "sonic_layer", "archetype_weights"]
                     }
                 }
             });
@@ -405,6 +459,7 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
         });
     } catch (error) {
         console.error("MIMI // Zine Generation Error:", error);
+        triggerAlert("Failed to generate zine. Please check your connection or try again later.", "error");
         throw error;
     }
 };

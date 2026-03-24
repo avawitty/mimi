@@ -5,7 +5,16 @@ import { Auth, getAuth } from "firebase/auth";
 import { Firestore, initializeFirestore, getFirestore } from "firebase/firestore";
 import { FirebaseStorage, getStorage } from "firebase/storage";
 import { getAnalytics, Analytics, isSupported } from "firebase/analytics";
-import firebaseConfig from "../firebase-applet-config.json";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA5ugvWqsO63IKlXDDeADLBr_aNRDMG5O8",
+  authDomain: "gen-lang-client-02106746-1e8ee.firebaseapp.com",
+  databaseURL: "https://gen-lang-client-0210674664-default-rtdb.firebaseio.com",
+  projectId: "gen-lang-client-0210674664",
+  storageBucket: "gen-lang-client-0210674664.firebasestorage.app",
+  messagingSenderId: "98167672430",
+  appId: "1:98167672430:web:2ab61bd54e3bbc298fe07f"
+};
 
 const apps = getApps();
 export let app: FirebaseApp;
@@ -18,7 +27,7 @@ try {
 }
 
 // TARGET DATABASE
-const TARGET_DB_ID = firebaseConfig.firestoreDatabaseId || "(default)";
+const TARGET_DB_ID = "ai-studio-6d7c4a54-8086-473c-9ba1-b64d035b37c5";
 
 // MIMI // REGISTRY AUDIT
 if (typeof window !== 'undefined') {

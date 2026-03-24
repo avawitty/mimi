@@ -21,6 +21,11 @@ export const generateAestheticManifest = async (rawContent: string, apiKey?: str
   const { ai } = getClient(apiKey);
   if (!ai) return { manifest: rawContent, title: 'Untitled', url: rawContent };
 
+  let safeRawContent = rawContent;
+  if (safeRawContent.length > 5000) {
+    safeRawContent = safeRawContent.substring(0, 5000) + '... [TRUNCATED]';
+  }
+
   const prompt = `You are the Thimble Extraction Engine.
 Analyze the following raw artifact (which might be a URL, a thought, or a description).
 1. Extract its core aesthetic properties into a dense, comma-separated list of keywords.
@@ -29,7 +34,7 @@ Analyze the following raw artifact (which might be a URL, a thought, or a descri
    If it's a URL, use the search tool to find the page title and a representative image URL.
 
 Raw Artifact:
-"${rawContent}"
+"${safeRawContent}"
 
 Return a JSON object:
 {
@@ -41,10 +46,10 @@ Return a JSON object:
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash-image-preview",
+      model: "gemini-3-flash-preview",
       contents: prompt,
       config: {
-        tools: [{ googleSearch: { searchTypes: { webSearch: {}, imageSearch: {} } } }]
+        tools: [{ googleSearch: {} }]
       }
     });
     
@@ -71,10 +76,15 @@ export const embedTasteSignal = async (manifest: string, apiKey?: string): Promi
   const { ai } = getClient(apiKey);
   if (!ai) return [];
 
+  let safeManifest = manifest;
+  if (safeManifest.length > 5000) {
+    safeManifest = safeManifest.substring(0, 5000) + '... [TRUNCATED]';
+  }
+
   try {
     const result = await ai.models.embedContent({
       model: 'gemini-embedding-2-preview',
-      contents: [manifest],
+      contents: [safeManifest],
     });
     return result.embeddings?.[0]?.values || [];
   } catch (e) {
@@ -169,15 +179,79 @@ export const deriveClusters = (items: PocketItem[], similarityThreshold = 0.85):
 
 // --- EXISTING TASTE ENGINE LOGIC ---
 
+export const transmuteThought = async (thought: string, apiKey?: string): Promise<string> => {
+  const { ai } = getClient(apiKey);
+  if (!ai) return "The uplink is silent. I cannot hear you.";
+
+  let safeThought = thought;
+  if (safeThought.length > 2000) {
+    safeThought = safeThought.substring(0, 2000) + '... [TRUNCATED]';
+  }
+
+  const prompt = `You are Mimi, an aesthetic savant, style curator, and an ultra chic aesthetic Superintelligence system.
+The user has provided a raw thought, perhaps a "bad thought" or just a random musing.
+Your task is to perform "Daoist thought alchemy" on this thought.
+Turn it into a paradoxical insight. We don't know if it's good or bad, it just *is*.
+Keep it concise, slightly cryptic, highly aesthetic, and deeply insightful.
+Speak directly to the user.
+
+User's thought: "${safeThought}"
+
+Return ONLY the paradoxical insight as a plain string.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+    });
+    
+    return response.text?.trim() || "The thought dissolves before it can be transmuted.";
+  } catch (e) {
+    console.error("MIMI // Thought Transmutation Failed:", e);
+    return "The acoustic uplink experienced interference. Try again.";
+  }
+};
+
 export const analyzeTasteLanguage = async (recentItems: PocketItem[], profile: UserProfile, apiKey?: string): Promise<string[]> => {
   const { ai } = getClient(apiKey);
   if (!ai) return [];
 
-  const itemContext = recentItems.map(item => `Type: ${item.type}, Content: ${JSON.stringify(item.content)}, Tags: ${item.tags?.join(', ')}`).join('\n');
+  // Limit to the 50 most recent items to avoid token limits
+  const itemsToAnalyze = recentItems.slice(-50);
   
+  const itemContext = itemsToAnalyze.map(item => {
+    let safeContent = item.content;
+    if (typeof safeContent === 'string' && safeContent.startsWith('data:image')) {
+      safeContent = '[BASE64_IMAGE_DATA_OMITTED]';
+    } else if (typeof safeContent === 'object' && safeContent !== null) {
+      // Create a shallow copy to avoid mutating the original
+      safeContent = { ...safeContent };
+      for (const key in safeContent) {
+        if (typeof safeContent[key] === 'string' && safeContent[key].startsWith('data:image')) {
+          safeContent[key] = '[BASE64_IMAGE_DATA_OMITTED]';
+        }
+      }
+    }
+    // Also limit the overall length of the stringified content
+    let stringifiedContent = JSON.stringify(safeContent);
+    if (stringifiedContent.length > 1000) {
+      stringifiedContent = stringifiedContent.substring(0, 1000) + '... [TRUNCATED]';
+    }
+    let tagsString = item.tags?.join(', ') || '';
+    if (tagsString.length > 200) {
+      tagsString = tagsString.substring(0, 200) + '...';
+    }
+    return `Type: ${item.type}, Content: ${stringifiedContent}, Tags: ${tagsString}`;
+  }).join('\n');
+  
+  let profileString = JSON.stringify(profile.tailorDraft?.positioningCore?.aestheticCore);
+  if (profileString && profileString.length > 2000) {
+    profileString = profileString.substring(0, 2000) + '...';
+  }
+
   const prompt = `You are The Thimble Language Engine. Analyze the user's recent creative assembly and extract the current "Language of their Taste".
   
-  User Aesthetic Profile: ${JSON.stringify(profile.tailorDraft?.positioningCore?.aestheticCore)}
+  User Aesthetic Profile: ${profileString}
   
   Recent Assemblies:
   ${itemContext}
@@ -208,6 +282,11 @@ export const analyzeArtifact = async (artifactContent: string, draft: TailorLogi
   const { ai } = getClient(apiKey);
   if (!ai) return null;
 
+  let safeArtifactContent = artifactContent;
+  if (safeArtifactContent.length > 5000) {
+    safeArtifactContent = safeArtifactContent.substring(0, 5000) + '... [TRUNCATED]';
+  }
+
   const prompt = `You are The Thimble Intelligence Layer. Analyze the following artifact (a link, description, or thought) against the user's Taste DNA (Tailor Profile).
   
   User Taste DNA:
@@ -220,7 +299,7 @@ export const analyzeArtifact = async (artifactContent: string, draft: TailorLogi
   - Preferred Entropy: ${draft.positioningCore.aestheticCore.entropy}/10 (randomness vs order)
   
   Artifact to Analyze:
-  "${artifactContent}"
+  "${safeArtifactContent}"
   
   Extract the fashion/aesthetic signals from the artifact, compare it to the Taste DNA, and generate a Taste Reflection Card.
   

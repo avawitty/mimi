@@ -116,10 +116,10 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId
   if (!profile) return null;
 
   const getStatusIcon = () => {
-    if (type === 'friend' || connectionStatus?.status === 'friends') return <Handshake size={12} className="text-emerald-500" title="Connected" />;
-    if (type === 'request' || connectionStatus?.status === 'request_sent' || connectionStatus?.status === 'request_received') return <Clock size={12} className="text-amber-500 animate-pulse" title="Pending" />;
-    if (type === 'following') return <Zap size={12} className="text-indigo-500" title="Resonating" />;
-    if (type === 'search' && connectionStatus?.status === 'none') return <Link2Off size={12} className="text-stone-300" title="Disconnected" />;
+    if (type === 'friend' || connectionStatus?.status === 'friends') return <span title="Connected"><Handshake size={12} className="text-emerald-500" /></span>;
+    if (type === 'request' || connectionStatus?.status === 'request_sent' || connectionStatus?.status === 'request_received') return <span title="Pending"><Clock size={12} className="text-amber-500 animate-pulse" /></span>;
+    if (type === 'following') return <span title="Resonating"><Zap size={12} className="text-indigo-500" /></span>;
+    if (type === 'search' && connectionStatus?.status === 'none') return <span title="Disconnected"><Link2Off size={12} className="text-stone-300" /></span>;
     return null;
   };
 

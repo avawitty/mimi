@@ -1,5 +1,6 @@
 import React from 'react';
 import { MaterialityConfig } from '../types';
+import { SemanticSteps } from './SemanticSteps';
 import { Layers, Type as FontIcon, SlidersHorizontal, Palette } from 'lucide-react';
 
 interface MaterialityPanelProps {
@@ -77,19 +78,15 @@ export const MaterialityPanel: React.FC<MaterialityPanelProps> = ({ config, onCh
         <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 flex items-center gap-2">
           <SlidersHorizontal size={12} /> Negative Space Density
         </span>
-        <input
-          type="range"
-          min="1"
-          max="10"
+        <SemanticSteps 
+          steps={[
+            { label: 'Sparse', value: 1 },
+            { label: 'Balanced', value: 5 },
+            { label: 'Dense', value: 10 }
+          ]}
           value={config.negativeSpaceDensity}
-          onChange={(e) => onChange({ ...config, negativeSpaceDensity: parseInt(e.target.value) })}
-          className="w-full h-1 bg-stone-100 dark:bg-stone-800 accent-nous-text dark:accent-white"
+          onChange={(val) => onChange({ ...config, negativeSpaceDensity: val })}
         />
-        <div className="flex justify-between text-[8px] font-mono text-stone-400 uppercase">
-          <span>Sparse</span>
-          <span>{config.negativeSpaceDensity}</span>
-          <span>Dense</span>
-        </div>
       </div>
     </div>
   );

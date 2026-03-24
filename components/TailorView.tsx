@@ -18,6 +18,9 @@ import { TailorPreview } from './TailorPreview';
 import { ShardAnalyzer } from './ShardAnalyzer';
 import { ScryLinkInput } from './ScryLinkInput';
 import { TasteBlueprintModule } from './TasteBlueprintModule';
+import { GlossaryTooltip } from './GlossaryTooltip';
+import { AestheticDial } from './AestheticDial';
+import { SemanticSteps } from './SemanticSteps';
 
 
 // Helper for Blob conversion
@@ -36,6 +39,7 @@ const dataURLtoBlob = (dataurl: string) => {
 const SILHOUETTE_OPTIONS = ['Architectural', 'Oversized', 'Fluid', 'Minimal', 'Sharp', 'Cinematic', 'Biomorphic', 'Brutalist', 'Deconstructed', 'Tailored'];
 const TEXTURE_OPTIONS = ['Raw Silk', 'Cold Concrete', 'Brushed Aluminum', 'Matte Ceramic', 'Heavy Wool', 'Distressed Leather', 'Paper Grain', 'Latex', 'Velvet', 'Glass'];
 const ERA_OPTIONS = ['90s Minimal', 'Y2K Cyber', '80s Power', 'Retro-Futurist', 'Post-Digital', 'Old Money Noir', 'Industrial', 'Romantic Goth', 'Bauhaus'];
+const PRESENTATION_OPTIONS = ['Feminine', 'Masculine', 'Androgynous', 'Fluid', 'Neutral'];
 const VOICE_REGISTERS = ['EDITORIAL', 'DIARY', 'MANIFESTO', 'ARCHIVE', 'TECHNICAL', 'POETIC', 'JOURNAL', 'BRIEF', 'NOIR', 'HIGH-FASHION', 'CYNICAL', 'OPTIMISTIC', 'MYSTERIOUS', 'AUTHORITATIVE'];
 const SENTENCE_STRUCTURES = ['CONCISE', 'FLOWING', 'CONTINUOUS', 'FRAGMENTED', 'STACCATO', 'ACADEMIC', 'MINIMAL', 'VERBOSE'];
 const EMOTIONAL_TEMPERATURES = ['DETACHED', 'CLINICAL', 'RESTRAINED', 'OBSERVATIONAL', 'INTIMATE', 'VISCERAL', 'WARM', 'PASSIONATE', 'COLD'];
@@ -67,8 +71,9 @@ const VISUAL_PRESETS = [
       expressionEngine: {
         chromaticRegistry: { baseNeutral: '#FDFBF7', accentSignal: '#1C1917', primaryPalette: [{ name: 'Ink', hex: '#000000', descriptor: 'Preset' }] },
         typographyIntent: { styleDescription: 'Cormorant Garamond', weightPreference: 'Light' },
-        narrativeVoice: { emotionalTemperature: 'CLINICAL', structureBias: 'CONCISE', lexicalDensity: 3, restraintLevel: 9, voiceNotes: '' }
+        narrativeVoice: { emotionalTemperature: 'CLINICAL', structureBias: 'CONCISE', lexicalDensity: 3, restraintLevel: 9, voiceNotes: '', tone: 'Clinical' }
       },
+      visual_guidance: { strict_palette: ['#FDFBF7', '#1C1917', '#000000'] },
       strategicVectors: {
         expansionTolerance: 2,
         fiscalVelocity: 'measured',
@@ -91,8 +96,9 @@ const VISUAL_PRESETS = [
       expressionEngine: {
         chromaticRegistry: { baseNeutral: '#262626', accentSignal: '#F97316', primaryPalette: [{ name: 'Steel', hex: '#94A3B8', descriptor: 'Preset' }] },
         typographyIntent: { styleDescription: 'Space Mono', weightPreference: 'Bold' },
-        narrativeVoice: { emotionalTemperature: 'DETACHED', structureBias: 'STACCATO', lexicalDensity: 6, restraintLevel: 7, voiceNotes: '' }
+        narrativeVoice: { emotionalTemperature: 'DETACHED', structureBias: 'STACCATO', lexicalDensity: 6, restraintLevel: 7, voiceNotes: '', tone: 'Detached' }
       },
+      visual_guidance: { strict_palette: ['#262626', '#F97316', '#94A3B8'] },
       strategicVectors: {
         expansionTolerance: 4,
         fiscalVelocity: 'measured',
@@ -115,8 +121,9 @@ const VISUAL_PRESETS = [
       expressionEngine: {
         chromaticRegistry: { baseNeutral: '#F5F5F4', accentSignal: '#78350F', primaryPalette: [{ name: 'Dust', hex: '#D6D3D1', descriptor: 'Preset' }] },
         typographyIntent: { styleDescription: 'Playfair Display', weightPreference: 'Medium' },
-        narrativeVoice: { emotionalTemperature: 'INTIMATE', structureBias: 'FLOWING', lexicalDensity: 7, restraintLevel: 5, voiceNotes: '' }
+        narrativeVoice: { emotionalTemperature: 'INTIMATE', structureBias: 'FLOWING', lexicalDensity: 7, restraintLevel: 5, voiceNotes: '', tone: 'Intimate' }
       },
+      visual_guidance: { strict_palette: ['#F5F5F4', '#78350F', '#D6D3D1'] },
       strategicVectors: {
         expansionTolerance: 6,
         fiscalVelocity: 'conservative',
@@ -139,8 +146,9 @@ const VISUAL_PRESETS = [
       expressionEngine: {
         chromaticRegistry: { baseNeutral: '#050505', accentSignal: '#10B981', primaryPalette: [{ name: 'Neon', hex: '#34D399', descriptor: 'Preset' }] },
         typographyIntent: { styleDescription: 'Space Grotesk', weightPreference: 'Regular' },
-        narrativeVoice: { emotionalTemperature: 'OBSERVATIONAL', structureBias: 'FRAGMENTED', lexicalDensity: 8, restraintLevel: 4, voiceNotes: '' }
+        narrativeVoice: { emotionalTemperature: 'OBSERVATIONAL', structureBias: 'FRAGMENTED', lexicalDensity: 8, restraintLevel: 4, voiceNotes: '', tone: 'Observational' }
       },
+      visual_guidance: { strict_palette: ['#050505', '#10B981', '#34D399'] },
       strategicVectors: {
         expansionTolerance: 8,
         fiscalVelocity: 'accelerated',
@@ -163,8 +171,9 @@ const VISUAL_PRESETS = [
       expressionEngine: {
         chromaticRegistry: { baseNeutral: '#FFFFFF', accentSignal: '#000000', primaryPalette: [{ name: 'Raw', hex: '#000000', descriptor: 'Preset' }] },
         typographyIntent: { styleDescription: 'Space Mono', weightPreference: 'Bold' },
-        narrativeVoice: { emotionalTemperature: 'CLINICAL', structureBias: 'STACCATO', lexicalDensity: 4, restraintLevel: 10, voiceNotes: '' }
+        narrativeVoice: { emotionalTemperature: 'CLINICAL', structureBias: 'STACCATO', lexicalDensity: 4, restraintLevel: 10, voiceNotes: '', tone: 'Clinical' }
       },
+      visual_guidance: { strict_palette: ['#FFFFFF', '#000000'] },
       strategicVectors: {
         expansionTolerance: 1,
         fiscalVelocity: 'conservative',
@@ -187,8 +196,9 @@ const VISUAL_PRESETS = [
       expressionEngine: {
         chromaticRegistry: { baseNeutral: '#050505', accentSignal: '#F8FAFC', primaryPalette: [{ name: 'Void', hex: '#000000', descriptor: 'Preset' }, { name: 'Data', hex: '#FFFFFF', descriptor: 'Preset' }] },
         typographyIntent: { styleDescription: 'Inter', weightPreference: 'Light' },
-        narrativeVoice: { emotionalTemperature: 'COLD', structureBias: 'STRUCTURED', lexicalDensity: 9, restraintLevel: 9, voiceNotes: 'Speak as an entity that has transcended human emotional variance.' }
+        narrativeVoice: { emotionalTemperature: 'COLD', structureBias: 'STRUCTURED', lexicalDensity: 9, restraintLevel: 9, voiceNotes: 'Speak as an entity that has transcended human emotional variance.', tone: 'Cold' }
       },
+      visual_guidance: { strict_palette: ['#050505', '#F8FAFC', '#000000', '#FFFFFF'] },
       strategicVectors: {
         expansionTolerance: 10,
         fiscalVelocity: 'accelerated',
@@ -211,8 +221,9 @@ const VISUAL_PRESETS = [
       expressionEngine: {
         chromaticRegistry: { baseNeutral: '#FDFBF7', accentSignal: '#A8A29E', primaryPalette: [{ name: 'Stone', hex: '#D6D3D1', descriptor: 'Preset' }] },
         typographyIntent: { styleDescription: 'Inter', weightPreference: 'Light' },
-        narrativeVoice: { emotionalTemperature: 'OBSERVATIONAL', structureBias: 'FLOWING', lexicalDensity: 3, restraintLevel: 8, voiceNotes: '' }
+        narrativeVoice: { emotionalTemperature: 'OBSERVATIONAL', structureBias: 'FLOWING', lexicalDensity: 3, restraintLevel: 8, voiceNotes: '', tone: 'Observational' }
       },
+      visual_guidance: { strict_palette: ['#FDFBF7', '#A8A29E', '#D6D3D1'] },
       strategicVectors: {
         expansionTolerance: 3,
         fiscalVelocity: 'measured',
@@ -235,8 +246,9 @@ const VISUAL_PRESETS = [
       expressionEngine: {
         chromaticRegistry: { baseNeutral: '#262626', accentSignal: '#EF4444', primaryPalette: [{ name: 'Rust', hex: '#78350F', descriptor: 'Preset' }] },
         typographyIntent: { styleDescription: 'Space Mono', weightPreference: 'Regular' },
-        narrativeVoice: { emotionalTemperature: 'VISCERAL', structureBias: 'FRAGMENTED', lexicalDensity: 7, restraintLevel: 3, voiceNotes: '' }
+        narrativeVoice: { emotionalTemperature: 'VISCERAL', structureBias: 'FRAGMENTED', lexicalDensity: 7, restraintLevel: 3, voiceNotes: '', tone: 'Visceral' }
       },
+      visual_guidance: { strict_palette: ['#262626', '#EF4444', '#78350F'] },
       strategicVectors: {
         expansionTolerance: 5,
         fiscalVelocity: 'measured',
@@ -259,8 +271,9 @@ const VISUAL_PRESETS = [
       expressionEngine: {
         chromaticRegistry: { baseNeutral: '#050505', accentSignal: '#38BDF8', primaryPalette: [{ name: 'Neon', hex: '#34D399', descriptor: 'Preset' }] },
         typographyIntent: { styleDescription: 'Space Grotesk', weightPreference: 'Bold' },
-        narrativeVoice: { emotionalTemperature: 'DETACHED', structureBias: 'STACCATO', lexicalDensity: 8, restraintLevel: 5, voiceNotes: '' }
+        narrativeVoice: { emotionalTemperature: 'DETACHED', structureBias: 'STACCATO', lexicalDensity: 8, restraintLevel: 5, voiceNotes: '', tone: 'Detached' }
       },
+      visual_guidance: { strict_palette: ['#050505', '#38BDF8', '#34D399'] },
       strategicVectors: {
         expansionTolerance: 7,
         fiscalVelocity: 'accelerated',
@@ -283,8 +296,9 @@ const VISUAL_PRESETS = [
       expressionEngine: {
         chromaticRegistry: { baseNeutral: '#000000', accentSignal: '#FFFFFF', primaryPalette: [{ name: 'Shadow', hex: '#1F2937', descriptor: 'Preset' }] },
         typographyIntent: { styleDescription: 'Cormorant Garamond', weightPreference: 'Bold' },
-        narrativeVoice: { emotionalTemperature: 'INTIMATE', structureBias: 'FLOWING', lexicalDensity: 8, restraintLevel: 6, voiceNotes: '' }
+        narrativeVoice: { emotionalTemperature: 'INTIMATE', structureBias: 'FLOWING', lexicalDensity: 8, restraintLevel: 6, voiceNotes: '', tone: 'Intimate' }
       },
+      visual_guidance: { strict_palette: ['#000000', '#FFFFFF', '#1F2937'] },
       strategicVectors: {
         expansionTolerance: 4,
         fiscalVelocity: 'conservative',
@@ -347,15 +361,24 @@ const primaryAnchorsMap = [
 const DEFAULT_DRAFT_FALLBACK: TailorLogicDraft = {
   positioningCore: {
     anchors: { culturalReferences: [], ideologicalBias: [], culturalSynthesis: [], trendClusters: [] },
-    aestheticCore: { silhouettes: [], materiality: [], eraBias: 'Post-Digital', density: 5, entropy: 5, tags: [] },
+    aestheticCore: { silhouettes: [], materiality: [], eraBias: 'Post-Digital', presentation: 'Androgynous', density: 5, entropy: 5, tags: [] },
     positioningAxis: 'Signal vs Noise',
     authorityClaim: 'Aesthetic infrastructure for long-term cultural positioning.',
     exclusionPrinciples: []
   },
+  algoDials: {
+    webScry: 50,
+    memorySynthesis: 50,
+    dissonance: 10,
+    binaryToSpectrum: 50
+  },
+  visual_guidance: {
+    strict_palette: []
+  },
   expressionEngine: {
     chromaticRegistry: { primaryPalette: [], baseNeutral: '#F2F1ED', accentSignal: '#1C1917' },
     typographyIntent: { styleDescription: 'Cormorant Garamond', weightPreference: 'Light' },
-    narrativeVoice: { emotionalTemperature: 'CLINICAL', structureBias: 'CONCISE', lexicalDensity: 5, restraintLevel: 8, voiceNotes: '' },
+    narrativeVoice: { emotionalTemperature: 'CLINICAL', structureBias: 'CONCISE', lexicalDensity: 5, restraintLevel: 8, voiceNotes: '', tone: 'Neutral' },
     brandIdentity: { fonts: { serif: 'Cormorant Garamond', sans: 'Inter', mono: 'Space Mono' }, logo: '', palette: ['#000000', '#FFFFFF'] }
   },
   strategicVectors: {
@@ -432,7 +455,7 @@ const PresetStrip: React.FC<{ options: string[], current: string | string[], onS
   </div>
 );
 
-const FieldGroup: React.FC<{ label: string; description?: string; children: React.ReactNode }> = ({ label, description, children }) => (
+const FieldGroup: React.FC<{ label: React.ReactNode; description?: string; children: React.ReactNode }> = ({ label, description, children }) => (
   <div className="space-y-4 pb-12 border-b border-black/5 dark:border-white/5 last:border-b-0 relative">
     <div className="tape-top"></div>
     <div className="space-y-1">
@@ -474,18 +497,19 @@ const BlueprintCard: React.FC<{ label: string; subLabel?: string; onClick: () =>
 
 // --- MAIN COMPONENT ---
 
-export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverrides }) => {
+export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?: () => void }> = ({ initialOverrides, onOverridesConsumed }) => {
   const { profile, updateProfile, personas, activePersonaId, switchPersona, updatePersona, user, enabledAlgos, toggleAlgo, deletePersona } = useUser();
   const activePersona = personas.find(p => p.id === activePersonaId);
   const [draft, setDraft] = useState<TailorLogicDraft | null>(null);
   
   const [viewMode, setViewMode] = useState<'blueprint' | 'edit'>('blueprint');
-  const [activeStep, setActiveStep] = useState<'positioning' | 'celestial' | 'aesthetic' | 'chromatic' | 'voice' | 'vectors' | 'shards' | 'brand' | 'settings'>('positioning');
+  const [activeStep, setActiveStep] = useState<'positioning' | 'celestial' | 'aesthetic' | 'chromatic' | 'voice' | 'vectors' | 'shards' | 'brand' | 'drift' | 'settings'>('positioning');
   
   const [isSaving, setIsSaving] = useState(false);
   const [isAuditing, setIsAuditing] = useState(false);
   const [auditReport, setAuditReport] = useState<TailorAuditReport | null>(null);
   const [showAuditOverlay, setShowAuditOverlay] = useState(false);
+  const [presetFilter, setPresetFilter] = useState({ eraBias: '', tone: '', strictPalette: '' });
   
   // --- AUTO-SAVE LOGIC ---
   const saveDraftToLocalStorage = useCallback((draftToSave: TailorLogicDraft) => {
@@ -529,11 +553,43 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
   const [personaKey, setPersonaKey] = useState('');
   const [aiSignature, setAiSignature] = useState('');
   const [isGeneratingSignature, setIsGeneratingSignature] = useState(false);
+  const [isExtractingGrid, setIsExtractingGrid] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const gridInputRef = useRef<HTMLInputElement>(null);
 
   // --- LOGIC ---
+
+  const handleGridUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setIsExtractingGrid(true);
+      try {
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+              const base64Data = reader.result as string;
+              const base64Image = base64Data.split(',')[1];
+              
+              const { extractTailorLogicFromGrid } = await import('../services/geminiService');
+              const logic = await extractTailorLogicFromGrid(base64Image, file.type);
+              
+              if (logic) {
+                  setDraft({ ...logic, draftStatus: 'provisional' });
+                  window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Grid Aesthetic Extracted.", icon: <Sparkles size={14} /> } }));
+              } else {
+                  throw new Error("Failed to extract logic");
+              }
+          };
+          reader.readAsDataURL(file);
+      } catch (err) {
+          console.error("MIMI // Grid Extraction Error:", err);
+          window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Grid Extraction Failed.", type: 'error' } }));
+      } finally {
+          setIsExtractingGrid(false);
+      }
+  };
 
   const generateAiSignature = async () => {
       if (!activePersona || !draft) return;
@@ -642,18 +698,27 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
   };
 
   useEffect(() => {
-    if (initialOverrides && draft && draft.strategicVectors) {
-        setDraft(prev => prev ? ({
-            ...prev,
-            strategicVectors: {
-                ...prev.strategicVectors,
-                desireVectors: {
-                    ...prev.strategicVectors.desireVectors,
-                    experiment: initialOverrides.suggestedExperiments || prev.strategicVectors.desireVectors.experiment,
-                    deepen: initialOverrides.identifiedDrifts ? [initialOverrides.identifiedDrifts] : prev.strategicVectors.desireVectors.deepen
+    if (initialOverrides) {
+        if (initialOverrides.positioningCore) {
+            // It's a full TailorLogicDraft
+            setDraft({ ...initialOverrides, draftStatus: 'provisional' });
+            window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Tailor Logic Extracted.", icon: <Sparkles size={14} /> } }));
+            if (onOverridesConsumed) onOverridesConsumed();
+        } else if (draft && draft.strategicVectors) {
+            // It's a partial override (e.g., from drift forecast)
+            setDraft(prev => prev ? ({
+                ...prev,
+                strategicVectors: {
+                    ...prev.strategicVectors,
+                    desireVectors: {
+                        ...prev.strategicVectors.desireVectors,
+                        experiment: initialOverrides.suggestedExperiments || prev.strategicVectors.desireVectors.experiment,
+                        deepen: initialOverrides.identifiedDrifts ? [initialOverrides.identifiedDrifts] : prev.strategicVectors.desireVectors.deepen
+                    }
                 }
-            }
-        }) : null);
+            }) : null);
+            if (onOverridesConsumed) onOverridesConsumed();
+        }
     }
   }, [initialOverrides]);
 
@@ -775,7 +840,8 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
     updateDraft({
       positioningCore: { ...draft.positioningCore, ...preset.config.positioningCore },
       expressionEngine: { ...draft.expressionEngine, ...preset.config.expressionEngine },
-      strategicVectors: { ...draft.strategicVectors, ...preset.config.strategicVectors }
+      strategicVectors: { ...draft.strategicVectors, ...preset.config.strategicVectors },
+      visual_guidance: { ...draft.visual_guidance, ...preset.config.visual_guidance }
     });
     window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: `${preset.name} Preset Applied.`, icon: preset.icon } }));
   };
@@ -956,7 +1022,7 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                 </p>
              </div>
              
-             {/* MASK SELECTOR */}
+             {/* MASK SELECTOR & ACTIONS */}
              <div className="flex flex-col items-end gap-2">
                  <div className="flex items-center gap-4 bg-white/50 dark:bg-stone-900/50 backdrop-blur-xl px-6 py-3 rounded-full border border-stone-200 dark:border-stone-800 shadow-sm group cursor-pointer hover:border-emerald-500 transition-all" onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }))}>
                     <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center animate-pulse"><User size={14} /></div>
@@ -973,11 +1039,99 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                     </div>
                     <ChevronRight size={14} className="text-stone-300 group-hover:text-emerald-500 transition-colors ml-2" />
                  </div>
-                 {viewMode === 'edit' && (
-                     <button onClick={() => setViewMode('blueprint')} className="text-stone-400 hover:text-emerald-500 font-sans text-[8px] uppercase tracking-widest font-black flex items-center gap-2">
-                         <LayoutGrid size={12} /> Return to Blueprint
+                 
+                 <div className="flex items-center gap-2">
+                     <input 
+                         type="file" 
+                         ref={gridInputRef} 
+                         onChange={handleGridUpload} 
+                         accept="image/*" 
+                         className="hidden" 
+                     />
+                     <button 
+                         onClick={() => gridInputRef.current?.click()} 
+                         disabled={isExtractingGrid}
+                         className="flex items-center gap-2 px-4 py-2 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 rounded-full font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+                     >
+                         {isExtractingGrid ? <Loader2 size={12} className="animate-spin" /> : <ImageIcon size={12} />}
+                         {isExtractingGrid ? 'Extracting...' : 'Extract from Social Grid'}
                      </button>
-                 )}
+                     
+                     {viewMode === 'edit' && (
+                         <button onClick={() => setViewMode('blueprint')} className="text-stone-400 hover:text-emerald-500 font-sans text-[8px] uppercase tracking-widest font-black flex items-center gap-2 px-2">
+                             <LayoutGrid size={12} /> Return to Blueprint
+                         </button>
+                     )}
+                     
+                     <button 
+                         onClick={async () => {
+                             if (!activePersona || !draft) return;
+                             setIsSaving(true);
+                             try {
+                                 await updatePersona({ ...activePersona, tailorDraft: draft });
+                                 window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Tailor Logic Saved.", icon: <Save size={14} /> } }));
+                             } catch (e) {
+                                 console.error(e);
+                                 window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Save Failed.", type: 'error' } }));
+                             } finally {
+                                 setIsSaving(false);
+                             }
+                         }}
+                         disabled={isSaving}
+                         className="flex items-center gap-2 px-4 py-2 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 rounded-full font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+                     >
+                         {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+                         {isSaving ? 'Saving...' : 'Save Logic'}
+                     </button>
+
+                     <button 
+                         onClick={() => {
+                             if (!draft) return;
+                             const blob = new Blob([JSON.stringify(draft, null, 2)], { type: 'application/json' });
+                             const url = URL.createObjectURL(blob);
+                             const a = document.createElement('a');
+                             a.href = url;
+                             a.download = `tailor_logic_${activePersona?.name || 'draft'}_${Date.now()}.json`;
+                             a.click();
+                             URL.revokeObjectURL(url);
+                         }}
+                         className="flex items-center gap-2 px-4 py-2 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 rounded-full font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+                     >
+                         <Download size={12} /> Export JSON
+                     </button>
+                     <label className="flex items-center gap-2 px-4 py-2 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 rounded-full font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors cursor-pointer">
+                         <Upload size={12} /> Import JSON
+                         <input 
+                             type="file" 
+                             accept=".json" 
+                             className="hidden" 
+                             onChange={(e) => {
+                                 const file = e.target.files?.[0];
+                                 if (!file) return;
+                                 const reader = new FileReader();
+                                 reader.onload = (event) => {
+                                     try {
+                                         const json = JSON.parse(event.target?.result as string);
+                                         if (json && typeof json === 'object' && 'positioningCore' in json) {
+                                             setDraft({ ...(json as TailorLogicDraft), draftStatus: 'provisional' });
+                                             window.dispatchEvent(new CustomEvent('mimi:registry_alert', {
+                                                 detail: { message: 'Tailor Logic imported successfully.', type: 'success' }
+                                             }));
+                                         } else {
+                                             throw new Error("Invalid format");
+                                         }
+                                     } catch (err) {
+                                         window.dispatchEvent(new CustomEvent('mimi:registry_alert', {
+                                             detail: { message: 'Failed to parse JSON file.', type: 'error' }
+                                         }));
+                                     }
+                                 };
+                                 reader.readAsText(file);
+                                 e.target.value = ''; // Reset input
+                             }}
+                         />
+                     </label>
+                 </div>
              </div>
           </div>
         </header>
@@ -1086,12 +1240,24 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                     <p className="font-serif italic text-xl">{draft.positioningCore.aestheticCore.eraBias || "Undefined"}</p>
                                 </div>
                                 <div className="space-y-2">
-                                    <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Density</span>
-                                    <p className="font-serif italic text-xl">{draft.positioningCore.aestheticCore.density}/10</p>
+                                    <GlossaryTooltip 
+                                      term="Density" 
+                                      poeticMeaning="The visual weight and concentration of elements within the frame." 
+                                      functionalMeaning="Controls the amount of detail, objects, and visual information packed into the generated output."
+                                    >
+                                      <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Density</span>
+                                    </GlossaryTooltip>
+                                    <p className="font-serif italic text-xl">{draft.positioningCore.aestheticCore.density || 5}/10</p>
                                 </div>
                                 <div className="space-y-2">
-                                    <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Entropy</span>
-                                    <p className="font-serif italic text-xl">{draft.positioningCore.aestheticCore.entropy}/10</p>
+                                    <GlossaryTooltip 
+                                      term="Entropy" 
+                                      poeticMeaning="The degree of chaos and unpredictability in the visual translation." 
+                                      functionalMeaning="Determines how strictly the AI adheres to conventional logic versus introducing random, surreal elements."
+                                    >
+                                      <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Entropy</span>
+                                    </GlossaryTooltip>
+                                    <p className="font-serif italic text-xl">{draft.positioningCore.aestheticCore.entropy || 5}/10</p>
                                 </div>
                             </div>
                         </BlueprintCard>
@@ -1138,8 +1304,20 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                     <span className="px-3 py-1 bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-full font-sans text-[7px] uppercase font-black">{draft.expressionEngine.narrativeVoice.structureBias}</span>
                                 </div>
                                 <div className="flex gap-4 font-serif italic text-stone-500 text-xs">
-                                    <span>Lexical: {draft.expressionEngine.narrativeVoice.lexicalDensity}/10</span>
-                                    <span>Restraint: {draft.expressionEngine.narrativeVoice.restraintLevel}/10</span>
+                                    <GlossaryTooltip 
+                                      term="Lexical Density" 
+                                      poeticMeaning="The thickness of the vocabulary, from sparse air to dense earth." 
+                                      functionalMeaning="A score from 1-10 indicating the complexity and rarity of the vocabulary used in the generated text."
+                                    >
+                                      <span>Lexical: {draft.expressionEngine.narrativeVoice.lexicalDensity || 5}/10</span>
+                                    </GlossaryTooltip>
+                                    <GlossaryTooltip 
+                                      term="Restraint Level" 
+                                      poeticMeaning="The tension of the unsaid holding back the flood." 
+                                      functionalMeaning="A score from 1-10 indicating how much emotion or detail is withheld versus explicitly stated."
+                                    >
+                                      <span>Restraint: {draft.expressionEngine.narrativeVoice.restraintLevel || 5}/10</span>
+                                    </GlossaryTooltip>
                                 </div>
                                 {draft.expressionEngine.narrativeVoice.voiceNotes && (
                                     <p className="font-mono text-[8px] text-stone-400 uppercase tracking-widest border-t border-stone-100 dark:border-stone-800 pt-2 truncate">
@@ -1216,7 +1394,7 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                 >
                     {/* SIDEBAR NAV */}
                     <nav className="w-full md:w-64 bg-stone-50 dark:bg-black/20 border-b md:border-b-0 md:border-r border-stone-200 dark:border-stone-800 p-6 flex flex-row md:flex-col gap-2 overflow-x-auto no-scrollbar md:overflow-visible shrink-0">
-                        {['positioning', 'celestial', 'aesthetic', 'chromatic', 'voice', 'vectors', 'shards', 'brand', 'settings'].map(step => (
+                        {['positioning', 'celestial', 'aesthetic', 'chromatic', 'voice', 'vectors', 'shards', 'brand', 'drift', 'settings'].map(step => (
                             <button
                                 key={step}
                                 onClick={() => setActiveStep(step as any)}
@@ -1323,18 +1501,90 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                     <>
                                         <p className="font-serif italic text-stone-500 mb-8">Define the physics of your visual world.</p>
                                         
-                                        <FieldGroup label="Visual Presets" description="Apply a combination of stylistic elements.">
-                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-                                                {VISUAL_PRESETS.map(p => (
-                                                    <button key={p.name} onClick={() => applyVisualPreset(p)} className="p-4 border border-stone-200 dark:border-stone-800 rounded-sm hover:border-emerald-500 transition-all group flex flex-col items-center gap-3">
-                                                        <div className="text-stone-400 group-hover:text-emerald-500 transition-colors">{p.icon}</div>
-                                                        <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 group-hover:text-emerald-500">{p.name}</span>
+                                        <FieldGroup label="Visual Presets" description="Apply a combination of stylistic elements. Use filters to discover specific logic.">
+                                            <div className="flex flex-col md:flex-row gap-2 mb-4">
+                                                <select 
+                                                    value={presetFilter.eraBias} 
+                                                    onChange={e => setPresetFilter(prev => ({ ...prev, eraBias: e.target.value }))}
+                                                    className="flex-1 bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-sans text-[10px] uppercase tracking-widest text-stone-500 focus:outline-none focus:border-emerald-500"
+                                                >
+                                                    <option value="">All Eras</option>
+                                                    {Array.from(new Set(VISUAL_PRESETS.map(p => p.config.positioningCore.aestheticCore.eraBias))).map(era => (
+                                                        <option key={era} value={era}>{era}</option>
+                                                    ))}
+                                                </select>
+                                                <select 
+                                                    value={presetFilter.tone} 
+                                                    onChange={e => setPresetFilter(prev => ({ ...prev, tone: e.target.value }))}
+                                                    className="flex-1 bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-sans text-[10px] uppercase tracking-widest text-stone-500 focus:outline-none focus:border-emerald-500"
+                                                >
+                                                    <option value="">All Tones</option>
+                                                    {Array.from(new Set(VISUAL_PRESETS.map(p => p.config.expressionEngine.narrativeVoice.tone).filter(Boolean))).map(tone => (
+                                                        <option key={tone} value={tone}>{tone}</option>
+                                                    ))}
+                                                </select>
+                                                <select 
+                                                    value={presetFilter.strictPalette} 
+                                                    onChange={e => setPresetFilter(prev => ({ ...prev, strictPalette: e.target.value }))}
+                                                    className="flex-1 bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-sans text-[10px] uppercase tracking-widest text-stone-500 focus:outline-none focus:border-emerald-500"
+                                                >
+                                                    <option value="">All Palettes</option>
+                                                    {Array.from(new Set(VISUAL_PRESETS.map(p => p.config.visual_guidance?.strict_palette?.join(', ')).filter(Boolean))).map(palette => (
+                                                        <option key={palette} value={palette}>{palette}</option>
+                                                    ))}
+                                                </select>
+                                                {(presetFilter.eraBias || presetFilter.tone || presetFilter.strictPalette) && (
+                                                    <button 
+                                                        onClick={() => setPresetFilter({ eraBias: '', tone: '', strictPalette: '' })}
+                                                        className="p-2 text-stone-400 hover:text-emerald-500 transition-colors"
+                                                        title="Clear Filters"
+                                                    >
+                                                        <X size={14} />
                                                     </button>
-                                                ))}
+                                                )}
+                                            </div>
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                                                {VISUAL_PRESETS.filter(p => {
+                                                    if (presetFilter.eraBias && p.config.positioningCore.aestheticCore.eraBias !== presetFilter.eraBias) return false;
+                                                    if (presetFilter.tone && p.config.expressionEngine.narrativeVoice.tone !== presetFilter.tone) return false;
+                                                    if (presetFilter.strictPalette && p.config.visual_guidance?.strict_palette?.join(', ') !== presetFilter.strictPalette) return false;
+                                                    return true;
+                                                }).map(p => {
+                                                    const isSelected = draft?.positioningCore.aestheticCore.silhouettes.join(',') === p.config.positioningCore.aestheticCore.silhouettes.join(',') &&
+                                                                       draft?.positioningCore.aestheticCore.eraBias === p.config.positioningCore.aestheticCore.eraBias;
+                                                    return (
+                                                      <button key={p.name} onClick={() => applyVisualPreset(p)} className={`p-4 border rounded-sm transition-all group flex flex-col items-center gap-3 relative ${isSelected ? 'border-emerald-500 bg-emerald-500/5' : 'border-stone-200 dark:border-stone-800 hover:border-emerald-500'}`}>
+                                                          <div className={`transition-colors ${isSelected ? 'text-emerald-500' : 'text-stone-400 group-hover:text-emerald-500'}`}>{p.icon}</div>
+                                                          <span className={`font-sans text-[8px] uppercase tracking-widest font-black transition-colors ${isSelected ? 'text-emerald-500' : 'text-stone-400 group-hover:text-emerald-500'}`}>{p.name}</span>
+                                                          {isSelected && <CheckCircle size={12} className="text-emerald-500 absolute top-2 right-2" />}
+                                                      </button>
+                                                    );
+                                                })}
+                                                {VISUAL_PRESETS.filter(p => {
+                                                    if (presetFilter.eraBias && p.config.positioningCore.aestheticCore.eraBias !== presetFilter.eraBias) return false;
+                                                    if (presetFilter.tone && p.config.expressionEngine.narrativeVoice.tone !== presetFilter.tone) return false;
+                                                    if (presetFilter.strictPalette && p.config.visual_guidance?.strict_palette?.join(', ') !== presetFilter.strictPalette) return false;
+                                                    return true;
+                                                }).length === 0 && (
+                                                    <div className="col-span-full py-8 text-center text-stone-400 font-serif italic">
+                                                        No presets match the selected filters.
+                                                    </div>
+                                                )}
                                             </div>
                                         </FieldGroup>
 
-                                        <FieldGroup label="Typographic DNA" description="Import from Google Fonts. Type specific font name to fetch and preview.">
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Typographic DNA" 
+                                              poeticMeaning="The shape of your voice." 
+                                              functionalMeaning="Import from Google Fonts. Type specific font name to fetch and preview."
+                                            >
+                                              <span>Typographic DNA</span>
+                                            </GlossaryTooltip>
+                                          }
+                                          description="Import from Google Fonts. Type specific font name to fetch and preview."
+                                        >
                                             <div className="grid grid-cols-2 gap-4 mb-4">
                                                 {availableFonts.map(f => (
                                                     <button key={f.name} onClick={() => updateExpression('typographyIntent', { ...draft.expressionEngine.typographyIntent, styleDescription: f.name })} className={`text-left p-4 border rounded-sm transition-all ${draft.expressionEngine.typographyIntent.styleDescription === f.name ? 'border-emerald-500 bg-emerald-50/10' : 'border-stone-200 dark:border-stone-800'}`}>
@@ -1350,16 +1600,60 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                             {draft.expressionEngine.typographyIntent.styleDescription && <p className="mt-4 text-sm text-stone-400 font-serif italic">Mimi will inject the Google Font stylesheet immediately.</p>}
                                         </FieldGroup>
 
-                                        <FieldGroup label="Silhouettes">
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Silhouettes" 
+                                              poeticMeaning="The shape of your shadow against the cultural wall." 
+                                              functionalMeaning="Defines the primary structural forms and outlines present in the generated visuals."
+                                            >
+                                              <span>Silhouettes</span>
+                                            </GlossaryTooltip>
+                                          }
+                                        >
                                             <PresetStrip options={SILHOUETTE_OPTIONS} current={draft.positioningCore.aestheticCore.silhouettes} onSelect={(v) => toggleOption('silhouettes', v)} onAddCustom={(v) => addCustomOption('silhouettes', v)} customPlaceholder="Add custom silhouette..." />
                                         </FieldGroup>
-                                        <FieldGroup label="Materiality">
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Materiality" 
+                                              poeticMeaning="The tactile truth of the digital surface." 
+                                              functionalMeaning="Specifies the textures, fabrics, and physical substances that dominate the aesthetic."
+                                            >
+                                              <span>Materiality</span>
+                                            </GlossaryTooltip>
+                                          }
+                                        >
                                             <PresetStrip options={TEXTURE_OPTIONS} current={draft.positioningCore.aestheticCore.materiality} onSelect={(v) => toggleOption('materiality', v)} onAddCustom={(v) => addCustomOption('materiality', v)} customPlaceholder="Add custom material..." />
                                         </FieldGroup>
-                                        <FieldGroup label="Era Bias">
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Era Bias" 
+                                              poeticMeaning="The temporal anchor of the aesthetic." 
+                                              functionalMeaning="Sets the historical or futuristic time period that influences the visual style (e.g., 90s Minimal, Y2K Cyber, Post-Digital)."
+                                            >
+                                              <span>Era Bias</span>
+                                            </GlossaryTooltip>
+                                          }
+                                        >
                                             <PresetStrip options={ERA_OPTIONS} current={draft.positioningCore.aestheticCore.eraBias} onSelect={(v) => updatePositioning('aestheticCore', { ...draft.positioningCore.aestheticCore, eraBias: v })} onAddCustom={(v) => updatePositioning('aestheticCore', { ...draft.positioningCore.aestheticCore, eraBias: v })} customPlaceholder="Add specific era..." />
                                         </FieldGroup>
-                                        <FieldGroup label="Tags" description="Comma-separated keywords for generation.">
+                                        <FieldGroup label="Form & Presentation" description="The gender expression or structural presentation of the aesthetic.">
+                                            <PresetStrip options={PRESENTATION_OPTIONS} current={draft.positioningCore.aestheticCore.presentation || 'Androgynous'} onSelect={(v) => updatePositioning('aestheticCore', { ...draft.positioningCore.aestheticCore, presentation: v })} onAddCustom={(v) => updatePositioning('aestheticCore', { ...draft.positioningCore.aestheticCore, presentation: v })} customPlaceholder="Add specific presentation..." />
+                                        </FieldGroup>
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Tags" 
+                                              poeticMeaning="The whispers that summon the ghost." 
+                                              functionalMeaning="Comma-separated keywords used to guide the AI generation process."
+                                            >
+                                              <span>Tags</span>
+                                            </GlossaryTooltip>
+                                          }
+                                          description="Comma-separated keywords for generation."
+                                        >
                                             <input 
                                                 value={(draft.positioningCore.aestheticCore.tags || []).join(', ')} 
                                                 onChange={e => updatePositioning('aestheticCore', { ...draft.positioningCore.aestheticCore, tags: e.target.value.split(',').map(t => t.trim()) })} 
@@ -1367,37 +1661,76 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                                 placeholder="e.g. ethereal, glitch, chrome..." 
                                             />
                                         </FieldGroup>
-                                        <FieldGroup label="Density (1-10)" description="The amount of information, layers, and semiotic weight packed into a single artifact.">
-                                            <div className="flex items-center gap-4 mb-4">
-                                                <span className="font-mono text-xs">MINIMAL</span>
-                                                <input type="range" min="1" max="10" value={draft.positioningCore.aestheticCore.density} onChange={e => updatePositioning('aestheticCore', { ...draft.positioningCore.aestheticCore, density: parseInt(e.target.value) })} className="flex-1 h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-emerald-500" />
-                                                <span className="font-mono text-xs">MAXIMAL</span>
-                                            </div>
-                                            <span className="font-mono text-xs text-emerald-500">{draft.positioningCore.aestheticCore.density} / 10</span>
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Density" 
+                                              poeticMeaning="The visual weight and concentration of elements within the frame." 
+                                              functionalMeaning="Controls the amount of detail, objects, and visual information packed into the generated output."
+                                            >
+                                              <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Density (1-10)</label>
+                                            </GlossaryTooltip>
+                                          } 
+                                          description="The amount of information, layers, and semiotic weight packed into a single artifact."
+                                        >
+                                            <SemanticSteps 
+                                                steps={[
+                                                    { label: 'MINIMAL', value: 1 },
+                                                    { label: 'BALANCED', value: 4 },
+                                                    { label: 'DENSE', value: 7 },
+                                                    { label: 'MAXIMAL', value: 10 }
+                                                ]}
+                                                value={draft.positioningCore.aestheticCore.density || 5} 
+                                                onChange={val => updatePositioning('aestheticCore', { ...draft.positioningCore.aestheticCore, density: val })} 
+                                            />
                                         </FieldGroup>
 
-                                        <FieldGroup label="Entropy (1-10)" description="The degree of randomness, unpredictability, and unconventional logic applied to the translation.">
-                                            <div className="flex items-center gap-4 mb-4">
-                                                <span className="font-mono text-xs">STABLE</span>
-                                                <input type="range" min="1" max="10" value={draft.positioningCore.aestheticCore.entropy} onChange={e => updatePositioning('aestheticCore', { ...draft.positioningCore.aestheticCore, entropy: parseInt(e.target.value) })} className="flex-1 h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-emerald-500" />
-                                                <span className="font-mono text-xs">CHAOTIC</span>
-                                            </div>
-                                            <span className="font-mono text-xs text-emerald-500">{draft.positioningCore.aestheticCore.entropy} / 10</span>
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Entropy" 
+                                              poeticMeaning="The degree of chaos and unpredictability in the visual translation." 
+                                              functionalMeaning="Determines how strictly the AI adheres to conventional logic versus introducing random, surreal elements."
+                                            >
+                                              <span>Entropy (1-10)</span>
+                                            </GlossaryTooltip>
+                                          } 
+                                          description="The degree of randomness, unpredictability, and unconventional logic applied to the translation."
+                                        >
+                                            <SemanticSteps 
+                                                steps={[
+                                                    { label: 'STABLE', value: 1 },
+                                                    { label: 'STRUCTURED', value: 4 },
+                                                    { label: 'FLUID', value: 7 },
+                                                    { label: 'CHAOTIC', value: 10 }
+                                                ]}
+                                                value={draft.positioningCore.aestheticCore.entropy || 5} 
+                                                onChange={val => updatePositioning('aestheticCore', { ...draft.positioningCore.aestheticCore, entropy: val })} 
+                                            />
                                         </FieldGroup>
 
-                                        <FieldGroup label="Generation Temperature" description="Control the 'wildness' of AI generation. Lower values are more stable and grounded.">
-                                            <div className="flex items-center gap-4 mb-4">
-                                                <span className="font-mono text-xs">STABLE</span>
-                                                <input 
-                                                    type="range" 
-                                                    min="0" 
-                                                    max="100" 
-                                                    value={(draft.generationTemperature ?? 0.8) * 100} 
-                                                    onChange={e => updateDraft({ generationTemperature: parseInt(e.target.value) / 100 })} 
-                                                    className="flex-1 h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-emerald-500" 
-                                                />
-                                                <span className="font-mono text-xs">WILD</span>
-                                            </div>
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Generation Temperature" 
+                                              poeticMeaning="The fever of the machine." 
+                                              functionalMeaning="Controls the 'wildness' of AI generation. Lower values are more stable and grounded, higher values are more experimental and hallucinatory."
+                                            >
+                                              <span>Generation Temperature</span>
+                                            </GlossaryTooltip>
+                                          }
+                                          description="Control the 'wildness' of AI generation. Lower values are more stable and grounded."
+                                        >
+                                            <SemanticSteps 
+                                                steps={[
+                                                    { label: 'STABLE', value: 0 },
+                                                    { label: 'MEASURED', value: 33 },
+                                                    { label: 'CREATIVE', value: 66 },
+                                                    { label: 'WILD', value: 100 }
+                                                ]}
+                                                value={(draft.generationTemperature ?? 0.8) * 100} 
+                                                onChange={val => updateDraft({ generationTemperature: val / 100 })} 
+                                            />
                                             <p className="font-mono text-[8px] text-stone-400 uppercase tracking-widest mt-2">Current Resonance: {((draft.generationTemperature ?? 0.8) * 100).toFixed(0)}%</p>
                                         </FieldGroup>
 
@@ -1421,18 +1754,16 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Negative Space Density (1-10)</label>
-                                                    <div className="flex items-center gap-4">
-                                                        <span className="font-mono text-xs">TIGHT</span>
-                                                        <input 
-                                                            type="range" 
-                                                            min="1" 
-                                                            max="10" 
-                                                            value={draft.materialityConfig?.negativeSpaceDensity || 5} 
-                                                            onChange={e => updateDraft({ materialityConfig: { ...draft.materialityConfig, negativeSpaceDensity: parseInt(e.target.value) } })} 
-                                                            className="flex-1 h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-emerald-500" 
-                                                        />
-                                                        <span className="font-mono text-xs">AIRY</span>
-                                                    </div>
+                                                    <SemanticSteps 
+                                                        steps={[
+                                                            { label: 'TIGHT', value: 1 },
+                                                            { label: 'COMPACT', value: 4 },
+                                                            { label: 'AIRY', value: 7 },
+                                                            { label: 'EXPANSIVE', value: 10 }
+                                                        ]}
+                                                        value={draft.materialityConfig?.negativeSpaceDensity || 5} 
+                                                        onChange={val => updateDraft({ materialityConfig: { ...draft.materialityConfig, negativeSpaceDensity: val } })} 
+                                                    />
                                                     <span className="font-mono text-xs text-emerald-500">{draft.materialityConfig?.negativeSpaceDensity || 5} / 10</span>
                                                 </div>
                                             </div>
@@ -1455,7 +1786,18 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                             ))}
                                         </div>
 
-                                        <FieldGroup label="Base Neutral (Primary)" description="Your silence. Enter Hex or use picker.">
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Base Neutral (Primary)" 
+                                              poeticMeaning="The silence between the notes." 
+                                              functionalMeaning="The primary background or neutral color that grounds the aesthetic palette."
+                                            >
+                                              <span>Base Neutral (Primary)</span>
+                                            </GlossaryTooltip>
+                                          }
+                                          description="Your silence. Enter Hex or use picker."
+                                        >
                                             <div className="flex items-center gap-4">
                                                 <div className="relative">
                                                   <input type="color" value={draft.expressionEngine.chromaticRegistry.baseNeutral} onChange={e => updateExpression('chromaticRegistry', { ...draft.expressionEngine.chromaticRegistry, baseNeutral: e.target.value })} className="w-12 h-12 p-0 border-0 rounded-full cursor-pointer absolute inset-0 opacity-0" />
@@ -1464,7 +1806,18 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                                 <input value={draft.expressionEngine.chromaticRegistry.baseNeutral} onChange={e => updateExpression('chromaticRegistry', { ...draft.expressionEngine.chromaticRegistry, baseNeutral: e.target.value })} className="bg-transparent border-b border-stone-200 py-2 font-mono text-lg focus:outline-none focus:border-emerald-500" />
                                             </div>
                                         </FieldGroup>
-                                        <FieldGroup label="Accent Signal" description="Your alert. Enter Hex or use picker.">
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Accent Signal" 
+                                              poeticMeaning="The sudden flash of neon in the dark." 
+                                              functionalMeaning="The primary highlight color used to draw attention or signify action."
+                                            >
+                                              <span>Accent Signal</span>
+                                            </GlossaryTooltip>
+                                          }
+                                          description="Your alert. Enter Hex or use picker."
+                                        >
                                             <div className="flex items-center gap-4">
                                                 <div className="relative">
                                                   <input type="color" value={draft.expressionEngine.chromaticRegistry.accentSignal} onChange={e => updateExpression('chromaticRegistry', { ...draft.expressionEngine.chromaticRegistry, accentSignal: e.target.value })} className="w-12 h-12 p-0 border-0 rounded-full cursor-pointer absolute inset-0 opacity-0" />
@@ -1474,7 +1827,18 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                             </div>
                                         </FieldGroup>
                                         
-                                        <FieldGroup label="Extended Palette" description="Define the core signals.">
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Extended Palette" 
+                                              poeticMeaning="The full spectrum of your synthetic soul." 
+                                              functionalMeaning="A broader set of colors that define the brand's visual identity."
+                                            >
+                                              <span>Extended Palette</span>
+                                            </GlossaryTooltip>
+                                          }
+                                          description="Define the core signals."
+                                        >
                                             <div className="flex flex-wrap gap-4 mb-4">
                                                 {draft.expressionEngine.chromaticRegistry.primaryPalette.map((c, i) => (
                                                     <div key={i} className="group relative">
@@ -1502,7 +1866,17 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                 {activeStep === 'voice' && (
                                     <>
                                         <p className="font-serif italic text-stone-500 mb-8">How does this mask speak?</p>
-                                        <FieldGroup label="Emotional Temperature">
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Emotional Temperature" 
+                                              poeticMeaning="The heat radiating from the words." 
+                                              functionalMeaning="Sets the overall mood and affective resonance of the generated text (e.g., Clinical, Intimate, Visceral)."
+                                            >
+                                              <span>Emotional Temperature</span>
+                                            </GlossaryTooltip>
+                                          }
+                                        >
                                             <PresetStrip options={EMOTIONAL_TEMPERATURES} current={draft.expressionEngine.narrativeVoice.emotionalTemperature} onSelect={(v) => updateExpression('narrativeVoice', { ...draft.expressionEngine.narrativeVoice, emotionalTemperature: v })} />
                                             <textarea 
                                                 value={draft.expressionEngine.narrativeVoice.emotionalTemperature} 
@@ -1511,7 +1885,17 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                                 placeholder="Write-in emotional temperature..." 
                                             />
                                         </FieldGroup>
-                                        <FieldGroup label="Structure Bias">
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Structure Bias" 
+                                              poeticMeaning="The architectural rhythm of the sentence." 
+                                              functionalMeaning="Determines the syntactic flow, from short, punchy fragments to long, flowing prose."
+                                            >
+                                              <span>Structure Bias</span>
+                                            </GlossaryTooltip>
+                                          }
+                                        >
                                             <PresetStrip options={SENTENCE_STRUCTURES} current={draft.expressionEngine.narrativeVoice.structureBias} onSelect={(v) => updateExpression('narrativeVoice', { ...draft.expressionEngine.narrativeVoice, structureBias: v })} />
                                             <textarea 
                                                 value={draft.expressionEngine.narrativeVoice.structureBias} 
@@ -1521,22 +1905,52 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                             />
                                         </FieldGroup>
                                         
-                                        <FieldGroup label="Lexical Density (1-10)" description="Complexity and richness of vocabulary.">
-                                            <div className="flex items-center gap-4 mb-4">
-                                                <span className="font-mono text-xs">PLAIN</span>
-                                                <input type="range" min="1" max="10" value={draft.expressionEngine.narrativeVoice.lexicalDensity} onChange={e => updateExpression('narrativeVoice', { ...draft.expressionEngine.narrativeVoice, lexicalDensity: parseInt(e.target.value) })} className="flex-1 h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-emerald-500" />
-                                                <span className="font-mono text-xs">ACADEMIC</span>
-                                            </div>
-                                            <span className="font-mono text-xs text-emerald-500">{draft.expressionEngine.narrativeVoice.lexicalDensity} / 10</span>
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Lexical Density" 
+                                              poeticMeaning="The thickness of the vocabulary, from sparse air to dense earth." 
+                                              functionalMeaning="A score from 1-10 indicating the complexity and rarity of the vocabulary used in the generated text."
+                                            >
+                                              <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Lexical Density (1-10)</label>
+                                            </GlossaryTooltip>
+                                          } 
+                                          description="Complexity and richness of vocabulary."
+                                        >
+                                            <SemanticSteps 
+                                                steps={[
+                                                    { label: 'PLAIN', value: 1 },
+                                                    { label: 'ACCESSIBLE', value: 4 },
+                                                    { label: 'ACADEMIC', value: 7 },
+                                                    { label: 'VERBOSE', value: 10 }
+                                                ]}
+                                                value={draft.expressionEngine.narrativeVoice.lexicalDensity || 5} 
+                                                onChange={val => updateExpression('narrativeVoice', { ...draft.expressionEngine.narrativeVoice, lexicalDensity: val })} 
+                                            />
                                         </FieldGroup>
 
-                                        <FieldGroup label="Restraint Level (1-10)" description="How much is held back versus explicitly stated.">
-                                            <div className="flex items-center gap-4 mb-4">
-                                                <span className="font-mono text-xs">OPEN</span>
-                                                <input type="range" min="1" max="10" value={draft.expressionEngine.narrativeVoice.restraintLevel} onChange={e => updateExpression('narrativeVoice', { ...draft.expressionEngine.narrativeVoice, restraintLevel: parseInt(e.target.value) })} className="flex-1 h-1 bg-stone-200 rounded-lg appearance-none cursor-pointer accent-emerald-500" />
-                                                <span className="font-mono text-xs">CRYPTIC</span>
-                                            </div>
-                                            <span className="font-mono text-xs text-emerald-500">{draft.expressionEngine.narrativeVoice.restraintLevel} / 10</span>
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Restraint Level" 
+                                              poeticMeaning="The tension of the unsaid holding back the flood." 
+                                              functionalMeaning="A score from 1-10 indicating how much emotion or detail is withheld versus explicitly stated."
+                                            >
+                                              <span>Restraint Level (1-10)</span>
+                                            </GlossaryTooltip>
+                                          } 
+                                          description="How much is held back versus explicitly stated."
+                                        >
+                                            <SemanticSteps 
+                                                steps={[
+                                                    { label: 'OPEN', value: 1 },
+                                                    { label: 'EXPRESSIVE', value: 4 },
+                                                    { label: 'MEASURED', value: 7 },
+                                                    { label: 'CRYPTIC', value: 10 }
+                                                ]}
+                                                value={draft.expressionEngine.narrativeVoice.restraintLevel || 5} 
+                                                onChange={val => updateExpression('narrativeVoice', { ...draft.expressionEngine.narrativeVoice, restraintLevel: val })} 
+                                            />
                                         </FieldGroup>
 
                                         <FieldGroup label="Voice Notes" description="General directives for the narrative voice.">
@@ -1647,16 +2061,56 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                 {activeStep === 'vectors' && (
                                     <>
                                         <p className="font-serif italic text-stone-500 mb-8">Where is this taste moving towards?</p>
-                                        <FieldGroup label="More Of">
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="More Of" 
+                                              poeticMeaning="The gravitational pull of your desires." 
+                                              functionalMeaning="Concepts, themes, or visual elements you want to see amplified in future generations."
+                                            >
+                                              <span>More Of</span>
+                                            </GlossaryTooltip>
+                                          }
+                                        >
                                             <textarea value={draft.strategicVectors.desireVectors.moreOf} onChange={e => updateStrategic('desireVectors', { ...draft.strategicVectors.desireVectors, moreOf: e.target.value })} className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-xl h-24 resize-none focus:outline-none focus:border-emerald-500" placeholder="e.g. Silence, negative space..." />
                                         </FieldGroup>
-                                        <FieldGroup label="Less Of">
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Less Of" 
+                                              poeticMeaning="The noise you are trying to filter out." 
+                                              functionalMeaning="Concepts, themes, or visual elements you want to actively suppress or avoid."
+                                            >
+                                              <span>Less Of</span>
+                                            </GlossaryTooltip>
+                                          }
+                                        >
                                             <textarea value={draft.strategicVectors.desireVectors.lessOf} onChange={e => updateStrategic('desireVectors', { ...draft.strategicVectors.desireVectors, lessOf: e.target.value })} className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-xl h-24 resize-none focus:outline-none focus:border-red-500" placeholder="e.g. Noise, clutter..." />
                                         </FieldGroup>
-                                        <FieldGroup label="Experimenting With">
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Experimenting With" 
+                                              poeticMeaning="The edge of the map where monsters live." 
+                                              functionalMeaning="New, untested concepts or styles you are currently exploring."
+                                            >
+                                              <span>Experimenting With</span>
+                                            </GlossaryTooltip>
+                                          }
+                                        >
                                             <textarea value={draft.strategicVectors.desireVectors.experimentingWith} onChange={e => updateStrategic('desireVectors', { ...draft.strategicVectors.desireVectors, experimentingWith: e.target.value })} className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-xl h-24 resize-none focus:outline-none focus:border-indigo-500" placeholder="e.g. 3D renders, video essays..." />
                                         </FieldGroup>
-                                        <FieldGroup label="Fiscal Velocity">
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Fiscal Velocity" 
+                                              poeticMeaning="The speed at which value is consumed and discarded." 
+                                              functionalMeaning="A strategic indicator of how quickly the aesthetic should evolve or respond to trends."
+                                            >
+                                              <span>Fiscal Velocity</span>
+                                            </GlossaryTooltip>
+                                          }
+                                        >
                                             <PresetStrip 
                                                 options={['conservative', 'measured', 'accelerated']} 
                                                 current={draft.strategicVectors.fiscalVelocity} 
@@ -1701,7 +2155,17 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                     <>
                                         <p className="font-serif italic text-stone-500 mb-8">Define your visual assets and typographic hierarchy.</p>
                                         
-                                        <FieldGroup label="Logo Mark">
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Logo Mark" 
+                                              poeticMeaning="The sigil of your digital presence." 
+                                              functionalMeaning="Upload or paste an image URL to serve as the primary brand identifier."
+                                            >
+                                              <span>Logo Mark</span>
+                                            </GlossaryTooltip>
+                                          }
+                                        >
                                             <div 
                                                 className="border-2 border-dashed border-stone-200 dark:border-stone-800 rounded-sm p-8 text-center hover:border-emerald-500 transition-colors cursor-pointer group flex flex-col items-center gap-4"
                                                 onClick={() => logoInputRef.current?.click()}
@@ -1720,7 +2184,17 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                             <input type="file" ref={logoInputRef} onChange={handleLogoUpload} className="hidden" accept="image/*" />
                                         </FieldGroup>
 
-                                        <FieldGroup label="Typography System">
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Typography System" 
+                                              poeticMeaning="The architectural hierarchy of your words." 
+                                              functionalMeaning="Defines the specific fonts used for different textual elements (Serif, Sans, Mono)."
+                                            >
+                                              <span>Typography System</span>
+                                            </GlossaryTooltip>
+                                          }
+                                        >
                                             <div className="grid grid-cols-1 gap-6">
                                                 <div className="space-y-2">
                                                     <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Primary Serif (Headlines)</label>
@@ -1782,7 +2256,17 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                             </div>
                                         </FieldGroup>
 
-                                        <FieldGroup label="Brand Palette">
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Brand Palette" 
+                                              poeticMeaning="The colors of your synthetic aura." 
+                                              functionalMeaning="The core set of colors that define the brand's visual identity."
+                                            >
+                                              <span>Brand Palette</span>
+                                            </GlossaryTooltip>
+                                          }
+                                        >
                                             <div className="flex flex-wrap gap-4 mb-4">
                                                 {draft.expressionEngine.brandIdentity?.palette.map((hex, i) => (
                                                     <div key={i} className="group relative">
@@ -1806,6 +2290,102 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                                     </div>
                                                 </div>
                                             </div>
+                                        </FieldGroup>
+                                    </>
+                                )}
+
+                                {activeStep === 'drift' && (
+                                    <>
+                                        <p className="font-serif italic text-stone-500 mb-8">Monitor and control the aesthetic drift of your persona.</p>
+                                        
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Drift Vulnerability" 
+                                              poeticMeaning="The permeability of the mask to the winds of the zeitgeist." 
+                                              functionalMeaning="A score from 1-10 indicating how susceptible this persona is to external aesthetic influence and trends."
+                                            >
+                                              <span>Drift Vulnerability (1-10)</span>
+                                            </GlossaryTooltip>
+                                          } 
+                                          description="How susceptible is this persona to external aesthetic influence?"
+                                        >
+                                            <SemanticSteps 
+                                                steps={[
+                                                    { label: 'RIGID', value: 1 },
+                                                    { label: 'SELECTIVE', value: 4 },
+                                                    { label: 'OPEN', value: 7 },
+                                                    { label: 'FLUID', value: 10 }
+                                                ]}
+                                                value={draft.diagnostics?.driftVulnerability || 5} 
+                                                onChange={val => updateDraft({ diagnostics: { ...(draft.diagnostics || { contradictionFlags: [], dilutionRisks: [], authorityStrengthScore: 50, driftVulnerability: 5 }), driftVulnerability: val } })} 
+                                            />
+                                        </FieldGroup>
+
+                                        <FieldGroup label="Authority Strength Score" description="The overall coherence and distinctiveness of this persona.">
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex-1 h-2 bg-stone-200 dark:bg-stone-800 rounded-full overflow-hidden">
+                                                    <div 
+                                                        className={`h-full transition-all duration-500 ${(draft.diagnostics?.authorityStrengthScore || 50) < 40 ? 'bg-red-500' : (draft.diagnostics?.authorityStrengthScore || 50) < 70 ? 'bg-amber-500' : 'bg-emerald-500'}`} 
+                                                        style={{ width: `${draft.diagnostics?.authorityStrengthScore || 50}%` }}
+                                                    />
+                                                </div>
+                                                <span className={`font-mono text-xs font-bold ${(draft.diagnostics?.authorityStrengthScore || 50) < 40 ? 'text-red-500' : (draft.diagnostics?.authorityStrengthScore || 50) < 70 ? 'text-amber-500' : 'text-emerald-500'}`}>{draft.diagnostics?.authorityStrengthScore || 50}/100</span>
+                                            </div>
+                                        </FieldGroup>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                                            <FieldGroup label="Contradiction Flags" description="Conflicting directives in the current logic.">
+                                                {draft.diagnostics?.contradictionFlags && draft.diagnostics.contradictionFlags.length > 0 ? (
+                                                    <ul className="space-y-2">
+                                                        {draft.diagnostics.contradictionFlags.map((flag, i) => (
+                                                            <li key={i} className="flex items-start gap-2 text-sm">
+                                                                <ShieldAlert size={14} className="text-amber-500 mt-0.5 shrink-0" />
+                                                                <span className="font-serif italic text-stone-600 dark:text-stone-400">{flag}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                ) : (
+                                                    <p className="font-serif italic text-sm text-stone-400">No contradictions detected. The logic is coherent.</p>
+                                                )}
+                                            </FieldGroup>
+
+                                            <FieldGroup label="Dilution Risks" description="Areas where the persona might lose its edge.">
+                                                {draft.diagnostics?.dilutionRisks && draft.diagnostics.dilutionRisks.length > 0 ? (
+                                                    <ul className="space-y-2">
+                                                        {draft.diagnostics.dilutionRisks.map((risk, i) => (
+                                                            <li key={i} className="flex items-start gap-2 text-sm">
+                                                                <Info size={14} className="text-blue-500 mt-0.5 shrink-0" />
+                                                                <span className="font-serif italic text-stone-600 dark:text-stone-400">{risk}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                ) : (
+                                                    <p className="font-serif italic text-sm text-stone-400">No dilution risks detected. The persona is sharp.</p>
+                                                )}
+                                            </FieldGroup>
+                                        </div>
+
+                                        <FieldGroup label="Aesthetic Drift History" description="Recent shifts in your aesthetic profile.">
+                                            {profile?.tasteProfile?.audit_history && profile.tasteProfile.audit_history.length > 0 ? (
+                                                <div className="space-y-4">
+                                                    {profile.tasteProfile.audit_history.slice(-5).reverse().map((event, i) => (
+                                                        <div key={i} className="p-4 border border-stone-200 dark:border-stone-800 rounded-sm bg-stone-50 dark:bg-stone-900/50">
+                                                            <div className="flex justify-between items-center mb-2">
+                                                                <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-500">{event.type.replace('_', ' ')}</span>
+                                                                <span className="font-mono text-[8px] text-stone-400">{new Date(event.timestamp).toLocaleDateString()}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-4">
+                                                                <span className="font-serif italic text-sm text-stone-400 line-through">{event.before.archetype || event.before.color}</span>
+                                                                <ArrowRight size={12} className="text-emerald-500" />
+                                                                <span className="font-serif italic text-sm text-nous-text dark:text-white">{event.after.archetype || event.after.color}</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="font-serif italic text-sm text-stone-400">No significant drift detected yet. Keep generating zines to establish a baseline.</p>
+                                            )}
                                         </FieldGroup>
                                     </>
                                 )}
@@ -1891,7 +2471,18 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                             </div>
                                         </FieldGroup>
 
-                                        <FieldGroup label="Algo Firewall" description="Arm or disarm specific algorithmic functions for this mask.">
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Algo Firewall" 
+                                              poeticMeaning="The gatekeepers of the generative mind." 
+                                              functionalMeaning="Enable or disable specific AI capabilities and tools for this persona."
+                                            >
+                                              <span>Algo Firewall</span>
+                                            </GlossaryTooltip>
+                                          } 
+                                          description="Arm or disarm specific algorithmic functions for this mask."
+                                        >
                                             <div className="space-y-4">
                                                 {[
                                                     { id: 'zine_gen', name: 'Zine Synthesis', desc: 'The core engine for translating shards into editorial zines.' },
@@ -1919,6 +2510,117 @@ export const TailorView: React.FC<{ initialOverrides?: any }> = ({ initialOverri
                                                         </div>
                                                     );
                                                 })}
+                                            </div>
+                                        </FieldGroup>
+
+                                        <FieldGroup 
+                                          label={
+                                            <GlossaryTooltip 
+                                              term="Algorithmic Dials" 
+                                              poeticMeaning="The tuning knobs of the machine's soul." 
+                                              functionalMeaning="Adjust the core parameters that influence the AI's generation logic and behavior."
+                                            >
+                                              <span>Algorithmic Dials</span>
+                                            </GlossaryTooltip>
+                                          } 
+                                          description="Fine-tune the cognitive behavior of the generative models."
+                                        >
+                                            <div className="space-y-6">
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <GlossaryTooltip 
+                                                          term="Web Scry Intensity" 
+                                                          poeticMeaning="The degree to which the machine gazes into the current world." 
+                                                          functionalMeaning="Controls how much real-time web search data influences the generated output."
+                                                        >
+                                                          <span className="font-sans text-[10px] uppercase tracking-widest font-bold">Web Scry Intensity</span>
+                                                        </GlossaryTooltip>
+                                                        <span className="font-mono text-xs text-emerald-500">{draft.algoDials?.webScry || 50}%</span>
+                                                    </div>
+                                                    <p className="font-serif italic text-xs text-stone-500 mb-4">0% = Pure internal Tailor logic. 100% = Heavily grounded in current events and search data.</p>
+                                                    <SemanticSteps 
+                                                        steps={[
+                                                            { label: 'INTERNAL', value: 0 },
+                                                            { label: 'CONTEXTUAL', value: 33 },
+                                                            { label: 'GROUNDED', value: 66 },
+                                                            { label: 'EXTERNAL', value: 100 }
+                                                        ]}
+                                                        value={draft.algoDials?.webScry || 50} 
+                                                        onChange={val => updateDraft({ algoDials: { ...(draft.algoDials || { webScry: 50, memorySynthesis: 50, dissonance: 10 }), webScry: val } })} 
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <GlossaryTooltip 
+                                                          term="Memory Synthesis" 
+                                                          poeticMeaning="The weight of your past artifacts shaping the present." 
+                                                          functionalMeaning="Controls how much your previously saved zines and thoughts influence the current generation."
+                                                        >
+                                                          <span className="font-sans text-[10px] uppercase tracking-widest font-bold">Memory Synthesis</span>
+                                                        </GlossaryTooltip>
+                                                        <span className="font-mono text-xs text-emerald-500">{draft.algoDials?.memorySynthesis || 50}%</span>
+                                                    </div>
+                                                    <p className="font-serif italic text-xs text-stone-500 mb-4">0% = Isolated artifacts. 100% = Deeply contextualized by past zines and thoughts.</p>
+                                                    <SemanticSteps 
+                                                        steps={[
+                                                            { label: 'ISOLATED', value: 0 },
+                                                            { label: 'REFERENTIAL', value: 33 },
+                                                            { label: 'ARCHIVAL', value: 66 },
+                                                            { label: 'CONTEXTUAL', value: 100 }
+                                                        ]}
+                                                        value={draft.algoDials?.memorySynthesis || 50} 
+                                                        onChange={val => updateDraft({ algoDials: { ...(draft.algoDials || { webScry: 50, memorySynthesis: 50, dissonance: 10 }), memorySynthesis: val } })} 
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <GlossaryTooltip 
+                                                          term="Dissonance Engine" 
+                                                          poeticMeaning="The deliberate injection of chaos to break the mold." 
+                                                          functionalMeaning="A dial that controls how much opposing aesthetic concepts are introduced to force creative breakthroughs."
+                                                        >
+                                                          <span className="font-sans text-[10px] uppercase tracking-widest font-bold text-rose-500">Dissonance Engine</span>
+                                                        </GlossaryTooltip>
+                                                        <span className="font-mono text-xs text-rose-500">{draft.algoDials?.dissonance || 10}%</span>
+                                                    </div>
+                                                    <p className="font-serif italic text-xs text-stone-500 mb-4">Intended for creative exploration. Injects opposing aesthetic concepts to force breakthroughs and mutate safe choices. High dissonance may cause chaotic, unpredictable results.</p>
+                                                    <SemanticSteps 
+                                                        steps={[
+                                                            { label: 'HARMONY', value: 0 },
+                                                            { label: 'TEXTURED', value: 33 },
+                                                            { label: 'CHALLENGING', value: 66 },
+                                                            { label: 'CHAOS', value: 100 }
+                                                        ]}
+                                                        value={draft.algoDials?.dissonance || 10} 
+                                                        onChange={val => updateDraft({ algoDials: { ...(draft.algoDials || { webScry: 50, memorySynthesis: 50, dissonance: 10, binaryToSpectrum: 50 }), dissonance: val } })} 
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <div className="flex justify-between items-center mb-2">
+                                                        <GlossaryTooltip 
+                                                          term="Binary-to-Spectrum Dial" 
+                                                          poeticMeaning="The dissolution of borders between fixed identities." 
+                                                          functionalMeaning="A dial that controls the fluidity of aesthetic categories, moving from strict binaries to a continuous spectrum."
+                                                        >
+                                                          <span className="font-sans text-[10px] uppercase tracking-widest font-bold text-indigo-500">Binary-to-Spectrum Dial</span>
+                                                        </GlossaryTooltip>
+                                                        <span className="font-mono text-xs text-indigo-500">{draft.algoDials?.binaryToSpectrum || 50}%</span>
+                                                    </div>
+                                                    <p className="font-serif italic text-xs text-stone-500 mb-4">0% = Strict adherence to binary categories (e.g., hyper-masculine/feminine). 100% = Fluid, post-binary aesthetic synthesis.</p>
+                                                    <SemanticSteps 
+                                                        steps={[
+                                                            { label: 'BINARY', value: 0 },
+                                                            { label: 'ANDROGYNOUS', value: 33 },
+                                                            { label: 'FLUID', value: 66 },
+                                                            { label: 'SPECTRUM', value: 100 }
+                                                        ]}
+                                                        value={draft.algoDials?.binaryToSpectrum || 50} 
+                                                        onChange={val => updateDraft({ algoDials: { ...(draft.algoDials || { webScry: 50, memorySynthesis: 50, dissonance: 10, binaryToSpectrum: 50 }), binaryToSpectrum: val } })} 
+                                                    />
+                                                </div>
                                             </div>
                                         </FieldGroup>
                                     </>

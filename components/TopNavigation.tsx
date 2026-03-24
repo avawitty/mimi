@@ -25,7 +25,7 @@ const MENU_STRUCTURE = [
   ]},
   { section: 'Archive', items: [
       { mode: 'archival', label: 'Library', note: 'Creative Memory' },
-      { mode: 'mesopic', label: 'Temporal Nebula', note: 'Living Map' },
+      { mode: 'the-lens', label: 'The Lens', note: 'Spatial Aesthetic Capture' },
       { mode: 'darkroom', label: 'Darkroom', note: 'Unprocessed Fragments' }
   ]},
   { section: 'Threads', items: [

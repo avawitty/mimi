@@ -1,140 +1,269 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Compass, ArrowRight, Edit2, X, Save, Link2 } from 'lucide-react';
+import * as d3 from 'd3';
 import { useUser } from '../contexts/UserContext';
-import { db } from '../services/firebaseInit';
-import { collection, getDocs } from 'firebase/firestore';
-import { Thread, updateThread } from '../services/threadService';
+import { fetchUserZines } from '../services/firebaseUtils';
+import { ZineMetadata } from '../types';
+import { useSonicResonance } from '../hooks/useSonicResonance';
+import { ZineCoverCard } from './ZineCoverCard';
+import { X, Loader2 } from 'lucide-react';
+
+interface LoomNode extends d3.SimulationNodeDatum {
+  id: string;
+  group: 'motif' | 'tag';
+  frequency: number;
+  radius: number;
+}
+
+interface LoomLink extends d3.SimulationLinkDatum<LoomNode> {
+  source: string | LoomNode;
+  target: string | LoomNode;
+  weight: number;
+}
 
 export const NarrativeThreadsView: React.FC = () => {
-  const { user } = useUser();
-  const [threads, setThreads] = useState<Thread[]>([]);
+  const { user, loading: userLoading } = useUser();
+  const [zines, setZines] = useState<ZineMetadata[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingThread, setEditingThread] = useState<Thread | null>(null);
-  const [editTitle, setEditTitle] = useState('');
-  const [editNarrative, setEditNarrative] = useState('');
+  
+  const [nodes, setNodes] = useState<LoomNode[]>([]);
+  const [links, setLinks] = useState<LoomLink[]>([]);
+  
+  const [renderNodes, setRenderNodes] = useState<LoomNode[]>([]);
+  const [renderLinks, setRenderLinks] = useState<LoomLink[]>([]);
+  
+  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { playDrone, playChime } = useSonicResonance();
 
-  const fetchThreads = async () => {
-    if (!user?.uid) return;
-    setLoading(true);
-    try {
-      const threadsCol = collection(db, `users/${user.uid}/threads`);
-      const snapshot = await getDocs(threadsCol);
-      const fetchedThreads = snapshot.docs.map(d => d.data() as Thread);
-      setThreads(fetchedThreads.sort((a, b) => b.created_at - a.created_at));
-    } catch (e) {
-      console.error("Error fetching threads:", e);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    const loadData = async () => {
+      if (!user?.uid) return;
+      setLoading(true);
+      try {
+        const fetchedZines = await fetchUserZines(user.uid);
+        setZines(fetchedZines);
+      } catch (e) {
+        console.error("Failed to load zines for The Loom", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (!userLoading) loadData();
+  }, [user, userLoading]);
+
+  // Data Aggregation Engine
+  useEffect(() => {
+    if (zines.length === 0) return;
+
+    const nodesMap = new Map<string, LoomNode>();
+    const linksMap = new Map<string, LoomLink>();
+
+    zines.forEach(zine => {
+      const motifs = (zine.content?.semiotic_signals || []).map(s => s.motif).filter(Boolean);
+      const tags = (zine.tags || []).filter(Boolean);
+      
+      const allTerms = [...new Set([...motifs, ...tags])];
+      
+      allTerms.forEach(term => {
+        if (!nodesMap.has(term)) {
+          nodesMap.set(term, {
+            id: term,
+            group: motifs.includes(term) ? 'motif' : 'tag',
+            frequency: 0,
+            radius: 10,
+          });
+        }
+        nodesMap.get(term)!.frequency += 1;
+      });
+      
+      // Co-occurrences
+      for (let i = 0; i < allTerms.length; i++) {
+        for (let j = i + 1; j < allTerms.length; j++) {
+          const source = allTerms[i];
+          const target = allTerms[j];
+          // Sort to ensure consistent edge IDs
+          const [s, t] = [source, target].sort();
+          const linkId = `${s}|${t}`;
+          
+          if (!linksMap.has(linkId)) {
+            linksMap.set(linkId, {
+              source: s,
+              target: t,
+              weight: 0
+            });
+          }
+          linksMap.get(linkId)!.weight += 1;
+        }
+      }
+    });
+
+    const nodesArr = Array.from(nodesMap.values());
+    const maxFreq = Math.max(...nodesArr.map(n => n.frequency), 1);
+    
+    nodesArr.forEach(node => {
+      // Scale radius between 10 and 50 based on frequency
+      node.radius = 10 + (node.frequency / maxFreq) * 40;
+    });
+
+    setNodes(nodesArr);
+    setLinks(Array.from(linksMap.values()));
+  }, [zines]);
+
+  // D3 Physics Engine
+  useEffect(() => {
+    if (nodes.length === 0 || !containerRef.current) return;
+
+    const width = containerRef.current.clientWidth;
+    const height = containerRef.current.clientHeight;
+
+    // Clone nodes and links for D3 to mutate
+    const simNodes = nodes.map(n => ({ ...n }));
+    const simLinks = links.map(l => ({ ...l }));
+
+    const simulation = d3.forceSimulation<LoomNode>(simNodes)
+      .force('charge', d3.forceManyBody().strength(-200))
+      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('collide', d3.forceCollide().radius(d => (d as LoomNode).radius + 15))
+      .force('link', d3.forceLink<LoomNode, LoomLink>(simLinks).id(d => d.id).distance(100))
+      .on('tick', () => {
+        setRenderNodes([...simulation.nodes()]);
+        setRenderLinks([...simLinks]);
+      });
+
+    return () => {
+      simulation.stop();
+    };
+  }, [nodes, links]);
+
+  // Filter zines for side drawer
+  const filteredZines = useMemo(() => {
+    if (!selectedNode) return [];
+    return zines.filter(zine => {
+      const motifs = (zine.content?.semiotic_signals || []).map(s => s.motif);
+      const tags = zine.tags || [];
+      return motifs.includes(selectedNode) || tags.includes(selectedNode);
+    });
+  }, [selectedNode, zines]);
+
+  const handleNodeHover = (node: LoomNode) => {
+    const maxFreq = Math.max(...nodes.map(n => n.frequency), 1);
+    if (node.frequency > maxFreq * 0.5) {
+      // High frequency -> deep drone
+      playDrone(65.41 - (node.frequency * 2)); // Lower pitch for higher frequency
+    } else {
+      // Low frequency -> delicate chime
+      playChime(1046.50 + (node.frequency * 50));
     }
   };
 
-  useEffect(() => {
-    fetchThreads();
-    const handleViewChange = (e: any) => {
-      if (e.detail === 'narrative-threads') {
-        fetchThreads();
-      }
-    };
-    window.addEventListener('mimi:change_view', handleViewChange);
-    return () => window.removeEventListener('mimi:change_view', handleViewChange);
-  }, [user]);
-
-  const handleEdit = (thread: Thread) => {
-    setEditingThread(thread);
-    setEditTitle(thread.title || '');
-    setEditNarrative(thread.narrative);
-  };
-
-  const handleSave = async () => {
-    if (!editingThread) return;
-    const updatedThread = { ...editingThread, title: editTitle, narrative: editNarrative };
-    await updateThread(updatedThread);
-    setThreads(threads.map(t => t.id === updatedThread.id ? updatedThread : t));
-    setEditingThread(null);
+  const handleEdgeHover = (link: LoomLink) => {
+    if (link.weight < 2) {
+      playChime(2093); // C7 for thin edges
+    }
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#f5f2ed] dark:bg-[#050505] text-stone-900 dark:text-stone-100 font-serif p-12">
-      <div className="max-w-4xl mx-auto space-y-12">
-        <div className="flex items-center justify-between">
-          <h2 className="text-5xl italic font-serif">Narrative Threads</h2>
-          <button onClick={fetchThreads} className="text-stone-500 hover:text-stone-900 dark:hover:text-stone-100">
-            <Compass size={20} />
-          </button>
+    <div className="flex-1 relative overflow-hidden bg-[#050505] text-stone-100 font-serif" ref={containerRef}>
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center z-50 bg-[#050505]/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 text-emerald-500">
+            <Loader2 className="animate-spin" size={32} />
+            <p className="font-sans text-[10px] uppercase tracking-[0.3em]">Weaving the Loom...</p>
+          </div>
         </div>
-        
-        {loading ? (
-          <div className="flex items-center gap-4 text-stone-500">
-            <Loader2 className="animate-spin" />
-            <p className="font-sans text-xs uppercase tracking-widest">Unraveling threads...</p>
-          </div>
-        ) : threads.length === 0 ? (
-          <div className="text-stone-500 italic">No threads manifested yet.</div>
-        ) : (
-          <div className="space-y-8">
-            {threads.map(thread => (
-              <motion.div 
-                key={thread.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-8 border border-stone-200 dark:border-stone-800 rounded-sm hover:bg-white/50 dark:hover:bg-stone-900 transition-colors"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-2xl italic">{thread.title || "Untitled Thread"}</h3>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleEdit(thread)} className="text-stone-400 hover:text-stone-900 dark:hover:text-stone-100">
-                      <Edit2 size={16} />
-                    </button>
-                    <button onClick={() => {
-                        const shareUrl = `${window.location.origin}/threads/${thread.id}`;
-                        navigator.clipboard.writeText(shareUrl);
-                        alert("Link copied to clipboard!");
-                    }} className="text-stone-400 hover:text-stone-900 dark:hover:text-stone-100">
-                      <Link2 size={16} />
-                    </button>
-                  </div>
-                </div>
-                <p className="text-stone-600 dark:text-stone-400 mb-6 font-sans text-sm leading-relaxed">{thread.narrative}</p>
-                <div className="flex items-center gap-2 text-emerald-600 font-sans text-[10px] uppercase tracking-widest">
-                  <span>{thread.mode}</span>
-                  <ArrowRight size={12} />
-                  <span>{thread.path.length} nodes</span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
+      )}
+
+      {/* Header */}
+      <div className="absolute top-12 left-12 z-40 pointer-events-none">
+        <h2 className="text-5xl italic font-serif text-white/90 drop-shadow-lg">The Loom</h2>
+        <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-emerald-500/80 mt-2">Latent Constellation of Motifs</p>
       </div>
 
-      <AnimatePresence>
-        {editingThread && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+      {/* Edges */}
+      <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
+        {renderLinks.map((link, i) => {
+          const source = link.source as LoomNode;
+          const target = link.target as LoomNode;
+          if (source.x === undefined || source.y === undefined || target.x === undefined || target.y === undefined) return null;
+          
+          return (
+            <motion.line
+              key={`link-${i}`}
+              x1={source.x}
+              y1={source.y}
+              x2={target.x}
+              y2={target.y}
+              stroke="rgba(16, 185, 129, 0.2)"
+              strokeWidth={Math.max(1, link.weight * 1.5)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              onHoverStart={() => handleEdgeHover(link)}
+              className="pointer-events-auto cursor-crosshair hover:stroke-emerald-400 transition-colors duration-300"
+            />
+          );
+        })}
+      </svg>
+
+      {/* Nodes */}
+      <div className="absolute inset-0 z-20 pointer-events-none">
+        {renderNodes.map(node => (
+          <motion.div
+            key={node.id}
+            className="absolute flex items-center justify-center rounded-full cursor-pointer pointer-events-auto group"
+            style={{ 
+              width: node.radius * 2, 
+              height: node.radius * 2,
+              backgroundColor: node.group === 'motif' ? 'rgba(16, 185, 129, 0.8)' : 'rgba(99, 102, 241, 0.8)',
+              boxShadow: node.group === 'motif' 
+                ? `0 0 ${node.radius}px rgba(16, 185, 129, 0.5)` 
+                : `0 0 ${node.radius}px rgba(99, 102, 241, 0.5)`,
+            }}
+            animate={{ x: node.x ? node.x - node.radius : 0, y: node.y ? node.y - node.radius : 0 }}
+            transition={{ type: 'spring', stiffness: 50, damping: 15 }}
+            onHoverStart={() => handleNodeHover(node)}
+            onClick={() => setSelectedNode(node.id)}
+            whileHover={{ scale: 1.2 }}
+            whileTap={{ scale: 0.9 }}
           >
-            <div className="bg-white dark:bg-stone-900 p-8 rounded-sm max-w-lg w-full space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-2xl italic">Edit Thread</h3>
-                <button onClick={() => setEditingThread(null)}><X size={20} /></button>
+            <span className="opacity-0 group-hover:opacity-100 absolute top-full mt-2 whitespace-nowrap font-sans text-[10px] uppercase tracking-widest bg-black/80 px-2 py-1 rounded text-white transition-opacity">
+              {node.id} ({node.frequency})
+            </span>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Side Drawer */}
+      <AnimatePresence>
+        {selectedNode && (
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="absolute top-0 right-0 bottom-0 w-full md:w-[450px] bg-[#0A0A0A] border-l border-white/10 z-50 flex flex-col shadow-2xl"
+          >
+            <div className="p-8 border-b border-white/10 flex justify-between items-center bg-black/50 backdrop-blur-md">
+              <div>
+                <h3 className="text-2xl italic text-emerald-400">{selectedNode}</h3>
+                <p className="font-sans text-[9px] uppercase tracking-widest text-white/50 mt-1">
+                  {filteredZines.length} Manifestations
+                </p>
               </div>
-              <input 
-                value={editTitle}
-                onChange={(e) => setEditTitle(e.target.value)}
-                className="w-full p-2 border border-stone-300 dark:border-stone-700 bg-transparent"
-                placeholder="Title"
-              />
-              <textarea 
-                value={editNarrative}
-                onChange={(e) => setEditNarrative(e.target.value)}
-                className="w-full p-2 border border-stone-300 dark:border-stone-700 bg-transparent h-40"
-                placeholder="Narrative"
-              />
-              <button onClick={handleSave} className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-sm">
-                <Save size={16} /> Save
+              <button 
+                onClick={() => setSelectedNode(null)}
+                className="p-2 rounded-full hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+              >
+                <X size={20} />
               </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-8 space-y-8">
+              {filteredZines.map(zine => (
+                <div key={zine.id} className="w-full">
+                  <ZineCoverCard zine={zine} onClick={() => {}} />
+                </div>
+              ))}
             </div>
           </motion.div>
         )}

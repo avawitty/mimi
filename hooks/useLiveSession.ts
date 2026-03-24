@@ -27,6 +27,7 @@ export const useLiveSession = (systemInstruction: string) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [volume, setVolume] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [transcript, setTranscript] = useState<string>('');
   
   // Refs for cleanup
   const sessionRef = useRef<any>(null);
@@ -94,13 +95,15 @@ export const useLiveSession = (systemInstruction: string) => {
         
         // 4. Connect Live Session
         const sessionPromise = ai.live.connect({
-          model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+          model: 'gemini-2.5-flash-native-audio-preview-12-2025',
           config: {
             responseModalities: [Modality.AUDIO],
             systemInstruction: systemInstruction,
             speechConfig: {
               voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } }
-            }
+            },
+            inputAudioTranscription: {},
+            outputAudioTranscription: {}
           },
           callbacks: {
             onopen: async () => {
@@ -134,7 +137,7 @@ export const useLiveSession = (systemInstruction: string) => {
   
                   sessionPromise.then(session => {
                     session.sendRealtimeInput({
-                      media: {
+                      audio: {
                         mimeType: 'audio/pcm;rate=16000',
                         data: base64
                       }
@@ -145,10 +148,10 @@ export const useLiveSession = (systemInstruction: string) => {
                 source.connect(processor);
                 processor.connect(inputContextRef.current.destination);
               } catch (e: any) {
-                console.error("Mic Access Failed", e);
+                console.warn("Mic Access Failed", e);
                 if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
                   setError("Microphone permission denied. Enable in browser.");
-                } else if (e.name === 'NotFoundError') {
+                } else if (e.name === 'NotFoundError' || (e.message && e.message.includes('Requested device not found'))) {
                   setError("No microphone detected.");
                 } else {
                   setError("Audio input system failure.");
@@ -158,6 +161,15 @@ export const useLiveSession = (systemInstruction: string) => {
               }
             },
             onmessage: async (msg: LiveServerMessage) => {
+              // Handle Transcriptions
+              if (msg.serverContent?.modelTurn?.parts) {
+                msg.serverContent.modelTurn.parts.forEach(part => {
+                  if (part.text) {
+                    setTranscript(prev => prev + part.text);
+                  }
+                });
+              }
+
               // Handle Audio Output
               const audioData = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
               if (audioData && audioContextRef.current) {
@@ -237,8 +249,10 @@ export const useLiveSession = (systemInstruction: string) => {
   const sendVideoFrame = useCallback((base64Image: string) => {
     if (sessionRef.current) {
         sessionRef.current.sendRealtimeInput({
-            mimeType: 'image/jpeg',
-            data: base64Image
+            video: {
+                mimeType: 'image/jpeg',
+                data: base64Image
+            }
         });
     }
   }, []);
@@ -247,5 +261,5 @@ export const useLiveSession = (systemInstruction: string) => {
     return () => cleanup();
   }, []);
 
-  return { connect, disconnect, isConnected, isSpeaking, volume, error, sendVideoFrame, analyser: analyserRef.current };
+  return { connect, disconnect, isConnected, isSpeaking, volume, error, sendVideoFrame, analyser: analyserRef.current, transcript };
 };

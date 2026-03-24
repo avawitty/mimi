@@ -6,8 +6,99 @@ import { auth, db, storage, isFullyAuthenticated } from "./firebase";
 import { ZineContent, ZineMetadata, ToneTag, PocketItem, UserProfile, DossierFolder, DossierArtifact, Treatment, UserPreferences, MediaFile, Proposal, ContextEntry, LineageEntry } from "../types";
 import { saveZineLocally, savePocketItemLocally, getLocalProfile, getLocalPocket, getLocalZines, deleteLocalPocketItem, saveFolderLocally, getLocalFolders, saveArtifactLocally, getLocalArtifacts } from "./localArchive";
 import { syncToShadowMemory, deleteFromShadowMemory } from "./vectorSearch";
-import { extractTasteVector, generateTagsFromMedia } from "./geminiService";
-import { generateProfoundSignature } from "./thoughtSignatureService";
+import { StrategyAudit, Task } from "../types";
+
+export const saveStrategyAudit = async (userId: string, audit: StrategyAudit): Promise<void> => {
+  if (!isFullyAuthenticated()) {
+    console.warn("MIMI // Cannot save strategy audit: User not fully authenticated. Saving to local storage only.");
+    const localAudits = JSON.parse(localStorage.getItem(`mimi_audits_${userId}`) || '[]');
+    localAudits.push(audit);
+    localStorage.setItem(`mimi_audits_${userId}`, JSON.stringify(localAudits));
+    return;
+  }
+  try {
+    const auditRef = doc(db, `users/${userId}/reads`, audit.id);
+    await setDoc(auditRef, audit);
+    console.log("MIMI // Strategy audit saved to Firebase.");
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, `users/${userId}/reads/${audit.id}`);
+  }
+};
+
+export const fetchStrategyAudits = async (userId: string): Promise<StrategyAudit[]> => {
+  if (!isFullyAuthenticated()) {
+    return JSON.parse(localStorage.getItem(`mimi_audits_${userId}`) || '[]');
+  }
+  try {
+    const q = query(collection(db, `users/${userId}/reads`), orderBy('timestamp', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => doc.data() as StrategyAudit);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, `users/${userId}/reads`);
+    return [];
+  }
+};
+
+export const saveTask = async (userId: string, task: Task): Promise<void> => {
+  if (!isFullyAuthenticated()) {
+    console.warn("MIMI // Cannot save task: User not fully authenticated. Saving to local storage only.");
+    const localTasks = JSON.parse(localStorage.getItem(`mimi_tasks_${userId}`) || '[]');
+    localTasks.push(task);
+    localStorage.setItem(`mimi_tasks_${userId}`, JSON.stringify(localTasks));
+    return;
+  }
+  try {
+    const taskRef = doc(db, `users/${userId}/tasks`, task.id);
+    await setDoc(taskRef, task);
+    console.log("MIMI // Task saved to Firebase.");
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, `users/${userId}/tasks/${task.id}`);
+  }
+};
+
+export const fetchTasks = async (userId: string): Promise<Task[]> => {
+  if (!isFullyAuthenticated()) {
+    return JSON.parse(localStorage.getItem(`mimi_tasks_${userId}`) || '[]');
+  }
+  try {
+    const q = query(collection(db, `users/${userId}/tasks`), orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => doc.data() as Task);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, `users/${userId}/tasks`);
+    return [];
+  }
+};
+
+export const updateTask = async (userId: string, taskId: string, updates: Partial<Task>): Promise<void> => {
+  if (!isFullyAuthenticated()) {
+    const localTasks = JSON.parse(localStorage.getItem(`mimi_tasks_${userId}`) || '[]');
+    const updatedTasks = localTasks.map((t: Task) => t.id === taskId ? { ...t, ...updates } : t);
+    localStorage.setItem(`mimi_tasks_${userId}`, JSON.stringify(updatedTasks));
+    return;
+  }
+  try {
+    const taskRef = doc(db, `users/${userId}/tasks`, taskId);
+    await updateDoc(taskRef, updates);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, `users/${userId}/tasks/${taskId}`);
+  }
+};
+
+export const deleteTask = async (userId: string, taskId: string): Promise<void> => {
+  if (!isFullyAuthenticated()) {
+    const localTasks = JSON.parse(localStorage.getItem(`mimi_tasks_${userId}`) || '[]');
+    const updatedTasks = localTasks.filter((t: Task) => t.id !== taskId);
+    localStorage.setItem(`mimi_tasks_${userId}`, JSON.stringify(updatedTasks));
+    return;
+  }
+  try {
+    const taskRef = doc(db, `users/${userId}/tasks`, taskId);
+    await deleteDoc(taskRef);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, `users/${userId}/tasks/${taskId}`);
+  }
+};
 
 export enum OperationType {
   CREATE = 'create',
@@ -157,6 +248,20 @@ export const isCaptiveInWebview = () => {
   return isSocial && !isStandalone;
 };
 
+export const fetchAllPublicProfiles = async (): Promise<UserProfile[]> => {
+  try {
+    if (!auth.currentUser) {
+      await signInAnonymously(auth);
+    }
+    const q = query(collection(db, "profiles_public"), limit(100));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ uid: d.id, ...d.data() } as UserProfile));
+  } catch (e) {
+    handleFirestoreError(e, OperationType.LIST, "profiles_public");
+    return [];
+  }
+};
+
 export const searchUsers = async (searchTerm: string): Promise<UserProfile[]> => {
   if (!searchTerm || searchTerm.length < 2) return [];
   const q = query(
@@ -252,22 +357,11 @@ export const signUpWithEmail = async (email: string, password: string, handle: s
   }
 };
 
-export const anchorIdentity = async (forceRedirect = false): Promise<void> => {
+export const anchorIdentity = async (): Promise<void> => {
   const provider = new GoogleAuthProvider();
   provider.addScope('email');
   provider.addScope('profile');
 
-  if (forceRedirect) {
-    try {
-      await signInWithRedirect(auth, provider);
-    } catch (e: any) {
-      console.error("MIMI // Redirect anchor failed:", e);
-      throw e;
-    }
-    return;
-  }
-
-  // Popup-first — falls back to redirect if blocked
   try {
     await signInWithPopup(auth, provider);
   } catch (e: any) {
@@ -277,8 +371,7 @@ export const anchorIdentity = async (forceRedirect = false): Promise<void> => {
       e.code === 'auth/popup-closed-by-user' ||
       e.code === 'auth/internal-error'
     ) {
-      console.warn("MIMI // Popup obstructed — switching to redirect:", e.code);
-      await signInWithRedirect(auth, provider);
+      alert("Popup blocked. Please allow popups for this site to sign in.");
     } else {
       console.error("MIMI // Popup anchor failed:", e);
       throw e;
@@ -286,48 +379,26 @@ export const anchorIdentity = async (forceRedirect = false): Promise<void> => {
   }
 };
 
-export const linkIdentity = async (forceRedirect = false): Promise<void> => {
+export const linkIdentity = async (): Promise<void> => {
   if (!auth.currentUser) throw new Error("No active session to link.");
   const provider = new GoogleAuthProvider();
   provider.addScope('email');
   provider.addScope('profile');
   
-  if (forceRedirect) {
-    try {
-      await linkWithRedirect(auth.currentUser, provider);
-    } catch (e: any) {
-      if (e.code === 'auth/credential-already-in-use') {
-         throw new Error("This Google frequency is already occupied by another registry.");
-      }
-      console.error("Link redirect failed:", e);
-      throw e;
-    }
-    return;
-  }
-
-  // Popup-first — falls back to redirect if blocked
   try {
     await linkWithPopup(auth.currentUser, provider);
   } catch (e: any) {
+    if (e.code === 'auth/credential-already-in-use') {
+       throw new Error("This Google frequency is already occupied by another registry.");
+    }
     if (
       e.code === 'auth/popup-blocked' ||
       e.code === 'auth/cancelled-popup-request' ||
       e.code === 'auth/popup-closed-by-user' ||
       e.code === 'auth/internal-error'
     ) {
-      console.warn("MIMI // Popup obstructed — switching to redirect:", e.code);
-      try {
-        await linkWithRedirect(auth.currentUser, provider);
-      } catch (redirectError: any) {
-        if (redirectError.code === 'auth/credential-already-in-use') {
-           throw new Error("This Google frequency is already occupied by another registry.");
-        }
-        throw redirectError;
-      }
+      alert("Popup blocked. Please allow popups for this site to link your account.");
     } else {
-      if (e.code === 'auth/credential-already-in-use') {
-         throw new Error("This Google frequency is already occupied by another registry.");
-      }
       console.error("Link popup failed:", e);
       throw e;
     }
@@ -336,7 +407,7 @@ export const linkIdentity = async (forceRedirect = false): Promise<void> => {
 
 import { generateAndStoreZineEmbedding } from "./zineEmbeddingService";
 
-export const saveZineToProfile = async (uid: string, handle: string, avatar: string | undefined, zine: ZineContent, tone: ToneTag, coverUrl?: string, deep?: boolean, isPublic?: boolean, isLite?: boolean, artifacts?: MediaFile[], originalInput?: string, transmissionsUsed?: any[], isHighFidelity?: boolean, tags?: string[]): Promise<string> => {
+export const saveZineToProfile = async (uid: string, handle: string, avatar: string | undefined, zine: ZineContent, tone: ToneTag, coverUrl?: string, deep?: boolean, isPublic?: boolean, isLite?: boolean, artifacts?: MediaFile[], originalInput?: string, transmissionsUsed?: any[], isHighFidelity?: boolean, tags?: string[], treatmentId?: string): Promise<string> => {
   if (!uid || uid === 'ghost' || !isFullyAuthenticated()) return '';
   const targetId = `zine_${uid}_${Date.now()}`;
   
@@ -344,9 +415,9 @@ export const saveZineToProfile = async (uid: string, handle: string, avatar: str
   const rawInput = originalInput || zine.meta?.intent || "";
 
   // 1. Separate threadData
-  const pagesWithoutThreadData = zine.pages.map(page => ({ ...page, threadData: undefined }));
+  const pagesWithoutThreadData = (zine.pages || []).map(page => ({ ...page, threadData: undefined }));
   const threadDataMap = new Map<number, any>();
-  zine.pages.forEach(page => {
+  (zine.pages || []).forEach(page => {
     if (page.threadData) {
       threadDataMap.set(page.pageNumber, page.threadData);
     }
@@ -361,7 +432,13 @@ export const saveZineToProfile = async (uid: string, handle: string, avatar: str
     artifacts: [],
     fragmentsUsed: [],
     originalInput: rawInput,
-    transmissionsUsed: transmissionsUsed || [],
+    transmissionsUsed: (transmissionsUsed || []).map(t => ({ 
+      id: t.id || '', 
+      type: t.type || '', 
+      content: typeof t.content === 'string' ? t.content.substring(0, 100) : '', 
+      userId: t.userId || '' 
+    })),
+    treatmentId,
     tags: tags && tags.length > 0 ? tags : await generateTagsFromMedia(JSON.stringify(zine), artifacts || [])
   };
   
@@ -381,8 +458,24 @@ export const saveZineToProfile = async (uid: string, handle: string, avatar: str
 
       // 4. Save artifacts in subcollection
       if (artifacts && artifacts.length > 0) {
+        const { uploadBase64Image } = await import('./firebaseUtils');
         for (const artifact of artifacts) {
-          await setDoc(doc(db, "zines", targetId, "artifacts", artifact.id), sanitizeFirestoreData(artifact));
+          let artifactToSave = { ...artifact };
+          if (artifactToSave.data && artifactToSave.data.length > 100000) { // If base64 is large
+              try {
+                  const path = `zine_artifacts/${targetId}_${artifact.id || Date.now()}.jpg`;
+                  const url = await uploadBase64Image(artifactToSave.data, path);
+                  artifactToSave.url = url;
+                  artifactToSave.data = ''; // Clear base64 to save space
+              } catch (e) {
+                  console.warn("Failed to upload artifact to storage", e);
+              }
+          }
+          // Remove File object before saving
+          if (artifactToSave.file) {
+              delete artifactToSave.file;
+          }
+          await setDoc(doc(db, "zines", targetId, "artifacts", artifact.id || Date.now().toString()), sanitizeFirestoreData(artifactToSave));
         }
       }
       
@@ -510,14 +603,14 @@ export const updateTasteGraph = async (uid: string, type: PocketItem['type'], co
 };
 
 
-export const addToPocket = async (uid: string, type: PocketItem['type'], content: any, embedding?: number[]): Promise<string | undefined> => {
+export const addToPocket = async (uid: string, type: PocketItem['type'], content: any, embedding?: number[], deltaVerdict?: any): Promise<string | undefined> => {
   if (!uid || uid === 'ghost' || !isFullyAuthenticated()) return;
   const itemId = `item_${Date.now()}`;
   
   // Generate tags automatically
   const tags = await generateTagsFromMedia(JSON.stringify(content), content.media || []);
   
-  const item: PocketItem = { id: itemId, userId: uid, type, savedAt: Date.now(), content, notes: content.notes || "", tags, embedding };
+  const item: PocketItem = { id: itemId, userId: uid, type, savedAt: Date.now(), content, notes: content.notes || "", tags, embedding, deltaVerdict };
   await savePocketItemLocally(item);
   if (uid && auth.currentUser && navigator.onLine) {
     try {
@@ -619,7 +712,11 @@ export const subscribeToPocketItems = (uid: string, callback: (data: PocketItem[
 };
 
 export const fetchUserZines = async (uid: string, forceRefresh = false) => {
-    if (!uid || uid === 'ghost' || !isFullyAuthenticated()) return [];
+    if (!uid) return [];
+    
+    if (uid === 'ghost' || !isFullyAuthenticated()) {
+        return getLocalZines();
+    }
     
     if (!forceRefresh && zineCache[uid] && (Date.now() - zineCache[uid].timestamp < CACHE_TTL)) {
         return zineCache[uid].data;
@@ -687,26 +784,52 @@ export const subscribeToCommunityZines = (callback: (data: ZineMetadata[]) => vo
 };
 
 export const updateZineMetadata = async (metadata: ZineMetadata): Promise<void> => {
-  if (!auth.currentUser) return;
+  if (!auth.currentUser) {
+    console.error("MIMI // updateZineMetadata: No current user");
+    return;
+  }
+  if (!metadata.userId) {
+    console.error("MIMI // updateZineMetadata: metadata.userId is missing");
+    throw new Error("MIMI // updateZineMetadata: metadata.userId is missing");
+  }
   try {
+    console.info("MIMI // updateZineMetadata: Attempting update for zine:", metadata.id, "User:", auth.currentUser.uid, "ZineOwner:", metadata.userId);
     const { setDoc, doc } = await import('firebase/firestore');
     
     // 1. Separate threadData and artifacts
     const threadDataMap = new Map<number, any>();
-    if (metadata.content.pages) {
-        metadata.content.pages.forEach(page => {
-            if (page.threadData) {
-                threadDataMap.set(page.pageNumber, page.threadData);
-                page.threadData = undefined; // Remove from main doc
-            }
-        });
-    }
+    const pagesWithoutThreadData = (metadata.content.pages || []).map(page => {
+        const pageCopy = { ...page };
+        if (pageCopy.threadData) {
+            threadDataMap.set(pageCopy.pageNumber, pageCopy.threadData);
+            pageCopy.threadData = undefined; // Remove from main doc
+        }
+        return pageCopy;
+    });
     
     const artifacts = metadata.artifacts;
-    metadata.artifacts = []; // Remove from main doc
+    
+    // Create a sanitized copy of metadata for Firestore
+    const firestoreMetadata: ZineMetadata = {
+        ...metadata,
+        artifacts: [], // Remove from main doc
+        transmissionsUsed: (metadata.transmissionsUsed || []).map(t => ({ 
+            id: t.id || '', 
+            type: t.type || '', 
+            content: typeof t.content === 'string' ? t.content.substring(0, 100) : '', 
+            userId: t.userId || '' 
+        })),
+        content: {
+            ...metadata.content,
+            pages: [],
+            pagesJson: JSON.stringify(pagesWithoutThreadData)
+        }
+    };
 
     // 2. Save Zine without threadData and artifacts
-    await setDoc(doc(db, "zines", metadata.id), sanitizeFirestoreData(metadata));
+    console.info("MIMI // updateZineMetadata: Calling setDoc for:", metadata.id);
+    await setDoc(doc(db, "zines", metadata.id), sanitizeFirestoreData(firestoreMetadata));
+    console.info("MIMI // updateZineMetadata: setDoc successful");
     
     // 3. Save threadData in subcollection
     for (const [pageNumber, threadData] of threadDataMap) {
@@ -723,8 +846,10 @@ export const updateZineMetadata = async (metadata: ZineMetadata): Promise<void> 
     await saveZineLocally(metadata);
     syncToShadowMemory(metadata);
     invalidateZineCache();
+    console.info("MIMI // updateZineMetadata: Update complete");
   } catch (e) {
-    console.error("Failed to update zine metadata", e);
+    console.error("MIMI // updateZineMetadata: Failed to update zine metadata", e);
+    throw e; // Rethrow to be caught by caller if needed
   }
 };
 
@@ -777,11 +902,12 @@ export const createDossierFolder = async (uid: string, name: string): Promise<st
 };
 
 export const saveNarrativeThread = async (thread: NarrativeThread): Promise<void> => {
-  if (!thread.userId || thread.userId === 'ghost') return;
+  if (!thread.userId || thread.userId === 'ghost' || !auth.currentUser) return;
   await setDoc(doc(db, "narrative_threads", thread.id), sanitizeFirestoreData(thread));
 };
 
 export const fetchNarrativeThreads = async (userId: string): Promise<NarrativeThread[]> => {
+  if (!userId || userId === 'ghost' || !auth.currentUser) return [];
   const q = query(collection(db, "narrative_threads"), where("userId", "==", userId), orderBy("updatedAt", "desc"));
   const snap = await getDocs(q);
   return snap.docs.map(doc => doc.data() as NarrativeThread);
@@ -916,6 +1042,30 @@ export const createDossierArtifactFromImage = async (uid: string, folderId: stri
     try { 
       await setDoc(doc(db, "dossier_artifacts", id), sanitizeFirestoreData(artifact)); 
       updateTasteGraph(uid, 'image', { imageUrl });
+    } catch (e) {}
+  }
+  return id;
+};
+
+export const createDossierArtifactFromStrategy = async (uid: string, folderId: string, audit: StrategyAudit) => {
+  if (!uid || uid === 'ghost' || !isFullyAuthenticated()) return '';
+  const id = `artifact_${Date.now()}`;
+  
+  const title = `${audit.platform} Strategy Audit`;
+  const content = JSON.stringify(audit.read, null, 2);
+  
+  const artifact: DossierArtifact = {
+    id, userId: uid, folderId, type: 'strategy', title, createdAt: Date.now(),
+    elements: [{ id: 'el_0', type: 'text', content }],
+    tags: [audit.platform.toLowerCase(), 'strategy', 'audit'],
+    status: 'active'
+  };
+  
+  await saveArtifactLocally(artifact);
+  
+  if (uid && auth.currentUser && navigator.onLine) {
+    try { 
+      await setDoc(doc(db, "dossier_artifacts", id), sanitizeFirestoreData(artifact)); 
     } catch (e) {}
   }
   return id;
@@ -1059,12 +1209,43 @@ export const deleteContextEntry = async (id: string) => {
 
 // -- REAL-TIME LISTENERS & PROFILES --
 
+const getCache = <T>(key: string): T | null => {
+  try {
+    const cached = localStorage.getItem(key);
+    if (!cached) return null;
+    const { data, timestamp } = JSON.parse(cached);
+    if (Date.now() - timestamp > CACHE_TTL) {
+      localStorage.removeItem(key);
+      return null;
+    }
+    return data as T;
+  } catch (e) {
+    return null;
+  }
+};
+
+const setCache = (key: string, data: any) => {
+  try {
+    localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch (e) {}
+};
+
 // Updated: 'profiles' collection for Identity
 export const getUserProfile = async (uid: string) => {
   if (!uid || uid === 'ghost' || !isFullyAuthenticated()) return null;
+  
+  const cacheKey = `profile_${uid}`;
+  const cached = getCache<UserProfile>(cacheKey);
+  if (cached) return cached;
+
   try {
     const d = await getDoc(doc(db, "profiles_public", uid));
-    return d.exists() ? d.data() as UserProfile : null;
+    if (d.exists()) {
+      const data = d.data() as UserProfile;
+      setCache(cacheKey, data);
+      return data;
+    }
+    return null;
   } catch (e: any) {
     console.warn("MIMI // Profile Read Blocked:", e.code);
     return null;
@@ -1075,6 +1256,7 @@ export const saveUserProfile = async (p: UserProfile) => {
   if (!p.uid || p.uid === 'ghost' || !auth.currentUser) return;
   try {
     await setDoc(doc(db, "profiles_public", p.uid), sanitizeFirestoreData(p), { merge: true });
+    setCache(`profile_${p.uid}`, p);
   } catch (e: any) {
     console.warn("MIMI // Profile Write Blocked:", e.code);
   }
@@ -1083,9 +1265,19 @@ export const saveUserProfile = async (p: UserProfile) => {
 // Updated: 'userPreferences' collection for private data (drafts, personas, etc)
 export const getUserPreferences = async (uid: string) => {
   if (!uid || uid === 'ghost' || !isFullyAuthenticated()) return null;
+  
+  const cacheKey = `prefs_${uid}`;
+  const cached = getCache<UserPreferences>(cacheKey);
+  if (cached) return cached;
+
   try {
     const d = await getDoc(doc(db, "userPreferences", uid));
-    return d.exists() ? d.data() as UserPreferences : null;
+    if (d.exists()) {
+      const data = d.data() as UserPreferences;
+      setCache(cacheKey, data);
+      return data;
+    }
+    return null;
   } catch (e: any) {
     console.warn("MIMI // Prefs Read Blocked:", e.code);
     return null;
@@ -1096,6 +1288,7 @@ export const saveUserPreferences = async (uid: string, p: UserPreferences) => {
   if (!uid || uid === 'ghost' || !isFullyAuthenticated()) return;
   try {
     await setDoc(doc(db, "userPreferences", uid), sanitizeFirestoreData(p), { merge: true });
+    setCache(`prefs_${uid}`, p);
   } catch (e: any) {
     console.warn("MIMI // Prefs Write Blocked:", e.code);
   }
@@ -1232,3 +1425,80 @@ export const createNotification = async (userId: string, title: string, message:
         console.error("MIMI // Notification Creation Error:", e);
     }
 };
+
+// --- Zine Folder Management ---
+export const createZineFolder = async (userId: string, name: string): Promise<string | null> => {
+  if (!isFullyAuthenticated()) return null;
+  try {
+    const folderRef = doc(collection(db, "zine_folders"));
+    const folder = {
+      id: folderRef.id,
+      userId,
+      name,
+      createdAt: Date.now()
+    };
+    await setDoc(folderRef, folder);
+    return folder.id;
+  } catch (e) {
+    handleFirestoreError(e, OperationType.CREATE, "zine_folders");
+    return null;
+  }
+};
+
+export const fetchZineFolders = async (userId: string): Promise<any[]> => {
+  if (!isFullyAuthenticated()) return [];
+  try {
+    const q = query(collection(db, "zine_folders"), where("userId", "==", userId));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => d.data());
+  } catch (e) {
+    logFirestoreError(e, OperationType.LIST, "zine_folders");
+    return [];
+  }
+};
+
+export const updateZineFolder = async (folderId: string, name: string): Promise<boolean> => {
+  if (!isFullyAuthenticated()) return false;
+  try {
+    const folderRef = doc(db, "zine_folders", folderId);
+    await updateDoc(folderRef, { name });
+    return true;
+  } catch (e) {
+    handleFirestoreError(e, OperationType.UPDATE, `zine_folders/${folderId}`);
+    return false;
+  }
+};
+
+export const deleteZineFolder = async (folderId: string): Promise<boolean> => {
+  if (!isFullyAuthenticated()) return false;
+  try {
+    const folderRef = doc(db, "zine_folders", folderId);
+    await deleteDoc(folderRef);
+    return true;
+  } catch (e) {
+    handleFirestoreError(e, OperationType.DELETE, `zine_folders/${folderId}`);
+    return false;
+  }
+};
+
+export const moveZineToFolder = async (zineId: string, folderId: string | null): Promise<boolean> => {
+  try {
+    // Update locally first
+    const localZines = await getLocalZines() || [];
+    const zineIndex = localZines.findIndex(z => z.id === zineId);
+    if (zineIndex !== -1) {
+      localZines[zineIndex].folderId = folderId || undefined;
+      await saveZineLocally(localZines[zineIndex]);
+    }
+
+    if (!isFullyAuthenticated()) return true; // If not authenticated, local update is enough
+
+    const zineRef = doc(db, "zines", zineId);
+    await updateDoc(zineRef, { folderId: folderId || null });
+    return true;
+  } catch (e) {
+    console.error("MIMI // Error moving zine to folder:", e);
+    return false;
+  }
+};
+

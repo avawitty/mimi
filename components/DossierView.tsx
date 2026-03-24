@@ -882,6 +882,11 @@ export default function DossierView() {
                                     )}
                                     {art.elements[0].type === 'image' ? (
                                        <img src={art.elements[0].content} className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" />
+                                    ) : art.type === 'strategy' ? (
+                                       <div className="w-full h-full p-6 flex flex-col justify-center items-center bg-stone-900 border border-stone-800">
+                                          <Target size={32} className="text-emerald-500 mb-4 opacity-50" />
+                                          <p className="font-mono text-[10px] text-stone-400 uppercase tracking-widest text-center">Strategy Audit</p>
+                                       </div>
                                     ) : (
                                        <div className="w-full h-full p-6 flex flex-col justify-center bg-stone-900">
                                           <Quote size={24} className="text-stone-700 mb-4" />

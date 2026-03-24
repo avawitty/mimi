@@ -1,5 +1,33 @@
 {
   "entities": {
+    "ThimbleBoard": {
+      "title": "ThimbleBoard",
+      "description": "A sourcing board for grouping external links.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "ID of the user who owns the board." },
+        "title": { "type": "string", "description": "Title of the board." },
+        "description": { "type": "string", "description": "Optional description of the board." },
+        "createdAt": { "type": "number", "description": "Timestamp of creation." },
+        "updatedAt": { "type": "number", "description": "Timestamp of last update." }
+      },
+      "required": ["userId", "title", "createdAt", "updatedAt"]
+    },
+    "ThimbleItem": {
+      "title": "ThimbleItem",
+      "description": "An item within a sourcing board.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "ID of the user who owns the item." },
+        "boardId": { "type": "string", "description": "ID of the board this item belongs to." },
+        "url": { "type": "string", "description": "URL of the item." },
+        "title": { "type": "string", "description": "Optional title of the item." },
+        "price": { "type": "string", "description": "Optional price of the item." },
+        "notes": { "type": "string", "description": "Optional notes for the item." },
+        "createdAt": { "type": "number", "description": "Timestamp of creation." }
+      },
+      "required": ["userId", "boardId", "url", "createdAt"]
+    },
     "LineageEntry": {
       "title": "LineageEntry",
       "description": "Records the provenance and archetypal synthesis of a creative artifact.",
@@ -270,6 +298,14 @@
     }
   },
   "firestore": {
+    "thimbleBoards/{boardId}": {
+      "schema": { "$ref": "#/entities/ThimbleBoard" },
+      "description": "Sourcing boards for grouping external links."
+    },
+    "thimbleItems/{itemId}": {
+      "schema": { "$ref": "#/entities/ThimbleItem" },
+      "description": "Items within a sourcing board."
+    },
     "lineage_entries/{lineageId}": {
       "schema": { "$ref": "#/entities/LineageEntry" },
       "description": "Collection of provenance lineage records."

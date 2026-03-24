@@ -2,6 +2,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { SemanticSteps } from './SemanticSteps';
 import { X, Cpu, ShieldCheck, Sparkles, Activity, Terminal, Play, Settings } from 'lucide-react';
 import { useAgents } from '../contexts/AgentContext';
 
@@ -85,14 +86,15 @@ export const DeveloperSettings: React.FC<{ onClose: () => void }> = ({ onClose }
                                     </div>
                                     <span className="font-mono text-[10px] text-emerald-500">{agentConfig.curatorThinkingBudget} Tokens</span>
                                 </div>
-                                <input 
-                                    type="range" 
-                                    min="0" 
-                                    max="16384" 
-                                    step="1024" 
-                                    value={agentConfig.curatorThinkingBudget} 
-                                    onChange={(e) => setAgentConfig({ ...agentConfig, curatorThinkingBudget: parseInt(e.target.value) })}
-                                    className="w-full accent-emerald-500 bg-stone-800 h-1 rounded-full cursor-pointer"
+                                <SemanticSteps 
+                                    steps={[
+                                        { label: 'Low', value: 1024 },
+                                        { label: 'Medium', value: 4096 },
+                                        { label: 'High', value: 8192 },
+                                        { label: 'Max', value: 16384 }
+                                    ]}
+                                    value={agentConfig.curatorThinkingBudget}
+                                    onChange={(val) => setAgentConfig({ ...agentConfig, curatorThinkingBudget: val })}
                                 />
                                 <p className="font-serif italic text-[10px] text-stone-500 leading-relaxed">
                                     A higher budget for the Curator allows it to perform deeper cultural cross-referencing and more sophisticated semiotic decoding of your shards. 
@@ -108,14 +110,15 @@ export const DeveloperSettings: React.FC<{ onClose: () => void }> = ({ onClose }
                                     </div>
                                     <span className="font-mono text-[10px] text-emerald-500">{agentConfig.sentinelThinkingBudget} Tokens</span>
                                 </div>
-                                <input 
-                                    type="range" 
-                                    min="0" 
-                                    max="16384" 
-                                    step="1024" 
-                                    value={agentConfig.sentinelThinkingBudget} 
-                                    onChange={(e) => setAgentConfig({ ...agentConfig, sentinelThinkingBudget: parseInt(e.target.value) })}
-                                    className="w-full accent-emerald-500 bg-stone-800 h-1 rounded-full cursor-pointer"
+                                <SemanticSteps 
+                                    steps={[
+                                        { label: 'Low', value: 1024 },
+                                        { label: 'Medium', value: 4096 },
+                                        { label: 'High', value: 8192 },
+                                        { label: 'Max', value: 16384 }
+                                    ]}
+                                    value={agentConfig.sentinelThinkingBudget}
+                                    onChange={(val) => setAgentConfig({ ...agentConfig, sentinelThinkingBudget: val })}
                                 />
                                 <p className="font-serif italic text-[10px] text-stone-500 leading-relaxed">
                                     The Sentinel uses this budget to audit your recent debris against your stated Manifesto. 

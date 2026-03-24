@@ -19,7 +19,7 @@ const MENU_STRUCTURE: Record<string, MenuItem[]> = {
   ],
   Archive: [
     { label: 'Library', viewMode: 'archival' },
-    { label: 'Temporal Nebula', viewMode: 'mesopic' },
+    { label: 'The Lens', viewMode: 'the-lens' },
     { label: 'Darkroom', viewMode: 'darkroom' },
   ],
   Threads: [

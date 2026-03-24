@@ -1,7 +1,7 @@
 
 import { useMemo } from 'react';
 
-export type FeatureKey = 'studio' | 'scry' | 'darkroom' | 'mesopic' | 'archival';
+export type FeatureKey = 'studio' | 'scry' | 'darkroom' | 'the-lens' | 'archival';
 
 interface FeatureConfig {
   active: boolean;
@@ -13,7 +13,7 @@ const AVAILABILITY_MAP: Record<FeatureKey, FeatureConfig> = {
   studio: { active: true, window: null, message: "Studio access is consistent." },
   scry: { active: true, window: "18:00-02:00", message: "Trajectory scrying requires evening scotopic light." },
   darkroom: { active: true, window: null, message: "Darkroom is permanently active." },
-  mesopic: { active: true, window: "20:00-05:00", message: "The Maison opens during mesopic hours." },
+  'the-lens': { active: true, window: "20:00-05:00", message: "The Lens opens during mesopic hours." },
   archival: { active: true, window: null, message: "Registry is always accessible." }
 };
 
