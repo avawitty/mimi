@@ -1,386 +1,571 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, X, Zap, Sparkles, Loader2, Play, Square, Video, Mic, Image as ImageIcon, Save } from 'lucide-react';
+import { Camera, X, Zap, Sparkles, Loader2, Play, Square, Video, Mic, Image as ImageIcon, Save, Layers, ArrowRight } from 'lucide-react';
 import { LiveAestheticService, AestheticAnalysis } from '../services/liveAestheticService';
 import { useUser } from '../contexts/UserContext';
-import { analyzeMiseEnScene, analyzeVideo, analyzeAudio } from '../services/geminiService';
-import { addToPocket } from '../services/firebase';
+import { analyzeMiseEnScene, analyzeVideo, analyzeAudio, analyzeArchitecturalIntent, analyzeLatentResonance } from '../services/geminiService';
+import { saveTask } from '../services/firebaseUtils';
+import { VibeGraph } from './VibeGraph';
 
 export const TheLens = () => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isActive, setIsActive] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [analysis, setAnalysis] = useState<AestheticAnalysis[]>([]);
-  const [currentReading, setCurrentReading] = useState<string>("");
-  const serviceRef = useRef<LiveAestheticService | null>(null);
-  const { user, profile } = useUser();
+ const videoRef = useRef<HTMLVideoElement>(null);
+ const canvasRef = useRef<HTMLCanvasElement>(null);
+ const [isActive, setIsActive] = useState(false);
+ const [isConnecting, setIsConnecting] = useState(false);
+ const [analysis, setAnalysis] = useState<AestheticAnalysis[]>([]);
+ const [currentReading, setCurrentReading] = useState<string>("");
+ const serviceRef = useRef<LiveAestheticService | null>(null);
+ const { user, profile } = useUser();
 
-  const [isRecordingVideo, setIsRecordingVideo] = useState(false);
-  const [isRecordingAudio, setIsRecordingAudio] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [captureResult, setCaptureResult] = useState<any>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
+ const [isRecordingVideo, setIsRecordingVideo] = useState(false);
+ const [isRecordingAudio, setIsRecordingAudio] = useState(false);
+ const [isAnalyzing, setIsAnalyzing] = useState(false);
+ const [captureResult, setCaptureResult] = useState<any>(null);
+ const [isSaving, setIsSaving] = useState(false);
+ 
+ const [lensMode, setLensMode] = useState<'spectral' | 'mesopic'>('spectral');
+ const [selectedArchiveNode, setSelectedArchiveNode] = useState<any>(null);
+ const [isAnalyzingLatent, setIsAnalyzingLatent] = useState(false);
+ const [latentAnalysisResult, setLatentAnalysisResult] = useState<any>(null);
 
-  const handleSaveToPocket = async () => {
-    if (!captureResult || !user?.uid) return;
-    setIsSaving(true);
-    try {
-      await addToPocket(user.uid, 'analysis_report', {
-        title: `The Lens Analysis: ${captureResult.type.toUpperCase()}`,
-        content: captureResult.data,
-        timestamp: Date.now()
-      });
-      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
-          detail: { message: "Analysis Anchored.", icon: <Save size={14} /> } 
-      }));
-      setCaptureResult(null);
-    } catch (e) {
-      console.error("Failed to save analysis", e);
-    } finally {
-      setIsSaving(false);
-    }
-  };
+ const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+ const chunksRef = useRef<Blob[]>([]);
 
-  const startLens = async () => {
-    setIsConnecting(true);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-      
-      serviceRef.current = new LiveAestheticService((data) => {
-        if (data.scribeReading) {
-          setCurrentReading(data.scribeReading);
-          setAnalysis(prev => [...prev, data]);
-        }
-      });
-      
-      await serviceRef.current.connect();
-      setIsActive(true);
-    } catch (err) {
-      console.error("MIMI // Failed to start The Lens:", err);
-    } finally {
-      setIsConnecting(false);
-    }
-  };
+ const handleSaveToPocket = async () => {
+ if (!captureResult || !user?.uid) return;
+ setIsSaving(true);
+ try {
+ const { archiveManager } = await import('../services/archiveManager');
+ await archiveManager.saveToPocket(user.uid, 'analysis_report', {
+ title: `The Lens Analysis: ${captureResult.type.toUpperCase()}`,
+ content: captureResult.data,
+ timestamp: Date.now()
+ });
+ window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+ detail: { message:"Analysis Anchored.", icon: <Save size={14} /> } 
+ }));
+ setCaptureResult(null);
+ } catch (e) {
+ console.error("Failed to save analysis", e);
+ } finally {
+ setIsSaving(false);
+ }
+ };
 
-  const stopLens = () => {
-    setIsActive(false);
-    if (serviceRef.current) {
-      serviceRef.current.close();
-    }
-    if (videoRef.current?.srcObject) {
-      (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
-    }
-  };
+ const handlePushToBoard = async () => {
+ if (!captureResult?.data?.tasks || !user?.uid) return;
+ for (const task of captureResult.data.tasks) {
+ await saveTask(user.uid, {
+ id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+ text: task.title,
+ description: task.description,
+ completed: false,
+ createdAt: Date.now(),
+ tags: ['lens_directive']
+ });
+ }
+ window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+ detail: { message:"Directives pushed to Action Board.", icon: <ArrowRight size={14} /> } 
+ }));
+ };
 
-  useEffect(() => {
-    let interval: any;
-    if (isActive && serviceRef.current) {
-      interval = setInterval(() => {
-        if (videoRef.current && canvasRef.current && !isRecordingVideo) {
-          const context = canvasRef.current.getContext('2d');
-          if (context) {
-            context.drawImage(videoRef.current, 0, 0, 640, 480);
-            const base64 = canvasRef.current.toDataURL('image/jpeg', 0.5).split(',')[1];
-            serviceRef.current?.sendVideoFrame(base64);
-          }
-        }
-      }, 3000); // Send frame every 3 seconds
-    }
-    return () => clearInterval(interval);
-  }, [isActive, isRecordingVideo]);
+ const handleNodeSelect = async (node: any) => {
+ setSelectedArchiveNode(node);
+ setIsAnalyzingLatent(true);
+ setLatentAnalysisResult(null);
+ try {
+ const result = await analyzeLatentResonance(node, profile);
+ setLatentAnalysisResult(result);
+ } catch (e) {
+ console.error(e);
+ } finally {
+ setIsAnalyzingLatent(false);
+ }
+ };
 
-  const captureImage = async () => {
-    if (!videoRef.current || !canvasRef.current) return;
-    const context = canvasRef.current.getContext('2d');
-    if (!context) return;
-    context.drawImage(videoRef.current, 0, 0, 640, 480);
-    const base64 = canvasRef.current.toDataURL('image/jpeg', 0.8).split(',')[1];
-    
-    setIsAnalyzing(true);
-    setCaptureResult(null);
-    try {
-      const result = await analyzeMiseEnScene(base64, 'image/jpeg', profile);
-      setCaptureResult({ type: 'image', data: result });
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
+ const handlePushLatentDirective = async () => {
+ if (!latentAnalysisResult?.architectural_directive || !user?.uid) return;
+ const task = latentAnalysisResult.architectural_directive;
+ await saveTask(user.uid, {
+ id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+ text: task.title,
+ description: task.description,
+ completed: false,
+ createdAt: Date.now(),
+ tags: ['latent_directive']
+ });
+ window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+ detail: { message:"Latent Directive pushed to Action Board.", icon: <ArrowRight size={14} /> } 
+ }));
+ };
 
-  const toggleVideoRecording = () => {
-    if (isRecordingVideo) {
-      mediaRecorderRef.current?.stop();
-      setIsRecordingVideo(false);
-    } else {
-      if (!videoRef.current?.srcObject) return;
-      chunksRef.current = [];
-      const stream = videoRef.current.srcObject as MediaStream;
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-      mediaRecorder.onstop = async () => {
-        const blob = new Blob(chunksRef.current, { type: 'video/webm' });
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          const base64 = (reader.result as string).split(',')[1];
-          setIsAnalyzing(true);
-          try {
-            const result = await analyzeVideo(base64, 'video/webm', profile);
-            setCaptureResult({ type: 'video', data: result });
-          } catch (e) {
-            console.error(e);
-          } finally {
-            setIsAnalyzing(false);
-          }
-        };
-        reader.readAsDataURL(blob);
-      };
-      mediaRecorder.start();
-      mediaRecorderRef.current = mediaRecorder;
-      setIsRecordingVideo(true);
-    }
-  };
+ const startLens = async () => {
+ setIsConnecting(true);
+ try {
+ const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true });
+ if (videoRef.current) {
+ videoRef.current.srcObject = stream;
+ }
+ 
+ serviceRef.current = new LiveAestheticService((data) => {
+ if (data.scribeReading) {
+ setCurrentReading(data.scribeReading);
+ setAnalysis(prev => [...prev, data]);
+ }
+ });
+ 
+ await serviceRef.current.connect();
+ setIsActive(true);
+ } catch (err) {
+ console.error("MIMI // Failed to start The Lens:", err);
+ } finally {
+ setIsConnecting(false);
+ }
+ };
 
-  const toggleAudioRecording = () => {
-    if (isRecordingAudio) {
-      mediaRecorderRef.current?.stop();
-      setIsRecordingAudio(false);
-    } else {
-      if (!videoRef.current?.srcObject) return;
-      chunksRef.current = [];
-      const stream = videoRef.current.srcObject as MediaStream;
-      const audioStream = new MediaStream(stream.getAudioTracks());
-      const mediaRecorder = new MediaRecorder(audioStream);
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-      mediaRecorder.onstop = async () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-          const base64 = (reader.result as string).split(',')[1];
-          setIsAnalyzing(true);
-          try {
-            const result = await analyzeAudio(base64, 'audio/webm');
-            setCaptureResult({ type: 'audio', data: result });
-          } catch (e) {
-            console.error(e);
-          } finally {
-            setIsAnalyzing(false);
-          }
-        };
-        reader.readAsDataURL(blob);
-      };
-      mediaRecorder.start();
-      mediaRecorderRef.current = mediaRecorder;
-      setIsRecordingAudio(true);
-    }
-  };
+ const stopLens = () => {
+ setIsActive(false);
+ if (serviceRef.current) {
+ serviceRef.current.close();
+ }
+ if (videoRef.current?.srcObject) {
+ (videoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
+ }
+ };
 
-  return (
-    <div className="w-full h-full bg-black flex flex-col relative overflow-hidden">
-      <canvas ref={canvasRef} width={640} height={480} className="hidden" />
-      
-      <div className="absolute inset-0 z-0">
-        <video 
-          ref={videoRef} 
-          autoPlay 
-          playsInline 
-          muted 
-          className="w-full h-full object-cover opacity-60 grayscale contrast-125"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 pointer-events-none" />
-        
-        {/* Scanning Line Effect */}
-        {isActive && (
-          <motion.div 
-            initial={{ top: '0%' }}
-            animate={{ top: '100%' }}
-            transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-            className="absolute left-0 right-0 h-[1px] bg-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.5)] z-10"
-          />
-        )}
-      </div>
+ useEffect(() => {
+ let interval: any;
+ if (isActive && serviceRef.current && lensMode === 'spectral') {
+ interval = setInterval(() => {
+ if (videoRef.current && canvasRef.current && !isRecordingVideo) {
+ const context = canvasRef.current.getContext('2d');
+ if (context) {
+ context.drawImage(videoRef.current, 0, 0, 640, 480);
+ const base64 = canvasRef.current.toDataURL('image/jpeg', 0.5).split(',')[1];
+ serviceRef.current?.sendVideoFrame(base64);
+ }
+ }
+ }, 3000); // Send frame every 3 seconds
+ }
+ return () => clearInterval(interval);
+ }, [isActive, isRecordingVideo, lensMode]);
 
-      <div className="relative z-10 flex-1 flex flex-col p-8">
-        <div className="flex justify-between items-start">
-          <div className="space-y-1">
-            <h2 className="text-white font-mono text-2xl uppercase tracking-[0.3em] flex items-center gap-3">
-              <Camera size={24} className={isActive ? "text-emerald-500 animate-pulse" : "text-white/20"} />
-              The Lens
-            </h2>
-            <p className="text-white/40 text-[10px] uppercase tracking-widest">Spatial Aesthetic Capture Engine</p>
-          </div>
-          
-          <button 
-            onClick={isActive ? stopLens : startLens}
-            disabled={isConnecting}
-            className={`px-6 py-3 rounded-full font-mono text-[10px] uppercase tracking-widest transition-all flex items-center gap-3 ${
-              isActive 
-                ? "bg-red-500/20 text-red-500 border border-red-500/50 hover:bg-red-500 hover:text-white" 
-                : "bg-white text-black hover:bg-emerald-500 hover:text-white"
-            }`}
-          >
-            {isConnecting ? <Loader2 className="animate-spin" size={14} /> : isActive ? <Square size={14} /> : <Play size={14} />}
-            {isConnecting ? "Initializing..." : isActive ? "Terminate" : "Activate"}
-          </button>
-        </div>
+ const captureImage = async () => {
+ if (!videoRef.current || !canvasRef.current) return;
+ const context = canvasRef.current.getContext('2d');
+ if (!context) return;
+ context.drawImage(videoRef.current, 0, 0, 640, 480);
+ const base64 = canvasRef.current.toDataURL('image/jpeg', 0.8).split(',')[1];
+ 
+ setIsAnalyzing(true);
+ setCaptureResult(null);
+ try {
+ const result = await analyzeArchitecturalIntent(base64, 'image/jpeg', profile);
+ setCaptureResult({ type: 'image', data: result });
+ } catch (e) {
+ console.error(e);
+ } finally {
+ setIsAnalyzing(false);
+ }
+ };
 
-        <div className="flex-1 flex flex-col justify-end pb-12">
-          <AnimatePresence mode="wait">
-            {currentReading && !captureResult ? (
-              <motion.div
-                key={currentReading}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="max-w-2xl mb-8"
-              >
-                <div className="text-emerald-500 font-mono text-[10px] uppercase tracking-[0.4em] mb-4 flex items-center gap-2">
-                  <Sparkles size={12} /> Scribe Reading
-                </div>
-                <p className="text-white font-serif italic text-3xl leading-tight tracking-tight">
-                  "{currentReading}"
-                </p>
-              </motion.div>
-            ) : captureResult ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="max-w-2xl mb-8 bg-black/60 p-6 rounded-xl border border-white/10 backdrop-blur-md"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="text-emerald-500 font-mono text-[10px] uppercase tracking-[0.4em] flex items-center gap-2">
-                    <Zap size={12} /> {captureResult.type} Analysis
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button onClick={handleSaveToPocket} disabled={isSaving} className="text-emerald-500 hover:text-emerald-400 disabled:opacity-50">
-                      {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                    </button>
-                    <button onClick={() => setCaptureResult(null)} className="text-white/50 hover:text-white">
-                      <X size={16} />
-                    </button>
-                  </div>
-                </div>
-                <div className="space-y-4 text-white">
-                  {captureResult.data.directors_note && (
-                    <p className="font-serif italic text-xl">"{captureResult.data.directors_note}"</p>
-                  )}
-                  {captureResult.data.lighting_analysis && (
-                    <div>
-                      <span className="text-[10px] uppercase tracking-widest text-white/50 block mb-1">Lighting</span>
-                      <p className="text-sm">{captureResult.data.lighting_analysis}</p>
-                    </div>
-                  )}
-                  {captureResult.data.cultural_parallel && (
-                    <div>
-                      <span className="text-[10px] uppercase tracking-widest text-white/50 block mb-1">Cultural Parallel</span>
-                      <p className="text-sm">{captureResult.data.cultural_parallel}</p>
-                    </div>
-                  )}
-                  {captureResult.data.semiotic_touchpoints && (
-                    <div className="flex flex-wrap gap-2">
-                      {captureResult.data.semiotic_touchpoints.map((t: string, i: number) => (
-                        <span key={i} className="px-2 py-1 bg-white/10 rounded text-[10px] uppercase tracking-widest">{t}</span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-white/20 font-serif italic text-2xl mb-8"
-              >
-                Waiting for spatial resonance...
-              </motion.div>
-            )}
-          </AnimatePresence>
+ const toggleVideoRecording = () => {
+ if (isRecordingVideo) {
+ mediaRecorderRef.current?.stop();
+ setIsRecordingVideo(false);
+ } else {
+ if (!videoRef.current?.srcObject) return;
+ chunksRef.current = [];
+ const stream = videoRef.current.srcObject as MediaStream;
+ const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+ mediaRecorder.ondataavailable = (e) => {
+ if (e.data.size > 0) chunksRef.current.push(e.data);
+ };
+ mediaRecorder.onstop = async () => {
+ const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+ const reader = new FileReader();
+ reader.onloadend = async () => {
+ const base64 = (reader.result as string).split(',')[1];
+ setIsAnalyzing(true);
+ try {
+ const result = await analyzeVideo(base64, 'video/webm', profile);
+ setCaptureResult({ type: 'video', data: result });
+ } catch (e) {
+ console.error(e);
+ } finally {
+ setIsAnalyzing(false);
+ }
+ };
+ reader.onerror = (e) => console.error("MIMI // FileReader error", e);
+ reader.readAsDataURL(blob);
+ };
+ mediaRecorder.start();
+ mediaRecorderRef.current = mediaRecorder;
+ setIsRecordingVideo(true);
+ }
+ };
 
-          {isActive && (
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={captureImage}
-                disabled={isAnalyzing || isRecordingVideo || isRecordingAudio}
-                className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white hover:text-black transition-colors disabled:opacity-50"
-              >
-                {isAnalyzing ? <Loader2 className="animate-spin" size={18} /> : <ImageIcon size={18} />}
-              </button>
-              <button 
-                onClick={toggleVideoRecording}
-                disabled={isAnalyzing || isRecordingAudio}
-                className={`w-12 h-12 rounded-full border flex items-center justify-center transition-colors disabled:opacity-50 ${
-                  isRecordingVideo ? "bg-red-500 text-white border-red-500 animate-pulse" : "bg-white/10 border-white/20 text-white hover:bg-white hover:text-black"
-                }`}
-              >
-                <Video size={18} />
-              </button>
-              <button 
-                onClick={toggleAudioRecording}
-                disabled={isAnalyzing || isRecordingVideo}
-                className={`w-12 h-12 rounded-full border flex items-center justify-center transition-colors disabled:opacity-50 ${
-                  isRecordingAudio ? "bg-red-500 text-white border-red-500 animate-pulse" : "bg-white/10 border-white/20 text-white hover:bg-white hover:text-black"
-                }`}
-              >
-                <Mic size={18} />
-              </button>
-            </div>
-          )}
-        </div>
+ const toggleAudioRecording = () => {
+ if (isRecordingAudio) {
+ mediaRecorderRef.current?.stop();
+ setIsRecordingAudio(false);
+ } else {
+ if (!videoRef.current?.srcObject) return;
+ chunksRef.current = [];
+ const stream = videoRef.current.srcObject as MediaStream;
+ const audioStream = new MediaStream(stream.getAudioTracks());
+ const mediaRecorder = new MediaRecorder(audioStream);
+ mediaRecorder.ondataavailable = (e) => {
+ if (e.data.size > 0) chunksRef.current.push(e.data);
+ };
+ mediaRecorder.onstop = async () => {
+ const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+ const reader = new FileReader();
+ reader.onloadend = async () => {
+ const base64 = (reader.result as string).split(',')[1];
+ setIsAnalyzing(true);
+ try {
+ const result = await analyzeAudio(base64, 'audio/webm');
+ setCaptureResult({ type: 'audio', data: result });
+ } catch (e) {
+ console.error(e);
+ } finally {
+ setIsAnalyzing(false);
+ }
+ };
+ reader.onerror = (e) => console.error("MIMI // FileReader error", e);
+ reader.readAsDataURL(blob);
+ };
+ mediaRecorder.start();
+ mediaRecorderRef.current = mediaRecorder;
+ setIsRecordingAudio(true);
+ }
+ };
 
-        {/* Real-time Telemetry */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-white/10 pt-8">
-          <div className="space-y-1">
-            <div className="text-[8px] text-white/30 uppercase tracking-widest">Signal Strength</div>
-            <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-              <motion.div 
-                animate={{ width: isActive ? '85%' : '0%' }}
-                className="h-full bg-emerald-500"
-              />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-[8px] text-white/30 uppercase tracking-widest">Aesthetic Entropy</div>
-            <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-              <motion.div 
-                animate={{ width: isActive ? '42%' : '0%' }}
-                className="h-full bg-white/40"
-              />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-[8px] text-white/30 uppercase tracking-widest">Latent Depth</div>
-            <div className="h-1 bg-white/10 rounded-full overflow-hidden">
-              <motion.div 
-                animate={{ width: isActive ? '68%' : '0%' }}
-                className="h-full bg-white/40"
-              />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-[8px] text-white/30 uppercase tracking-widest">Registry Sync</div>
-            <div className="flex items-center gap-2">
-              <div className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-emerald-500 animate-pulse" : "bg-white/10"}`} />
-              <span className="text-[10px] text-white/50 font-mono uppercase tracking-widest">
-                {isActive ? "Connected" : "Idle"}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+ return (
+ <div className="w-full h-full bg-black flex flex-col relative overflow-hidden">
+ <canvas ref={canvasRef} width={640} height={480} className="hidden"/>
+ 
+ <AnimatePresence mode="wait">
+ {lensMode === 'spectral' ? (
+ <motion.div 
+ key="spectral"
+ initial={{ opacity: 0, scale: 1.1 }}
+ animate={{ opacity: 1, scale: 1 }}
+ exit={{ opacity: 0, scale: 0.9 }}
+ transition={{ duration: 0.8, ease:"easeInOut"}}
+ className="absolute inset-0 z-0"
+ >
+ <video 
+ ref={videoRef} 
+ autoPlay 
+ playsInline 
+ muted 
+ className="w-full h-full object-cover opacity-60 grayscale contrast-125"
+ />
+ <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80 pointer-events-none"/>
+ 
+ {/* Scanning Line Effect */}
+ {isActive && (
+ <motion.div 
+ initial={{ top: '0%' }}
+ animate={{ top: '100%' }}
+ transition={{ duration: 4, repeat: Infinity, ease:"linear"}}
+ className="absolute left-0 right-0 h-[1px] bg-stone-500/50 z-10"
+ />
+ )}
+ </motion.div>
+ ) : (
+ <motion.div 
+ key="mesopic"
+ initial={{ opacity: 0, scale: 0.9 }}
+ animate={{ opacity: 1, scale: 1 }}
+ exit={{ opacity: 0, scale: 1.1 }}
+ transition={{ duration: 0.8, ease:"easeInOut"}}
+ className="absolute inset-0 z-0"
+ >
+ <div className="absolute inset-0 backdrop-blur-xl bg-black/40 z-10 pointer-events-none"style={{ backdropFilter: 'blur(20px) contrast(1.2) saturate(1.5)' }} />
+ <VibeGraph onGenerateZine={() => {}} onNodeSelect={handleNodeSelect} />
+ <div className="absolute inset-0 pointer-events-none z-20"style={{ boxShadow: 'inset 0 0 100px rgba(0,0,0,0.8)' }} />
+ </motion.div>
+ )}
+ </AnimatePresence>
+
+ <div className="relative z-20 flex-1 flex flex-col p-8 pointer-events-none">
+ <div className="flex justify-between items-start pointer-events-auto">
+ <div className="space-y-1">
+ <h2 className="text-white font-mono text-2xl uppercase tracking-[0.3em] flex items-center gap-3">
+ <Camera size={24} className={isActive ?"text-stone-500 animate-pulse":"text-white/20"} />
+ The Lens
+ </h2>
+ <p className="text-white/40 text-[10px] uppercase tracking-widest">Spatial Aesthetic Capture Engine</p>
+ </div>
+ 
+ <div className="flex items-center gap-4">
+ <div className="flex bg p-1 border border-stone-800">
+ <button
+ onClick={() => setLensMode('spectral')}
+ className={`px-4 py-1.5 text-[9px] font-mono uppercase tracking-widest transition-colors ${lensMode === 'spectral' ? 'bg-stone-800 text-stone-300' : 'text-stone-500 hover:text-stone-300'}`}
+ >
+ Spectral
+ </button>
+ <button
+ onClick={() => setLensMode('mesopic')}
+ className={`px-4 py-1.5 text-[9px] font-mono uppercase tracking-widest transition-colors ${lensMode === 'mesopic' ? 'bg-stone-800 text-stone-300' : 'text-stone-500 hover:text-stone-300'}`}
+ >
+ Mesopic
+ </button>
+ </div>
+
+ <button 
+ onClick={isActive ? stopLens : startLens}
+ disabled={isConnecting}
+ className={`px-6 py-3 font-mono text-[9px] uppercase tracking-widest transition-all flex items-center gap-3 ${
+ isActive 
+ ?"bg-red-900/20 text-red-500 border border-red-900/50 hover:bg-red-900/40"
+ :"bg-transparent text-stone-300 border border-stone-800 hover:bg-stone-900"
+ }`}
+ >
+ {isConnecting ? <Loader2 className="animate-spin"size={14} /> : isActive ? <Square size={14} /> : <Play size={14} />}
+ {isConnecting ?"Initializing...": isActive ?"Terminate":"[ INITIATE LENS ]"}
+ </button>
+ </div>
+ </div>
+
+ <div className="flex-1 flex flex-col justify-end pb-12 pointer-events-auto">
+ <AnimatePresence mode="wait">
+ {lensMode === 'spectral' && currentReading && !captureResult ? (
+ <motion.div
+ key={currentReading}
+ initial={{ opacity: 0, y: 20 }}
+ animate={{ opacity: 1, y: 0 }}
+ exit={{ opacity: 0, y: -20 }}
+ className="max-w-2xl mb-8"
+ >
+ <div className="text-stone-500 font-mono text-[10px] uppercase tracking-[0.4em] mb-4 flex items-center gap-2">
+ <Sparkles size={12} /> Scribe Reading
+ </div>
+ <p className="text-white font-serif italic text-3xl leading-tight tracking-tight">
+"{currentReading}"
+ </p>
+ </motion.div>
+ ) : captureResult ? (
+ <motion.div
+ initial={{ opacity: 0, y: 20 }}
+ animate={{ opacity: 1, y: 0 }}
+ className="max-w-2xl mb-8 bg p-6 border border-stone-800 backdrop-blur-md max-h-[60vh] overflow-y-auto"
+ >
+ <div className="flex justify-between items-start mb-4">
+ <div className="text-stone-500 font-mono text-[9px] uppercase tracking-widest flex items-center gap-2 font-bold">
+ <Zap size={12} /> {captureResult.type} Analysis
+ </div>
+ <div className="flex items-center gap-2">
+ {captureResult.data.tasks && captureResult.data.tasks.length > 0 && (
+ <button onClick={handlePushToBoard} className="text-stone-500 hover:text-stone-300 flex items-center gap-1 text-[9px] font-mono uppercase tracking-widest border border-stone-800 hover:bg-stone-900 px-2 py-1 transition-colors">
+ <ArrowRight size={12} /> Push to Board
+ </button>
+ )}
+ <button onClick={handleSaveToPocket} disabled={isSaving} className="text-stone-500 hover:text-stone-300 disabled:opacity-50 transition-colors">
+ {isSaving ? <Loader2 size={16} className="animate-spin"/> : <Save size={16} />}
+ </button>
+ <button onClick={() => setCaptureResult(null)} className="text-stone-500 hover:text-stone-300 transition-colors">
+ <X size={16} />
+ </button>
+ </div>
+ </div>
+ <div className="space-y-4 text-stone-300">
+ {captureResult.data.directives && (
+ <div>
+ <span className="text-[9px] font-mono uppercase tracking-widest text-stone-500 block mb-2 font-bold">Architectural Directives</span>
+ <ul className="list-disc pl-4 space-y-1 text-sm font-serif italic">
+ {captureResult.data.directives.map((d: string, i: number) => (
+ <li key={i}>{d}</li>
+ ))}
+ </ul>
+ </div>
+ )}
+ {captureResult.data.tasks && (
+ <div>
+ <span className="text-[9px] font-mono uppercase tracking-widest text-stone-500 block mb-2 font-bold">Actionable Tasks</span>
+ <div className="space-y-2">
+ {captureResult.data.tasks.map((t: any, i: number) => (
+ <div key={i} className="bg-transparent p-3 border border-stone-800">
+ <h4 className="font-mono text-[9px] uppercase tracking-widest font-bold text-stone-300">{t.title}</h4>
+ <p className="font-serif italic text-xs text-stone-500 mt-1">{t.description}</p>
+ </div>
+ ))}
+ </div>
+ </div>
+ )}
+ {captureResult.data.directors_note && (
+ <p className="font-serif italic text-xl">"{captureResult.data.directors_note}"</p>
+ )}
+ {captureResult.data.lighting_analysis && (
+ <div>
+ <span className="text-[10px] uppercase tracking-widest text-white/50 block mb-1">Lighting</span>
+ <p className="text-sm">{captureResult.data.lighting_analysis}</p>
+ </div>
+ )}
+ {captureResult.data.cultural_parallel && (
+ <div>
+ <span className="text-[9px] font-mono uppercase tracking-widest text-stone-500 block mb-1 font-bold">Cultural Parallel</span>
+ <p className="text-sm font-serif italic">{captureResult.data.cultural_parallel}</p>
+ </div>
+ )}
+ {captureResult.data.semiotic_touchpoints && (
+ <div className="flex flex-wrap gap-2">
+ {captureResult.data.semiotic_touchpoints.map((t: string, i: number) => (
+ <span key={i} className="px-2 py-1 bg-transparent border border-stone-800 text-[9px] font-mono uppercase tracking-widest text-stone-400">{t}</span>
+ ))}
+ </div>
+ )}
+ </div>
+ </motion.div>
+ ) : lensMode === 'mesopic' ? (
+ isAnalyzingLatent ? (
+ <motion.div
+ initial={{ opacity: 0, y: 20 }}
+ animate={{ opacity: 1, y: 0 }}
+ className="max-w-2xl mb-8 bg p-6 border border-stone-800 backdrop-blur-md flex items-center gap-4"
+ >
+ <Loader2 className="animate-spin text-stone-500"size={24} />
+ <span className="text-stone-500 font-mono text-sm uppercase tracking-widest font-bold">Extracting Latent Resonance...</span>
+ </motion.div>
+ ) : latentAnalysisResult ? (
+ <motion.div
+ initial={{ opacity: 0, y: 20 }}
+ animate={{ opacity: 1, y: 0 }}
+ className="max-w-2xl mb-8 bg p-6 border border-stone-800 backdrop-blur-md max-h-[60vh] overflow-y-auto"
+ >
+ <div className="flex justify-between items-start mb-4">
+ <div className="text-stone-500 font-mono text-[9px] uppercase tracking-widest flex items-center gap-2 font-bold">
+ <Sparkles size={12} /> Latent Resonance
+ </div>
+ <div className="flex items-center gap-2">
+ <button onClick={handlePushLatentDirective} className="text-stone-500 hover:text-stone-300 flex items-center gap-1 text-[9px] font-mono uppercase tracking-widest border border-stone-800 hover:bg-stone-900 px-2 py-1 transition-colors">
+ <ArrowRight size={12} /> Push to Board
+ </button>
+ <button onClick={() => setLatentAnalysisResult(null)} className="text-stone-500 hover:text-stone-300 transition-colors">
+ <X size={16} />
+ </button>
+ </div>
+ </div>
+ <div className="space-y-4 text-stone-300">
+ {latentAnalysisResult.resonance_insight && (
+ <p className="font-serif italic text-xl text-stone-400">"{latentAnalysisResult.resonance_insight}"</p>
+ )}
+ {latentAnalysisResult.architectural_directive && (
+ <div>
+ <span className="text-[9px] font-mono uppercase tracking-widest text-stone-500 block mb-2 font-bold">Architectural Directive</span>
+ <div className="bg-transparent p-3 border border-stone-800">
+ <h4 className="font-mono text-[9px] uppercase tracking-widest font-bold text-stone-300">{latentAnalysisResult.architectural_directive.title}</h4>
+ <p className="font-serif italic text-xs text-stone-500 mt-1">{latentAnalysisResult.architectural_directive.description}</p>
+ </div>
+ </div>
+ )}
+ {latentAnalysisResult.aesthetic_vectors && (
+ <div className="flex flex-wrap gap-2">
+ {latentAnalysisResult.aesthetic_vectors.map((v: string, i: number) => (
+ <span key={i} className="px-2 py-1 bg-transparent border border-stone-800 text-[9px] font-mono uppercase tracking-widest text-stone-400">{v}</span>
+ ))}
+ </div>
+ )}
+ </div>
+ </motion.div>
+ ) : (
+ <motion.div
+ initial={{ opacity: 0 }}
+ animate={{ opacity: 1 }}
+ className="text-white/20 font-serif italic text-2xl mb-8"
+ >
+ Exploring the Mesopic Archive...
+ </motion.div>
+ )
+ ) : (
+ <motion.div
+ initial={{ opacity: 0 }}
+ animate={{ opacity: 1 }}
+ className="text-white/20 font-serif italic text-2xl mb-8"
+ >
+ Waiting for spatial resonance...
+ </motion.div>
+ )}
+ </AnimatePresence>
+
+ {isActive && lensMode === 'spectral' && (
+ <div className="flex items-center gap-4">
+ <button 
+ onClick={captureImage}
+ disabled={isAnalyzing || isRecordingVideo || isRecordingAudio}
+ className="w-12 h-12 bg-transparent border border-stone-800 flex items-center justify-center text-stone-500 hover:bg-stone-900 hover:text-stone-300 transition-colors disabled:opacity-50"
+ >
+ {isAnalyzing ? <Loader2 className="animate-spin"size={18} /> : <ImageIcon size={18} />}
+ </button>
+ <button 
+ onClick={toggleVideoRecording}
+ disabled={isAnalyzing || isRecordingAudio}
+ className={`w-12 h-12 border flex items-center justify-center transition-colors disabled:opacity-50 ${
+ isRecordingVideo ?"bg-red-900/20 text-red-500 border-red-900/50 animate-pulse":"bg-transparent border-stone-800 text-stone-500 hover:bg-stone-900 hover:text-stone-300"
+ }`}
+ >
+ <Video size={18} />
+ </button>
+ <button 
+ onClick={toggleAudioRecording}
+ disabled={isAnalyzing || isRecordingVideo}
+ className={`w-12 h-12 border flex items-center justify-center transition-colors disabled:opacity-50 ${
+ isRecordingAudio ?"bg-red-900/20 text-red-500 border-red-900/50 animate-pulse":"bg-transparent border-stone-800 text-stone-500 hover:bg-stone-900 hover:text-stone-300"
+ }`}
+ >
+ <Mic size={18} />
+ </button>
+ </div>
+ )}
+ </div>
+
+ {/* Real-time Telemetry */}
+ <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-stone-800 pt-8 pointer-events-auto">
+ <div className="space-y-1">
+ <div className="text-[9px] font-mono text-stone-500 uppercase tracking-widest font-bold">Signal Strength</div>
+ <div className="h-1 bg border border-stone-800 overflow-hidden">
+ <motion.div 
+ animate={{ width: isActive ? '85%' : '0%' }}
+ className="h-full bg-stone-500"
+ />
+ </div>
+ </div>
+ <div className="space-y-1">
+ <div className="text-[9px] font-mono text-stone-500 uppercase tracking-widest font-bold">Aesthetic Entropy</div>
+ <div className="h-1 bg border border-stone-800 overflow-hidden">
+ <motion.div 
+ animate={{ width: isActive ? '42%' : '0%' }}
+ className="h-full bg-stone-700"
+ />
+ </div>
+ </div>
+ <div className="space-y-1">
+ <div className="text-[9px] font-mono text-stone-500 uppercase tracking-widest font-bold">Latent Depth</div>
+ <div className="h-1 bg border border-stone-800 overflow-hidden">
+ <motion.div 
+ animate={{ width: isActive ? '68%' : '0%' }}
+ className="h-full bg-stone-600"
+ />
+ </div>
+ </div>
+ <div className="space-y-1">
+ <div className="text-[9px] font-mono text-stone-500 uppercase tracking-widest font-bold">Registry Sync</div>
+ <div className="flex items-center gap-2">
+ <div className={`w-1.5 h-1.5 ${isActive ?"bg-stone-500 animate-pulse":"bg-stone-800"}`} />
+ <span className="text-[9px] text-stone-500 font-mono uppercase tracking-widest font-bold">
+ {isActive ?"Connected":"Idle"}
+ </span>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ );
 };
 
 export default TheLens;

@@ -1,6 +1,6 @@
 import { collection, doc, setDoc, deleteDoc, query, where, getDocs, onSnapshot, updateDoc, getDoc } from "firebase/firestore";
 import { db, auth } from "./firebaseInit";
-import { handleFirestoreError, OperationType } from "./firebaseUtils";
+import { handleFirestoreError, logFirestoreError, OperationType } from "./firebaseUtils";
 
 export interface Connection {
   id: string;
@@ -73,8 +73,12 @@ export const subscribeToFollowing = (userId: string, callback: (connections: Con
   const q = query(collection(db, "connections"), where("followerId", "==", userId));
   return onSnapshot(q, (snap) => {
     callback(snap.docs.map(d => d.data() as Connection));
-  }, (error) => {
-    handleFirestoreError(error, OperationType.LIST, "connections");
+  }, (error: any) => {
+    if (error.code === 'permission-denied' && !auth.currentUser) {
+      console.warn(`MIMI // Ignored permission-denied for connections due to auth state change.`);
+      return;
+    }
+    logFirestoreError(error, OperationType.LIST, "connections");
   });
 };
 

@@ -1,5 +1,5 @@
 
-import { setPersistence, browserSessionPersistence, onAuthStateChanged, User } from "firebase/auth";
+import { setPersistence, browserLocalPersistence, onAuthStateChanged, User } from "firebase/auth";
 import { auth, db, storage } from "./firebaseInit";
 import { PocketItem, Stack } from "../types";
 import { logFirestoreError, handleFirestoreError, OperationType } from "./firebaseUtils";
@@ -28,10 +28,10 @@ export const initializeAuthPersistence = async (): Promise<void> => {
   if (persistenceInitialized) return;
   
   try {
-    // browserSessionPersistence clears on tab close
-    await setPersistence(auth, browserSessionPersistence);
+    // browserLocalPersistence persists across tab closes
+    await setPersistence(auth, browserLocalPersistence);
     persistenceInitialized = true;
-    console.info("MIMI // Persistence Locked: browserSessionPersistence");
+    console.info("MIMI // Persistence Locked: browserLocalPersistence");
   } catch (err: any) {
     console.error("MIMI // Persistence Calibration Failed:", err.code, err.message);
     persistenceInitialized = true;

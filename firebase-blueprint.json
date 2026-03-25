@@ -53,7 +53,9 @@
         "displayName": { "type": "string" },
         "photoURL": { "type": "string" },
         "email": { "type": "string" },
-        "role": { "type": "string" }
+        "role": { "type": "string" },
+        "plan": { "type": "string", "enum": ["free", "core", "pro", "lab"] },
+        "subscriptionStatus": { "type": "string", "enum": ["active", "inactive", "past_due", "canceled"] }
       },
       "required": ["uid", "handle"]
     },

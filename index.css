@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Public+Sans:wght@300;400;500&family=Inter:wght@200;300;400;500&family=JetBrains+Mono:wght@300;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Public+Sans:wght@300;400;500&family=Inter:wght@200;300;400;500&family=JetBrains+Mono:wght@300;400&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,700;1,6..96,400&display=swap');
 @import "tailwindcss";
 @config "./tailwind.config.js";
 
@@ -8,7 +8,7 @@
     --nous-base: #F5F2ED; /* Warm off-white */
     --nous-text: #0C0C0C; 
     --nous-subtle: #404040;
-    --nous-accent: #10B981; /* Desaturated emerald */
+    --nous-accent: #78716c; /* Desaturated stone */
     --nous-olive: #5A5A40;
     --nous-charcoal: #262626;
   }

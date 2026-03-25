@@ -4,100 +4,100 @@ import { Loader2, Plus, Check } from 'lucide-react';
 import { generateTagsFromMedia } from '../services/geminiService';
 
 interface TagGeneratorProps {
-  onAddTags: (tags: string[]) => void;
-  context?: string;
+ onAddTags: (tags: string[]) => void;
+ context?: string;
 }
 
 export const TagGenerator: React.FC<TagGeneratorProps> = ({ onAddTags, context }) => {
-  const [inputText, setInputText] = useState('');
-  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+ const [inputText, setInputText] = useState('');
+ const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
+ const [isLoading, setIsLoading] = useState(false);
+ const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
 
-  const handleGenerateTags = async () => {
-    if (!inputText.trim()) return;
-    setIsLoading(true);
-    try {
-      const tags = await generateTagsFromMedia(inputText, []);
-      setSuggestedTags(tags);
-      setSelectedTags(new Set());
-    } catch (error) {
-      console.error("MIMI // Tag Generation Error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+ const handleGenerateTags = async () => {
+ if (!inputText.trim()) return;
+ setIsLoading(true);
+ try {
+ const tags = await generateTagsFromMedia(inputText, []);
+ setSuggestedTags(tags);
+ setSelectedTags(new Set());
+ } catch (error) {
+ console.error("MIMI // Tag Generation Error:", error);
+ } finally {
+ setIsLoading(false);
+ }
+ };
 
-  const toggleTag = (tag: string) => {
-    const newSelected = new Set(selectedTags);
-    if (newSelected.has(tag)) {
-      newSelected.delete(tag);
-    } else {
-      newSelected.add(tag);
-    }
-    setSelectedTags(newSelected);
-  };
+ const toggleTag = (tag: string) => {
+ const newSelected = new Set(selectedTags);
+ if (newSelected.has(tag)) {
+ newSelected.delete(tag);
+ } else {
+ newSelected.add(tag);
+ }
+ setSelectedTags(newSelected);
+ };
 
-  const handleAddSelected = () => {
-    onAddTags(Array.from(selectedTags));
-    setSuggestedTags([]);
-    setSelectedTags(new Set());
-  };
+ const handleAddSelected = () => {
+ onAddTags(Array.from(selectedTags));
+ setSuggestedTags([]);
+ setSelectedTags(new Set());
+ };
 
-  return (
-    <div className="w-full space-y-6 p-6 bg-white dark:bg-black border border-black dark:border-white">
-      <div className="flex justify-between items-baseline border-b border-black dark:border-white pb-2">
-        <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-black dark:text-white">TAG_GENERATOR // AI</span>
-      </div>
-      <textarea
-        value={inputText}
-        onChange={(e) => setInputText(e.target.value)}
-        placeholder="INPUT CONTENT TO GENERATE AESTHETIC TAGS..."
-        className="w-full bg-transparent border-b border-black dark:border-white font-mono text-[9px] uppercase tracking-[0.2em] text-black dark:text-white focus:outline-none placeholder:text-stone-400 py-2 resize-none"
-        rows={3}
-      />
-      <button
-        onClick={handleGenerateTags}
-        disabled={isLoading || !inputText.trim()}
-        className="w-full py-3 border border-black dark:border-white bg-black text-white dark:bg-white dark:text-black font-mono text-[9px] uppercase tracking-[0.3em] hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors disabled:opacity-50 disabled:hover:bg-black disabled:hover:text-white dark:disabled:hover:bg-white dark:disabled:hover:text-black"
-      >
-        {isLoading ? <Loader2 size={12} className="animate-spin mx-auto" strokeWidth={1} /> : 'GENERATE TAGS'}
-      </button>
+ return (
+ <div className="w-full space-y-6 p-6 bg-white dark:bg-black border border-black dark:border-white">
+ <div className="flex justify-between items-baseline border-b border-black dark:border-white pb-2">
+ <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-black dark:text-white">TAG_GENERATOR // AI</span>
+ </div>
+ <textarea
+ value={inputText}
+ onChange={(e) => setInputText(e.target.value)}
+ placeholder="INPUT CONTENT TO GENERATE AESTHETIC TAGS..."
+ className="w-full bg-transparent border-b border-black dark:border-white font-mono text-[9px] uppercase tracking-[0.2em] text-black dark:text-white focus:outline-none placeholder:text-stone-400 py-2 resize-none"
+ rows={3}
+ />
+ <button
+ onClick={handleGenerateTags}
+ disabled={isLoading || !inputText.trim()}
+ className="w-full py-3 border border-black dark:border-white bg-black text-white dark:bg-white dark:text-black font-mono text-[9px] uppercase tracking-[0.3em] hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors disabled:opacity-50 disabled:hover:bg-black disabled:hover:text-white dark:disabled:hover:bg-white dark:disabled:hover:text-black"
+ >
+ {isLoading ? <Loader2 size={12} className="animate-spin mx-auto"strokeWidth={1} /> : 'GENERATE TAGS'}
+ </button>
 
-      <AnimatePresence>
-        {suggestedTags.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="space-y-6 pt-4"
-          >
-            <div className="flex flex-wrap gap-3">
-              {suggestedTags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={() => toggleTag(tag)}
-                  className={`px-4 py-2 font-mono text-[9px] uppercase tracking-[0.2em] border transition-colors ${
-                    selectedTags.has(tag)
-                      ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
-                      : 'bg-white text-black border-black dark:bg-black dark:text-white dark:border-white hover:opacity-50'
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-            {selectedTags.size > 0 && (
-              <button
-                onClick={handleAddSelected}
-                className="w-full py-3 flex items-center justify-center gap-3 border border-black dark:border-white bg-white text-black dark:bg-black dark:text-white font-mono text-[9px] uppercase tracking-[0.3em] hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
-              >
-                <Check size={12} strokeWidth={1} /> SAVE {selectedTags.size} TAGS
-              </button>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+ <AnimatePresence>
+ {suggestedTags.length > 0 && (
+ <motion.div
+ initial={{ opacity: 0, height: 0 }}
+ animate={{ opacity: 1, height: 'auto' }}
+ exit={{ opacity: 0, height: 0 }}
+ className="space-y-6 pt-4"
+ >
+ <div className="flex flex-wrap gap-3">
+ {suggestedTags.map((tag) => (
+ <button
+ key={tag}
+ onClick={() => toggleTag(tag)}
+ className={`px-4 py-2 font-mono text-[9px] uppercase tracking-[0.2em] border transition-colors ${
+ selectedTags.has(tag)
+ ? 'bg-black text-white border-black dark:bg-white dark:text-black dark:border-white'
+ : 'bg-white text-black border-black dark:bg-black dark:text-white dark:border-white hover:opacity-50'
+ }`}
+ >
+ {tag}
+ </button>
+ ))}
+ </div>
+ {selectedTags.size > 0 && (
+ <button
+ onClick={handleAddSelected}
+ className="w-full py-3 flex items-center justify-center gap-3 border border-black dark:border-white bg-white text-black dark:bg-black dark:text-white font-mono text-[9px] uppercase tracking-[0.3em] hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
+ >
+ <Check size={12} strokeWidth={1} /> SAVE {selectedTags.size} TAGS
+ </button>
+ )}
+ </motion.div>
+ )}
+ </AnimatePresence>
+ </div>
+ );
 };

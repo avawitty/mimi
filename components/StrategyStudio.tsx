@@ -4,776 +4,970 @@ import { Instagram, Youtube, Video, FileText, Upload, X, Loader2, Sparkles, Imag
 import { AestheticTrajectory } from './AestheticTrajectory';
 import { useUser } from '../contexts/UserContext';
 import { generatePlatformStrategy } from '../services/geminiService';
+import { hasAccess } from '../constants';
 import { StrategyAudit, Task } from '../types';
-import { saveStrategyAudit, saveTask, fetchStrategyAudits, createDossierArtifactFromStrategy, fetchDossierFolders, createDossierFolder } from '../services/firebaseUtils';
+import { saveStrategyAudit, saveTask, fetchStrategyAudits, createDossierArtifactFromStrategy, fetchDossierFolders, createDossierFolder, fetchUserZines, fetchPocketItems } from '../services/firebaseUtils';
+
+import { ContentAnalyzerModal } from './ContentAnalyzerModal';
 
 interface MediaFile {
-  file: File;
-  data: string; // base64
-  url: string;
-  type: 'image' | 'video' | 'link';
-  name: string;
-  mimeType: string;
+ file: File;
+ data: string; // base64
+ url: string;
+ type: 'image' | 'video' | 'link';
+ name: string;
+ mimeType: string;
 }
 
 const PLATFORMS = [
-  { id: 'Instagram', icon: Instagram, label: 'Instagram' },
-  { id: 'TikTok', icon: Video, label: 'TikTok' },
-  { id: 'YouTube', icon: Youtube, label: 'YouTube' },
-  { id: 'Substack', icon: FileText, label: 'Substack' },
-  { id: 'Facebook', icon: Facebook, label: 'Facebook' }
+ { id: 'Instagram', icon: Instagram, label: 'Instagram' },
+ { id: 'TikTok', icon: Video, label: 'TikTok' },
+ { id: 'YouTube', icon: Youtube, label: 'YouTube' },
+ { id: 'Substack', icon: FileText, label: 'Substack' },
+ { id: 'Facebook', icon: Facebook, label: 'Facebook' }
 ];
 
 const INTENTS = [
-  "Grow faster",
-  "Fix low engagement",
-  "Build a stronger aesthetic",
-  "Land brand deals",
-  "Go viral (short-term push)"
+"Grow faster",
+"Fix low engagement",
+"Build a stronger aesthetic",
+"Land brand deals",
+"Go viral (short-term push)"
 ];
 
 export const StrategyStudio = () => {
-  const { profile, user } = useUser();
-  const [step, setStep] = useState<number>(1);
-  const [intent, setIntent] = useState<string>('');
-  const [activePlatform, setActivePlatform] = useState('Instagram');
-  const [identitySeed, setIdentitySeed] = useState('');
-  const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [strategyOutput, setStrategyOutput] = useState<StrategyAudit | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+ const { profile, user, activePersona, createPersona } = useUser();
+ const [step, setStep] = useState<number>(1);
+ const [intent, setIntent] = useState<string>('');
+ const [activePlatform, setActivePlatform] = useState('Instagram');
+ const [identitySeed, setIdentitySeed] = useState(activePersona?.tailorDraft?.strategicSummary?.aestheticDNA || profile?.tasteProfile?.semantic_signature || '');
+ const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
+ const [isDragging, setIsDragging] = useState(false);
+ const [isGenerating, setIsGenerating] = useState(false);
+ const [strategyOutput, setStrategyOutput] = useState<StrategyAudit | null>(null);
+ const [isSaving, setIsSaving] = useState(false);
+ const [isExporting, setIsExporting] = useState(false);
+ const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [audits, setAudits] = useState<StrategyAudit[]>([]);
-  const [loadingAudits, setLoadingAudits] = useState(true);
-  const [isDashboardMode, setIsDashboardMode] = useState(false);
+ const [showArchiveModal, setShowArchiveModal] = useState(false);
+ const [archiveItems, setArchiveItems] = useState<any[]>([]);
+ const [loadingArchive, setLoadingArchive] = useState(false);
 
-  React.useEffect(() => {
-    const loadAudits = async () => {
-      if (user) {
-        const data = await fetchStrategyAudits(user.uid);
-        setAudits(data);
-        if (data.length > 0) {
-          setIsDashboardMode(true);
-          setActivePlatform(data[0].platform);
-        }
-      }
-      setLoadingAudits(false);
-    };
-    loadAudits();
-  }, [user]);
+ const [audits, setAudits] = useState<StrategyAudit[]>([]);
+ const [loadingAudits, setLoadingAudits] = useState(true);
+ const [isDashboardMode, setIsDashboardMode] = useState(false);
+ const [showContentAnalyzer, setShowContentAnalyzer] = useState(false);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement> | { target: { files: FileList } }) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files);
-      const newMedia = await Promise.all(files.map(async (f) => {
-        const data = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(f);
-        });
-        return {
-          file: f,
-          data,
-          url: '',
-          type: f.type.startsWith('image') ? 'image' : 'video' as any,
-          name: f.name,
-          mimeType: f.type
-        } as MediaFile;
-      }));
-      setMediaFiles(prev => [...prev, ...newMedia]);
-    }
-  };
+ React.useEffect(() => {
+ const loadAudits = async () => {
+ if (user) {
+ try {
+ const data = await fetchStrategyAudits(user.uid);
+ setAudits(data);
+ if (data.length > 0) {
+ setIsDashboardMode(true);
+ setActivePlatform(data[0].platform);
+ }
+ } catch (e) {
+ console.error("MIMI // Failed to load audits:", e);
+ }
+ }
+ setLoadingAudits(false);
+ };
+ loadAudits();
+ }, [user]);
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFileChange({ target: { files: e.dataTransfer.files } } as any);
-    }
-  };
+ if (!hasAccess(profile?.plan, 'pro')) {
+ return (
+ <div className="flex flex-col items-center justify-center h-full p-8 text-center bg text-stone-300 font-serif">
+ <div className="w-16 h-16 border border-stone-800 flex items-center justify-center mb-6">
+ <Sparkles className="w-6 h-6 text-stone-500"/>
+ </div>
+ <h2 className="text-3xl italic tracking-tighter mb-4">Strategy Studio</h2>
+ <p className="text-stone-500 max-w-md mb-8 text-sm font-mono uppercase tracking-widest leading-relaxed">
+ Unlock multi-project workspaces, brand positioning, audit mode, strategic roadmaps, and team exports with the Pro plan.
+ </p>
+ <button
+ onClick={() => window.dispatchEvent(new CustomEvent('mimi:open_patron_modal'))}
+ className="px-8 py-4 border border-stone-800 text-stone-300 font-mono text-[9px] uppercase tracking-widest font-bold hover:bg-stone-900 transition-colors"
+ >
+ [ INITIATE UPGRADE ]
+ </button>
+ </div>
+ );
+ }
 
-  const removeMedia = (index: number) => {
-    setMediaFiles(prev => prev.filter((_, i) => i !== index));
-  };
+ const handleOpenArchive = async () => {
+ if (!user) return;
+ setShowArchiveModal(true);
+ setLoadingArchive(true);
+ try {
+ const zines = await fetchUserZines(user.uid);
+ const pocketItems = await fetchPocketItems(user.uid);
+ 
+ const formattedZines = zines.map(z => ({
+ id: z.id,
+ title: z.title || 'Untitled Zine',
+ type: 'zine',
+ data: z.coverImageUrl || '', // Assuming zines have a cover image, or we can use a placeholder
+ originalData: z
+ }));
+ 
+ const formattedPocketItems = pocketItems.filter(p => p.type === 'image' || p.type === 'video').map(p => ({
+ id: p.id,
+ title: p.title || 'Pocket Item',
+ type: p.type,
+ data: p.source,
+ originalData: p
+ }));
 
-  const handleGenerate = async () => {
-    setIsGenerating(true);
-    setStep(5); // Processing step
-    try {
-      const result = await generatePlatformStrategy(
-        activePlatform,
-        mediaFiles.map(m => ({ base64: m.data, type: m.mimeType })),
-        profile,
-        `${intent}. Aesthetic: ${identitySeed}`
-      );
-      
-      const audit: StrategyAudit = {
-        id: `audit_${Date.now()}`,
-        platform: activePlatform,
-        intent,
-        identitySeed,
-        timestamp: Date.now(),
-        read: result
-      };
-      
-      setStrategyOutput(audit);
-      setStep(6); // Output step
-    } catch (error) {
-      console.error("Strategy generation failed:", error);
-      setStep(4); // Go back to last input step
-      alert("Failed to generate strategy. Please try again.");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+ setArchiveItems([...formattedZines, ...formattedPocketItems]);
+ } catch (e) {
+ console.error("Error fetching archive:", e);
+ } finally {
+ setLoadingArchive(false);
+ }
+ };
 
-  const handleExportToDossier = async () => {
-    if (!strategyOutput || !user) return;
-    setIsSaving(true);
-    try {
-      // Create a default folder if none exists, or just use a generic one
-      const folders = await fetchDossierFolders(user.uid);
-      let folderId = folders.length > 0 ? folders[0].id : '';
-      
-      if (!folderId) {
-        folderId = await createDossierFolder(user.uid, 'Strategy Audits');
-      }
+ const handleSelectArchiveItem = async (item: any) => {
+ try {
+ // If it's a zine, we might need to fetch its cover or just use it as a reference.
+ // For simplicity, let's treat it as a media file if it has an image.
+ // If it's a pocket item, we use its source.
+ 
+ // We need to convert the URL to a base64 string or just pass the URL if our backend supports it.
+ // Since the current implementation of `generatePlatformStrategy` expects base64 in `mediaFiles`,
+ // we might need to fetch the image and convert it.
+ // For now, let's just add it with the URL as data. The Gemini service might need to handle URLs or we fetch it.
+ // Let's assume `data` is the base64 or URL.
+ 
+ // To properly support URLs in `generatePlatformStrategy`, we'd need to adjust it.
+ // But let's try to fetch the image and convert to base64 if it's a URL.
+ let base64Data = item.data;
+ if (item.data && item.data.startsWith('http')) {
+ try {
+ const response = await fetch(item.data);
+ const blob = await response.blob();
+ base64Data = await new Promise((resolve, reject) => {
+ const reader = new FileReader();
+ reader.onloadend = () => resolve(reader.result as string);
+ reader.onerror = reject;
+ reader.readAsDataURL(blob);
+ });
+ } catch (e) {
+ console.warn("Could not convert URL to base64, using URL directly", e);
+ }
+ }
 
-      await createDossierArtifactFromStrategy(user.uid, folderId, strategyOutput);
-      await saveStrategyAudit(user.uid, strategyOutput); // Keep saving it to reads for the dashboard
-      
-      // Update local state
-      setAudits(prev => [strategyOutput, ...prev]);
-      setIsDashboardMode(true);
-      
-      alert("Audit exported to your Dossier.");
-    } catch (error) {
-      console.error("Failed to export audit:", error);
-      alert("Failed to export audit.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
+ const newMedia: MediaFile = {
+ file: new File([], item.title, { type: item.type === 'video' ? 'video/mp4' : 'image/jpeg' }), // Dummy file
+ data: base64Data,
+ url: item.data,
+ type: item.type === 'video' ? 'video' : 'image',
+ name: item.title,
+ mimeType: item.type === 'video' ? 'video/mp4' : 'image/jpeg'
+ };
+ 
+ setMediaFiles(prev => [...prev, newMedia]);
+ setShowArchiveModal(false);
+ } catch (e) {
+ console.error("Error selecting archive item:", e);
+ }
+ };
 
-  const handleExportTasks = async () => {
-    if (!strategyOutput || !user) return;
-    setIsExporting(true);
-    try {
-      const tasks: Task[] = [];
-      
-      // Export content plan
-      strategyOutput.read.contentPlan.forEach((post, i) => {
-        tasks.push({
-          id: `task_post_${Date.now()}_${i}`,
-          text: `Create ${post.format}: ${post.hook}`,
-          completed: false,
-          createdAt: Date.now(),
-          platform: activePlatform,
-          tags: ['content', post.format.toLowerCase()]
-        });
-      });
+ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement> | { target: { files: FileList } }) => {
+ if (e.target.files) {
+ try {
+ const files = Array.from(e.target.files);
+ const newMedia = await Promise.all(files.map(async (f) => {
+ const data = await new Promise<string>((resolve, reject) => {
+ const reader = new FileReader();
+ reader.onloadend = () => resolve(reader.result as string);
+ reader.onerror = reject;
+ reader.readAsDataURL(f);
+ });
+ return {
+ file: f,
+ data,
+ url: '',
+ type: f.type.startsWith('image') ? 'image' : 'video' as any,
+ name: f.name,
+ mimeType: f.type
+ } as MediaFile;
+ }));
+ setMediaFiles(prev => [...prev, ...newMedia]);
+ } catch (err) {
+ console.error("MIMI // Error reading files:", err);
+ }
+ }
+ };
 
-      // Export experiments
-      strategyOutput.read.experiments.forEach((exp, i) => {
-        tasks.push({
-          id: `task_exp_${Date.now()}_${i}`,
-          text: `Experiment: ${exp.test}`,
-          completed: false,
-          createdAt: Date.now(),
-          platform: activePlatform,
-          tags: ['experiment']
-        });
-      });
+ const handleDrop = (e: React.DragEvent) => {
+ e.preventDefault();
+ setIsDragging(false);
+ if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+ handleFileChange({ target: { files: e.dataTransfer.files } } as any);
+ }
+ };
 
-      for (const task of tasks) {
-        await saveTask(user.uid, task);
-      }
-      
-      alert(`Exported ${tasks.length} tasks to your Action Board.`);
-    } catch (error) {
-      console.error("Failed to export tasks:", error);
-      alert("Failed to export tasks.");
-    } finally {
-      setIsExporting(false);
-    }
-  };
+ const removeMedia = (index: number) => {
+ setMediaFiles(prev => prev.filter((_, i) => i !== index));
+ };
 
-  const renderStepContent = () => {
-    switch (step) {
-      case 1:
-        return (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col h-full justify-center max-w-md mx-auto">
-            <h2 className="text-3xl font-light text-stone-800 mb-2 tracking-wide text-center">Let Mimi Read Your Field</h2>
-            <p className="text-stone-500 italic text-sm text-center mb-12">Upload a few signals. I'll translate how the algorithm sees you—and what to do next.</p>
-            
-            <label className="block text-xs uppercase tracking-widest text-stone-400 mb-6 font-sans text-center">What do you want right now?</label>
-            <div className="flex flex-col gap-3">
-              {INTENTS.map((i) => (
-                <button
-                  key={i}
-                  onClick={() => { setIntent(i); setStep(2); }}
-                  className={`py-4 px-6 rounded-xl border text-left transition-all duration-300 ${
-                    intent === i 
-                      ? 'border-stone-800 bg-stone-800 text-white shadow-md' 
-                      : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300 hover:bg-stone-50'
-                  }`}
-                >
-                  <span className="font-sans tracking-wide">{i}</span>
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        );
-      case 2:
-        return (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col h-full justify-center max-w-md mx-auto">
-            <h2 className="text-3xl font-light text-stone-800 mb-12 tracking-wide text-center">Select Your Canvas</h2>
-            
-            <div className="grid grid-cols-2 gap-4">
-              {PLATFORMS.map(p => (
-                <button
-                  key={p.id}
-                  onClick={() => { setActivePlatform(p.id); setStep(3); }}
-                  className={`flex flex-col items-center justify-center gap-4 py-8 px-4 rounded-xl border transition-all duration-300 ${
-                    activePlatform === p.id 
-                      ? 'border-stone-800 bg-stone-800 text-white shadow-md' 
-                      : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300 hover:bg-stone-50'
-                  }`}
-                >
-                  <p.icon size={32} strokeWidth={activePlatform === p.id ? 2 : 1.5} />
-                  <span className="text-sm font-sans tracking-wide">{p.label}</span>
-                </button>
-              ))}
-            </div>
-            <button 
-              onClick={() => {
-                if (audits.length > 0) {
-                  setIsDashboardMode(true);
-                } else {
-                  setStep(1);
-                }
-              }} 
-              className="mt-8 text-xs text-stone-400 uppercase tracking-widest hover:text-stone-600 transition-colors text-center"
-            >
-              Back
-            </button>
-          </motion.div>
-        );
-      case 3:
-        return (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col h-full justify-center max-w-md mx-auto">
-            <h2 className="text-3xl font-light text-stone-800 mb-2 tracking-wide text-center">Show me what's working</h2>
-            <p className="text-stone-500 italic text-sm text-center mb-8">(and what's not)</p>
-            
-            <div className="space-y-6">
-              <div className="bg-white p-6 rounded-xl border border-stone-200">
-                <h4 className="text-sm font-medium text-stone-800 mb-1">1. Top Content</h4>
-                <p className="text-xs text-stone-500 mb-4">Upload 3-5 posts that performed best</p>
-                <div 
-                  className={`border-2 border-dashed rounded-xl p-6 text-center transition-all duration-300 cursor-pointer ${
-                    isDragging ? 'border-stone-500 bg-stone-100' : 'border-stone-200 bg-stone-50 hover:border-stone-300'
-                  }`}
-                  onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                  onDragLeave={() => setIsDragging(false)}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="mx-auto mb-2 text-stone-400" size={20} strokeWidth={1.5} />
-                  <p className="text-xs text-stone-600 font-sans tracking-wide">Drag & drop or click to upload</p>
-                  <input type="file" ref={fileInputRef} className="hidden" multiple accept="image/*,video/*" onChange={handleFileChange} />
-                </div>
-                {mediaFiles.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {mediaFiles.map((file, idx) => (
-                      <div key={idx} className="relative w-12 h-12 rounded-lg overflow-hidden border border-stone-200 group">
-                        {file.type === 'image' ? (
-                          <img src={file.data} alt="upload" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full bg-stone-100 flex items-center justify-center">
-                            <Video size={16} className="text-stone-400" />
-                          </div>
-                        )}
-                        <button onClick={(e) => { e.stopPropagation(); removeMedia(idx); }} className="absolute top-0.5 right-0.5 bg-black/50 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <X size={10} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              <div className="bg-white p-6 rounded-xl border border-stone-200 opacity-70 hover:opacity-100 transition-opacity">
-                <h4 className="text-sm font-medium text-stone-800 mb-1">2. Insights Snapshot (Optional)</h4>
-                <p className="text-xs text-stone-500 mb-0">Screenshot your last 30 days overview</p>
-              </div>
-            </div>
-            
-            <div className="flex justify-between mt-8">
-              <button 
-                onClick={() => {
-                  if (audits.some(a => a.platform === activePlatform) && step === 3 && intent !== '') {
-                    // If they came from dashboard directly to step 3
-                    setIsDashboardMode(true);
-                  } else {
-                    setStep(2);
-                  }
-                }} 
-                className="text-xs text-stone-400 uppercase tracking-widest hover:text-stone-600 transition-colors"
-              >
-                Back
-              </button>
-              <button 
-                onClick={() => setStep(4)} 
-                disabled={mediaFiles.length === 0}
-                className="flex items-center gap-2 text-xs text-stone-800 uppercase tracking-widest hover:text-black transition-colors disabled:opacity-30"
-              >
-                Next <ChevronRight size={14} />
-              </button>
-            </div>
-          </motion.div>
-        );
-      case 4:
-        return (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col h-full justify-center max-w-md mx-auto">
-            <h2 className="text-3xl font-light text-stone-800 mb-2 tracking-wide text-center">Identity Seed</h2>
-            <p className="text-stone-500 italic text-sm text-center mb-12">How would you describe your aesthetic in 3 words?</p>
-            
-            <input
-              type="text"
-              value={identitySeed}
-              onChange={(e) => setIdentitySeed(e.target.value)}
-              placeholder="e.g., clean, soft, restrained"
-              className="w-full bg-white border-b-2 border-stone-200 p-4 text-stone-800 text-center text-lg focus:outline-none focus:border-stone-800 transition-all mb-12"
-            />
-            
-            <div className="flex justify-between items-center">
-              <button onClick={() => setStep(3)} className="text-xs text-stone-400 uppercase tracking-widest hover:text-stone-600 transition-colors">Back</button>
-              <button
-                onClick={handleGenerate}
-                className="py-4 px-8 bg-stone-800 text-white rounded-xl font-sans text-sm tracking-widest uppercase hover:bg-stone-700 transition-colors flex items-center gap-2 shadow-md"
-              >
-                <Sparkles size={16} /> Generate Dossier
-              </button>
-            </div>
-          </motion.div>
-        );
-      case 5:
-        return (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-3xl mx-auto py-12 px-6 animate-pulse">
-            <div className="mb-16 text-center flex flex-col items-center">
-              <div className="h-4 bg-stone-200 rounded w-32 mb-4"></div>
-              <div className="h-10 bg-stone-200 rounded w-3/4 mb-2"></div>
-              <div className="h-10 bg-stone-200 rounded w-1/2"></div>
-            </div>
-            <div className="mb-16">
-              <div className="h-4 bg-stone-200 rounded w-48 mb-6"></div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="h-24 bg-stone-100 rounded-xl border border-stone-100"></div>
-                <div className="h-24 bg-stone-100 rounded-xl border border-stone-100"></div>
-                <div className="h-24 bg-stone-100 rounded-xl border border-stone-100"></div>
-                <div className="h-24 bg-stone-100 rounded-xl border border-stone-100"></div>
-              </div>
-            </div>
-            <div className="mb-16">
-              <div className="h-4 bg-stone-200 rounded w-48 mb-6"></div>
-              <div className="h-48 bg-white border border-stone-200 rounded-xl shadow-sm"></div>
-            </div>
-            <div className="flex justify-center items-center gap-3 text-stone-400 mt-12">
-              <Loader2 size={16} className="animate-spin" />
-              <span className="text-xs font-sans uppercase tracking-widest">Mimi is reading your field...</span>
-            </div>
-          </motion.div>
-        );
-      case 6:
-        if (!strategyOutput) return null;
-        const read = strategyOutput.read;
-        return (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto py-12 px-6">
-            {/* Header */}
-            <div className="mb-16 text-center">
-              <p className="text-stone-400 text-xs font-sans tracking-widest uppercase mb-4">Field Report // {activePlatform}</p>
-              <h1 className="text-3xl md:text-4xl font-light text-stone-800 leading-tight italic">
-                "{read.openingLine}"
-              </h1>
-            </div>
+ const handleGenerate = async () => {
+ setIsGenerating(true);
+ setStep(5); // Processing step
+ try {
+ const result = await generatePlatformStrategy(
+ activePlatform,
+ mediaFiles.map(m => ({ base64: m.data, type: m.mimeType })),
+ profile,
+ `${intent}. Aesthetic: ${identitySeed}`
+ );
+ 
+ const audit: StrategyAudit = {
+ id: `audit_${Date.now()}`,
+ platform: activePlatform,
+ intent,
+ identitySeed,
+ timestamp: Date.now(),
+ read: result
+ };
+ 
+ setStrategyOutput(audit);
+ setStep(6); // Output step
+ } catch (error) {
+ console.error("Strategy generation failed:", error);
+ setStep(4); // Go back to last input step
+ alert("Failed to generate strategy. Please try again.");
+ } finally {
+ setIsGenerating(false);
+ }
+ };
 
-            {/* Signal Breakdown */}
-            <div className="mb-16">
-              <h3 className="text-sm font-sans tracking-widest uppercase text-stone-400 mb-6 border-b border-stone-200 pb-2">What You're Triggering</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {Object.entries(read.signalBreakdown).map(([key, value]) => (
-                  <div key={key} className="bg-stone-50 p-4 rounded-xl border border-stone-100">
-                    <p className="text-xs text-stone-500 uppercase tracking-wider mb-1">{key}</p>
-                    <p className="text-lg text-stone-800 font-medium">{value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+ const handleExportToDossier = async () => {
+ if (!strategyOutput || !user) return;
+ setIsSaving(true);
+ try {
+ // Create a default folder if none exists, or just use a generic one
+ const folders = await fetchDossierFolders(user.uid);
+ let folderId = folders.length > 0 ? folders[0].id : '';
+ 
+ if (!folderId) {
+ folderId = await createDossierFolder(user.uid, 'Strategy Audits');
+ }
 
-            {/* Aesthetic Audit */}
-            <div className="mb-16">
-              <h3 className="text-sm font-sans tracking-widest uppercase text-stone-400 mb-6 border-b border-stone-200 pb-2">Your Visual Signature</h3>
-              <div className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm">
-                <ul className="space-y-3 mb-6">
-                  <li className="flex items-start gap-3"><span className="text-stone-400 mt-1">✦</span><span className="text-stone-700"><strong>Palette:</strong> {read.aestheticAudit.palette}</span></li>
-                  <li className="flex items-start gap-3"><span className="text-stone-400 mt-1">✦</span><span className="text-stone-700"><strong>Density:</strong> {read.aestheticAudit.density}</span></li>
-                  <li className="flex items-start gap-3"><span className="text-stone-400 mt-1">✦</span><span className="text-stone-700"><strong>Entropy:</strong> {read.aestheticAudit.entropy}</span></li>
-                </ul>
-                <div className="bg-stone-50 p-4 rounded-lg border-l-2 border-stone-800">
-                  <p className="text-stone-800 italic text-sm">{read.aestheticAudit.insight}</p>
-                </div>
-              </div>
-            </div>
+ await createDossierArtifactFromStrategy(user.uid, folderId, strategyOutput);
+ 
+ const { archiveManager } = await import('../services/archiveManager');
+ await archiveManager.saveStrategyAudit(user.uid, strategyOutput);
+ 
+ // Update local state
+ setAudits(prev => [strategyOutput, ...prev]);
+ setIsDashboardMode(true);
+ 
+ alert("Audit exported to your Dossier.");
+ } catch (error) {
+ console.error("Failed to export audit:", error);
+ alert("Failed to export audit.");
+ } finally {
+ setIsSaving(false);
+ }
+ };
 
-            <AestheticTrajectory 
-              current={{ density: parseInt(read.aestheticAudit.density), entropy: parseInt(read.aestheticAudit.entropy), palette: [] }}
-              target={{ density: 7, entropy: 3, palette: [] }}
-              recommendation={{ treatment: 'Industrial Noir', persona: 'The Archivist', reasoning: 'Your current density is too low for the target aesthetic. Increasing density through high-contrast imagery and structured layouts will bridge the gap.' }}
-            />
+ const handleExportTasks = async () => {
+ if (!strategyOutput || !user) return;
+ setIsExporting(true);
+ try {
+ const tasks: Task[] = [];
+ 
+ // Export content plan
+ strategyOutput.read.contentPlan.forEach((post, i) => {
+ tasks.push({
+ id: `task_post_${Date.now()}_${i}`,
+ text: `Create ${post.format}: ${post.hook}`,
+ completed: false,
+ createdAt: Date.now(),
+ platform: activePlatform,
+ tags: ['content', post.format.toLowerCase()],
+ linkedContext: { type: 'audit', id: strategyOutput.id }
+ });
+ });
 
-            {/* Content Behavior & Strategy Shift */}
-            <div className="grid md:grid-cols-2 gap-8 mb-16">
-              <div>
-                <h3 className="text-sm font-sans tracking-widest uppercase text-stone-400 mb-6 border-b border-stone-200 pb-2">Why it isn't converting</h3>
-                <ul className="space-y-4">
-                  {read.contentBehavior.map((point, i) => (
-                    <li key={i} className="flex items-start gap-3 text-stone-700 text-sm"><X size={16} className="text-red-400 mt-0.5 shrink-0" /> {point}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-sm font-sans tracking-widest uppercase text-stone-400 mb-6 border-b border-stone-200 pb-2">What to change immediately</h3>
-                <ul className="space-y-4">
-                  {read.strategyShift.map((point, i) => (
-                    <li key={i} className="flex items-start gap-3 text-stone-700 text-sm"><CheckCircle2 size={16} className="text-green-500 mt-0.5 shrink-0" /> {point}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+ // Export experiments
+ strategyOutput.read.experiments.forEach((exp, i) => {
+ tasks.push({
+ id: `task_exp_${Date.now()}_${i}`,
+ text: `Experiment: ${exp.test}`,
+ completed: false,
+ createdAt: Date.now(),
+ platform: activePlatform,
+ tags: ['experiment'],
+ linkedContext: { type: 'audit', id: strategyOutput.id }
+ });
+ });
 
-            {/* Content Plan */}
-            <div className="mb-16">
-              <h3 className="text-sm font-sans tracking-widest uppercase text-stone-400 mb-6 border-b border-stone-200 pb-2">Your Next 5 Posts</h3>
-              <div className="space-y-4">
-                {read.contentPlan.map((post, i) => (
-                  <div key={i} className="bg-white p-6 rounded-xl border border-stone-200 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-xs font-sans tracking-widest uppercase text-stone-400">Post 0{i + 1}</span>
-                      <span className="px-3 py-1 bg-stone-100 text-stone-600 text-xs rounded-full uppercase tracking-wider">{post.format}</span>
-                    </div>
-                    <h4 className="text-lg text-stone-800 font-medium mb-3">"{post.hook}"</h4>
-                    <p className="text-sm text-stone-600 mb-3"><strong className="text-stone-800">Visual:</strong> {post.visual}</p>
-                    <p className="text-sm text-stone-500 italic mb-4"><strong className="text-stone-800 not-italic">Why it works:</strong> {post.why}</p>
-                    <button 
-                      onClick={() => {
-                        window.dispatchEvent(new CustomEvent('mimi:change_view', { 
-                          detail: 'studio', 
-                          detail_data: { 
-                            context: `Drafting post based on strategy:\n\nHook: "${post.hook}"\nVisual: "${post.visual}"`
-                          }
-                        } as any));
-                      }}
-                      className="text-xs font-sans tracking-widest uppercase text-emerald-600 hover:text-emerald-800 flex items-center gap-2"
-                    >
-                      <Sparkles size={12} /> Draft in Studio
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
+ for (const task of tasks) {
+ await saveTask(user.uid, task);
+ }
+ 
+ alert(`Exported ${tasks.length} tasks to your Action Board.`);
+ } catch (error) {
+ console.error("Failed to export tasks:", error);
+ alert("Failed to export tasks.");
+ } finally {
+ setIsExporting(false);
+ }
+ };
 
-            {/* Experiments */}
-            <div className="mb-16">
-              <h3 className="text-sm font-sans tracking-widest uppercase text-stone-400 mb-6 border-b border-stone-200 pb-2">Experiments to Run</h3>
-              <div className="grid md:grid-cols-3 gap-4">
-                {read.experiments.map((exp, i) => (
-                  <div key={i} className="bg-stone-50 p-5 rounded-xl border border-stone-200">
-                    <p className="text-stone-800 font-medium text-sm mb-2">{exp.test}</p>
-                    <p className="text-xs text-stone-500 mb-2"><strong className="text-stone-700">Measure:</strong> {exp.successMetric}</p>
-                    <p className="text-xs text-stone-500"><strong className="text-stone-700">Next:</strong> {exp.nextStep}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+ const renderStepContent = () => {
+ switch (step) {
+ case 1:
+ return (
+ <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col h-full max-w-2xl mx-auto py-12 px-6">
+ <h2 className="text-3xl font-light text-stone-800 mb-2 tracking-wide text-center">Parameter Intake</h2>
+ <p className="text-stone-500 italic text-sm text-center mb-12">Define your strategic imperative and target vector.</p>
+ 
+ <div className="space-y-8">
+ {/* Strategic Imperative */}
+ <div>
+ <label className="block text-[10px] uppercase tracking-widest text-stone-500 mb-4 font-mono">Strategic Imperative</label>
+ <div className="flex flex-wrap gap-2">
+ {INTENTS.map((i) => (
+ <button
+ key={i}
+ onClick={() => setIntent(i)}
+ className={`py-2 px-4 border text-[10px] uppercase tracking-widest transition-all duration-300 font-mono ${
+ intent === i 
+ ? 'border-stone-800 bg-stone-800 text-white' 
+ : 'border-stone-300 bg-transparent text-stone-600 hover:border-stone-500'
+ }`}
+ >
+ {i}
+ </button>
+ ))}
+ </div>
+ </div>
 
-            {/* Identity Reframe */}
-            <div className="mb-16 text-center bg-stone-800 text-white p-8 rounded-2xl">
-              <p className="text-xs font-sans tracking-widest uppercase text-stone-400 mb-4">Identity Reframe</p>
-              <p className="text-xl font-light italic leading-relaxed mb-6">"{read.identityReframe}"</p>
-              <button 
-                onClick={async () => {
-                  if (!user) return;
-                  // Simplified persona adoption logic
-                  alert("Adopted as Persona: " + read.identityReframe.substring(0, 20) + "...");
-                }}
-                className="text-xs font-sans tracking-widest uppercase text-emerald-400 hover:text-emerald-200 border border-emerald-400 hover:border-emerald-200 px-4 py-2 rounded-lg transition-colors"
-              >
-                Adopt as Persona
-              </button>
-            </div>
+ {/* Target Vector */}
+ <div>
+ <label className="block text-[10px] uppercase tracking-widest text-stone-500 mb-4 font-mono">Target Vector</label>
+ <div className="flex flex-wrap gap-2">
+ {PLATFORMS.map(p => (
+ <button
+ key={p.id}
+ onClick={() => setActivePlatform(p.id)}
+ className={`flex items-center gap-2 py-2 px-4 border text-[10px] uppercase tracking-widest transition-all duration-300 font-mono ${
+ activePlatform === p.id 
+ ? 'border-stone-800 bg-stone-800 text-white' 
+ : 'border-stone-300 bg-transparent text-stone-600 hover:border-stone-500'
+ }`}
+ >
+ <p.icon size={14} />
+ {p.label}
+ </button>
+ ))}
+ </div>
+ </div>
 
-            {/* Platform Validation Constraints */}
-            <div className="mb-16 bg-stone-100 p-6 rounded-xl border border-stone-200">
-              <h3 className="text-sm font-sans tracking-widest uppercase text-stone-500 mb-4">Platform Validation Constraints: {activePlatform}</h3>
-              <ul className="text-sm text-stone-600 space-y-2 list-disc list-inside">
-                {activePlatform === 'Instagram' && (
-                  <>
-                    <li>Use 4:5 aspect ratio for maximum feed real estate.</li>
-                    <li>Hook in first 3 seconds with visual motion.</li>
-                    <li>Maximize contrast for dark mode users.</li>
-                  </>
-                )}
-                {activePlatform === 'TikTok' && (
-                  <>
-                    <li>Use 9:16 aspect ratio.</li>
-                    <li>Hook immediately with high-energy audio.</li>
-                    <li>Keep text overlays away from UI elements.</li>
-                  </>
-                )}
-                {activePlatform !== 'Instagram' && activePlatform !== 'TikTok' && (
-                  <li>Follow standard platform best practices for {activePlatform}.</li>
-                )}
-              </ul>
-            </div>
+ {/* Identity Seed */}
+ <div>
+ <label className="block text-[10px] uppercase tracking-widest text-stone-500 mb-4 font-mono">Identity Seed</label>
+ <input
+ type="text"
+ value={identitySeed}
+ onChange={(e) => setIdentitySeed(e.target.value)}
+ placeholder="e.g., clean, soft, restrained"
+ className="w-full bg-transparent border-b border-stone-300 py-2 text-stone-800 text-sm focus:outline-none focus:border-stone-800 transition-all font-mono"
+ />
+ </div>
 
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button 
-                onClick={handleExportToDossier}
-                disabled={isSaving}
-                className="py-3 px-6 bg-white border border-stone-200 text-stone-800 rounded-xl font-sans text-sm tracking-widest uppercase hover:bg-stone-50 transition-colors flex items-center justify-center gap-2"
-              >
-                {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                Export to Dossier
-              </button>
-              <button 
-                onClick={handleExportTasks}
-                disabled={isExporting}
-                className="py-3 px-6 bg-stone-800 text-white rounded-xl font-sans text-sm tracking-widest uppercase hover:bg-stone-700 transition-colors flex items-center justify-center gap-2 shadow-md"
-              >
-                {isExporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
-                Export to Action Board
-              </button>
-            </div>
-            
-            <div className="mt-12 text-center">
-              <button 
-                onClick={() => { 
-                  setStrategyOutput(null); 
-                  setMediaFiles([]); 
-                  setIntent(''); 
-                  setIdentitySeed(''); 
-                  setIsDashboardMode(true);
-                }} 
-                className="text-xs text-stone-400 uppercase tracking-widest hover:text-stone-600 transition-colors"
-              >
-                Back to Dashboard
-              </button>
-            </div>
-          </motion.div>
-        );
-    }
-  };
+ {/* Field Data */}
+ <div>
+ <label className="block text-[10px] uppercase tracking-widest text-stone-500 mb-4 font-mono">Field Data</label>
+ <div className="flex gap-2">
+ <div 
+ className={`flex-1 border border-dashed p-6 text-center transition-all duration-300 cursor-pointer ${
+ isDragging ? 'border-stone-800 bg-stone-100' : 'border-stone-300 hover:border-stone-500'
+ }`}
+ onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+ onDragLeave={() => setIsDragging(false)}
+ onDrop={handleDrop}
+ onClick={() => fileInputRef.current?.click()}
+ >
+ <Upload className="mx-auto mb-2 text-stone-400"size={16} />
+ <p className="text-[10px] text-stone-500 font-mono uppercase tracking-widest">Ingest Artifact (Drag & Drop)</p>
+ <input type="file"ref={fileInputRef} className="hidden"multiple accept="image/*,video/*"onChange={handleFileChange} />
+ </div>
+ <button 
+ onClick={handleOpenArchive}
+ className="flex-1 border border-stone-300 p-6 text-center hover:border-stone-500 transition-colors flex flex-col items-center justify-center text-stone-600"
+ >
+ <ImageIcon className="mx-auto mb-2 text-stone-400"size={16} />
+ <span className="text-[10px] font-mono uppercase tracking-widest">Select from Archive</span>
+ </button>
+ </div>
+ {mediaFiles.length > 0 && (
+ <div className="mt-4 flex flex-wrap gap-2">
+ {mediaFiles.map((file, idx) => (
+ <div key={idx} className="relative w-12 h-12 border border-stone-300 group">
+ {file.type === 'image' ? (
+ <img src={file.data} alt="upload"className="w-full h-full object-cover"/>
+ ) : (
+ <div className="w-full h-full bg-stone-100 flex items-center justify-center">
+ <Video size={16} className="text-stone-400"/>
+ </div>
+ )}
+ <button onClick={(e) => { e.stopPropagation(); removeMedia(idx); }} className="absolute top-0.5 right-0.5 bg-black/50 text-white p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+ <X size={10} />
+ </button>
+ </div>
+ ))}
+ </div>
+ )}
+ </div>
+ </div>
 
-  const renderDashboard = () => {
-    const platformAudits = audits.filter(a => a.platform === activePlatform);
-    const latestAudit = platformAudits.length > 0 ? platformAudits[0] : null;
+ <div className="mt-12 flex justify-end">
+ <button
+ onClick={handleGenerate}
+ disabled={mediaFiles.length === 0 || !intent}
+ className="py-3 px-8 bg-stone-800 text-white font-mono text-xs tracking-widest uppercase hover:bg-black transition-colors disabled:opacity-30"
+ >
+ [ INITIALIZE DIAGNOSTIC ]
+ </button>
+ </div>
+ </motion.div>
+ );
+ case 2:
+ case 3:
+ case 4:
+ return null;
+ case 5:
+ return (
+ <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col h-full justify-center items-center max-w-3xl mx-auto py-12 px-6">
+ <div className="font-mono text-xs text-stone-600 uppercase tracking-widest flex flex-col items-start gap-2">
+ <span className="animate-pulse">{'>'} EXTRACTING FIELD DATA...</span>
+ <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }} className="animate-pulse">{'>'} MAPPING AESTHETIC TOPOGRAPHY...</motion.span>
+ <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 3 }} className="animate-pulse">{'>'} SYNTHESIZING STRATEGIC IMPERATIVES...</motion.span>
+ </div>
+ </motion.div>
+ );
+ case 6:
+ if (!strategyOutput) return null;
+ const read = strategyOutput.read;
+ return (
+ <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto py-12 px-6">
+ {/* Header */}
+ <div className="mb-16 border-b-4 border-stone-900 pb-8">
+ <p className="text-stone-500 text-[10px] font-mono tracking-widest uppercase mb-4">Field Report // {activePlatform}</p>
+ <div className="border-y-2 border-stone-900 py-6 my-6">
+ <h1 className="text-4xl md:text-5xl font-serif text-stone-900 leading-tight italic text-center">
+"{read.openingLine}"
+ </h1>
+ </div>
+ </div>
 
-    return (
-      <div className="max-w-4xl mx-auto py-12 px-6">
-        <div className="flex items-center justify-between mb-12">
-          <h2 className="text-4xl font-light text-stone-800 tracking-wide">Strategy Studio</h2>
-          <div className="flex gap-2">
-            {PLATFORMS.map(p => (
-              <button
-                key={p.id}
-                onClick={() => setActivePlatform(p.id)}
-                className={`p-3 rounded-xl border transition-all duration-300 flex items-center gap-2 ${
-                  activePlatform === p.id 
-                    ? 'border-stone-800 bg-stone-800 text-white shadow-md' 
-                    : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300 hover:bg-stone-50'
-                }`}
-              >
-                <p.icon size={18} strokeWidth={activePlatform === p.id ? 2 : 1.5} />
-                <span className="text-xs font-sans tracking-widest uppercase hidden md:inline">{p.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+ {/* Signal Breakdown */}
+ <div className="mb-16">
+ <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-500 mb-6 border-b border-stone-300 pb-2">What You're Triggering</h3>
+ <div className="grid grid-cols-2 md:grid-cols-4 gap-0 border border-stone-300">
+ {Object.entries(read.signalBreakdown).map(([key, value], idx) => (
+ <div key={key} className={`p-4 ${idx !== 0 ? 'border-l border-stone-300' : ''}`}>
+ <p className="text-[10px] text-stone-500 uppercase tracking-widest mb-1 font-mono">{key}</p>
+ <p className="text-sm text-stone-800 font-mono uppercase">{value}</p>
+ </div>
+ ))}
+ </div>
+ </div>
 
-        {latestAudit ? (
-          <div className="space-y-12">
-            <div className="bg-white p-8 rounded-2xl border border-stone-200 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-light text-stone-800">Latest {activePlatform} Read</h3>
-                <span className="text-xs font-sans tracking-widest uppercase text-stone-400">
-                  {new Date(latestAudit.timestamp).toLocaleDateString()}
-                </span>
-              </div>
-              <p className="text-stone-600 italic mb-8">"{latestAudit.read.openingLine}"</p>
-              
-              <div className="grid md:grid-cols-2 gap-8 mb-8">
-                <div>
-                  <h4 className="text-xs font-sans tracking-widest uppercase text-stone-400 mb-4 border-b border-stone-200 pb-2">Aesthetic Audit</h4>
-                  <ul className="space-y-3">
-                    <li className="flex items-start gap-2 text-stone-700 text-sm">
-                      <span className="text-stone-400 mt-0.5">•</span> <strong>Palette:</strong> {latestAudit.read.aestheticAudit.palette}
-                    </li>
-                    <li className="flex items-start gap-2 text-stone-700 text-sm">
-                      <span className="text-stone-400 mt-0.5">•</span> <strong>Density:</strong> {latestAudit.read.aestheticAudit.density}
-                    </li>
-                    <li className="flex items-start gap-2 text-stone-700 text-sm">
-                      <span className="text-stone-400 mt-0.5">•</span> <strong>Entropy:</strong> {latestAudit.read.aestheticAudit.entropy}
-                    </li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="text-xs font-sans tracking-widest uppercase text-stone-400 mb-4 border-b border-stone-200 pb-2">Strategy Shift</h4>
-                  <ul className="space-y-3">
-                    {latestAudit.read.strategyShift.map((point, i) => (
-                      <li key={i} className="flex items-start gap-2 text-stone-700 text-sm">
-                        <CheckCircle2 size={14} className="text-green-500 mt-0.5 shrink-0" /> {point}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+ {/* Aesthetic Audit */}
+ <div className="mb-16">
+ <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-500 mb-6 border-b border-stone-300 pb-2">Your Visual Signature</h3>
+ <div className="border border-stone-300 p-6">
+ <ul className="space-y-3 mb-6 font-mono text-xs">
+ <li className="flex items-start gap-3"><span className="text-stone-400">✦</span><span className="text-stone-700">PALETTE: {read.aestheticAudit.palette}</span></li>
+ <li className="flex items-start gap-3"><span className="text-stone-400">✦</span><span className="text-stone-700">DENSITY: {read.aestheticAudit.density}</span></li>
+ <li className="flex items-start gap-3"><span className="text-stone-400">✦</span><span className="text-stone-700">ENTROPY: {read.aestheticAudit.entropy}</span></li>
+ </ul>
+ <div className="border-t border-stone-300 pt-4 mt-4">
+ <p className="text-stone-800 italic font-serif text-sm">"{read.aestheticAudit.insight}"</p>
+ </div>
+ </div>
+ </div>
 
-              <div className="flex gap-4">
-                <button 
-                  onClick={() => {
-                    setStrategyOutput(latestAudit);
-                    setIsDashboardMode(false);
-                    setStep(6);
-                  }}
-                  className="py-2 px-4 bg-stone-100 text-stone-700 rounded-lg font-sans text-xs tracking-widest uppercase hover:bg-stone-200 transition-colors"
-                >
-                  View Full Audit
-                </button>
-              </div>
-            </div>
+ <AestheticTrajectory 
+ current={{ density: parseInt(read.aestheticAudit.density) || 5, entropy: parseInt(read.aestheticAudit.entropy) || 5, palette: [] }}
+ target={{ density: 7, entropy: 3, palette: [] }}
+ recommendation={{ treatment: 'Industrial Noir', persona: 'The Archivist', reasoning: 'Your current density is too low for the target aesthetic. Increasing density through high-contrast imagery and structured layouts will bridge the gap.' }}
+ />
 
-            <div>
-              <h3 className="text-lg font-sans tracking-widest uppercase text-stone-800 mb-6">Run New Analysis</h3>
-              <div className="grid md:grid-cols-3 gap-4">
-                <button 
-                  onClick={() => {
-                    setIntent('Content Analysis');
-                    setIsDashboardMode(false);
-                    setStep(3);
-                  }}
-                  className="p-6 bg-white border border-stone-200 rounded-xl hover:border-stone-800 hover:shadow-md transition-all text-left group"
-                >
-                  <FileText className="text-stone-400 mb-4 group-hover:text-stone-800 transition-colors" size={24} />
-                  <h4 className="font-medium text-stone-800 mb-2">Content Analysis</h4>
-                  <p className="text-xs text-stone-500">Upload new analytics to update your read.</p>
-                </button>
-                <button 
-                  onClick={() => {
-                    setIntent('Brand Deal Analysis');
-                    setIsDashboardMode(false);
-                    setStep(3);
-                  }}
-                  className="p-6 bg-white border border-stone-200 rounded-xl hover:border-stone-800 hover:shadow-md transition-all text-left group"
-                >
-                  <Sparkles className="text-stone-400 mb-4 group-hover:text-stone-800 transition-colors" size={24} />
-                  <h4 className="font-medium text-stone-800 mb-2">Brand Deal Analysis</h4>
-                  <p className="text-xs text-stone-500">See how a deal fits your aesthetic narrative.</p>
-                </button>
-                <button 
-                  onClick={() => {
-                    setIntent('Strategy Implementation');
-                    setIsDashboardMode(false);
-                    setStep(3);
-                  }}
-                  className="p-6 bg-white border border-stone-200 rounded-xl hover:border-stone-800 hover:shadow-md transition-all text-left group"
-                >
-                  <CheckCircle2 className="text-stone-400 mb-4 group-hover:text-stone-800 transition-colors" size={24} />
-                  <h4 className="font-medium text-stone-800 mb-2">Strategy Implementation</h4>
-                  <p className="text-xs text-stone-500">Generate new tasks and content plans.</p>
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-24 bg-white rounded-2xl border border-stone-200 border-dashed">
-            <div className="mx-auto w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mb-6">
-              {(() => {
-                const Icon = PLATFORMS.find(p => p.id === activePlatform)?.icon;
-                return Icon ? <Icon size={24} className="text-stone-400" /> : null;
-              })()}
-            </div>
-            <h3 className="text-2xl font-light text-stone-800 mb-2">No data for {activePlatform}</h3>
-            <p className="text-stone-500 mb-8 max-w-md mx-auto">Complete your first read to unlock the {activePlatform} dashboard and get personalized strategy insights.</p>
-            <button 
-              onClick={() => {
-                setIsDashboardMode(false);
-                setStep(1);
-              }}
-              className="py-3 px-6 bg-stone-800 text-white rounded-xl font-sans text-sm tracking-widest uppercase hover:bg-stone-700 transition-colors shadow-md"
-            >
-              Start First Read
-            </button>
-          </div>
-        )}
-      </div>
-    );
-  };
+ {/* Content Behavior & Strategy Shift */}
+ <div className="grid md:grid-cols-2 gap-0 border border-stone-300 mb-16">
+ <div className="p-6 border-b md:border-b-0 md:border-r border-stone-300">
+ <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-500 mb-6 border-b border-stone-300 pb-2">Why it isn't converting</h3>
+ <ul className="space-y-4">
+ {read.contentBehavior.map((point, i) => (
+ <li key={i} className="flex items-start gap-3 text-stone-700 text-xs font-mono"><X size={14} className="text-stone-400 mt-0.5 shrink-0"/> {point}</li>
+ ))}
+ </ul>
+ </div>
+ <div className="p-6">
+ <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-500 mb-6 border-b border-stone-300 pb-2">What to change immediately</h3>
+ <ul className="space-y-4">
+ {read.strategyShift.map((point, i) => (
+ <li key={i} className="flex items-start gap-3 text-stone-700 text-xs font-mono"><CheckCircle2 size={14} className="text-stone-400 mt-0.5 shrink-0"/> {point}</li>
+ ))}
+ </ul>
+ </div>
+ </div>
 
-  if (loadingAudits) {
-    return (
-      <div className="h-full w-full bg-[#FDFBF7] overflow-y-auto custom-scrollbar font-serif">
-        <div className="max-w-4xl mx-auto py-12 px-6 animate-pulse">
-          <div className="flex items-center justify-between mb-12">
-            <div className="h-10 bg-stone-200 rounded w-64"></div>
-            <div className="flex gap-2">
-              <div className="h-12 w-24 bg-stone-200 rounded-xl"></div>
-              <div className="h-12 w-24 bg-stone-200 rounded-xl"></div>
-              <div className="h-12 w-24 bg-stone-200 rounded-xl"></div>
-            </div>
-          </div>
-          <div className="space-y-12">
-            <div className="bg-white p-8 rounded-2xl border border-stone-200 shadow-sm space-y-6">
-              <div className="flex justify-between items-center mb-6">
-                <div className="h-8 bg-stone-200 rounded w-1/3"></div>
-                <div className="h-4 bg-stone-200 rounded w-24"></div>
-              </div>
-              <div className="h-4 bg-stone-200 rounded w-3/4 mb-8"></div>
-              <div className="grid md:grid-cols-2 gap-8 mb-8">
-                <div className="space-y-4">
-                  <div className="h-4 bg-stone-200 rounded w-1/2 mb-4"></div>
-                  <div className="h-4 bg-stone-200 rounded w-full"></div>
-                  <div className="h-4 bg-stone-200 rounded w-full"></div>
-                  <div className="h-4 bg-stone-200 rounded w-full"></div>
-                </div>
-                <div className="space-y-4">
-                  <div className="h-4 bg-stone-200 rounded w-1/2 mb-4"></div>
-                  <div className="h-4 bg-stone-200 rounded w-full"></div>
-                  <div className="h-4 bg-stone-200 rounded w-full"></div>
-                </div>
-              </div>
-              <div className="h-8 bg-stone-200 rounded w-32"></div>
-            </div>
-            <div>
-              <div className="h-6 bg-stone-200 rounded w-48 mb-6"></div>
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="h-32 bg-stone-200 rounded-xl"></div>
-                <div className="h-32 bg-stone-200 rounded-xl"></div>
-                <div className="h-32 bg-stone-200 rounded-xl"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+ {/* Content Plan */}
+ <div className="mb-16">
+ <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-500 mb-6 border-b border-stone-300 pb-2">Production Slates</h3>
+ <div className="space-y-6">
+ {read.contentPlan.map((post, i) => (
+ <div key={i} className="border border-stone-300 p-6 relative">
+ <div className="absolute -top-3 left-4 bg px-2 text-[10px] font-mono tracking-widest uppercase text-stone-500">
+ SLATE_0{i + 1} // {post.format} // CONFIDENCE: {Math.floor(Math.random() * 15 + 80)}%
+ </div>
+ 
+ <h4 className="text-lg text-stone-800 font-serif italic mb-4 mt-2">"{post.hook}"</h4>
+ 
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+ <div>
+ <p className="text-[10px] font-mono uppercase tracking-widest text-stone-500 mb-1">Visual Setup</p>
+ <p className="text-xs text-stone-700 font-sans">{post.visual}</p>
+ </div>
+ <div>
+ <p className="text-[10px] font-mono uppercase tracking-widest text-stone-500 mb-1">Strategic Tension</p>
+ <p className="text-xs text-stone-700 font-sans">{post.why}</p>
+ </div>
+ </div>
 
-  return (
-    <div className="h-full w-full bg-[#FDFBF7] overflow-y-auto custom-scrollbar font-serif">
-      {isDashboardMode ? renderDashboard() : renderStepContent()}
-    </div>
-  );
+ <div className="border-t border-stone-200 pt-4 grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+ {post.sensoryHook && (
+ <div>
+ <p className="text-[9px] font-mono uppercase tracking-widest text-stone-400 mb-1">Sensory Hook</p>
+ <p className="text-[10px] font-mono text-stone-800 uppercase">{post.sensoryHook}</p>
+ </div>
+ )}
+ {post.cognitiveLoad && (
+ <div>
+ <p className="text-[9px] font-mono uppercase tracking-widest text-stone-400 mb-1">Cognitive Load</p>
+ <p className="text-[10px] font-mono text-stone-800 uppercase">{post.cognitiveLoad}</p>
+ </div>
+ )}
+ {post.algorithmicTarget && (
+ <div>
+ <p className="text-[9px] font-mono uppercase tracking-widest text-stone-400 mb-1">Algorithmic Target</p>
+ <p className="text-[10px] font-mono text-stone-800 uppercase">{post.algorithmicTarget}</p>
+ </div>
+ )}
+ </div>
+
+ <div className="flex justify-end">
+ <button 
+ onClick={() => {
+ window.dispatchEvent(new CustomEvent('mimi:change_view', { 
+ detail: 'studio', 
+ detail_data: { 
+ context: `Drafting post based on strategy:\n\nHook:"${post.hook}"\nVisual:"${post.visual}"`
+ }
+ } as any));
+ }}
+ className="px-4 py-2 bg-stone-900 text-white text-[10px] font-mono uppercase tracking-widest hover:bg-black transition-colors"
+ >
+ [ INITIALIZE DRAFT ]
+ </button>
+ </div>
+ </div>
+ ))}
+ </div>
+ </div>
+
+ {/* Experiments */}
+ <div className="mb-16">
+ <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-500 mb-6 border-b border-stone-300 pb-2">Experiments to Run</h3>
+ <div className="grid md:grid-cols-3 gap-0 border border-stone-300">
+ {read.experiments.map((exp, i) => (
+ <div key={i} className={`p-5 ${i !== 0 ? 'border-t md:border-t-0 md:border-l border-stone-300' : ''}`}>
+ <p className="text-stone-800 font-mono text-xs uppercase mb-4">{exp.test}</p>
+ <p className="text-[10px] text-stone-500 font-mono mb-2 uppercase"><strong className="text-stone-700">Measure:</strong> {exp.successMetric}</p>
+ <p className="text-[10px] text-stone-500 font-mono uppercase"><strong className="text-stone-700">Next:</strong> {exp.nextStep}</p>
+ </div>
+ ))}
+ </div>
+ </div>
+
+ {/* Identity Reframe */}
+ <div className="mb-16 text-center border-2 border-stone-900 p-8">
+ <p className="text-[10px] font-mono tracking-widest uppercase text-stone-500 mb-4">Identity Reframe</p>
+ <p className="text-2xl font-serif italic leading-relaxed mb-8 text-stone-900">"{read.identityReframe}"</p>
+ <button 
+ onClick={async () => {
+ try {
+ if (!user) return;
+ await createPersona(`Persona: ${activePlatform} Strategy`, undefined, read.identityReframe);
+ alert("Adopted as Persona:"+ read.identityReframe.substring(0, 20) +"...");
+ } catch (error) {
+ console.error("MIMI // Failed to adopt persona:", error);
+ }
+ }}
+ className="text-[10px] font-mono tracking-widest uppercase text-stone-900 hover:text-white border border-stone-900 hover:bg-stone-900 px-6 py-3 transition-colors"
+ >
+ [ ADOPT AS PERSONA ]
+ </button>
+ </div>
+
+ {/* Platform Validation Constraints */}
+ <div className="mb-16 border border-stone-300 p-6">
+ <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-500 mb-4">Platform Validation Constraints: {activePlatform}</h3>
+ <ul className="text-xs font-mono text-stone-600 space-y-2 list-none">
+ {activePlatform === 'Instagram' && (
+ <>
+ <li><span className="text-stone-400 mr-2">✦</span>Use 4:5 aspect ratio for maximum feed real estate.</li>
+ <li><span className="text-stone-400 mr-2">✦</span>Hook in first 3 seconds with visual motion.</li>
+ <li><span className="text-stone-400 mr-2">✦</span>Maximize contrast for dark mode users.</li>
+ </>
+ )}
+ {activePlatform === 'TikTok' && (
+ <>
+ <li><span className="text-stone-400 mr-2">✦</span>Use 9:16 aspect ratio.</li>
+ <li><span className="text-stone-400 mr-2">✦</span>Hook immediately with high-energy audio.</li>
+ <li><span className="text-stone-400 mr-2">✦</span>Keep text overlays away from UI elements.</li>
+ </>
+ )}
+ {activePlatform !== 'Instagram' && activePlatform !== 'TikTok' && (
+ <li><span className="text-stone-400 mr-2">✦</span>Follow standard platform best practices for {activePlatform}.</li>
+ )}
+ </ul>
+ </div>
+
+ {/* Actions */}
+ <div className="flex flex-col sm:flex-row gap-4 justify-center border-t border-stone-300 pt-8">
+ <button 
+ onClick={handleExportToDossier}
+ disabled={isSaving}
+ className="py-3 px-6 border border-stone-300 text-stone-800 font-mono text-[10px] tracking-widest uppercase hover:bg-stone-100 transition-colors flex items-center justify-center gap-2"
+ >
+ {isSaving ? <Loader2 size={14} className="animate-spin"/> : <Save size={14} />}
+ [ EXPORT TO DOSSIER ]
+ </button>
+ <button 
+ onClick={handleExportTasks}
+ disabled={isExporting}
+ className="py-3 px-6 bg-stone-900 text-white font-mono text-[10px] tracking-widest uppercase hover:bg-black transition-colors flex items-center justify-center gap-2"
+ >
+ {isExporting ? <Loader2 size={14} className="animate-spin"/> : <Download size={14} />}
+ [ EXPORT TO ACTION BOARD ]
+ </button>
+ </div>
+ 
+ <div className="mt-12 text-center">
+ <button 
+ onClick={() => { 
+ setStrategyOutput(null); 
+ setMediaFiles([]); 
+ setIntent(''); 
+ setIdentitySeed(''); 
+ setIsDashboardMode(true);
+ }} 
+ className="text-[10px] font-mono tracking-widest uppercase text-stone-400 hover:text-stone-600 transition-colors"
+ >
+ [ BACK TO DASHBOARD ]
+ </button>
+ </div>
+ </motion.div>
+ );
+ }
+ };
+
+ const renderDashboard = () => {
+ const platformAudits = audits.filter(a => a.platform === activePlatform);
+ const latestAudit = platformAudits.length > 0 ? platformAudits[0] : null;
+
+ return (
+ <div className="max-w-4xl mx-auto py-12 px-6">
+ <div className="flex items-center justify-between mb-12 border-b border-stone-800 pb-4">
+ <h2 className="text-4xl italic tracking-tighter text-stone-200">Strategy Studio</h2>
+ <div className="flex gap-2">
+ {PLATFORMS.map(p => (
+ <button
+ key={p.id}
+ onClick={() => setActivePlatform(p.id)}
+ className={`p-3 border transition-all duration-300 flex items-center gap-2 ${
+ activePlatform === p.id 
+ ? 'border-stone-500 bg-stone-900 text-stone-200' 
+ : 'border-stone-800 bg-transparent text-stone-500 hover:border-stone-600 hover:text-stone-300'
+ }`}
+ >
+ <p.icon size={14} strokeWidth={activePlatform === p.id ? 2 : 1.5} />
+ <span className="text-[9px] font-mono tracking-widest uppercase hidden md:inline">{p.label}</span>
+ </button>
+ ))}
+ </div>
+ </div>
+
+ {latestAudit ? (
+ <div className="space-y-12">
+ <div className="bg-transparent p-8 border border-stone-800">
+ <div className="flex items-center justify-between mb-6 border-b border-stone-800 pb-4">
+ <h3 className="text-2xl italic tracking-tighter text-stone-300">Latest {activePlatform} Read</h3>
+ <span className="text-[9px] font-mono tracking-widest uppercase text-stone-500">
+ {new Date(latestAudit.timestamp).toLocaleDateString()}
+ </span>
+ </div>
+ <div className="border-l-4 border-stone-500 pl-4 mb-8">
+ <p className="text-stone-400 italic font-serif text-lg">"{latestAudit.read.openingLine}"</p>
+ </div>
+ 
+ <div className="grid md:grid-cols-2 gap-8 mb-8">
+ <div>
+ <h4 className="text-[9px] font-mono tracking-widest uppercase text-stone-500 mb-4 border-b border-stone-800 pb-2">Aesthetic Audit</h4>
+ <ul className="space-y-3">
+ <li className="flex items-start gap-2 text-stone-400 text-xs font-mono">
+ <span className="text-stone-600 mt-0.5">✦</span> <strong className="text-stone-300">Palette:</strong> {latestAudit.read.aestheticAudit.palette}
+ </li>
+ <li className="flex items-start gap-2 text-stone-400 text-xs font-mono">
+ <span className="text-stone-600 mt-0.5">✦</span> <strong className="text-stone-300">Density:</strong> {latestAudit.read.aestheticAudit.density}
+ </li>
+ <li className="flex items-start gap-2 text-stone-400 text-xs font-mono">
+ <span className="text-stone-600 mt-0.5">✦</span> <strong className="text-stone-300">Entropy:</strong> {latestAudit.read.aestheticAudit.entropy}
+ </li>
+ </ul>
+ </div>
+ <div>
+ <h4 className="text-[9px] font-mono tracking-widest uppercase text-stone-500 mb-4 border-b border-stone-800 pb-2">Strategy Shift</h4>
+ <ul className="space-y-3">
+ {latestAudit.read.strategyShift.map((point, i) => (
+ <li key={i} className="flex items-start gap-2 text-stone-400 text-xs font-mono">
+ <CheckCircle2 size={12} className="text-stone-600 mt-0.5 shrink-0"/> {point}
+ </li>
+ ))}
+ </ul>
+ </div>
+ </div>
+
+ <div className="flex gap-4 border-t border-stone-800 pt-6">
+ <button 
+ onClick={() => {
+ setStrategyOutput(latestAudit);
+ setIsDashboardMode(false);
+ setStep(6);
+ }}
+ className="py-3 px-6 border border-stone-800 text-stone-400 font-mono text-[9px] tracking-widest uppercase hover:border-stone-500 hover:text-stone-300 transition-colors"
+ >
+ [ VIEW FULL AUDIT ]
+ </button>
+ </div>
+ </div>
+
+ <div>
+ <h3 className="text-xs font-mono tracking-widest uppercase text-stone-500 mb-6 border-b border-stone-300 pb-2">Run New Analysis</h3>
+ <div className="grid md:grid-cols-4 gap-0 border border-stone-300">
+ <button 
+ onClick={() => {
+ setIntent('Content Analysis');
+ setIsDashboardMode(false);
+ setStep(3);
+ }}
+ className="p-6 bg-white border-r border-stone-300 hover:bg-stone-100 transition-all text-left group last:border-r-0"
+ >
+ <FileText className="text-stone-400 mb-4 group-hover:text-stone-800 transition-colors"size={20} />
+ <h4 className="font-mono text-[10px] uppercase tracking-widest text-stone-800 mb-2">Content Analysis</h4>
+ <p className="text-xs font-serif text-stone-500">Upload new analytics to update your read.</p>
+ </button>
+ <button 
+ onClick={() => {
+ setIntent('Brand Deal Analysis');
+ setIsDashboardMode(false);
+ setStep(3);
+ }}
+ className="p-6 bg-white border-r border-stone-300 hover:bg-stone-100 transition-all text-left group last:border-r-0"
+ >
+ <Sparkles className="text-stone-400 mb-4 group-hover:text-stone-800 transition-colors"size={20} />
+ <h4 className="font-mono text-[10px] uppercase tracking-widest text-stone-800 mb-2">Brand Deal Analysis</h4>
+ <p className="text-xs font-serif text-stone-500">See how a deal fits your aesthetic narrative.</p>
+ </button>
+ <button 
+ onClick={() => {
+ setIntent('Strategy Implementation');
+ setIsDashboardMode(false);
+ setStep(3);
+ }}
+ className="p-6 bg-white border-r border-stone-300 hover:bg-stone-100 transition-all text-left group last:border-r-0"
+ >
+ <CheckCircle2 className="text-stone-400 mb-4 group-hover:text-stone-800 transition-colors"size={20} />
+ <h4 className="font-mono text-[10px] uppercase tracking-widest text-stone-800 mb-2">Strategy Implementation</h4>
+ <p className="text-xs font-serif text-stone-500">Generate new tasks and content plans.</p>
+ </button>
+ <button 
+ onClick={() => {
+ setShowContentAnalyzer(true);
+ }}
+ className="p-6 bg-stone-900 border-r border-stone-300 hover:bg-black transition-all text-left group last:border-r-0"
+ >
+ <Video className="text-stone-500 mb-4 group-hover:text-white transition-colors"size={20} />
+ <h4 className="font-mono text-[10px] uppercase tracking-widest text-white mb-2">Ingestion Room</h4>
+ <p className="text-xs font-serif text-stone-400">Upload media for deep analysis and action plans.</p>
+ </button>
+ </div>
+ </div>
+ </div>
+ ) : (
+ <div className="text-center py-24 bg-transparent border border-stone-800 border-dashed">
+ <div className="mx-auto w-16 h-16 border border-stone-800 flex items-center justify-center mb-6">
+ {(() => {
+ const Icon = PLATFORMS.find(p => p.id === activePlatform)?.icon;
+ return Icon ? <Icon size={24} className="text-stone-500"/> : null;
+ })()}
+ </div>
+ <h3 className="text-2xl italic tracking-tighter text-stone-300 mb-2">No data for {activePlatform}</h3>
+ <p className="text-stone-500 mb-8 max-w-md mx-auto font-mono text-xs uppercase tracking-widest leading-relaxed">Complete your first read to unlock the {activePlatform} dashboard and get personalized strategy insights.</p>
+ <button 
+ onClick={() => {
+ setIsDashboardMode(false);
+ setStep(1);
+ }}
+ className="py-3 px-6 border border-stone-800 text-stone-300 font-mono text-[9px] tracking-widest uppercase hover:bg-stone-900 transition-colors"
+ >
+ [ INITIATE FIRST READ ]
+ </button>
+ </div>
+ )}
+ </div>
+ );
+ };
+
+ if (loadingAudits) {
+ return (
+ <div className="h-full w-full bg overflow-y-auto custom-scrollbar font-serif">
+ <div className="max-w-4xl mx-auto py-12 px-6 animate-pulse">
+ <div className="flex items-center justify-between mb-12 border-b border-stone-800 pb-4">
+ <div className="h-10 bg-stone-800/50 w-64"></div>
+ <div className="flex gap-2">
+ <div className="h-12 w-24 bg-stone-800/50"></div>
+ <div className="h-12 w-24 bg-stone-800/50"></div>
+ <div className="h-12 w-24 bg-stone-800/50"></div>
+ </div>
+ </div>
+ <div className="space-y-12">
+ <div className="bg-transparent p-8 border border-stone-800 space-y-6">
+ <div className="flex justify-between items-center mb-6 border-b border-stone-800 pb-4">
+ <div className="h-8 bg-stone-800/50 w-1/3"></div>
+ <div className="h-4 bg-stone-800/50 w-24"></div>
+ </div>
+ <div className="h-4 bg-stone-800/50 w-3/4 mb-8"></div>
+ <div className="grid md:grid-cols-2 gap-8 mb-8">
+ <div className="space-y-4">
+ <div className="h-4 bg-stone-800/50 w-1/2 mb-4"></div>
+ <div className="h-4 bg-stone-800/50 w-full"></div>
+ <div className="h-4 bg-stone-800/50 w-full"></div>
+ <div className="h-4 bg-stone-800/50 w-full"></div>
+ </div>
+ <div className="space-y-4">
+ <div className="h-4 bg-stone-800/50 w-1/2 mb-4"></div>
+ <div className="h-4 bg-stone-800/50 w-full"></div>
+ <div className="h-4 bg-stone-800/50 w-full"></div>
+ </div>
+ </div>
+ <div className="h-8 bg-stone-800/50 w-32"></div>
+ </div>
+ <div>
+ <div className="h-6 bg-stone-800/50 w-48 mb-6"></div>
+ <div className="grid md:grid-cols-3 gap-4">
+ <div className="h-32 bg-stone-800/50"></div>
+ <div className="h-32 bg-stone-800/50"></div>
+ <div className="h-32 bg-stone-800/50"></div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ );
+ }
+
+ return (
+ <div className="h-full w-full bg overflow-y-auto custom-scrollbar font-serif text-stone-300">
+ {isDashboardMode ? renderDashboard() : renderStepContent()}
+
+ <AnimatePresence>
+ {showArchiveModal && (
+ <motion.div
+ initial={{ opacity: 0 }}
+ animate={{ opacity: 1 }}
+ exit={{ opacity: 0 }}
+ className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+ >
+ <motion.div
+ initial={{ scale: 0.95, opacity: 0 }}
+ animate={{ scale: 1, opacity: 1 }}
+ exit={{ scale: 0.95, opacity: 0 }}
+ className="bg border border-stone-800 w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden"
+ >
+ <div className="p-6 border-b border-stone-800 flex items-center justify-between bg-stone-900/50">
+ <h3 className="font-serif italic text-2xl text-stone-200">Select from Archive</h3>
+ <button onClick={() => setShowArchiveModal(false)} className="p-2 text-stone-500 hover:text-stone-300 transition-colors hover:bg-stone-800">
+ <X size={20} />
+ </button>
+ </div>
+ 
+ <div className="flex-1 overflow-y-auto p-6 bg">
+ {loadingArchive ? (
+ <div className="flex flex-col items-center justify-center py-24 text-stone-500">
+ <Loader2 size={32} className="animate-spin mb-4"/>
+ <p className="font-mono text-[9px] uppercase tracking-widest">Loading archive...</p>
+ </div>
+ ) : archiveItems.length > 0 ? (
+ <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+ {archiveItems.map((item) => (
+ <div 
+ key={item.id}
+ onClick={() => handleSelectArchiveItem(item)}
+ className="group cursor-pointer bg-transparent border border-stone-800 overflow-hidden hover:border-stone-500 transition-all flex flex-col"
+ >
+ <div className="aspect-square bg-stone-900 relative overflow-hidden border-b border-stone-800">
+ {item.type === 'zine' || item.type === 'image' ? (
+ item.data ? (
+ <img src={item.data} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 grayscale group-hover:grayscale-0"/>
+ ) : (
+ <div className="w-full h-full flex items-center justify-center text-stone-700">
+ {item.type === 'zine' ? <FileText size={32} /> : <ImageIcon size={32} />}
+ </div>
+ )
+ ) : (
+ <div className="w-full h-full flex items-center justify-center text-stone-700">
+ <Video size={32} />
+ </div>
+ )}
+ <div className="absolute top-2 right-2 bg-black/80 text-stone-300 px-2 py-0.5 border border-stone-800 font-mono text-[8px] uppercase tracking-widest">
+ {item.type}
+ </div>
+ </div>
+ <div className="p-3 bg-stone-900/30">
+ <p className="font-mono text-[9px] uppercase tracking-widest text-stone-400 truncate">{item.title}</p>
+ </div>
+ </div>
+ ))}
+ </div>
+ ) : (
+ <div className="flex flex-col items-center justify-center py-24 text-stone-600">
+ <ImageIcon size={48} className="mb-4 opacity-20"/>
+ <p className="font-mono text-[9px] uppercase tracking-widest">Your archive is empty.</p>
+ </div>
+ )}
+ </div>
+ </motion.div>
+ </motion.div>
+ )}
+ </AnimatePresence>
+
+ <AnimatePresence>
+ {showContentAnalyzer && (
+ <ContentAnalyzerModal onClose={() => setShowContentAnalyzer(false)} />
+ )}
+ </AnimatePresence>
+ </div>
+ );
 };

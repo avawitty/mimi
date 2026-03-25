@@ -283,17 +283,25 @@ export const createStack = async (uid: string, title: string, description: strin
   if (!uid || uid === 'ghost' || !isFullyAuthenticated()) return '';
   const id = `stack_${Date.now()}`;
   const stack: Stack = { id, userId: uid, title, description, fragmentIds: [], createdAt: Date.now() };
-  await setDoc(doc(db, "stacks", id), sanitizeFirestoreData(stack));
+  try {
+    await setDoc(doc(db, "stacks", id), sanitizeFirestoreData(stack));
+  } catch (e) {
+    console.error("MIMI // createStack error:", e);
+  }
   return id;
 };
 
 export const addFragmentToStack = async (stackId: string, fragmentId: string) => {
-  await updateDoc(doc(db, "stacks", stackId), {
-    fragmentIds: arrayUnion(fragmentId)
-  });
-  await updateDoc(doc(db, "dossier_artifacts", fragmentId), {
-    stackIds: arrayUnion(stackId)
-  });
+  try {
+    await updateDoc(doc(db, "stacks", stackId), {
+      fragmentIds: arrayUnion(fragmentId)
+    });
+    await updateDoc(doc(db, "dossier_artifacts", fragmentId), {
+      stackIds: arrayUnion(stackId)
+    });
+  } catch (e) {
+    console.error("MIMI // addFragmentToStack error:", e);
+  }
 };
 
 export const getStacks = async (uid: string) => {
@@ -309,99 +317,125 @@ export const getStacks = async (uid: string) => {
 };
 
 
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, fetchSignInMethodsForEmail, EmailAuthProvider, linkWithCredential, signInWithCredential } from "firebase/auth";
 import { writeBatch, doc } from "firebase/firestore";
 
-export const sendEmailLink = async (email: string, actionCodeSettings: ActionCodeSettings) => {
-  return await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-};
-
-export const checkAndSignInWithEmailLink = async (email: string, url: string) => {
-  if (isSignInWithEmailLink(auth, url)) {
-    return await signInWithEmailLink(auth, email, url);
-  }
-  return null;
-};
-
-export const signUpWithEmail = async (email: string, password: string, handle: string) => {
+export const signUpWithEmailPassword = async (email: string, password: string) => {
   try {
-    // 1. Create the user in Firebase Auth
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const uid = userCredential.user.uid;
-
-    // 2. Prepare the batch to create both profile documents
-    const batch = writeBatch(db);
-
-    const publicProfileRef = doc(db, "profiles_public", uid);
-    const privateProfileRef = doc(db, "profiles_private", uid);
-
-    batch.set(publicProfileRef, {
-      handle: handle,
-      bio: "",
-      photoURL: "",
-      createdAt: Date.now()
-    });
-
-    batch.set(privateProfileRef, {
-      email: email,
-      createdAt: Date.now()
-    });
-
-    // 3. Commit the batch
-    await batch.commit();
-    
-    return uid;
-  } catch (error) {
-    console.error("MIMI // Sign Up Failed:", error);
+    return await createUserWithEmailAndPassword(auth, email, password);
+  } catch (error: any) {
+    if (error.code === 'auth/email-already-in-use') {
+      console.warn("MIMI // Email already in use, signing in instead.");
+      return await signInWithEmailAndPassword(auth, email, password);
+    }
+    console.error("MIMI // Sign Up with Email/Password Failed:", error);
     throw error;
   }
 };
 
-export const anchorIdentity = async (): Promise<void> => {
+export const signInWithEmailPassword = async (email: string, password: string) => {
+  try {
+    return await signInWithEmailAndPassword(auth, email, password);
+  } catch (error: any) {
+    console.error("MIMI // Sign In with Email/Password Failed:", error);
+    throw error;
+  }
+};
+
+export const upgradeAnonymousWithEmail = async (email: string, password: string): Promise<User> => {
+  if (!auth.currentUser || !auth.currentUser.isAnonymous) {
+    throw new Error('No anonymous user to upgrade.');
+  }
+  const credential = EmailAuthProvider.credential(email, password);
+  try {
+    const userCred = await linkWithCredential(auth.currentUser, credential);
+    return userCred.user;
+  } catch (err: any) {
+    if (err.code === 'auth/credential-already-in-use' || err.code === 'auth/email-already-in-use') {
+        console.warn("MIMI // Credential already in use, signing in instead.");
+        const userCred = await signInWithCredential(auth, credential);
+        return userCred.user;
+    }
+    console.error("MIMI // Credential Link Error:", err);
+    throw err;
+  }
+};
+
+export const sendEmailLink = async (email: string, redirectUrl: string): Promise<void> => {
+  const actionCodeSettings = {
+    url: redirectUrl,
+    handleCodeInApp: true,
+  };
+  try {
+    await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+    window.localStorage.setItem('emailForSignIn', email);
+  } catch (error) {
+    console.error("MIMI // Error sending email link:", error);
+    throw error;
+  }
+};
+
+export const completeEmailSignIn = async (url: string): Promise<void> => {
+  if (isSignInWithEmailLink(auth, url)) {
+    let email = window.localStorage.getItem('emailForSignIn');
+    if (!email) {
+      email = window.prompt('Please provide your email for confirmation');
+    }
+    if (email) {
+      try {
+        await signInWithEmailLink(auth, email, url);
+        window.localStorage.removeItem('emailForSignIn');
+      } catch (error) {
+        console.error("MIMI // Error signing in with email link:", error);
+        throw error;
+      }
+    }
+  }
+};
+
+export const anchorIdentity = async (forceRedirect: boolean = false): Promise<void> => {
   const provider = new GoogleAuthProvider();
   provider.addScope('email');
   provider.addScope('profile');
 
   try {
-    await signInWithPopup(auth, provider);
-  } catch (e: any) {
-    if (
-      e.code === 'auth/popup-blocked' ||
-      e.code === 'auth/cancelled-popup-request' ||
-      e.code === 'auth/popup-closed-by-user' ||
-      e.code === 'auth/internal-error'
-    ) {
-      alert("Popup blocked. Please allow popups for this site to sign in.");
+    if (forceRedirect) {
+      await signInWithRedirect(auth, provider);
     } else {
-      console.error("MIMI // Popup anchor failed:", e);
-      throw e;
+      await signInWithPopup(auth, provider);
     }
+  } catch (e: any) {
+    console.error("MIMI // Redirect anchor failed:", e);
+    throw e;
   }
 };
 
-export const linkIdentity = async (): Promise<void> => {
+export const linkIdentity = async (forceRedirect: boolean = false): Promise<void> => {
   if (!auth.currentUser) throw new Error("No active session to link.");
   const provider = new GoogleAuthProvider();
   provider.addScope('email');
   provider.addScope('profile');
   
   try {
-    await linkWithPopup(auth.currentUser, provider);
-  } catch (e: any) {
-    if (e.code === 'auth/credential-already-in-use') {
-       throw new Error("This Google frequency is already occupied by another registry.");
-    }
-    if (
-      e.code === 'auth/popup-blocked' ||
-      e.code === 'auth/cancelled-popup-request' ||
-      e.code === 'auth/popup-closed-by-user' ||
-      e.code === 'auth/internal-error'
-    ) {
-      alert("Popup blocked. Please allow popups for this site to link your account.");
+    if (forceRedirect) {
+      await linkWithRedirect(auth.currentUser, provider);
     } else {
-      console.error("Link popup failed:", e);
-      throw e;
+      await linkWithPopup(auth.currentUser, provider);
     }
+  } catch (e: any) {
+    if (e.code === 'auth/credential-already-in-use' || e.code === 'auth/email-already-in-use') {
+      console.warn("MIMI // Credential already in use, signing in instead.");
+      const credential = GoogleAuthProvider.credentialFromError(e);
+      if (credential) {
+        await signInWithCredential(auth, credential);
+        return;
+      }
+      // Fallback to popup sign in if credential extraction fails
+      await signInWithPopup(auth, provider);
+      return;
+    }
+    console.error("MIMI // Link redirect failed:", e);
+    throw e;
   }
 };
 
@@ -458,13 +492,12 @@ export const saveZineToProfile = async (uid: string, handle: string, avatar: str
 
       // 4. Save artifacts in subcollection
       if (artifacts && artifacts.length > 0) {
-        const { uploadBase64Image } = await import('./firebaseUtils');
+        const { archiveManager } = await import('./archiveManager');
         for (const artifact of artifacts) {
           let artifactToSave = { ...artifact };
-          if (artifactToSave.data && artifactToSave.data.length > 100000) { // If base64 is large
+          if (artifactToSave.data && artifactToSave.data.startsWith('data:')) { // If base64
               try {
-                  const path = `zine_artifacts/${targetId}_${artifact.id || Date.now()}.jpg`;
-                  const url = await uploadBase64Image(artifactToSave.data, path);
+                  const url = await archiveManager.uploadMedia(uid, artifactToSave.data, `zine_artifacts/${targetId}_${artifact.id || Date.now()}`);
                   artifactToSave.url = url;
                   artifactToSave.data = ''; // Clear base64 to save space
               } catch (e) {
@@ -604,13 +637,25 @@ export const updateTasteGraph = async (uid: string, type: PocketItem['type'], co
 
 
 export const addToPocket = async (uid: string, type: PocketItem['type'], content: any, embedding?: number[], deltaVerdict?: any): Promise<string | undefined> => {
-  if (!uid || uid === 'ghost' || !isFullyAuthenticated()) return;
-  const itemId = `item_${Date.now()}`;
+  if (!uid) return;
+  const randomId = Math.random().toString(36).substring(2, 9);
+  const itemId = `item_${Date.now()}_${randomId}`;
   
   // Generate tags automatically
   const tags = await generateTagsFromMedia(JSON.stringify(content), content.media || []);
   
   const item: PocketItem = { id: itemId, userId: uid, type, savedAt: Date.now(), content, notes: content.notes || "", tags, embedding, deltaVerdict };
+  
+  if (uid === 'ghost' || !isFullyAuthenticated()) {
+    const localPocket = await getLocalPocket() || [];
+    if (localPocket.length >= 24) {
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Ghost Pocket Full (24/24). Please anchor your identity.", type: 'error' } }));
+      return;
+    }
+    await savePocketItemLocally(item);
+    return itemId;
+  }
+
   await savePocketItemLocally(item);
   if (uid && auth.currentUser && navigator.onLine) {
     try {
@@ -708,7 +753,13 @@ export const subscribeToPocketItems = (uid: string, callback: (data: PocketItem[
     const sorted = docs.sort((a, b) => b.savedAt - a.savedAt);
     pocketCache[uid] = { data: sorted, timestamp: Date.now() }; // Update cache on snapshot
     callback(sorted);
-  }, (e) => logFirestoreError(e, OperationType.LIST, "pocket"));
+  }, (error: any) => {
+    if (error.code === 'permission-denied' && auth.currentUser?.uid !== uid) {
+      console.warn(`MIMI // Ignored permission-denied for pocket/${uid} due to auth state change.`);
+      return;
+    }
+    logFirestoreError(error, OperationType.LIST, "pocket");
+  });
 };
 
 export const fetchUserZines = async (uid: string, forceRefresh = false) => {
@@ -759,7 +810,13 @@ export const subscribeToUserZines = (uid: string, callback: (data: ZineMetadata[
     const sorted = docs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     zineCache[uid] = { data: sorted, timestamp: Date.now() }; // Update cache on snapshot
     callback(sorted);
-  }, (e) => logFirestoreError(e, OperationType.LIST, "zines"));
+  }, (error: any) => {
+    if (error.code === 'permission-denied' && auth.currentUser?.uid !== uid) {
+      console.warn(`MIMI // Ignored permission-denied for zines/${uid} due to auth state change.`);
+      return;
+    }
+    logFirestoreError(error, OperationType.LIST, "zines");
+  });
 };
 
 export const fetchCommunityZines = async (count: number) => {
@@ -838,8 +895,23 @@ export const updateZineMetadata = async (metadata: ZineMetadata): Promise<void> 
 
     // 4. Save artifacts in subcollection
     if (artifacts && artifacts.length > 0) {
+        const { archiveManager } = await import('./archiveManager');
         for (const artifact of artifacts) {
-            await setDoc(doc(db, "zines", metadata.id, "artifacts", artifact.id), sanitizeFirestoreData(artifact));
+            let artifactToSave = { ...artifact };
+            if (artifactToSave.data && artifactToSave.data.startsWith('data:')) { // If base64
+                try {
+                    const url = await archiveManager.uploadMedia(auth.currentUser.uid, artifactToSave.data, `zine_artifacts/${metadata.id}_${artifact.id || Date.now()}`);
+                    artifactToSave.url = url;
+                    artifactToSave.data = ''; // Clear base64 to save space
+                } catch (e) {
+                    console.warn("Failed to upload artifact to storage", e);
+                }
+            }
+            // Remove File object before saving
+            if (artifactToSave.file) {
+                delete artifactToSave.file;
+            }
+            await setDoc(doc(db, "zines", metadata.id, "artifacts", artifact.id || Date.now().toString()), sanitizeFirestoreData(artifactToSave));
         }
     }
 
@@ -903,14 +975,23 @@ export const createDossierFolder = async (uid: string, name: string): Promise<st
 
 export const saveNarrativeThread = async (thread: NarrativeThread): Promise<void> => {
   if (!thread.userId || thread.userId === 'ghost' || !auth.currentUser) return;
-  await setDoc(doc(db, "narrative_threads", thread.id), sanitizeFirestoreData(thread));
+  try {
+    await setDoc(doc(db, "narrative_threads", thread.id), sanitizeFirestoreData(thread));
+  } catch (e) {
+    console.error("MIMI // saveNarrativeThread error:", e);
+  }
 };
 
 export const fetchNarrativeThreads = async (userId: string): Promise<NarrativeThread[]> => {
   if (!userId || userId === 'ghost' || !auth.currentUser) return [];
-  const q = query(collection(db, "narrative_threads"), where("userId", "==", userId), orderBy("updatedAt", "desc"));
-  const snap = await getDocs(q);
-  return snap.docs.map(doc => doc.data() as NarrativeThread);
+  try {
+    const q = query(collection(db, "narrative_threads"), where("userId", "==", userId), orderBy("updatedAt", "desc"));
+    const snap = await getDocs(q);
+    return snap.docs.map(doc => doc.data() as NarrativeThread);
+  } catch (e) {
+    console.error("MIMI // fetchNarrativeThreads error:", e);
+    return [];
+  }
 };
 
 export const absorbTransmission = async (uid: string, zineData: ZineMetadata): Promise<string> => {
@@ -946,8 +1027,17 @@ export const absorbTransmission = async (uid: string, zineData: ZineMetadata): P
 
     // 3. Add any media artifacts
     if (zineData.artifacts && zineData.artifacts.length > 0) {
+        const { archiveManager } = await import('./archiveManager');
         for (const media of zineData.artifacts) {
             const mediaArtifactId = `art_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+            let finalMediaContent = media.url || media.data;
+            if (finalMediaContent && finalMediaContent.startsWith('data:')) {
+                try {
+                    finalMediaContent = await archiveManager.uploadMedia(uid, finalMediaContent, `dossier_artifacts/${mediaArtifactId}`);
+                } catch (e) {
+                    console.warn("Failed to upload absorbed media", e);
+                }
+            }
             const mediaArtifact: DossierArtifact = {
                 id: mediaArtifactId,
                 userId: uid,
@@ -955,7 +1045,7 @@ export const absorbTransmission = async (uid: string, zineData: ZineMetadata): P
                 type: media.type,
                 title: 'Absorbed Media',
                 createdAt: Date.now(),
-                elements: [{ id: `el_${Date.now()}`, type: media.type, content: media.url || media.data, style: { zIndex: 1 } }]
+                elements: [{ id: `el_${Date.now()}`, type: media.type, content: finalMediaContent, style: { zIndex: 1 } }]
             };
             await setDoc(doc(db, "dossier_artifacts", mediaArtifactId), sanitizeFirestoreData(mediaArtifact));
         }
@@ -1026,12 +1116,22 @@ export const createDossierArtifactFromImage = async (uid: string, folderId: stri
   if (!uid || uid === 'ghost' || !isFullyAuthenticated()) return '';
   const id = `artifact_${Date.now()}`;
   
+  let finalImageUrl = imageUrl;
+  if (imageUrl && imageUrl.startsWith('data:')) {
+      try {
+          const { archiveManager } = await import('./archiveManager');
+          finalImageUrl = await archiveManager.uploadMedia(uid, imageUrl, `dossier_artifacts/${id}`);
+      } catch (e) {
+          console.warn("Failed to upload dossier artifact image", e);
+      }
+  }
+
   // Generate tags automatically
   const tags = await generateTagsFromMedia(`Image artifact: ${title}`);
   
   const artifact: DossierArtifact = {
     id, userId: uid, folderId, type: 'moodboard', title, createdAt: Date.now(),
-    elements: [{ id: 'el_0', type: 'image', content: imageUrl }],
+    elements: [{ id: 'el_0', type: 'image', content: finalImageUrl }],
     tags, // Add tags
     status: 'active'
   };
@@ -1041,7 +1141,7 @@ export const createDossierArtifactFromImage = async (uid: string, folderId: stri
   if (uid && auth.currentUser && navigator.onLine) {
     try { 
       await setDoc(doc(db, "dossier_artifacts", id), sanitizeFirestoreData(artifact)); 
-      updateTasteGraph(uid, 'image', { imageUrl });
+      updateTasteGraph(uid, 'image', { imageUrl: finalImageUrl });
     } catch (e) {}
   }
   return id;
@@ -1094,6 +1194,15 @@ export const createDossierArtifactFromText = async (uid: string, folderId: strin
     } catch (e) {}
   }
   return id;
+};
+
+export const deleteDossierArtifact = async (artifactId: string) => {
+  try {
+    await deleteDoc(doc(db, "dossier_artifacts", artifactId));
+    // Note: We might also want to delete it from local storage if needed.
+  } catch (e: any) {
+    handleFirestoreError(e, OperationType.DELETE, `dossier_artifacts/${artifactId}`);
+  }
 };
 
 export const fetchDossierArtifacts = async (folderId: string) => {
@@ -1262,6 +1371,36 @@ export const saveUserProfile = async (p: UserProfile) => {
   }
 };
 
+export const commitGlobalHandshake = async (uid: string, newHandle: string, newAvatar: string | null) => {
+  if (!uid || uid === 'ghost' || !auth.currentUser) return;
+  try {
+    // 1. Update Zines
+    const zinesQuery = query(collection(db, "zines"), where("userId", "==", uid));
+    const zinesSnap = await getDocs(zinesQuery);
+    const zineUpdates = zinesSnap.docs.map(d => 
+      updateDoc(d.ref, { userHandle: newHandle, userAvatar: newAvatar })
+    );
+
+    // 2. Update Public Transmissions
+    const transQuery = query(collection(db, "public_transmissions"), where("userId", "==", uid));
+    const transSnap = await getDocs(transQuery);
+    const transUpdates = transSnap.docs.map(d => {
+      const data = d.data();
+      const updates: any = { userHandle: newHandle };
+      if (data.zineData) {
+        updates['zineData.userHandle'] = newHandle;
+        updates['zineData.userAvatar'] = newAvatar;
+      }
+      return updateDoc(d.ref, updates);
+    });
+
+    await Promise.all([...zineUpdates, ...transUpdates]);
+    console.info("MIMI // Global Handshake Committed.");
+  } catch (e: any) {
+    console.error("MIMI // Global Handshake Failed:", e);
+  }
+};
+
 // Updated: 'userPreferences' collection for private data (drafts, personas, etc)
 export const getUserPreferences = async (uid: string) => {
   if (!uid || uid === 'ghost' || !isFullyAuthenticated()) return null;
@@ -1331,7 +1470,13 @@ export const subscribeToUserPreferences = (uid: string, callback: (p: UserPrefer
   }
   return onSnapshot(doc(db, "userPreferences", uid), 
     (doc) => callback(doc.exists() ? doc.data() as UserPreferences : null),
-    (error) => logFirestoreError(error, OperationType.GET, `userPreferences/${uid}`)
+    (error) => {
+      if (error.code === 'permission-denied' && auth.currentUser?.uid !== uid) {
+        console.warn(`MIMI // Ignored permission-denied for userPreferences/${uid} due to auth state change.`);
+        return;
+      }
+      logFirestoreError(error, OperationType.GET, `userPreferences/${uid}`);
+    }
   );
 };
 
@@ -1365,18 +1510,28 @@ export const handleAuthRedirect = async () => {
 
 export const isHandleAvailable = async (handle: string, excludeUid?: string): Promise<boolean> => {
   if (!handle || handle.length < 2) return false;
-  const q = query(collection(db, "profiles_public"), where("handle", "==", handle.toLowerCase()));
-  const snap = await getDocs(q);
-  if (snap.empty) return true;
-  if (excludeUid && snap.docs.length === 1 && snap.docs[0].data().uid === excludeUid) return true;
-  return false;
+  try {
+    const q = query(collection(db, "profiles_public"), where("handle", "==", handle.toLowerCase()));
+    const snap = await getDocs(q);
+    if (snap.empty) return true;
+    if (excludeUid && snap.docs.length === 1 && snap.docs[0].data().uid === excludeUid) return true;
+    return false;
+  } catch (e) {
+    console.error("MIMI // isHandleAvailable error:", e);
+    return false;
+  }
 };
 
 export const getUserByHandle = async (handle: string): Promise<UserProfile | null> => {
-  const q = query(collection(db, "profiles_public"), where("handle", "==", handle.toLowerCase()));
-  const snap = await getDocs(q);
-  if (snap.empty) return null;
-  return snap.docs[0].data() as UserProfile;
+  try {
+    const q = query(collection(db, "profiles_public"), where("handle", "==", handle.toLowerCase()));
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    return snap.docs[0].data() as UserProfile;
+  } catch (e) {
+    console.error("MIMI // getUserByHandle error:", e);
+    return null;
+  }
 };
 
 export const uploadBlob = async (blob: Blob, path: string): Promise<string> => {

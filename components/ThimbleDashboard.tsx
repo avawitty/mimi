@@ -1,792 +1,948 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Loader2, Copy, Check, ShoppingBag, ExternalLink, Upload, X, Link as LinkIcon, Scale, FolderPlus, Plus, Trash2, LayoutGrid } from 'lucide-react';
+import { Search, Loader2, Copy, Check, ShoppingBag, ExternalLink, Upload, X, Link as LinkIcon, Scale, FolderPlus, Plus, Trash2, LayoutGrid, MoreVertical, Filter, SortAsc } from 'lucide-react';
 import { procureWithArtifacts, compareItemsFiscalAudit, auditThimbleBoard } from '../services/geminiService';
 import { useUser } from '../contexts/UserContext';
 import { MediaFile, ThimbleBoard, ThimbleItem } from '../types';
-import { addToPocket, handleFirestoreError, OperationType } from '../services/firebaseUtils';
+import { handleFirestoreError, OperationType, saveTask } from '../services/firebaseUtils';
 import { db } from '../services/firebaseInit';
 import { collection, query, where, orderBy, getDocs, addDoc, serverTimestamp, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
 
 interface SourcingTarget {
-  targetArchetype: string;
-  keywordBoolean: string;
-  emergingDesigner: string;
-  rationale: string;
+ targetArchetype: string;
+ keywordBoolean: string;
+ emergingDesigner: string;
+ rationale: string;
 }
 
 interface FiscalAuditResult {
-  item1Analysis: string;
-  item2Analysis: string;
-  verdict: string;
-  rationale: string;
+ item1Analysis: string;
+ item2Analysis: string;
+ verdict: string;
+ rationale: string;
+ searchDirectives: string[];
+ searchBooleans: string[];
 }
 
 interface BoardAuditResult {
-  boardAnalysis: string;
-  redundancies: string;
-  verdict: string;
-  rationale: string;
+ boardAnalysis: string;
+ redundancies: string;
+ verdict: string;
+ rationale: string;
 }
 
 export const ThimbleDashboard = () => {
-  const { profile, user } = useUser();
-  const [activeTab, setActiveTab] = useState<'sourcing' | 'boards' | 'audit'>('sourcing');
-  
-  // Sourcing State
-  const [budget, setBudget] = useState('');
-  const [objective, setObjective] = useState('');
-  const [targets, setTargets] = useState<SourcingTarget[]>([]);
-  const [isProcuring, setIsProcuring] = useState(false);
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [linkInput, setLinkInput] = useState('');
+ const { profile, user } = useUser();
+ const [activeTab, setActiveTab] = useState<'sourcing' | 'boards' | 'audit'>('sourcing');
+ 
+ // Sourcing State
+ const [budget, setBudget] = useState('');
+ const [objective, setObjective] = useState('');
+ const [targets, setTargets] = useState<SourcingTarget[]>([]);
+ const [expandedTargetIndex, setExpandedTargetIndex] = useState<number | null>(null);
+ const [isProcuring, setIsProcuring] = useState(false);
+ const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+ const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
+ const [isDragging, setIsDragging] = useState(false);
+ const fileInputRef = useRef<HTMLInputElement>(null);
+ const [linkInput, setLinkInput] = useState('');
 
-  // Audit State
-  const [item1, setItem1] = useState('');
-  const [item2, setItem2] = useState('');
-  const [auditBudget, setAuditBudget] = useState('');
-  const [isAuditing, setIsAuditing] = useState(false);
-  const [auditResult, setAuditResult] = useState<FiscalAuditResult | null>(null);
+ // Audit State
+ const [item1, setItem1] = useState('');
+ const [item2, setItem2] = useState('');
+ const [item1Image, setItem1Image] = useState<string | null>(null);
+ const [item2Image, setItem2Image] = useState<string | null>(null);
+ const [auditBudget, setAuditBudget] = useState('');
+ const [isAuditing, setIsAuditing] = useState(false);
+ const [auditResult, setAuditResult] = useState<FiscalAuditResult | null>(null);
 
-  // Boards State
-  const [boards, setBoards] = useState<ThimbleBoard[]>([]);
-  const [selectedBoard, setSelectedBoard] = useState<ThimbleBoard | null>(null);
-  const [boardItems, setBoardItems] = useState<ThimbleItem[]>([]);
-  const [newBoardTitle, setNewBoardTitle] = useState('');
-  const [newItemUrl, setNewItemUrl] = useState('');
-  const [newItemTitle, setNewItemTitle] = useState('');
-  const [newItemPrice, setNewItemPrice] = useState('');
-  const [isAuditingBoard, setIsAuditingBoard] = useState(false);
-  const [boardAuditResult, setBoardAuditResult] = useState<BoardAuditResult | null>(null);
+ // Boards State
+ const [boards, setBoards] = useState<ThimbleBoard[]>([]);
+ const [selectedBoard, setSelectedBoard] = useState<ThimbleBoard | null>(null);
+ const [boardItems, setBoardItems] = useState<ThimbleItem[]>([]);
+ const [newBoardTitle, setNewBoardTitle] = useState('');
+ const [newItemUrl, setNewItemUrl] = useState('');
+ const [newItemTitle, setNewItemTitle] = useState('');
+ const [newItemPrice, setNewItemPrice] = useState('');
+ const [isAuditingBoard, setIsAuditingBoard] = useState(false);
+ const [boardAuditResult, setBoardAuditResult] = useState<BoardAuditResult | null>(null);
 
-  useEffect(() => {
-    if (!user?.uid) return;
-    const q = query(collection(db, 'thimbleBoards'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const b = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ThimbleBoard));
-      setBoards(b);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'thimbleBoards');
-    });
-    return () => unsubscribe();
-  }, [user?.uid]);
+ useEffect(() => {
+ const handleNav = (e: any) => {
+ if (e.detail === 'thimble' && e.detail_id) {
+ const board = boards.find(b => b.id === e.detail_id);
+ if (board) {
+ setSelectedBoard(board);
+ setActiveTab('boards');
+ }
+ }
+ };
+ window.addEventListener('mimi:change_view', handleNav);
+ return () => window.removeEventListener('mimi:change_view', handleNav);
+ }, [boards]);
 
-  useEffect(() => {
-    if (!selectedBoard) {
-      setBoardItems([]);
-      setBoardAuditResult(null);
-      return;
-    }
-    const q = query(collection(db, 'thimbleItems'), where('boardId', '==', selectedBoard.id), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ThimbleItem));
-      setBoardItems(items);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'thimbleItems');
-    });
-    return () => unsubscribe();
-  }, [selectedBoard]);
+ useEffect(() => {
+ if (!user?.uid) return;
+ const q = query(collection(db, 'thimbleBoards'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
+ const unsubscribe = onSnapshot(q, (snapshot) => {
+ const b = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ThimbleBoard));
+ setBoards(b);
+ }, (error) => {
+ handleFirestoreError(error, OperationType.LIST, 'thimbleBoards');
+ });
+ return () => unsubscribe();
+ }, [user?.uid]);
 
-  const handleCreateBoard = async () => {
-    if (!user?.uid || !newBoardTitle.trim()) return;
-    try {
-      await addDoc(collection(db, 'thimbleBoards'), {
-        userId: user.uid,
-        title: newBoardTitle.trim(),
-        createdAt: Date.now(),
-        updatedAt: Date.now()
-      });
-      setNewBoardTitle('');
-    } catch (e) {
-      console.error("Error creating board", e);
-    }
-  };
+ useEffect(() => {
+ if (!selectedBoard || !user?.uid) {
+ setBoardItems([]);
+ setBoardAuditResult(null);
+ return;
+ }
+ const q = query(collection(db, 'thimbleItems'), where('boardId', '==', selectedBoard.id), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
+ const unsubscribe = onSnapshot(q, (snapshot) => {
+ const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ThimbleItem));
+ setBoardItems(items);
+ }, (error) => {
+ handleFirestoreError(error, OperationType.LIST, 'thimbleItems');
+ });
+ return () => unsubscribe();
+ }, [selectedBoard, user?.uid]);
 
-  const handleDeleteBoard = async (boardId: string) => {
-    try {
-      await deleteDoc(doc(db, 'thimbleBoards', boardId));
-      if (selectedBoard?.id === boardId) setSelectedBoard(null);
-    } catch (e) {
-      console.error("Error deleting board", e);
-    }
-  };
+ const handleCreateBoard = async () => {
+ if (!newBoardTitle.trim() || !user?.uid) return;
+ try {
+ await addDoc(collection(db, 'thimbleBoards'), {
+ userId: user.uid,
+ title: newBoardTitle.trim(),
+ createdAt: serverTimestamp()
+ });
+ setNewBoardTitle('');
+ } catch (error) {
+ handleFirestoreError(error, OperationType.CREATE, 'thimbleBoards');
+ }
+ };
 
-  const handleAddItem = async () => {
-    if (!user?.uid || !selectedBoard || !newItemUrl.trim()) return;
-    try {
-      await addDoc(collection(db, 'thimbleItems'), {
-        userId: user.uid,
-        boardId: selectedBoard.id,
-        url: newItemUrl.trim(),
-        title: newItemTitle.trim(),
-        price: newItemPrice.trim(),
-        createdAt: Date.now()
-      });
-      setNewItemUrl('');
-      setNewItemTitle('');
-      setNewItemPrice('');
-    } catch (e) {
-      console.error("Error adding item", e);
-    }
-  };
+ const handleDeleteBoard = async (boardId: string) => {
+ try {
+ await deleteDoc(doc(db, 'thimbleBoards', boardId));
+ if (selectedBoard?.id === boardId) setSelectedBoard(null);
+ } catch (error) {
+ handleFirestoreError(error, OperationType.DELETE, `thimbleBoards/${boardId}`);
+ }
+ };
 
-  const handleDeleteItem = async (itemId: string) => {
-    try {
-      await deleteDoc(doc(db, 'thimbleItems', itemId));
-    } catch (e) {
-      console.error("Error deleting item", e);
-    }
-  };
+ const handleAddItem = async () => {
+ if (!newItemUrl.trim() || !selectedBoard || !user?.uid) return;
+ try {
+ await addDoc(collection(db, 'thimbleItems'), {
+ boardId: selectedBoard.id,
+ userId: user.uid,
+ url: newItemUrl.trim(),
+ title: newItemTitle.trim() || 'Untitled Artifact',
+ price: newItemPrice.trim() || 'Unknown',
+ createdAt: serverTimestamp()
+ });
+ setNewItemUrl('');
+ setNewItemTitle('');
+ setNewItemPrice('');
+ } catch (error) {
+ handleFirestoreError(error, OperationType.CREATE, 'thimbleItems');
+ }
+ };
 
-  const handleAuditBoard = async () => {
-    if (!selectedBoard || boardItems.length === 0) return;
-    setIsAuditingBoard(true);
-    try {
-      const result = await auditThimbleBoard(
-        profile?.tasteProfile || "Unknown Taste",
-        selectedBoard.title,
-        boardItems.map(i => ({ url: i.url, title: i.title, price: i.price, notes: i.notes }))
-      );
-      setBoardAuditResult(result);
-    } catch (e) {
-      console.error("Error auditing board", e);
-    } finally {
-      setIsAuditingBoard(false);
-    }
-  };
+ const handleDeleteItem = async (itemId: string) => {
+ try {
+ await deleteDoc(doc(db, 'thimbleItems', itemId));
+ } catch (error) {
+ handleFirestoreError(error, OperationType.DELETE, `thimbleItems/${itemId}`);
+ }
+ };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement> | { target: { files: FileList } }) => {
-      if (e.target.files) {
-          const files = Array.from(e.target.files);
-          const newMedia = await Promise.all(files.map(async (f) => {
-              const data = await new Promise<string>((resolve) => {
-                  const reader = new FileReader();
-                  reader.onloadend = () => resolve(reader.result as string);
-                  reader.readAsDataURL(f);
-              });
-              return {
-                  file: f,
-                  data,
-                  url: '',
-                  type: f.type.startsWith('image') ? 'image' : 'video' as any,
-                  name: f.name,
-                  mimeType: f.type
-              } as MediaFile;
-          }));
-          setMediaFiles(prev => [...prev, ...newMedia]);
-      }
-  };
+ const handleAuditBoard = async () => {
+ if (!selectedBoard || boardItems.length === 0) return;
+ setIsAuditingBoard(true);
+ try {
+ const result = await auditThimbleBoard(
+ profile?.tasteProfile ||"Unknown Taste",
+ selectedBoard.title,
+ boardItems.map(i => ({ url: i.url, title: i.title, price: i.price, notes: i.notes }))
+ );
+ setBoardAuditResult(result);
+ } catch (error) {
+ console.error("Board audit failed:", error);
+ } finally {
+ setIsAuditingBoard(false);
+ }
+ };
 
-  const handleDrop = (e: React.DragEvent) => {
-      e.preventDefault();
-      setIsDragging(false);
-      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-          handleFileChange({ target: { files: e.dataTransfer.files } } as any);
-      } else {
-          const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
-          if (url) {
-              setMediaFiles(prev => [...prev, { type: 'link' as any, url, data: '', mimeType: 'text/plain', name: url } as MediaFile]);
-          }
-      }
-  };
+ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement> | { target: { files: FileList } }) => {
+ if (e.target.files && e.target.files.length > 0) {
+ const files = Array.from(e.target.files);
+ try {
+ const newMedia = await Promise.all(files.map(async (f) => {
+ return new Promise<MediaFile>((resolve, reject) => {
+ const reader = new FileReader();
+ reader.onload = (ev) => {
+ resolve({
+ type: f.type.startsWith('image/') ? 'image' : 'video',
+ data: (ev.target?.result as string).split(',')[1],
+ url: ev.target?.result as string,
+ mimeType: f.type,
+ name: f.name
+ });
+ };
+ reader.onerror = reject;
+ reader.readAsDataURL(f);
+ });
+ }));
+ setMediaFiles(prev => [...prev, ...newMedia]);
+ } catch (error) {
+ console.error("Error reading files:", error);
+ }
+ }
+ };
 
-  const removeMedia = (index: number) => {
-      setMediaFiles(prev => prev.filter((_, i) => i !== index));
-  };
+ const handleDrop = (e: React.DragEvent) => {
+ e.preventDefault();
+ setIsDragging(false);
+ if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+ handleFileChange({ target: { files: e.dataTransfer.files } } as any);
+ } else {
+ const url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain');
+ if (url) {
+ setMediaFiles(prev => [...prev, { type: 'link' as any, url, data: '', mimeType: 'text/plain', name: url } as MediaFile]);
+ }
+ }
+ };
 
-  const handleAddLink = () => {
-      if (linkInput.trim()) {
-          setMediaFiles(prev => [...prev, { type: 'link' as any, url: linkInput.trim(), data: '', mimeType: 'text/plain', name: linkInput.trim() } as MediaFile]);
-          setLinkInput('');
-      }
-  };
+ const removeMedia = (index: number) => {
+ setMediaFiles(prev => prev.filter((_, i) => i !== index));
+ };
 
-  const handleProcure = async () => {
-    if (!budget.trim() && mediaFiles.length === 0) return;
-    setIsProcuring(true);
-    try {
-      const results = await procureWithArtifacts(
-          profile?.tasteProfile || "Unknown Taste", 
-          budget, 
-          objective,
-          mediaFiles
-      );
-      setTargets(results);
-    } catch (error) {
-      console.error("Procurement failed:", error);
-    } finally {
-      setIsProcuring(false);
-    }
-  };
+ const handleAddLink = () => {
+ if (linkInput.trim()) {
+ setMediaFiles(prev => [...prev, { type: 'link' as any, url: linkInput.trim(), data: '', mimeType: 'text/plain', name: linkInput.trim() } as MediaFile]);
+ setLinkInput('');
+ }
+ };
 
-  const handleAudit = async () => {
-      if (!item1.trim() || !item2.trim()) return;
-      setIsAuditing(true);
-      try {
-          const result = await compareItemsFiscalAudit(
-              profile?.tasteProfile || "Unknown Taste",
-              item1,
-              item2,
-              auditBudget
-          );
-          setAuditResult(result);
-      } catch (error) {
-          console.error("Audit failed:", error);
-      } finally {
-          setIsAuditing(false);
-      }
-  };
+ const handleProcure = async () => {
+ if (!budget.trim() && mediaFiles.length === 0) return;
+ setIsProcuring(true);
+ try {
+ const results = await procureWithArtifacts(
+ profile?.tasteProfile ||"Unknown Taste", 
+ budget, 
+ objective,
+ mediaFiles
+ );
+ setTargets(results);
+ } catch (error) {
+ console.error("Procurement failed:", error);
+ } finally {
+ setIsProcuring(false);
+ }
+ };
 
-  const copyToClipboard = (text: string, index: number) => {
-    navigator.clipboard.writeText(text);
-    setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 2000);
-  };
+ const handleAudit = async () => {
+ if (!item1.trim() || !item2.trim()) return;
+ setIsAuditing(true);
+ try {
+ const result = await compareItemsFiscalAudit(
+ profile?.tasteProfile ||"Unknown Taste",
+ item1,
+ item1Image,
+ item2,
+ item2Image,
+ auditBudget
+ );
+ setAuditResult(result);
+ } catch (error) {
+ console.error("Audit failed:", error);
+ } finally {
+ setIsAuditing(false);
+ }
+ };
 
-  const openSearch = (query: string) => {
-    window.open(`https://www.grailed.com/shop?query=${encodeURIComponent(query)}`, '_blank');
-  };
+ const copyToClipboard = (text: string, index: number) => {
+ navigator.clipboard.writeText(text).catch(e => console.error("MIMI // Clipboard error", e));
+ setCopiedIndex(index);
+ setTimeout(() => setCopiedIndex(null), 2000);
+ };
 
-  const saveToPocket = async (target: SourcingTarget) => {
-      if (!user?.uid) return;
-      try {
-          await addToPocket(user.uid, 'text', {
-              content: `Sourcing Target: ${target.targetArchetype}\nQuery: ${target.keywordBoolean}\nDesigners: ${target.emergingDesigner}\nRationale: ${target.rationale}`,
-              title: target.targetArchetype,
-              timestamp: Date.now(),
-              origin: 'The Thimble'
-          });
-          window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Target saved to Pocket." } }));
-      } catch (e) {
-          console.error("Failed to save target", e);
-      }
-  };
+ const openSearch = (query: string, platform: string = 'grailed') => {
+ let url = '';
+ const encodedQuery = encodeURIComponent(query);
+ switch (platform) {
+ case 'grailed':
+ url = `https://www.grailed.com/shop?query=${encodedQuery}`;
+ break;
+ case 'ssense':
+ url = `https://www.ssense.com/en-us/men?q=${encodedQuery}`;
+ break;
+ case 'crossroads':
+ url = `https://crossroadstrading.com/?s=${encodedQuery}`;
+ break;
+ case 'therealreal':
+ url = `https://www.therealreal.com/shop?keywords=${encodedQuery}`;
+ break;
+ case 'vestiaire':
+ url = `https://us.vestiairecollective.com/search/?q=${encodedQuery}`;
+ break;
+ case 'depop':
+ url = `https://www.depop.com/search/?q=${encodedQuery}`;
+ break;
+ default:
+ url = `https://www.grailed.com/shop?query=${encodedQuery}`;
+ }
+ window.open(url, '_blank');
+ };
 
-  const saveAuditToPocket = async () => {
-      if (!user?.uid || !auditResult) return;
-      try {
-          await addToPocket(user.uid, 'text', {
-              content: `Fiscal Audit Verdict: ${auditResult.verdict}\n\nItem 1 Analysis: ${auditResult.item1Analysis}\n\nItem 2 Analysis: ${auditResult.item2Analysis}\n\nRationale: ${auditResult.rationale}`,
-              title: `Fiscal Audit: ${auditResult.verdict}`,
-              timestamp: Date.now(),
-              origin: 'The Thimble'
-          });
-          window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Audit saved to Pocket." } }));
-      } catch (e) {
-          console.error("Failed to save audit", e);
-      }
-  };
+ const saveToPocket = async (target: SourcingTarget) => {
+ if (!user?.uid) return;
+ try {
+ const { archiveManager } = await import('../services/archiveManager');
+ await archiveManager.saveToPocket(user.uid, 'text', {
+ content: `Sourcing Target: ${target.targetArchetype}\nQuery: ${target.keywordBoolean}\nDesigners: ${target.emergingDesigner}\nRationale: ${target.rationale}`,
+ title: target.targetArchetype,
+ timestamp: Date.now(),
+ origin: 'The Thimble'
+ });
+ } catch (e) {
+ console.error("Failed to save target", e);
+ }
+ };
 
-  return (
-    <div className="flex flex-col h-full w-full bg-[#0a0a0a] text-stone-200 overflow-hidden pb-20 md:pb-0 font-sans">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center p-6 md:p-8 border-b border-stone-800 shrink-0 bg-[#0a0a0a] gap-4 md:gap-0">
-        <div>
-          <h1 className="text-3xl font-serif italic text-stone-100">The Thimble</h1>
-          <p className="text-emerald-500/80 font-mono text-[10px] uppercase tracking-[0.2em] mt-2">Procurement & Sourcing Engine</p>
-        </div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-auto">
-            <div className="flex bg-stone-900/50 p-1 rounded-md w-full sm:w-auto border border-stone-800">
-                <button 
-                    onClick={() => setActiveTab('sourcing')}
-                    className={`flex-1 sm:flex-none px-4 py-2 text-xs uppercase tracking-widest font-bold rounded transition-colors ${activeTab === 'sourcing' ? 'bg-stone-800 text-emerald-400 shadow-sm' : 'text-stone-500 hover:text-stone-300'}`}
-                >
-                    Sourcing
-                </button>
-                <button 
-                    onClick={() => setActiveTab('boards')}
-                    className={`flex-1 sm:flex-none px-4 py-2 text-xs uppercase tracking-widest font-bold rounded transition-colors ${activeTab === 'boards' ? 'bg-stone-800 text-emerald-400 shadow-sm' : 'text-stone-500 hover:text-stone-300'}`}
-                >
-                    Boards
-                </button>
-                <button 
-                    onClick={() => setActiveTab('audit')}
-                    className={`flex-1 sm:flex-none px-4 py-2 text-xs uppercase tracking-widest font-bold rounded transition-colors ${activeTab === 'audit' ? 'bg-stone-800 text-emerald-400 shadow-sm' : 'text-stone-500 hover:text-stone-300'}`}
-                >
-                    Fiscal Audit
-                </button>
-            </div>
-            <div className="hidden sm:block text-[10px] font-mono uppercase tracking-widest text-emerald-500/50 border border-stone-800 px-3 py-1 rounded-full">
-            System Active: {new Date().toLocaleDateString()}
-            </div>
-        </div>
-      </header>
-      
-      <div className="flex-1 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
-        {/* Left Sidebar: Input & Artifacts */}
-        <section className="w-full lg:w-[400px] xl:w-[500px] lg:border-r border-b lg:border-b-0 border-stone-800 lg:overflow-y-auto no-scrollbar p-6 bg-stone-900/20 shrink-0 flex flex-col gap-8">
-          
-          {activeTab === 'sourcing' && (
-              <>
-                  <div className="space-y-4">
-                      <h2 className="font-serif italic text-xl text-stone-100">Visual Context</h2>
-                      <div 
-                          className={`border border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-center transition-colors cursor-pointer bg-stone-900/30
-                              ${isDragging ? 'border-emerald-500/50 bg-emerald-900/10' : 'border-stone-800 hover:border-stone-600'}`}
-                          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                          onDragLeave={() => setIsDragging(false)}
-                          onDrop={handleDrop}
-                          onClick={() => fileInputRef.current?.click()}
-                      >
-                          <Upload className="w-6 h-6 text-stone-500 mb-2" />
-                          <p className="text-sm font-medium text-stone-300">Upload Images</p>
-                          <p className="text-xs text-stone-600 mt-1">Tap to select or drop files here</p>
-                          <input type="file" ref={fileInputRef} onChange={handleFileChange as any} className="hidden" multiple accept="image/*" />
-                      </div>
+ const saveAuditToPocket = async () => {
+ if (!user?.uid || !auditResult) return;
+ try {
+ const { archiveManager } = await import('../services/archiveManager');
+ await archiveManager.saveToPocket(user.uid, 'text', {
+ content: `Fiscal Audit Verdict: ${auditResult.verdict}\n\nItem 1 Analysis: ${auditResult.item1Analysis}\n\nItem 2 Analysis: ${auditResult.item2Analysis}\n\nRationale: ${auditResult.rationale}${auditResult.searchDirectives ? `\n\nSearch Directives:\n${auditResult.searchDirectives.join('\n')}` : ''}${auditResult.searchBooleans ? `\n\nSearch Booleans:\n${auditResult.searchBooleans.join('\n')}` : ''}`,
+ title: `Fiscal Audit: ${auditResult.verdict}`,
+ timestamp: Date.now(),
+ origin: 'The Thimble'
+ });
+ } catch (e) {
+ console.error("Failed to save audit", e);
+ }
+ };
 
-                      <div className="flex gap-2">
-                          <input
-                              type="url"
-                              value={linkInput}
-                              onChange={(e) => setLinkInput(e.target.value)}
-                              placeholder="Or paste a link (e.g., Grailed, SSENSE)"
-                              className="flex-1 bg-stone-900/50 border border-stone-800 p-3 text-sm text-stone-200 focus:outline-none focus:border-emerald-500/50 transition-colors rounded-md placeholder:text-stone-600"
-                              onKeyDown={(e) => e.key === 'Enter' && handleAddLink()}
-                          />
-                          <button
-                              onClick={handleAddLink}
-                              disabled={!linkInput.trim()}
-                              className="bg-stone-800 text-stone-300 px-4 py-2 rounded-md font-bold text-xs uppercase tracking-widest hover:bg-stone-700 disabled:opacity-50 transition-colors flex items-center justify-center border border-stone-700"
-                          >
-                              Add
-                          </button>
-                      </div>
+ return (
+ <div className="min-h-full flex flex-col md:flex-row bg-archival-beige text-archival-text font-sans"style={{ backgroundImage: 'radial-gradient(#D1CFCA 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }}>
+ 
+ {/* Sidebar Navigation */}
+ <aside className="w-full md:w-64 border-r border-archival-border flex flex-col h-full sticky top-0 bg-archival-beige/80 backdrop-blur-sm z-10">
+ <div className="p-8 border-b border-archival-border flex flex-col gap-4">
+ <div className="flex items-center gap-3">
+ <div className="w-6 h-8 border border-archival-text rounded-none flex items-end justify-center pb-1 relative overflow-hidden">
+ <div className="w-full h-px bg-archival-text absolute bottom-1 opacity-30"></div>
+ <div className="w-1 h-1 bg-archival-text rounded-none mb-1"></div>
+ </div>
+ <h1 className="font-bodoni italic text-xl">The Thimble</h1>
+ </div>
+ <div className="text-[9px] uppercase tracking-[0.2em] font-medium opacity-60">System Active: {new Date().toLocaleDateString()}</div>
+ </div>
+ 
+ <nav className="flex-grow p-4 space-y-2">
+ <button 
+ onClick={() => setActiveTab('sourcing')}
+ className={`w-full flex items-center gap-3 px-4 py-3 border text-[10px] uppercase tracking-widest font-semibold transition-all ${activeTab === 'sourcing' ? 'bg-white border-archival-border opacity-100' : 'bg-transparent border-transparent hover:border-archival-border opacity-60 hover:opacity-100 hover:bg-white/50'}`}
+ >
+ <Search size={16} /> Sourcing
+ </button>
+ <button 
+ onClick={() => setActiveTab('boards')}
+ className={`w-full flex items-center gap-3 px-4 py-3 border text-[10px] uppercase tracking-widest font-semibold transition-all ${activeTab === 'boards' ? 'bg-white border-archival-border opacity-100' : 'bg-transparent border-transparent hover:border-archival-border opacity-60 hover:opacity-100 hover:bg-white/50'}`}
+ >
+ <LayoutGrid size={16} /> Boards
+ </button>
+ <button 
+ onClick={() => setActiveTab('audit')}
+ className={`w-full flex items-center gap-3 px-4 py-3 border text-[10px] uppercase tracking-widest font-semibold transition-all ${activeTab === 'audit' ? 'bg-white border-archival-border opacity-100' : 'bg-transparent border-transparent hover:border-archival-border opacity-60 hover:opacity-100 hover:bg-white/50'}`}
+ >
+ <Scale size={16} /> Fiscal Audit
+ </button>
+ </nav>
 
-                      {mediaFiles.length > 0 && (
-                          <div className="grid grid-cols-3 gap-2 mt-4">
-                              <AnimatePresence>
-                                  {mediaFiles.map((media, idx) => (
-                                      <motion.div 
-                                          key={idx}
-                                          initial={{ opacity: 0, scale: 0.9 }}
-                                          animate={{ opacity: 1, scale: 1 }}
-                                          exit={{ opacity: 0, scale: 0.9 }}
-                                          className="relative aspect-square rounded-md overflow-hidden border border-stone-800 group bg-stone-900/50"
-                                      >
-                                          {media.type === 'image' && media.data ? (
-                                              <img src={media.data} alt="Artifact" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                                          ) : (
-                                              <div className="w-full h-full flex items-center justify-center p-2 text-center break-all">
-                                                  <LinkIcon className="w-4 h-4 text-stone-500" />
-                                              </div>
-                                          )}
-                                          <button 
-                                              onClick={(e) => { e.stopPropagation(); removeMedia(idx); }}
-                                              className="absolute top-1 right-1 bg-black/80 text-stone-300 hover:text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                          >
-                                              <X size={12} />
-                                          </button>
-                                      </motion.div>
-                                  ))}
-                              </AnimatePresence>
-                          </div>
-                      )}
-                  </div>
+ {activeTab === 'boards' && (
+ <div className="p-4 border-t border-archival-border">
+ <div className="text-[9px] uppercase tracking-widest opacity-40 mb-3">Your Boards</div>
+ <div className="space-y-1 max-h-48 overflow-y-auto custom-scrollbar">
+ {boards.map(b => (
+ <div key={b.id} className="flex items-center justify-between group">
+ <button 
+ onClick={() => setSelectedBoard(b)}
+ className={`flex-grow text-left px-3 py-2 text-[10px] uppercase tracking-widest truncate transition-colors ${selectedBoard?.id === b.id ? 'bg-white border border-archival-border font-bold' : 'hover:bg-white/50 opacity-70 hover:opacity-100'}`}
+ >
+ {b.title}
+ </button>
+ <button onClick={() => handleDeleteBoard(b.id)} className="p-2 opacity-0 group-hover:opacity-100 text-archival-accent hover:text-red-800 transition-opacity">
+ <Trash2 size={12} />
+ </button>
+ </div>
+ ))}
+ </div>
+ <div className="mt-4 flex gap-2">
+ <input 
+ type="text"
+ value={newBoardTitle} 
+ onChange={e => setNewBoardTitle(e.target.value)}
+ placeholder="NEW BOARD..."
+ className="flex-grow bg-white/50 border border-archival-border px-3 py-2 text-[10px] uppercase tracking-widest focus:ring-0 focus:border-archival-text outline-none"
+ />
+ <button onClick={handleCreateBoard} className="bg-archival-text text-archival-beige px-3 py-2 hover:bg-black transition-colors">
+ <Plus size={14} />
+ </button>
+ </div>
+ </div>
+ )}
 
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-widest text-emerald-500/80 font-mono">Sourcing Objective</label>
-                      <input
-                        type="text"
-                        value={objective}
-                        onChange={(e) => setObjective(e.target.value)}
-                        placeholder="e.g., Winter capsule, Wedding guest"
-                        className="w-full bg-stone-900/50 border border-stone-800 p-3 text-stone-200 focus:outline-none focus:border-emerald-500/50 transition-colors rounded-md placeholder:text-stone-600"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-widest text-emerald-500/80 font-mono">Fiscal Constraints</label>
-                      <input
-                        type="text"
-                        value={budget}
-                        onChange={(e) => setBudget(e.target.value)}
-                        placeholder="e.g., $50-$150, Uncapped"
-                        className="w-full bg-stone-900/50 border border-stone-800 p-3 text-stone-200 focus:outline-none focus:border-emerald-500/50 transition-colors rounded-md placeholder:text-stone-600"
-                        onKeyDown={(e) => e.key === 'Enter' && handleProcure()}
-                      />
-                    </div>
-                    
-                    <button
-                      onClick={handleProcure}
-                      disabled={isProcuring || (!budget.trim() && mediaFiles.length === 0)}
-                      className="w-full bg-emerald-900/20 text-emerald-400 border border-emerald-900/50 p-4 font-mono text-xs uppercase tracking-widest hover:bg-emerald-900/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 rounded-md"
-                    >
-                      {isProcuring ? (
-                        <><Loader2 className="w-4 h-4 animate-spin" /> Procuring...</>
-                      ) : (
-                        <><Search className="w-4 h-4" /> Initialize Sourcing</>
-                      )}
-                    </button>
-                  </div>
-              </>
-          )}
+ <div className="p-8 border-t border-archival-border">
+ <div className="text-[9px] uppercase tracking-widest opacity-40">
+ Procurement & Sourcing Engine <br/>
+ v.4.0.1
+ </div>
+ </div>
+ </aside>
 
-          {activeTab === 'boards' && (
-              <div className="space-y-8">
-                  <div className="space-y-4">
-                      <h2 className="font-serif italic text-xl text-stone-100 flex items-center gap-2">
-                          <FolderPlus className="w-5 h-5 text-emerald-500/70" />
-                          Sourcing Boards
-                      </h2>
-                      <div className="flex gap-2">
-                          <input
-                              type="text"
-                              value={newBoardTitle}
-                              onChange={(e) => setNewBoardTitle(e.target.value)}
-                              placeholder="New Board Title (e.g., FW26 Coats)"
-                              className="flex-1 bg-stone-900/50 border border-stone-800 p-3 text-sm text-stone-200 focus:outline-none focus:border-emerald-500/50 transition-colors rounded-md placeholder:text-stone-600"
-                              onKeyDown={(e) => e.key === 'Enter' && handleCreateBoard()}
-                          />
-                          <button
-                              onClick={handleCreateBoard}
-                              disabled={!newBoardTitle.trim()}
-                              className="bg-stone-800 text-stone-300 px-4 py-2 rounded-md font-bold text-xs uppercase tracking-widest hover:bg-stone-700 disabled:opacity-50 transition-colors flex items-center justify-center border border-stone-700"
-                          >
-                              <Plus className="w-4 h-4" />
-                          </button>
-                      </div>
+ {/* Main Content Area */}
+ <main className="flex-grow p-6 md:p-12 overflow-x-hidden relative">
+ <header className="mb-12 flex justify-between items-end border-b border-archival-border pb-8">
+ <div>
+ <h2 className="font-bodoni italic text-4xl md:text-5xl leading-tight">
+ {activeTab === 'sourcing' && <>Procurement & Sourcing <br/>Executive Control Panel</>}
+ {activeTab === 'boards' && <>Archival Worksheet <br/>{selectedBoard ? selectedBoard.title : 'Board Overview'}</>}
+ {activeTab === 'audit' && <>Fiscal Audit <br/>Comparative Analysis</>}
+ </h2>
+ </div>
+ <div className="text-right hidden md:block">
+ <div className="text-[10px] tracking-widest uppercase font-semibold">Operational Status</div>
+ <div className="text-[10px] tracking-widest uppercase text-green-700">Nominal // Ready</div>
+ </div>
+ </header>
 
-                      <div className="space-y-2 mt-4 max-h-[40vh] overflow-y-auto no-scrollbar pr-2">
-                          {boards.map(board => (
-                              <div 
-                                  key={board.id}
-                                  onClick={() => setSelectedBoard(board)}
-                                  className={`p-4 rounded-md border cursor-pointer transition-colors flex justify-between items-center group
-                                      ${selectedBoard?.id === board.id ? 'bg-stone-800 border-emerald-500/30' : 'bg-stone-900/30 border-stone-800 hover:border-stone-700'}`}
-                              >
-                                  <div className="font-serif italic text-stone-200">{board.title}</div>
-                                  <button 
-                                      onClick={(e) => { e.stopPropagation(); handleDeleteBoard(board.id); }}
-                                      className="text-stone-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                                  >
-                                      <Trash2 className="w-4 h-4" />
-                                  </button>
-                              </div>
-                          ))}
-                          {boards.length === 0 && (
-                              <div className="text-center p-6 border border-dashed border-stone-800 rounded-md text-stone-500 text-sm">
-                                  No boards created yet.
-                              </div>
-                          )}
-                      </div>
-                  </div>
-              </div>
-          )}
+ {activeTab === 'sourcing' && (
+ <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+ <section className="lg:col-span-5 space-y-10">
+ <div className="space-y-6">
+ <div className="flex justify-between items-center">
+ <h3 className="font-bodoni italic text-2xl">Visual Context</h3>
+ <span className="text-[9px] uppercase tracking-tighter opacity-50 font-sans">Required Input</span>
+ </div>
+ 
+ <div className="space-y-2">
+ <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Upload Images</label>
+ <div 
+ onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+ onDragLeave={() => setIsDragging(false)}
+ onDrop={handleDrop}
+ onClick={() => fileInputRef.current?.click()}
+ className={`border-2 border-dashed border-archival-border p-8 text-center transition-colors cursor-pointer group ${isDragging ? 'bg-white/60 border-archival-text' : 'bg-white/30 hover:bg-white/50'}`}
+ >
+ <Upload className="mx-auto text-archival-accent mb-2 group-hover:scale-110 transition-transform"size={24} />
+ <p className="text-[11px] font-sans opacity-60">Tap to select or drop files here</p>
+ <input type="file"ref={fileInputRef} onChange={handleFileChange} multiple accept="image/*"className="hidden"/>
+ </div>
+ </div>
 
-          {activeTab === 'audit' && (
-              <div className="space-y-6">
-                  <div className="space-y-4">
-                      <h2 className="font-serif italic text-xl text-stone-100">Comparison Data</h2>
-                      <div className="space-y-2">
-                          <label className="text-[10px] uppercase tracking-widest text-emerald-500/80 font-mono">Item 1 Description</label>
-                          <textarea
-                              value={item1}
-                              onChange={(e) => setItem1(e.target.value)}
-                              placeholder="Describe the first item (e.g., 'Vintage Helmut Lang boiled wool sweater, $250')"
-                              className="w-full bg-stone-900/50 border border-stone-800 p-3 text-stone-200 focus:outline-none focus:border-emerald-500/50 transition-colors rounded-md resize-none h-24 placeholder:text-stone-600"
-                          />
-                      </div>
-                      <div className="space-y-2">
-                          <label className="text-[10px] uppercase tracking-widest text-emerald-500/80 font-mono">Item 2 Description</label>
-                          <textarea
-                              value={item2}
-                              onChange={(e) => setItem2(e.target.value)}
-                              placeholder="Describe the second item (e.g., 'New Acne Studios mohair cardigan, $400')"
-                              className="w-full bg-stone-900/50 border border-stone-800 p-3 text-stone-200 focus:outline-none focus:border-emerald-500/50 transition-colors rounded-md resize-none h-24 placeholder:text-stone-600"
-                          />
-                      </div>
-                      <div className="space-y-2">
-                          <label className="text-[10px] uppercase tracking-widest text-emerald-500/80 font-mono">Fiscal Constraints (Optional)</label>
-                          <input
-                              type="text"
-                              value={auditBudget}
-                              onChange={(e) => setAuditBudget(e.target.value)}
-                              placeholder="e.g., Max $300 total"
-                              className="w-full bg-stone-900/50 border border-stone-800 p-3 text-stone-200 focus:outline-none focus:border-emerald-500/50 transition-colors rounded-md placeholder:text-stone-600"
-                              onKeyDown={(e) => e.key === 'Enter' && handleAudit()}
-                          />
-                      </div>
-                  </div>
-                  <button
-                      onClick={handleAudit}
-                      disabled={isAuditing || !item1.trim() || !item2.trim()}
-                      className="w-full bg-emerald-900/20 text-emerald-400 border border-emerald-900/50 p-4 font-mono text-xs uppercase tracking-widest hover:bg-emerald-900/40 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 rounded-md"
-                  >
-                      {isAuditing ? (
-                          <><Loader2 className="w-4 h-4 animate-spin" /> Auditing...</>
-                      ) : (
-                          <><Scale className="w-4 h-4" /> Run Fiscal Audit</>
-                      )}
-                  </button>
-              </div>
-          )}
-        </section>
+ <div className="space-y-2">
+ <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Paste a link</label>
+ <div className="flex gap-2">
+ <input 
+ className="flex-grow bg-white/50 border border-archival-border px-4 py-2 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans"
+ placeholder="e.g., Grailed, SSENSE"
+ value={linkInput}
+ onChange={e => setLinkInput(e.target.value)}
+ onKeyDown={e => e.key === 'Enter' && handleAddLink()}
+ type="text"
+ />
+ <button onClick={handleAddLink} className="bg-archival-text text-archival-beige px-6 py-2 text-[10px] uppercase tracking-widest hover:bg-black transition-colors">Add</button>
+ </div>
+ </div>
 
-        {/* Right Area: Results */}
-        <section className="flex-1 lg:overflow-y-auto p-6 md:p-12 bg-[#0a0a0a] min-h-[50vh]">
-            {activeTab === 'sourcing' && (
-                targets.length > 0 ? (
-                  <div className="max-w-3xl mx-auto space-y-8">
-                    <div className="flex items-center gap-3 border-b border-stone-800 pb-4">
-                      <ShoppingBag className="w-5 h-5 text-emerald-500/70" />
-                      <h2 className="font-serif italic text-2xl text-stone-100">Sourcing Targets Acquired</h2>
-                    </div>
-                    
-                    <div className="space-y-6">
-                        {targets.map((target, idx) => (
-                          <motion.div 
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.1 }}
-                            key={idx} 
-                            className="bg-stone-900/30 border border-stone-800 p-6 rounded-xl shadow-sm space-y-6"
-                          >
-                            <div className="flex justify-between items-start">
-                              <h3 className="font-bold text-stone-100 text-lg uppercase tracking-wider">{target.targetArchetype}</h3>
-                              <span className="text-[10px] text-emerald-500/70 font-mono bg-emerald-900/10 border border-emerald-900/30 px-2 py-1 rounded">TARGET 0{idx + 1}</span>
-                            </div>
-                            
-                            <div className="space-y-2">
-                              <div className="text-[10px] uppercase tracking-widest text-stone-500 font-mono">Boolean Query</div>
-                              <div className="bg-stone-950 border border-stone-800 p-4 rounded-md flex items-center justify-between group">
-                                <code className="text-emerald-400 font-mono text-sm break-all pr-4">
-                                  {target.keywordBoolean}
-                                </code>
-                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                                  <button 
-                                    onClick={() => copyToClipboard(target.keywordBoolean, idx)}
-                                    className="text-stone-400 hover:text-stone-200 transition-colors p-2 bg-stone-900 rounded-md shadow-sm border border-stone-700"
-                                    title="Copy Query"
-                                  >
-                                    {copiedIndex === idx ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-                                  </button>
-                                  <button
-                                    onClick={() => openSearch(target.keywordBoolean)}
-                                    className="text-stone-400 hover:text-stone-200 transition-colors p-2 bg-stone-900 rounded-md shadow-sm border border-stone-700"
-                                    title="Search Grailed"
-                                  >
-                                    <ExternalLink className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
+ {mediaFiles.length > 0 && (
+ <div className="flex flex-wrap gap-2 mt-4">
+ {mediaFiles.map((file, idx) => (
+ <div key={idx} className="relative group w-16 h-16 border border-archival-border overflow-hidden bg-white">
+ {file.type === 'image' ? (
+ <img src={`data:${file.mimeType};base64,${file.data}`} alt="upload"className="w-full h-full object-cover grayscale opacity-80"/>
+ ) : (
+ <div className="w-full h-full flex items-center justify-center bg-archival-beige/50">
+ <LinkIcon size={16} className="text-archival-accent"/>
+ </div>
+ )}
+ <button onClick={(e) => { e.stopPropagation(); removeMedia(idx); }} className="absolute top-1 right-1 bg-white/90 p-0.5 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
+ <X size={12} className="text-archival-text"/>
+ </button>
+ </div>
+ ))}
+ </div>
+ )}
+ </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              <div className="space-y-2">
-                                <div className="text-[10px] uppercase tracking-widest text-stone-500 font-mono">Emerging Designer</div>
-                                <div className="text-stone-300 font-serif italic">{target.emergingDesigner}</div>
-                              </div>
-                              <div className="space-y-2">
-                                <div className="text-[10px] uppercase tracking-widest text-stone-500 font-mono">Rationale</div>
-                                <div className="text-stone-400 leading-relaxed text-sm">{target.rationale}</div>
-                              </div>
-                            </div>
+ <div className="space-y-6 pt-6 border-t border-archival-border">
+ <div className="space-y-2">
+ <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Sourcing Objective</label>
+ <input 
+ className="w-full bg-white/50 border border-archival-border px-4 py-2 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans italic"
+ placeholder="e.g., Winter capsule, Wedding guest"
+ value={objective}
+ onChange={e => setObjective(e.target.value)}
+ type="text"
+ />
+ </div>
+ <div className="space-y-2">
+ <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Fiscal Constraints</label>
+ <input 
+ className="w-full bg-white/50 border border-archival-border px-4 py-2 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans"
+ placeholder="e.g., $50-$150, Uncapped"
+ value={budget}
+ onChange={e => setBudget(e.target.value)}
+ type="text"
+ />
+ </div>
+ <button 
+ onClick={handleProcure}
+ disabled={isProcuring || (!budget.trim() && mediaFiles.length === 0)}
+ className="w-full py-4 bg-archival-text text-archival-beige text-[11px] uppercase tracking-[0.3em] font-bold hover:bg-black transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+ >
+ {isProcuring ? <Loader2 className="animate-spin"size={16} /> : <Search size={16} />}
+ {isProcuring ? 'ANALYZING...' : 'INITIALIZE SOURCING'}
+ </button>
+ </div>
+ </section>
 
-                            <div className="pt-4 border-t border-stone-800 flex justify-end">
-                                <button 
-                                    onClick={() => saveToPocket(target)}
-                                    className="text-[10px] uppercase tracking-widest font-mono text-stone-500 hover:text-emerald-400 transition-colors flex items-center gap-2"
-                                >
-                                    Save to Pocket
-                                </button>
-                            </div>
-                          </motion.div>
-                        ))}
-                    </div>
-                  </div>
-                ) : (
-                  !isProcuring && (
-                    <div className="h-full flex flex-col items-center justify-center text-stone-600 space-y-6 max-w-md mx-auto text-center">
-                      <div className="w-24 h-24 rounded-full bg-stone-900/50 border border-stone-800 flex items-center justify-center">
-                          <ShoppingBag className="w-10 h-10 opacity-50 text-emerald-500/50" />
-                      </div>
-                      <div className="space-y-2">
-                        <h3 className="font-serif italic text-2xl text-stone-300">Awaiting Input</h3>
-                        <p className="text-sm leading-relaxed text-stone-500">Provide visual artifacts, a sourcing objective, and fiscal constraints to generate highly specific procurement targets.</p>
-                      </div>
-                    </div>
-                  )
-                )
-            )}
+ <section className="lg:col-span-7 space-y-6">
+ <div className="flex justify-between items-center">
+ <h3 className="font-bodoni italic text-2xl">Procurement Targets</h3>
+ <div className="flex items-center gap-4">
+ <span className="text-[9px] uppercase tracking-widest font-sans px-2 py-1 border border-archival-border bg-white">
+ {targets.length > 0 ? `${targets.length} TARGETS` : 'AWAITING INPUT'}
+ </span>
+ <div className="flex gap-2">
+ <button className="p-1 hover:bg-white transition-colors border border-transparent hover:border-archival-border"><Filter size={16} /></button>
+ <button className="p-1 hover:bg-white transition-colors border border-transparent hover:border-archival-border"><SortAsc size={16} /></button>
+ </div>
+ </div>
+ </div>
 
-            {activeTab === 'boards' && (
-                selectedBoard ? (
-                    <div className="max-w-4xl mx-auto space-y-8">
-                        <div className="flex items-center justify-between border-b border-stone-800 pb-4">
-                            <div className="flex items-center gap-3">
-                                <LayoutGrid className="w-5 h-5 text-emerald-500/70" />
-                                <h2 className="font-serif italic text-2xl text-stone-100">{selectedBoard.title}</h2>
-                            </div>
-                            <button
-                                onClick={handleAuditBoard}
-                                disabled={isAuditingBoard || boardItems.length === 0}
-                                className="bg-emerald-900/20 text-emerald-400 border border-emerald-900/50 px-4 py-2 font-mono text-xs uppercase tracking-widest hover:bg-emerald-900/40 disabled:opacity-50 transition-colors flex items-center gap-2 rounded-md"
-                            >
-                                {isAuditingBoard ? <Loader2 className="w-4 h-4 animate-spin" /> : <Scale className="w-4 h-4" />}
-                                Audit Board
-                            </button>
-                        </div>
+ {targets.length > 0 ? (
+ <div className="border border-archival-border bg-white/40 overflow-hidden">
+ <table className="w-full text-left border-collapse">
+ <thead>
+ <tr className="border-b border-archival-border text-[9px] uppercase tracking-widest font-bold bg-white/50">
+ <th className="px-4 py-3">Archetype</th>
+ <th className="px-4 py-3">Query Boolean</th>
+ <th className="px-4 py-3">Designers</th>
+ <th className="px-4 py-3 text-right">Action</th>
+ </tr>
+ </thead>
+ <tbody className="divide-y divide-archival-border/50 text-xs">
+ {targets.map((target, idx) => (
+ <React.Fragment key={idx}>
+ <tr className="hover:bg-white/60 transition-colors group cursor-pointer" onClick={() => setExpandedTargetIndex(expandedTargetIndex === idx ? null : idx)}>
+ <td className="px-4 py-4">
+ <div className="font-bodoni italic text-sm">{target.targetArchetype}</div>
+ <div className="text-[9px] uppercase opacity-40 font-sans mt-0.5 max-w-xs truncate"title={target.rationale}>{target.rationale}</div>
+ </td>
+ <td className="px-4 py-4 font-mono text-[10px] opacity-80">
+ <div className="flex items-center gap-2">
+ <span className="truncate max-w-[150px]">{target.keywordBoolean}</span>
+ <button onClick={(e) => { e.stopPropagation(); copyToClipboard(target.keywordBoolean, idx); }} className="text-archival-accent hover:text-archival-text">
+ {copiedIndex === idx ? <Check size={12} /> : <Copy size={12} />}
+ </button>
+ </div>
+ </td>
+ <td className="px-4 py-4 text-[10px] uppercase opacity-70">
+ {target.emergingDesigner}
+ </td>
+ <td className="px-4 py-4 text-right">
+ <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+ <button onClick={(e) => { e.stopPropagation(); saveToPocket(target); }} className="p-1.5 border border-archival-border bg-white hover:bg-archival-text hover:text-white transition-colors"title="Save to Pocket">
+ <ShoppingBag size={14} />
+ </button>
+ </div>
+ </td>
+ </tr>
+ {expandedTargetIndex === idx && (
+ <tr className="bg-white/30 border-t border-archival-border/50">
+ <td colSpan={4} className="px-4 py-6">
+ <div className="space-y-4">
+ <div>
+ <h4 className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70 mb-2">Search Platforms</h4>
+ <div className="flex flex-wrap gap-2">
+ {['grailed', 'ssense', 'crossroads', 'therealreal', 'vestiaire', 'depop'].map(platform => (
+ <button 
+ key={platform}
+ onClick={() => openSearch(target.keywordBoolean, platform)}
+ className="px-3 py-1.5 border border-archival-border bg-white hover:bg-archival-text hover:text-white transition-colors text-[10px] uppercase tracking-wider flex items-center gap-2"
+ >
+ {platform} <ExternalLink size={10} />
+ </button>
+ ))}
+ </div>
+ </div>
+ <div>
+ <h4 className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70 mb-2">Add to Board</h4>
+ <div className="flex items-center gap-2">
+ <select 
+ className="bg-white border border-archival-border px-3 py-1.5 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans"
+ onChange={(e) => {
+ const boardId = e.target.value;
+ if (boardId) {
+ // We need to create an item for this board
+ const newItem = {
+ boardId,
+ userId: user?.uid,
+ url: `https://www.grailed.com/shop?query=${encodeURIComponent(target.keywordBoolean)}`,
+ title: target.targetArchetype,
+ price: 'TBD',
+ createdAt: serverTimestamp()
+ };
+ addDoc(collection(db, 'thimbleItems'), newItem).then(() => {
+ alert('Added to board!');
+ e.target.value = '';
+ }).catch(err => console.error(err));
+ }
+ }}
+ defaultValue=""
+ >
+ <option value="" disabled>Select Board...</option>
+ {boards.map(b => <option key={b.id} value={b.id}>{b.title}</option>)}
+ </select>
+ </div>
+ </div>
+ </div>
+ </td>
+ </tr>
+ )}
+ </React.Fragment>
+ ))}
+ </tbody>
+ </table>
+ </div>
+ ) : (
+ <div className="p-12 border border-archival-border bg-archival-beige/40 flex flex-col items-center justify-center text-center">
+ <div className="text-[10px] uppercase tracking-widest font-semibold mb-3 font-sans">System Intelligence Note</div>
+ <p className="font-bodoni italic text-sm leading-relaxed opacity-80 max-w-md">
+ Provide visual artifacts, a sourcing objective, and fiscal constraints to generate highly specific procurement targets. The engine will cross-reference archival patterns with current market availability.
+ </p>
+ </div>
+ )}
+ </section>
+ </div>
+ )}
 
-                        {/* Add Item to Board */}
-                        <div className="bg-stone-900/30 border border-stone-800 p-6 rounded-xl space-y-4">
-                            <h3 className="text-sm font-mono uppercase tracking-widest text-emerald-500/80">Add Artifact</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <input
-                                    type="url"
-                                    value={newItemUrl}
-                                    onChange={(e) => setNewItemUrl(e.target.value)}
-                                    placeholder="URL (Required)"
-                                    className="bg-stone-950 border border-stone-800 p-3 text-sm text-stone-200 focus:outline-none focus:border-emerald-500/50 rounded-md placeholder:text-stone-600"
-                                />
-                                <input
-                                    type="text"
-                                    value={newItemTitle}
-                                    onChange={(e) => setNewItemTitle(e.target.value)}
-                                    placeholder="Title (Optional)"
-                                    className="bg-stone-950 border border-stone-800 p-3 text-sm text-stone-200 focus:outline-none focus:border-emerald-500/50 rounded-md placeholder:text-stone-600"
-                                />
-                                <div className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={newItemPrice}
-                                        onChange={(e) => setNewItemPrice(e.target.value)}
-                                        placeholder="Price (Optional)"
-                                        className="flex-1 bg-stone-950 border border-stone-800 p-3 text-sm text-stone-200 focus:outline-none focus:border-emerald-500/50 rounded-md placeholder:text-stone-600"
-                                    />
-                                    <button
-                                        onClick={handleAddItem}
-                                        disabled={!newItemUrl.trim()}
-                                        className="bg-stone-800 text-stone-300 px-4 py-2 rounded-md font-bold text-xs uppercase tracking-widest hover:bg-stone-700 disabled:opacity-50 transition-colors border border-stone-700"
-                                    >
-                                        Add
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+ {activeTab === 'boards' && (
+ selectedBoard ? (
+ <div className="space-y-12">
+ <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
+ <div className="md:col-span-2 flex flex-col">
+ <div className="flex justify-between items-baseline mb-4">
+ <h2 className="font-bodoni italic text-2xl">Acquisition Intake</h2>
+ <span className="text-[10px] uppercase tracking-widest opacity-60">Fig. 01 // Input Terminal</span>
+ </div>
+ <div className="flex-grow border border-archival-border p-6 bg-white/20 flex flex-col gap-4">
+ <div className="grid grid-cols-2 gap-4">
+ <input 
+ type="text"
+ value={newItemTitle} 
+ onChange={e => setNewItemTitle(e.target.value)}
+ placeholder="Artifact Title"
+ className="bg-white/50 border border-archival-border px-4 py-2 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans"
+ />
+ <input 
+ type="text"
+ value={newItemPrice} 
+ onChange={e => setNewItemPrice(e.target.value)}
+ placeholder="Price / Value"
+ className="bg-white/50 border border-archival-border px-4 py-2 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans"
+ />
+ </div>
+ <div className="flex gap-2">
+ <input 
+ type="url"
+ value={newItemUrl} 
+ onChange={e => setNewItemUrl(e.target.value)}
+ placeholder="URL Link"
+ className="flex-grow bg-white/50 border border-archival-border px-4 py-2 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans"
+ />
+ <button onClick={handleAddItem} className="bg-archival-text text-archival-beige px-6 py-2 text-[10px] uppercase tracking-widest hover:bg-black transition-colors">Add</button>
+ </div>
+ </div>
+ </div>
 
-                        {/* Board Items */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {boardItems.map(item => (
-                                <div key={item.id} className="bg-stone-900/20 border border-stone-800 p-4 rounded-lg relative group">
-                                    <button 
-                                        onClick={() => handleDeleteItem(item.id)}
-                                        className="absolute top-2 right-2 text-stone-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                    <a href={item.url} target="_blank" rel="noopener noreferrer" className="block space-y-2">
-                                        <div className="font-serif italic text-stone-200 truncate pr-6">{item.title || 'Untitled Artifact'}</div>
-                                        {item.price && <div className="text-xs font-mono text-emerald-500/80">{item.price}</div>}
-                                        <div className="text-xs text-stone-500 truncate">{item.url}</div>
-                                    </a>
-                                </div>
-                            ))}
-                        </div>
+ <div className="flex flex-col">
+ <div className="flex justify-between items-baseline mb-4">
+ <h2 className="font-bodoni italic text-2xl">Curator Stats</h2>
+ </div>
+ <div className="border border-archival-border p-6 flex-grow space-y-6 bg-white/20">
+ <div className="space-y-1">
+ <div className="flex justify-between text-[9px] uppercase tracking-widest">
+ <span>Artifact Count</span>
+ <span>{boardItems.length}</span>
+ </div>
+ <div className="h-px bg-archival-border w-full">
+ <div className="h-full bg-archival-text"style={{ width: `${Math.min(boardItems.length * 10, 100)}%` }}></div>
+ </div>
+ </div>
+ 
+ <div className="pt-6 border-t border-archival-border space-y-3">
+ <button 
+ onClick={handleAuditBoard}
+ disabled={isAuditingBoard || boardItems.length === 0}
+ className="w-full py-3 border border-archival-text text-archival-text text-[10px] uppercase tracking-widest hover:bg-archival-text hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+ >
+ {isAuditingBoard ? <Loader2 className="animate-spin"size={14} /> : <Scale size={14} />}
+ {isAuditingBoard ? 'Auditing...' : 'Run Board Audit'}
+ </button>
+ <button 
+ onClick={async () => {
+ if (!user?.uid || !selectedBoard) return;
+ try {
+ await saveTask(user.uid, {
+ id: Date.now().toString(),
+ text: `Audit Board: ${selectedBoard.title}`,
+ completed: false,
+ createdAt: Date.now(),
+ platform: 'The Thimble',
+ linkedContext: {
+ type: 'thimble',
+ id: selectedBoard.id
+ }
+ });
+ alert('Task pushed to Action Board!');
+ } catch (e) {
+ console.error('Error pushing task:', e);
+ alert('Failed to push task.');
+ }
+ }}
+ className="w-full py-3 border border-archival-border text-archival-text text-[10px] uppercase tracking-widest hover:bg-white transition-colors flex items-center justify-center gap-2"
+ >
+ <Plus size={14} /> Push to Action Board
+ </button>
+ </div>
 
-                        {/* Board Audit Result */}
-                        {boardAuditResult && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="bg-stone-900/40 border border-emerald-900/50 p-8 rounded-xl shadow-sm space-y-8 mt-8"
-                            >
-                                <div className="text-center space-y-2 pb-6 border-b border-stone-800">
-                                    <div className="text-[10px] uppercase tracking-widest text-emerald-500/80 font-mono">Sovereign Mandate</div>
-                                    <h3 className="font-serif italic text-3xl text-emerald-400">{boardAuditResult.verdict}</h3>
-                                </div>
+ {boardAuditResult && (
+ <div className="bg-white p-4 border border-archival-border rotate-1 mt-4">
+ <span className="text-[8px] uppercase tracking-widest opacity-60 block mb-2">Audit_Note</span>
+ <p className="font-bodoni italic text-sm leading-snug">"{boardAuditResult.verdict}"</p>
+ </div>
+ )}
+ </div>
+ </div>
+ </section>
 
-                                <div className="space-y-6">
-                                    <div className="space-y-3">
-                                        <div className="text-[10px] uppercase tracking-widest text-stone-500 font-mono border-b border-stone-800 pb-2">Board Analysis</div>
-                                        <p className="text-stone-300 text-sm leading-relaxed">{boardAuditResult.boardAnalysis}</p>
-                                    </div>
-                                    <div className="space-y-3">
-                                        <div className="text-[10px] uppercase tracking-widest text-stone-500 font-mono border-b border-stone-800 pb-2">Redundancies</div>
-                                        <p className="text-stone-300 text-sm leading-relaxed">{boardAuditResult.redundancies}</p>
-                                    </div>
-                                    <div className="space-y-3 bg-stone-950 p-6 rounded-lg border border-stone-800">
-                                        <div className="text-[10px] uppercase tracking-widest text-emerald-500/80 font-mono">Rationale</div>
-                                        <p className="text-stone-200 text-sm leading-relaxed">{boardAuditResult.rationale}</p>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
-                    </div>
-                ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-stone-600 space-y-6 max-w-md mx-auto text-center">
-                        <div className="w-24 h-24 rounded-full bg-stone-900/50 border border-stone-800 flex items-center justify-center">
-                            <FolderPlus className="w-10 h-10 opacity-50 text-emerald-500/50" />
-                        </div>
-                        <div className="space-y-2">
-                            <h3 className="font-serif italic text-2xl text-stone-300">Select a Board</h3>
-                            <p className="text-sm leading-relaxed text-stone-500">Choose a sourcing board from the sidebar to view its artifacts and run a comprehensive fiscal audit.</p>
-                        </div>
-                    </div>
-                )
-            )}
+ <section>
+ <div className="flex justify-between items-end border-b border-archival-border pb-4 mb-8">
+ <h2 className="font-bodoni italic text-3xl">Pending Acquisitions</h2>
+ <div className="flex gap-4 items-center">
+ <span className="text-[10px] uppercase tracking-widest opacity-60">Log_Ref_Archive</span>
+ <div className="flex gap-1">
+ <div className="w-3 h-3 border border-archival-text"></div>
+ <div className="w-3 h-3 border border-archival-text bg-archival-text"></div>
+ </div>
+ </div>
+ </div>
 
-            {activeTab === 'audit' && (
-                auditResult ? (
-                    <div className="max-w-3xl mx-auto space-y-8">
-                        <div className="flex items-center gap-3 border-b border-stone-800 pb-4">
-                            <Scale className="w-5 h-5 text-emerald-500/70" />
-                            <h2 className="font-serif italic text-2xl text-stone-100">Fiscal Audit Verdict</h2>
-                        </div>
-                        
-                        <motion.div 
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="bg-stone-900/30 border border-stone-800 p-8 rounded-xl shadow-sm space-y-8"
-                        >
-                            <div className="text-center space-y-2 pb-6 border-b border-stone-800">
-                                <div className="text-[10px] uppercase tracking-widest text-emerald-500/80 font-mono">Definitive Recommendation</div>
-                                <h3 className="font-serif italic text-3xl text-emerald-400">{auditResult.verdict}</h3>
-                            </div>
+ <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+ {boardItems.map((item, idx) => (
+ <article key={item.id} className="space-y-4 group">
+ <div className="aspect-[3/4] border border-archival-border overflow-hidden bg-white relative flex flex-col">
+ <div className="absolute top-4 left-4 bg-white/90 px-2 py-1 text-[10px] uppercase tracking-widest border border-archival-border z-10">
+ REF: 00{idx + 1}
+ </div>
+ <button onClick={() => handleDeleteItem(item.id)} className="absolute top-4 right-4 bg-white/90 p-1.5 border border-archival-border z-10 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-800">
+ <Trash2 size={12} />
+ </button>
+ 
+ <div className="flex-grow flex items-center justify-center p-8 bg-archival-beige/30">
+ <div className="text-center space-y-4">
+ <h3 className="font-bodoni text-2xl italic tracking-tight">{item.title}</h3>
+ <div className="text-sm font-mono opacity-60">{item.price}</div>
+ </div>
+ </div>
+ 
+ <div className="p-4 border-t border-archival-border bg-white flex justify-between items-center">
+ <a href={item.url} target="_blank"rel="noopener noreferrer"className="text-[10px] uppercase tracking-widest hover:underline flex items-center gap-1">
+ <ExternalLink size={12} /> View Source
+ </a>
+ </div>
+ </div>
+ </article>
+ ))}
+ {boardItems.length === 0 && (
+ <div className="col-span-3 py-24 text-center border border-dashed border-archival-border bg-white/20">
+ <p className="font-bodoni italic text-xl opacity-60">No artifacts acquired yet.</p>
+ </div>
+ )}
+ </div>
+ </section>
+ </div>
+ ) : (
+ <div className="h-full flex flex-col items-center justify-center text-archival-text space-y-6 max-w-md mx-auto text-center py-24">
+ <div className="w-24 h-24 rounded-none border border-archival-border flex items-center justify-center bg-white/30">
+ <FolderPlus className="w-10 h-10 opacity-50"/>
+ </div>
+ <div className="space-y-2">
+ <h3 className="font-bodoni italic text-2xl">Select a Board</h3>
+ <p className="text-sm leading-relaxed opacity-60">Choose a sourcing board from the sidebar to view its artifacts and run a comprehensive fiscal audit.</p>
+ </div>
+ </div>
+ )
+ )}
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-3">
-                                    <div className="text-[10px] uppercase tracking-widest text-stone-500 font-mono border-b border-stone-800 pb-2">Item 1 Analysis</div>
-                                    <p className="text-stone-300 text-sm leading-relaxed">{auditResult.item1Analysis}</p>
-                                </div>
-                                <div className="space-y-3">
-                                    <div className="text-[10px] uppercase tracking-widest text-stone-500 font-mono border-b border-stone-800 pb-2">Item 2 Analysis</div>
-                                    <p className="text-stone-300 text-sm leading-relaxed">{auditResult.item2Analysis}</p>
-                                </div>
-                            </div>
+ {activeTab === 'audit' && (
+ <div className="max-w-3xl mx-auto space-y-12">
+ <div className="space-y-6">
+ <div className="flex justify-between items-center border-b border-archival-border pb-4">
+ <h3 className="font-bodoni italic text-2xl">Fiscal Audit Input</h3>
+ <span className="text-[9px] uppercase tracking-tighter opacity-50 font-sans">Comparative Analysis</span>
+ </div>
+ 
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+ <div className="space-y-2">
+ <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Artifact 01</label>
+ <textarea 
+ className="w-full h-32 bg-white/50 border border-archival-border p-4 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans resize-none"
+ placeholder="Describe the first item..."
+ value={item1}
+ onChange={e => setItem1(e.target.value)}
+ />
+ <input 
+ type="file" 
+ accept="image/*" 
+ onChange={(e) => {
+ const file = e.target.files?.[0];
+ if (file) {
+ const reader = new FileReader();
+ reader.onloadend = () => setItem1Image(reader.result as string);
+ reader.readAsDataURL(file);
+ }
+ }}
+ className="text-[10px] font-sans w-full"
+ />
+ {item1Image && <img src={item1Image} alt="Item 1" className="w-full h-32 object-cover border border-archival-border" />}
+ </div>
+ <div className="space-y-2">
+ <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Artifact 02</label>
+ <textarea 
+ className="w-full h-32 bg-white/50 border border-archival-border p-4 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans resize-none"
+ placeholder="Describe the second item..."
+ value={item2}
+ onChange={e => setItem2(e.target.value)}
+ />
+ <input 
+ type="file" 
+ accept="image/*" 
+ onChange={(e) => {
+ const file = e.target.files?.[0];
+ if (file) {
+ const reader = new FileReader();
+ reader.onloadend = () => setItem2Image(reader.result as string);
+ reader.readAsDataURL(file);
+ }
+ }}
+ className="text-[10px] font-sans w-full"
+ />
+ {item2Image && <img src={item2Image} alt="Item 2" className="w-full h-32 object-cover border border-archival-border" />}
+ </div>
+ </div>
 
-                            <div className="space-y-3 bg-stone-950 p-6 rounded-lg border border-stone-800">
-                                <div className="text-[10px] uppercase tracking-widest text-emerald-500/80 font-mono">Rationale</div>
-                                <p className="text-stone-200 text-sm leading-relaxed">{auditResult.rationale}</p>
-                            </div>
+ <div className="space-y-2">
+ <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Fiscal Constraint</label>
+ <input 
+ className="w-full bg-white/50 border border-archival-border px-4 py-3 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans"
+ placeholder="e.g., $500 total budget"
+ value={auditBudget}
+ onChange={e => setAuditBudget(e.target.value)}
+ type="text"
+ />
+ </div>
 
-                            <div className="pt-4 border-t border-stone-800 flex justify-end">
-                                <button 
-                                    onClick={saveAuditToPocket}
-                                    className="text-[10px] uppercase tracking-widest font-mono text-stone-500 hover:text-emerald-400 transition-colors flex items-center gap-2"
-                                >
-                                    Save to Pocket
-                                </button>
-                            </div>
-                        </motion.div>
-                    </div>
-                ) : (
-                    !isAuditing && (
-                        <div className="h-full flex flex-col items-center justify-center text-stone-600 space-y-6 max-w-md mx-auto text-center">
-                            <div className="w-24 h-24 rounded-full bg-stone-900/50 border border-stone-800 flex items-center justify-center">
-                                <Scale className="w-10 h-10 opacity-50 text-emerald-500/50" />
-                            </div>
-                            <div className="space-y-2">
-                                <h3 className="font-serif italic text-2xl text-stone-300">Awaiting Items</h3>
-                                <p className="text-sm leading-relaxed text-stone-500">Provide descriptions of two items to receive a rigorous fiscal and aesthetic comparison.</p>
-                            </div>
-                        </div>
-                    )
-                )
-            )}
-        </section>
-      </div>
-    </div>
-  );
+ <button 
+ onClick={handleAudit}
+ disabled={isAuditing || !item1.trim() || !item2.trim()}
+ className="w-full py-4 bg-archival-text text-archival-beige text-[11px] uppercase tracking-[0.3em] font-bold hover:bg-black transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+ >
+ {isAuditing ? <Loader2 className="animate-spin"size={16} /> : <Scale size={16} />}
+ {isAuditing ? 'AUDITING...' : 'EXECUTE FISCAL AUDIT'}
+ </button>
+ </div>
+
+ {auditResult && (
+ <motion.div 
+ initial={{ opacity: 0, y: 20 }}
+ animate={{ opacity: 1, y: 0 }}
+ className="border border-archival-border bg-white/40 p-8 space-y-8"
+ >
+ <div className="text-center space-y-2 pb-6 border-b border-archival-border">
+ <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono">Definitive Recommendation</div>
+ <h3 className="font-bodoni italic text-3xl">{auditResult.verdict}</h3>
+ </div>
+
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+ <div className="space-y-3">
+ <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono border-b border-archival-border pb-2">Item 1 Analysis</div>
+ <p className="text-sm leading-relaxed opacity-90">{auditResult.item1Analysis}</p>
+ </div>
+ <div className="space-y-3">
+ <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono border-b border-archival-border pb-2">Item 2 Analysis</div>
+ <p className="text-sm leading-relaxed opacity-90">{auditResult.item2Analysis}</p>
+ </div>
+ </div>
+
+ <div className="space-y-3 bg-white/60 p-6 border border-archival-border">
+ <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono">Rationale</div>
+ <p className="text-sm leading-relaxed opacity-90">{auditResult.rationale}</p>
+ </div>
+
+ {auditResult.searchDirectives && auditResult.searchDirectives.length > 0 && (
+ <div className="space-y-3 bg-white/60 p-6 border border-archival-border">
+ <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono">Search Directives</div>
+ <ul className="list-disc pl-4 space-y-2">
+ {auditResult.searchDirectives.map((directive, i) => (
+ <li key={i} className="text-sm leading-relaxed opacity-90">{directive}</li>
+ ))}
+ </ul>
+ </div>
+ )}
+
+ {auditResult.searchBooleans && auditResult.searchBooleans.length > 0 && (
+ <div className="space-y-3 bg-white/60 p-6 border border-archival-border">
+ <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono">Search Booleans</div>
+ <div className="flex flex-wrap gap-2">
+ {auditResult.searchBooleans.map((boolean, i) => (
+ <div key={i} className="flex items-center gap-2 bg-archival-border/20 px-3 py-1.5 border border-archival-border">
+ <span className="font-mono text-[11px] font-medium">{boolean}</span>
+ <button 
+ onClick={() => copyToClipboard(boolean, i + 1000)}
+ className="opacity-50 hover:opacity-100 transition-opacity"
+ >
+ {copiedIndex === i + 1000 ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
+ </button>
+ </div>
+ ))}
+ </div>
+ </div>
+ )}
+
+ <div className="pt-4 border-t border-archival-border flex justify-end">
+ <button 
+ onClick={saveAuditToPocket}
+ className="text-[10px] uppercase tracking-widest font-mono opacity-60 hover:opacity-100 transition-colors flex items-center gap-2"
+ >
+ Save to Pocket
+ </button>
+ </div>
+ </motion.div>
+ )}
+ </div>
+ )}
+
+ </main>
+ </div>
+ );
 };

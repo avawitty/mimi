@@ -3,69 +3,76 @@ import * as d3 from 'd3';
 import { TasteGraphNode, TasteGraphEdge } from '../types';
 
 interface ThreadPathVisualizationProps {
-  nodes: TasteGraphNode[];
-  edges: TasteGraphEdge[];
+ nodes: TasteGraphNode[];
+ edges: TasteGraphEdge[];
 }
 
 export const ThreadPathVisualization: React.FC<ThreadPathVisualizationProps> = ({ nodes, edges }) => {
-  const svgRef = useRef<SVGSVGElement>(null);
+ const svgRef = useRef<SVGSVGElement>(null);
 
-  useEffect(() => {
-    if (!svgRef.current || nodes.length === 0) return;
+ useEffect(() => {
+ if (!svgRef.current || nodes.length === 0) return;
 
-    const svg = d3.select(svgRef.current);
-    svg.selectAll('*').remove();
+ const svg = d3.select(svgRef.current);
+ svg.selectAll('*').remove();
 
-    const width = 600;
-    const height = 400;
+ const width = 600;
+ const height = 400;
 
-    const simulation = d3.forceSimulation(nodes as any)
-      .force('link', d3.forceLink(edges).id((d: any) => d.id))
-      .force('charge', d3.forceManyBody().strength(-100))
-      .force('center', d3.forceCenter(width / 2, height / 2));
+ const simulation = d3.forceSimulation(nodes as any)
+ .force('link', d3.forceLink(edges).id((d: any) => d.id))
+ .force('charge', d3.forceManyBody().strength(-100))
+ .force('center', d3.forceCenter(width / 2, height / 2));
 
-    const link = svg.append('g')
-      .selectAll('line')
-      .data(edges)
-      .join('line')
-      .attr('stroke', '#a8a29e')
-      .attr('stroke-width', (d: any) => d.strength * 2);
+ const link = svg.append('g')
+ .selectAll('line')
+ .data(edges)
+ .join('line')
+ .attr('stroke', 'currentColor')
+ .attr('stroke-opacity', 0.3)
+ .attr('stroke-width', (d: any) => d.strength * 2)
+ .attr('stroke-dasharray', '2 2');
 
-    const node = svg.append('g')
-      .selectAll('circle')
-      .data(nodes)
-      .join('circle')
-      .attr('r', (d: any) => d.weight * 5)
-      .attr('fill', '#1c1917');
+ const node = svg.append('g')
+ .selectAll('rect')
+ .data(nodes)
+ .join('rect')
+ .attr('width', (d: any) => d.weight * 6)
+ .attr('height', (d: any) => d.weight * 6)
+ .attr('fill', 'transparent')
+ .attr('stroke', 'currentColor')
+ .attr('stroke-width', 1);
 
-    const label = svg.append('g')
-      .selectAll('text')
-      .data(nodes)
-      .join('text')
-      .text((d: any) => d.label)
-      .attr('font-size', '10px')
-      .attr('fill', '#a8a29e');
+ const label = svg.append('g')
+ .selectAll('text')
+ .data(nodes)
+ .join('text')
+ .text((d: any) => `> ${d.label.toUpperCase()}`)
+ .attr('font-size', '9px')
+ .attr('font-family', 'monospace')
+ .attr('fill', 'currentColor')
+ .attr('opacity', 0.7);
 
-    simulation.on('tick', () => {
-      link
-        .attr('x1', (d: any) => d.source.x)
-        .attr('y1', (d: any) => d.source.y)
-        .attr('x2', (d: any) => d.target.x)
-        .attr('y2', (d: any) => d.target.y);
+ simulation.on('tick', () => {
+ link
+ .attr('x1', (d: any) => d.source.x)
+ .attr('y1', (d: any) => d.source.y)
+ .attr('x2', (d: any) => d.target.x)
+ .attr('y2', (d: any) => d.target.y);
 
-      node
-        .attr('cx', (d: any) => d.x)
-        .attr('cy', (d: any) => d.y);
+ node
+ .attr('x', (d: any) => d.x - (d.weight * 3))
+ .attr('y', (d: any) => d.y - (d.weight * 3));
 
-      label
-        .attr('x', (d: any) => d.x + 10)
-        .attr('y', (d: any) => d.y + 5);
-    });
+ label
+ .attr('x', (d: any) => d.x + (d.weight * 3) + 5)
+ .attr('y', (d: any) => d.y + 3);
+ });
 
-    return () => {
-      simulation.stop();
-    };
-  }, [nodes, edges]);
+ return () => {
+ simulation.stop();
+ };
+ }, [nodes, edges]);
 
-  return <svg ref={svgRef} width="100%" height="400" viewBox="0 0 600 400" />;
+ return <svg ref={svgRef} width="100%"height="400"viewBox="0 0 600 400"className="text dark:text"/>;
 };

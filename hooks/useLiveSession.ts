@@ -142,6 +142,8 @@ export const useLiveSession = (systemInstruction: string) => {
                         data: base64
                       }
                     });
+                  }).catch(e => {
+                    console.error("MIMI // Failed to send realtime input", e);
                   });
                 };
                 

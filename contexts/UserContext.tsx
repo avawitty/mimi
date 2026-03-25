@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { UserProfile, UserPreferences, Persona, TailorLogicDraft, NarrativeThread } from '../types';
 import { getLocalProfile, saveProfileLocally } from '../services/localArchive';
 import { 
-  bootstrapAuth, ensureAuth, getUserProfile, saveUserProfile, 
+  bootstrapAuth, ensureAuth, getUserProfile, saveUserProfile, commitGlobalHandshake,
   anchorIdentity, linkIdentity, handleAuthRedirect, startGhostSession, 
   initializeAuthPersistence, getUserPreferences, saveUserPreferences, 
   subscribeToUserProfile, subscribeToUserPreferences, migrateLocalToCloud, db, auth,
@@ -13,6 +13,8 @@ import { recordSession as recordSessionService } from '../services/retentionServ
 import { onAuthStateChanged } from 'firebase/auth';
 import { Star } from 'lucide-react';
 import { setGlobalKeyRing } from '../services/geminiService';
+import { hasAccess } from '../constants';
+import { fetchUserSubscription } from '../services/membershipPipeline';
 
 interface SystemStatus {
   auth: 'syncing' | 'anchored' | 'offline';
@@ -38,6 +40,11 @@ interface UserContextType {
   toggleZineStar: (zineId: string) => Promise<void>;
   isOnboardingComplete: boolean;
   login: (forceRedirect?: boolean) => Promise<void>;
+  loginWithEmail: (email: string, redirectUrl: string) => Promise<void>;
+  signUpWithEmailPassword: (email: string, password: string) => Promise<void>;
+  signInWithEmailPassword: (email: string, password: string) => Promise<void>;
+  upgradeGhostAccount: (email: string, password: string) => Promise<void>;
+  completeEmailLogin: (url: string) => Promise<void>;
   signInWithGoogleRedirect: () => Promise<void>;
   ghostLogin: () => Promise<void>;
   speedGhostEntrance: () => Promise<void>;
@@ -64,13 +71,14 @@ interface UserContextType {
   activePersonaId: string | undefined;
   activePersona: Persona | undefined;
   switchPersona: (personaId: string) => void;
-  createPersona: (name: string, apiKey?: string) => Promise<void>;
+  createPersona: (name: string, apiKey?: string, identityReframe?: string) => Promise<void>;
   updatePersona: (persona: Persona) => Promise<void>;
   deletePersona: (personaId: string) => Promise<void>;
   // Patron & Generation Tracking
   canGenerate: boolean;
   generationsRemaining: number;
   activatePatron: (key: string) => Promise<void>;
+  upgradePlan: (plan: 'core' | 'pro' | 'lab', interval?: 'month' | 'year') => Promise<void>;
   incrementGeneration: () => Promise<void>;
   recordSession: () => Promise<void>;
   activeThread: NarrativeThread | null;
@@ -340,20 +348,23 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.info("MIMI // User changed during reconciliation. Aborting.");
           return;
       }
-      
-      // If no cloud data exists, but we have local data (fresh sign-up or first sync)
+
+      // Fetch subscription data
+      const subscription = await fetchUserSubscription(uid);
       
       // 2. Setup Real-time Listeners
-      unsubscribeProfile.current = subscribeToUserProfile(uid, (pData) => {
+      unsubscribeProfile.current = subscribeToUserProfile(uid, async (pData) => {
+         const subscription = await fetchUserSubscription(uid);
          setProfile(prev => {
-             const merged = { ...(prev || {}), ...pData, uid: uid } as UserProfile;
+             const merged = { ...(prev || {}), ...pData, uid: uid, subscription } as UserProfile;
              return ensurePersonas(merged);
          });
       });
 
-      unsubscribePrefs.current = subscribeToUserPreferences(uid, (prefsData) => {
+      unsubscribePrefs.current = subscribeToUserPreferences(uid, async (prefsData) => {
+         const subscription = await fetchUserSubscription(uid);
          setProfile(prev => {
-             const merged = { ...(prev || {}), ...prefsData } as UserProfile;
+             const merged = { ...(prev || {}), ...prefsData, subscription } as UserProfile;
              return ensurePersonas(merged);
          });
       });
@@ -366,7 +377,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           uid: uid,
           isSwan: !fbUser.isAnonymous,
           email: fbUser.email,
-          photoURL: (cloudProfileSnap?.photoURL) || fbUser.photoURL || null
+          photoURL: (cloudProfileSnap?.photoURL) || fbUser.photoURL || null,
+          subscription
       } as UserProfile;
 
       // If migration happened, local is the best source until listeners fire
@@ -379,7 +391,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             uid: uid, 
             isSwan: !fbUser.isAnonymous, 
             email: fbUser.email,
-            photoURL: currentLocal.photoURL || fbUser.photoURL || null
+            photoURL: currentLocal.photoURL || fbUser.photoURL || null,
+            subscription
           };
       } else {
           // Brand new user, no local data either
@@ -393,7 +406,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
               lastActive: Date.now(),
               onboardingComplete: false,
               tasteProfile: { archetype_weights: {}, color_frequency: {} },
-              starredZineIds: []
+              starredZineIds: [],
+              subscription
           };
       }
 
@@ -416,7 +430,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
     } catch (e: any) {
-      console.error("Reconciliation Failed", e);
+      console.error("MIMI // Reconciliation Failed", e);
       setSystemStatus(prev => ({ ...prev, auth: 'offline' }));
       // Fallback to local
       if (!profile) {
@@ -526,33 +540,46 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // 2. Setup Observer
         const unsubscribe = onAuthStateChanged(authInstance, async (fbUser) => {
-          console.info("MIMI // onAuthStateChanged called with:", fbUser ? fbUser.uid : "null", fbUser ? "isAnonymous: " + fbUser.isAnonymous : "");
-          if (fbUser) {
-            console.info("MIMI // Auth State Changed: Active", fbUser.uid);
-            await reconcileProfile(fbUser);
-          } else {
-             console.info("MIMI // Auth State Changed: Null");
-             
-             // CRITICAL: Only fallback to ghost if we are NOT in a redirect flow
-             // and we don't already have a profile (to prevent flicker)
-             if (!rResult && !profile) {
-                 const local = await getLocalProfile();
-                 if (local) {
-                   console.info("MIMI // Local Archive Found. Restoring Ghost Identity.");
-                   setProfile(ensurePersonas(local));
-                   setUser({ uid: local.uid, isAnonymous: !local.isSwan });
-                   setSystemStatus(prev => ({ ...prev, auth: 'anchored' }));
-                 } else {
-                   console.info("MIMI // No Identity Found. Entering Speed Ghost Flow.");
-                   await speedGhostEntrance();
-                 }
-             }
-             
-             if (!fbUser && !rResult) {
-                setLoading(false);
-             }
+          try {
+            console.info("MIMI // onAuthStateChanged called with:", fbUser ? fbUser.uid : "null", fbUser ? "isAnonymous: " + fbUser.isAnonymous : "");
+            if (fbUser) {
+              console.info("MIMI // Auth State Changed: Active", fbUser.uid);
+              await reconcileProfile(fbUser);
+            } else {
+               console.info("MIMI // Auth State Changed: Null");
+               
+               // CRITICAL: Only fallback to ghost if we are NOT in a redirect flow
+               // and we don't already have a profile (to prevent flicker)
+               if (!rResult && !profile) {
+                   const local = await getLocalProfile();
+                   // Only restore if it is explicitly a ghost profile
+                   if (local && (local.uid.startsWith('local_ghost_') || local.isAnonymous === true || local.isSwan === false)) {
+                     // Double check it's not a real Firebase UID that got mislabeled
+                     if (local.uid.length > 20 && !local.uid.startsWith('local_ghost_')) {
+                       console.info("MIMI // Stale Registered Profile Found. Entering Speed Ghost Flow.");
+                       await speedGhostEntrance();
+                     } else {
+                       console.info("MIMI // Local Archive Found. Restoring Ghost Identity.");
+                       setProfile(ensurePersonas(local));
+                       setUser({ uid: local.uid, isAnonymous: true });
+                       setSystemStatus(prev => ({ ...prev, auth: 'anchored' }));
+                     }
+                   } else {
+                     console.info("MIMI // No Identity Found or Session Expired. Entering Speed Ghost Flow.");
+                     await speedGhostEntrance();
+                   }
+               }
+               
+               if (!fbUser && !rResult) {
+                  setLoading(false);
+               }
+            }
+            setIsInitializing(false);
+          } catch (err) {
+            console.error("MIMI // onAuthStateChanged Error:", err);
+            setLoading(false);
+            setIsInitializing(false);
           }
-          setIsInitializing(false);
         });
 
         unsubscribeProfile.current = unsubscribe;
@@ -592,53 +619,146 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             saveUserProfile(identity as UserProfile), // Writes to 'profiles_public'
             saveUserPreferences(currentUid, preferences) // Writes to 'userPreferences'
         ]);
+        
+        // If handle or photoURL changed, trigger global handshake
+        if (profile && (profile.handle !== updated.handle || profile.photoURL !== updated.photoURL)) {
+          await commitGlobalHandshake(currentUid, updated.handle, updated.photoURL || null);
+        }
       }
-    } catch (e) { throw e; }
+    } catch (e) { 
+      console.error("MIMI // updateProfile error:", e);
+    }
   };
 
-  const switchPersona = (personaId: string) => {
+  const switchPersona = async (personaId: string) => {
       if (!profile) return;
-      const target = profile.personas?.find(p => p.id === personaId);
-      if (target) {
-          updateProfile({ ...profile, activePersonaId: personaId, tailorDraft: target.tailorDraft });
+      try {
+        const target = profile.personas?.find(p => p.id === personaId);
+        if (target) {
+            await updateProfile({ ...profile, activePersonaId: personaId, tailorDraft: target.tailorDraft });
+        }
+      } catch (e) {
+        console.error("MIMI // Failed to switch persona", e);
       }
   };
 
-  const createPersona = async (name: string, apiKey?: string) => {
+  const createPersona = async (name: string, apiKey?: string, identityReframe?: string) => {
       if (!profile) return;
-      const newPersona: Persona = {
-          id: `persona_${Date.now()}`,
-          name,
-          tailorDraft: { ...DEFAULT_DRAFT },
-          apiKey,
-          createdAt: Date.now()
-      };
-      const updatedPersonas = [...(profile.personas || []), newPersona];
-      await updateProfile({ ...profile, personas: updatedPersonas, activePersonaId: newPersona.id, tailorDraft: newPersona.tailorDraft });
+      try {
+        const newPersona: Persona = {
+            id: `persona_${Date.now()}`,
+            name,
+            tailorDraft: { 
+                ...DEFAULT_DRAFT,
+                strategicSummary: {
+                    ...DEFAULT_DRAFT.strategicSummary,
+                    aestheticDNA: identityReframe || DEFAULT_DRAFT.strategicSummary.aestheticDNA
+                }
+            },
+            apiKey,
+            createdAt: Date.now()
+        };
+        const updatedPersonas = [...(profile.personas || []), newPersona];
+        await updateProfile({ ...profile, personas: updatedPersonas, activePersonaId: newPersona.id, tailorDraft: newPersona.tailorDraft });
+      } catch (e) {
+        console.error("MIMI // Failed to create persona", e);
+      }
   };
 
   const updatePersona = async (updatedPersona: Persona) => {
       if (!profile) return;
-      const updatedPersonas = (profile.personas || []).map(p => p.id === updatedPersona.id ? updatedPersona : p);
-      const isUpdatingActive = profile.activePersonaId === updatedPersona.id;
-      await updateProfile({ ...profile, personas: updatedPersonas, tailorDraft: isUpdatingActive ? updatedPersona.tailorDraft : profile.tailorDraft });
+      try {
+        const updatedPersonas = (profile.personas || []).map(p => p.id === updatedPersona.id ? updatedPersona : p);
+        const isUpdatingActive = profile.activePersonaId === updatedPersona.id;
+        await updateProfile({ ...profile, personas: updatedPersonas, tailorDraft: isUpdatingActive ? updatedPersona.tailorDraft : profile.tailorDraft });
+      } catch (e) {
+        console.error("MIMI // Failed to update persona", e);
+      }
   };
 
   const deletePersona = async (personaId: string) => {
       if (!profile || !profile.personas || profile.personas.length <= 1) return;
-      const filtered = profile.personas.filter(p => p.id !== personaId);
-      const newActiveId = profile.activePersonaId === personaId ? filtered[0].id : profile.activePersonaId;
-      const newActiveDraft = filtered.find(p => p.id === newActiveId)?.tailorDraft || DEFAULT_DRAFT;
-      await updateProfile({ ...profile, personas: filtered, activePersonaId: newActiveId, tailorDraft: newActiveDraft });
+      try {
+        const filtered = profile.personas.filter(p => p.id !== personaId);
+        const newActiveId = profile.activePersonaId === personaId ? filtered[0].id : profile.activePersonaId;
+        const newActiveDraft = filtered.find(p => p.id === newActiveId)?.tailorDraft || DEFAULT_DRAFT;
+        await updateProfile({ ...profile, personas: filtered, activePersonaId: newActiveId, tailorDraft: newActiveDraft });
+      } catch (e) {
+        console.error("MIMI // Failed to delete persona", e);
+      }
   };
 
   const toggleZineStar = async (zineId: string) => {
     if (!profile) return;
-    const currentStars = profile.starredZineIds || [];
-    const isStarred = currentStars.includes(zineId);
-    const newStars = isStarred ? currentStars.filter(id => id !== zineId) : [...currentStars, zineId];
-    window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: isStarred ? "Manifest removed from Favorites." : "Manifest anchored to Favorites.", icon: <Star size={14} className={isStarred ? "" : "text-amber-500 fill-amber-500"} /> } }));
-    await updateProfile({ ...profile, starredZineIds: newStars });
+    try {
+      const currentStars = profile.starredZineIds || [];
+      const isStarred = currentStars.includes(zineId);
+      const newStars = isStarred ? currentStars.filter(id => id !== zineId) : [...currentStars, zineId];
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: isStarred ? "Manifest removed from Favorites." : "Manifest anchored to Favorites.", icon: <Star size={14} className={isStarred ? "" : "text-amber-500 fill-amber-500"} /> } }));
+      await updateProfile({ ...profile, starredZineIds: newStars });
+    } catch (e) {
+      console.error("MIMI // Failed to toggle zine star", e);
+    }
+  };
+
+  const loginWithEmail = async (email: string, redirectUrl: string) => {
+    setAuthError(null);
+    try {
+      const { sendEmailLink } = await import('../services/firebaseUtils');
+      await sendEmailLink(email, redirectUrl);
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Access link sent to email.", icon: <Star size={14} className="text-stone-500 fill-stone-500" /> } }));
+    } catch (e: any) {
+      console.error("MIMI // Email Login Error:", e);
+      setAuthError(e.code || e.message);
+    }
+  };
+
+  const signUpWithEmailPassword = async (email: string, password: string) => {
+    setAuthError(null);
+    try {
+      const { signUpWithEmailPassword } = await import('../services/firebaseUtils');
+      await signUpWithEmailPassword(email, password);
+      window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }));
+    } catch (e: any) {
+      console.error("MIMI // Sign Up Error:", e);
+      setAuthError(e.code || e.message);
+    }
+  };
+
+  const signInWithEmailPassword = async (email: string, password: string) => {
+    setAuthError(null);
+    try {
+      const { signInWithEmailPassword } = await import('../services/firebaseUtils');
+      await signInWithEmailPassword(email, password);
+      window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }));
+    } catch (e: any) {
+      console.error("MIMI // Sign In Error:", e);
+      setAuthError(e.code || e.message);
+    }
+  };
+
+  const upgradeGhostAccount = async (email: string, password: string) => {
+    setAuthError(null);
+    try {
+      const { upgradeAnonymousWithEmail } = await import('../services/firebaseUtils');
+      await upgradeAnonymousWithEmail(email, password);
+      window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }));
+    } catch (e: any) {
+      console.error("MIMI // Upgrade Ghost Error:", e);
+      setAuthError(e.code || e.message);
+    }
+  };
+
+  const completeEmailLogin = async (url: string) => {
+    setAuthError(null);
+    try {
+      const { completeEmailSignIn } = await import('../services/firebaseUtils');
+      await completeEmailSignIn(url);
+      window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }));
+    } catch (e: any) {
+      console.error("MIMI // Complete Email Login Error:", e);
+      setAuthError(e.code || e.message);
+    }
   };
 
   const login = async (forceRedirect = false) => {
@@ -663,15 +783,21 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }));
       }
       // For redirect flow, page reloads — handleAuthRedirect in performRitual catches the result
-    } catch (e: any) { setAuthError(e.code || e.message); throw e; }
+    } catch (e: any) { 
+      console.error("MIMI // Login Error:", e);
+      setAuthError(e.code || e.message); 
+    }
   };
 
   const signInWithGoogleRedirect = async () => {
     setAuthError(null);
     try { 
-      await import('../services/firebaseUtils').then(m => m.anchorIdentity(true)); 
+      await import('../services/firebaseUtils').then(m => m.anchorIdentity(false)); 
       window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }));
-    } catch (e: any) { setAuthError(e.code || e.message); throw e; }
+    } catch (e: any) { 
+      console.error("MIMI // Sign In Error:", e);
+      setAuthError(e.code || e.message); 
+    }
   };
 
   const linkAccount = async (forceRedirect = false) => {
@@ -705,7 +831,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e: any) { 
         console.error("MIMI // linkAccount error:", e);
         setAuthError(e.code || e.message); 
-        throw e; 
     }
   };
 
@@ -792,33 +917,55 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const activePersona = profile?.personas?.find(p => p.id === profile.activePersonaId);
 
-  const canGenerate = profile?.isPatron || (profile?.generationCount || 0) < 5;
-  const generationsRemaining = profile?.isPatron ? Infinity : Math.max(0, 5 - (profile?.generationCount || 0));
+  const canGenerate = hasAccess(profile?.plan, 'core') || profile?.isPatron || (profile?.generationCount || 0) < 5;
+  const generationsRemaining = (hasAccess(profile?.plan, 'core') || profile?.isPatron) ? Infinity : Math.max(0, 5 - (profile?.generationCount || 0));
 
   const activatePatron = async (key: string) => {
+    if (!profile || !user) return;
+    try {
+      const { applyPromoCode } = await import('../services/membershipPipeline');
+      await applyPromoCode(user.uid, key);
+      
+      // Also update local profile state to reflect the change immediately
+      await updateProfile({ ...profile, plan: 'lab', isPatron: true, patronActivatedAt: Date.now(), patronKey: key });
+    } catch (e) {
+      console.error("MIMI // Failed to activate patron", e);
+      throw e;
+    }
+  };
+
+  const upgradePlan = async (plan: 'core' | 'pro' | 'lab', interval?: 'month' | 'year') => {
     if (!profile) return;
-    const isUniversal = key.trim().toLowerCase() === 'mimimuse';
-    if (isUniversal) {
-        await updateProfile({ ...profile, isPatron: true, patronActivatedAt: Date.now(), patronKey: key });
-    } else {
-        throw new Error("Invalid access code");
+    try {
+      await updateProfile({ ...profile, plan, subscriptionInterval: interval || 'month', subscriptionStatus: 'active' });
+    } catch (e) {
+      console.error("MIMI // Failed to upgrade plan", e);
+      throw e;
     }
   };
 
   const incrementGeneration = async () => {
     if (!profile) return;
-    await updateProfile({ ...profile, generationCount: (profile.generationCount || 0) + 1 });
+    try {
+      await updateProfile({ ...profile, generationCount: (profile.generationCount || 0) + 1 });
+    } catch (e) {
+      console.error("MIMI // Failed to increment generation count", e);
+    }
   };
 
   const recordSession = async () => {
     if (!user || user.uid.startsWith('local_')) return;
-    await recordSessionService(user.uid);
+    try {
+      await recordSessionService(user.uid);
+    } catch (e) {
+      console.error("MIMI // Failed to record session", e);
+    }
   };
 
   return (
     <UserContext.Provider value={{ 
       user, profile, loading, isElevatorLoading, setElevatorLoading, updateProfile, toggleZineStar, isOnboardingComplete: !!profile?.onboardingComplete, 
-      login, signInWithGoogleRedirect, ghostLogin, speedGhostEntrance, linkAccount, keyLogin, verifyIdentity, isEnvironmentRestricted, isDatabaseMissing, authError,
+      login, loginWithEmail, completeEmailLogin, signUpWithEmailPassword, signInWithEmailPassword, upgradeGhostAccount, signInWithGoogleRedirect, ghostLogin, speedGhostEntrance, linkAccount, keyLogin, verifyIdentity, isEnvironmentRestricted, isDatabaseMissing, authError,
       hasApiKey, openKeySelector, logout, refreshHasApiKey, systemStatus, setOracleStatus,
       keyRing, addKeyToRing, removeKeyFromRing,
       featureFlags, toggleFeature,
@@ -834,6 +981,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       canGenerate,
       generationsRemaining,
       activatePatron,
+      upgradePlan,
       incrementGeneration,
       recordSession,
       activeThread,

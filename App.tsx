@@ -16,6 +16,7 @@ import { InputStudio } from './components/InputStudio';
 import { SUPERINTELLIGENCE_PROMPTS } from './constants';
 import { AnalysisDisplay } from './components/AnalysisDisplay';
 import { ElevatorLoader } from './components/ElevatorLoader';
+import { ViewSkeleton } from './components/loaders/ViewSkeleton';
 import { UserProvider, useUser } from './contexts/UserContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { AgentProvider, useAgents } from './contexts/AgentContext';
@@ -37,9 +38,13 @@ const DarkroomView = lazy(() => import('./components/DarkroomView').then(m => ({
 const ApiKeyShield = lazy(() => import('./components/ApiKeyShield').then(m => ({ default: m.ApiKeyShield })));
 const ProsceniumView = lazy(() => import('./components/ProsceniumView').then(m => ({ default: m.ProsceniumView })));
 import { AmbientSoundscape } from './components/AmbientSoundscape';
+import MimiIntroSequence from './components/MimiIntroSequence';
 const CaptiveSentinel = lazy(() => import('./components/CaptiveSentinel').then(m => ({ default: m.CaptiveSentinel })));
 const TheWard = lazy(() => import('./components/TheWard').then(m => ({ default: m.TheWard })));
 const PatronMintView = lazy(() => import('./components/PatronMintView').then(m => ({ default: m.PatronMintView })));
+import { MimiGateway } from './components/MimiGateway';
+import { ProfileHoverCard } from './components/ProfileHoverCard';
+
 const DossierView = lazy(() => import('./components/DossierView'));
 const StrategyStudio = lazy(() => import('./components/StrategyStudio').then(m => ({ default: m.StrategyStudio })));
 const ThreadsView = lazy(() => import('./components/ThreadsView').then(m => ({ default: m.ThreadsView })));
@@ -54,10 +59,10 @@ const ActionBoard = lazy(() => import('./components/ActionBoard').then(m => ({ d
 const MoodboardComposer = lazy(() => import('./components/MoodboardComposer').then(m => ({ default: m.MoodboardComposer })));
 const HelpView = lazy(() => import('./components/HelpView').then(m => ({ default: m.HelpView })));
 const RegistryAlert = lazy(() => import('./components/RegistryAlert').then(m => ({ default: m.RegistryAlert })));
-const AuthModal = lazy(() => import('./components/AuthModal').then(m => ({ default: m.AuthModal })));
-const Auth = lazy(() => import('./components/Auth').then(m => ({ default: m.Auth })));
 const ImperialPatronageModal = lazy(() => import('./components/ImperialPatronageModal').then(m => ({ default: m.ImperialPatronageModal })));
 const Founding50Tracker = lazy(() => import('./components/Founding50Tracker'));
+const MembershipView = lazy(() => import('./components/MembershipView').then(m => ({ default: m.MembershipView })));
+const CheckoutSuccessView = lazy(() => import('./components/CheckoutSuccessView').then(m => ({ default: m.CheckoutSuccessView })));
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Sparkles, LayoutGrid, User, Menu, X, ChevronDown, Newspaper, LogOut, ShieldAlert, Zap, Camera, Key, Radio, Activity as ActivityIcon, Archive, Moon, Sun, Scissors, FlaskConical, Eye, Radar, Compass, Info, Cpu, ShieldCheck, Briefcase, BookOpen, Volume2, VolumeX, Target, Link2, Layers, History, Settings, Loader2 } from 'lucide-react';
@@ -66,8 +71,8 @@ import { NotificationsPanel } from './components/NotificationsPanel';
 // ... (Rest of existing subcomponents: BinderRing, NavigationDrawer, DatabaseVoid) ...
 // BINDER RING COMPONENT
 const BinderRing = ({ className }: { className?: string }) => (
-  <div className={`absolute right-[-10px] w-5 h-5 rounded-full bg-[#151412] shadow-[inset_2px_2px_4px_rgba(0,0,0,0.9),1px_1px_1px_rgba(255,255,255,0.1)] z-50 flex items-center justify-center ${className}`}>
-    <div className="w-8 h-2.5 bg-gradient-to-r from-stone-600 via-stone-300 to-stone-600 rounded-sm shadow-lg transform translate-x-1" />
+  <div className={`absolute right-[-10px] w-5 h-5 bg-[#050505] border border-stone-800 z-50 flex items-center justify-center ${className}`}>
+    <div className="w-8 h-2.5 bg-stone-500 transform translate-x-1" />
   </div>
 );
 
@@ -112,7 +117,8 @@ const NavigationDrawer: React.FC<{
         { mode: 'proscenium', label: 'Proscenium', note: 'Manifested Visions' }
     ]},
     { section: 'System', items: [
-        { mode: 'help', label: 'Codex', note: 'Documentation' }
+        { mode: 'help', label: 'Codex', note: 'Documentation' },
+        { mode: 'membership', label: 'Membership', note: 'Access & Tiers' }
     ]}
   ];
 
@@ -121,7 +127,7 @@ const NavigationDrawer: React.FC<{
       initial={{ width: 0 }} 
       animate={{ width: isOpen ? 280 : 0 }} 
       transition={{ type: 'spring', damping: 30, stiffness: 200 }}
-      className="absolute top-0 left-full h-full z-10 bg-stone-950 border-r border-stone-800 text-white overflow-hidden shadow-[4px_0_10px_rgba(0,0,0,0.3)]"
+      className="absolute top-0 left-full h-full z-10 bg-stone-950 border-r border-stone-800 text-white overflow-hidden"
     >
       <div className="w-[280px] h-full overflow-y-auto no-scrollbar">
         <div className="px-8 py-12">
@@ -134,7 +140,7 @@ const NavigationDrawer: React.FC<{
             {menuItems.map((section) => (
               <div key={section.section} className="space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-1 h-3 bg-emerald-500" />
+                  <div className="w-1 h-3 bg-stone-500" />
                   <span className="font-sans text-[9px] uppercase tracking-[0.2em] font-black text-stone-400">
                     {section.section}
                   </span>
@@ -146,7 +152,7 @@ const NavigationDrawer: React.FC<{
                       onClick={() => handleNav(item.mode)} 
                       className="w-full text-left group flex flex-col gap-0.5"
                     >
-                      <div className={`font-serif italic text-xl transition-all duration-300 ${viewMode === item.mode ? 'text-emerald-400' : 'text-stone-300 group-hover:text-white'}`}>
+                      <div className={`font-serif italic text-xl transition-all duration-300 ${viewMode === item.mode ? 'text-stone-400' : 'text-stone-300 group-hover:text-white'}`}>
                         {item.label}
                       </div>
                       <div className="font-sans text-[8px] uppercase tracking-widest text-stone-600 group-hover:text-stone-400 transition-colors">
@@ -165,31 +171,31 @@ const NavigationDrawer: React.FC<{
 };
 
 const DatabaseVoid: React.FC = () => (
-  <div className="fixed inset-0 z-[50000] bg-stone-950 flex flex-col items-center justify-center p-8 text-center space-y-12">
+  <div className="fixed inset-0 z-[50000] bg-[#050505] flex flex-col items-center justify-center p-8 text-center space-y-12">
     <div className="space-y-6 max-w-lg">
-      <div className="relative mx-auto w-24 h-24">
-         <div className="absolute inset-0 border-t-2 border-red-500 rounded-full animate-[spin_4s_linear_infinite]" />
+      <div className="relative mx-auto w-24 h-24 border border-red-900/50 flex items-center justify-center">
+         <div className="absolute inset-0 border-t border-red-500 animate-[spin_4s_linear_infinite]" />
          <div className="absolute inset-0 flex items-center justify-center">
             <Radio size={32} className="text-red-500 animate-pulse" />
          </div>
       </div>
       <div className="space-y-3">
-         <h1 className="font-serif text-5xl italic tracking-tighter text-white">Registry Void.</h1>
-         <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-red-500 font-black">Connection Failure</p>
+         <h1 className="font-serif text-5xl italic tracking-tighter text-stone-300">Registry Void.</h1>
+         <p className="font-mono text-[9px] uppercase tracking-widest text-red-500 font-bold">Connection Failure</p>
       </div>
-      <p className="font-serif italic text-xl text-stone-400 leading-relaxed text-balance">
+      <p className="font-serif italic text-xl text-stone-500 leading-relaxed text-balance">
          The app cannot locate the database. I have updated the configuration to look for 'mimizine'.
       </p>
     </div>
 
-    <button onClick={() => window.location.reload()} className="px-12 py-5 bg-red-600 text-white rounded-full font-sans text-[10px] uppercase tracking-[0.4em] font-black shadow-[0_0_30px_rgba(220,38,38,0.5)] hover:bg-red-500 hover:shadow-[0_0_50px_rgba(239,68,68,0.6)] transition-all flex items-center gap-4 animate-pulse">
-       <ActivityIcon size={16} /> Force Re-Initialization
+    <button onClick={() => window.location.reload()} className="px-8 py-4 border border-red-900 text-red-500 font-mono text-[9px] uppercase tracking-widest font-bold hover:bg-red-900/20 hover:text-red-400 transition-all flex items-center gap-4 animate-pulse">
+       <ActivityIcon size={16} /> [ FORCE RE-INITIALIZATION ]
     </button>
   </div>
 );
 
-const AppContent: React.FC = () => {
-  const { user, profile, keyRing, updateProfile, loading: authLoading, isElevatorLoading, logout, setOracleStatus, systemStatus, activePersona, isDatabaseMissing, isOnboardingComplete, canGenerate, incrementGeneration, recordSession, generationsRemaining } = useUser();
+export const App: React.FC = () => {
+  const { user, profile, keyRing, updateProfile, loading: authLoading, isElevatorLoading, setElevatorLoading, logout, setOracleStatus, systemStatus, activePersona, isDatabaseMissing, isOnboardingComplete, canGenerate, incrementGeneration, recordSession, generationsRemaining, login, completeEmailLogin } = useUser();
   const { currentPalette, toggleMode } = useTheme();
   const { activeAgents } = useAgents();
 
@@ -218,8 +224,11 @@ const AppContent: React.FC = () => {
   const [tailorOverrides, setTailorOverrides] = useState<any>(null);
   const [isPatronMint, setIsPatronMint] = useState(false);
   const [showPatronModal, setShowPatronModal] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
+  const [showGateway, setShowGateway] = useState(false);
+  const [showProfileHover, setShowProfileHover] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
+  const profileButtonRef = useRef<HTMLDivElement>(null);
   const [proposalContext, setProposalContext] = useState<any>(null);
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const saved = localStorage.getItem('mimi_sound_enabled');
@@ -237,7 +246,7 @@ const AppContent: React.FC = () => {
           recordSession();
           hasRecordedSession.current = true;
       }
-    });
+    }).catch(err => console.error("MIMI // FirebaseInit Import Error:", err));
   }, [user]);
 
   useEffect(() => {
@@ -247,6 +256,43 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('mimi_volume', volume.toString());
   }, [volume]);
+
+  const [checkoutPlan, setCheckoutPlan] = useState<'core' | 'pro' | 'lab' | null>(null);
+  const [checkoutInterval, setCheckoutInterval] = useState<'month' | 'year'>('month');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const checkoutStatus = params.get('checkout');
+    const planParam = params.get('plan') || params.get('tier');
+    const isSuccessPath = window.location.pathname.includes('/success');
+
+    if ((checkoutStatus === 'success' || isSuccessPath) && planParam) {
+      if (planParam === 'lab_annual') {
+        setCheckoutPlan('lab');
+        setCheckoutInterval('year');
+      } else {
+        setCheckoutPlan(planParam as 'core' | 'pro' | 'lab');
+        setCheckoutInterval('month');
+      }
+      setViewMode('checkout-success');
+      // Clean up URL
+      window.history.replaceState({}, document.title, '/');
+    } else if (checkoutStatus === 'canceled' || window.location.pathname.includes('/canceled')) {
+      alert('Payment canceled.');
+      window.history.replaceState({}, document.title, '/');
+    }
+  }, []);
+
+  useEffect(() => {
+    // Handle Email Link Sign In
+    import('./services/firebaseInit').then(({ auth }) => {
+      import('firebase/auth').then(({ isSignInWithEmailLink }) => {
+        if (isSignInWithEmailLink(auth, window.location.href)) {
+          completeEmailLogin(window.location.href);
+        }
+      }).catch(err => console.error("MIMI // Auth Import Error:", err));
+    }).catch(err => console.error("MIMI // FirebaseInit Import Error:", err));
+  }, [completeEmailLogin]);
 
   const toggleSound = () => {
     setSoundEnabled(!soundEnabled);
@@ -281,7 +327,10 @@ const AppContent: React.FC = () => {
          try {
            const zine = await fetchZineById(e.detail_id);
            if (zine) { setZineMetadata(zine); setAppState(AppState.REVEALED); }
-         } catch(err) { setAppState(AppState.IDLE); }
+         } catch(err) { 
+           console.error("MIMI // Failed to fetch zine by id", err);
+           setAppState(AppState.IDLE); 
+         }
          return;
       }
       if (e.detail) { 
@@ -310,14 +359,17 @@ const AppContent: React.FC = () => {
       }
     };
     const handleShowQuota = () => setShowQuotaShield(true);
+    const handleOpenPatronModal = () => setShowPatronModal(true);
 
     window.addEventListener('mimi:change_view', handleChangeView);
     window.addEventListener('mimi:select_zine', handleSelectZine);
     window.addEventListener('mimi:show_quota_shield', handleShowQuota);
+    window.addEventListener('mimi:open_patron_modal', handleOpenPatronModal);
     return () => {
       window.removeEventListener('mimi:change_view', handleChangeView);
       window.removeEventListener('mimi:select_zine', handleSelectZine);
       window.removeEventListener('mimi:show_quota_shield', handleShowQuota);
+      window.removeEventListener('mimi:open_patron_modal', handleOpenPatronModal);
     };
   }, []);
 
@@ -373,7 +425,7 @@ const AppContent: React.FC = () => {
       });
       setAppState(AppState.REVEALED);
     } catch (e) {
-      console.error(e);
+      console.error("MIMI // Failed to generate thread zine", e);
       setAppState(AppState.IDLE);
     }
   }, [profile, user, activePersona, canGenerate]);
@@ -427,7 +479,7 @@ const AppContent: React.FC = () => {
       window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'success' } }));
       setAppState(AppState.REVEALED);
     } catch (e) { 
-        console.error("Zine Creation Failed:", e);
+        console.error("MIMI // Zine Creation Failed:", e);
         window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
             detail: { message: "Oracle Disconnected. Please try again.", type: 'error' } 
         }));
@@ -436,7 +488,17 @@ const AppContent: React.FC = () => {
   }, [user, profile, activePersona, canGenerate, incrementGeneration]);
 
   if (isDatabaseMissing) return <DatabaseVoid />;
-  if (authLoading || isElevatorLoading) return <ElevatorLoader />;
+  
+  if (authLoading || isElevatorLoading) {
+    return (
+      <AnimatePresence>
+        <ElevatorLoader 
+          minDuration={2000} 
+          onComplete={() => setElevatorLoading(false)}
+        />
+      </AnimatePresence>
+    );
+  }
 
   if (window.location.pathname.startsWith('/@')) {
       return <PublicSharePage />;
@@ -451,7 +513,7 @@ const AppContent: React.FC = () => {
       const type = window.location.pathname === '/privacy' ? 'privacy' : 'terms';
       return (
           <div className="min-h-screen bg-nous-base dark:bg-stone-950 flex flex-col items-center justify-center p-8">
-              <div className="max-w-2xl w-full bg-white dark:bg-stone-900 p-12 rounded-2xl shadow-xl">
+              <div className="max-w-2xl w-full bg-[#050505] border border-stone-800 p-12">
                   <h1 className="font-serif text-4xl italic mb-8">{type === 'privacy' ? 'Privacy Policy' : 'Terms of Service'}</h1>
                   <p className="font-sans text-stone-600 dark:text-stone-400 leading-relaxed mb-6">
                       {type === 'privacy' 
@@ -498,16 +560,22 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="h-full w-full bg-white dark:bg-background-dark text-primary dark:text-white transition-colors duration-500 flex flex-col relative overflow-hidden">
+      {showIntro && <MimiIntroSequence onComplete={() => setShowIntro(false)} />}
       {/* Subtle Texture Overlay Removed for clarity */}
       
       <AmbientSoundscape enabled={soundEnabled} volume={volume} />
       
       <AnimatePresence>{showCaptiveSentinel && <CaptiveSentinel onClose={() => setShowCaptiveSentinel(false)} />}</AnimatePresence>
       
+      <MimiGateway isOpen={showGateway} onClose={() => setShowGateway(false)} />
+      
       <RegistryAlert />
-      <ImperialPatronageModal isOpen={showPatronModal} onClose={() => setShowPatronModal(false)} isLimitReached={!canGenerate} />
+      <AnimatePresence>
+        {showPatronModal && (
+          <ImperialPatronageModal isOpen={showPatronModal} onClose={() => setShowPatronModal(false)} isLimitReached={!canGenerate} />
+        )}
+      </AnimatePresence>
       <Suspense fallback={null}>
-        <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
         <MobileProfileModal 
           isOpen={isMobileProfileOpen} 
           onClose={() => setIsMobileProfileOpen(false)} 
@@ -525,7 +593,8 @@ const AppContent: React.FC = () => {
       )}
       
       {/* Header */}
-      <header className="hidden md:flex canvas-texture border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-background-dark sticky top-0 z-[20] w-full px-8 py-4 items-center justify-between relative overflow-hidden">
+      {appState !== AppState.REVEALED && (
+      <header className="hidden md:flex canvas-texture border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-background-dark sticky top-0 z-[20] w-full px-8 py-4 items-center justify-between relative">
         {/* Texture Overlay */}
         <div className="absolute inset-0 pointer-events-none opacity-[0.15] bg-[url('https://www.transparenttextures.com/patterns/noise.png')] z-0 mix-blend-overlay" />
 
@@ -542,50 +611,94 @@ const AppContent: React.FC = () => {
         </div>
         
         <div className="flex gap-2 relative z-10 items-center">
-          <button onClick={() => setCommandDrawerOpen(true)} className="p-2 text-stone-500 hover:text-emerald-500 transition-colors">
+          <button onClick={() => setViewMode('membership')} className={`p-2 transition-colors ${
+            profile?.plan === 'lab' ? 'text-stone-500 hover:text-stone-400' :
+            profile?.plan === 'pro' ? 'text-purple-500 hover:text-purple-400' :
+            profile?.plan === 'core' ? 'text-orange-500 hover:text-orange-400' :
+            'text-stone-500 hover:text-stone-800'
+          }`}>
+            <ShieldCheck size={16} />
+          </button>
+          <button onClick={() => setCommandDrawerOpen(true)} className="p-2 text-stone-500 hover:text-stone-800 dark:hover:text-stone-300 transition-colors">
             <Zap size={16} />
           </button>
-          <button onClick={toggleMode} className="p-2 text-stone-500 hover:text-emerald-500 transition-colors">
+          <button onClick={toggleMode} className="p-2 text-stone-500 hover:text-stone-800 dark:hover:text-stone-300 transition-colors">
             {currentPalette?.isDark ? <Sun size={16} /> : <Moon size={16} />}
           </button>
-          <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 text-stone-500 hover:text-emerald-500 transition-colors">
+          <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 text-stone-500 hover:text-stone-500 transition-colors">
             <Bell size={16} />
           </button>
           {(!user || user.isAnonymous) ? (
             <button 
-              onClick={() => setIsAuthModalOpen(true)} 
-              className="ml-2 px-3 py-1.5 bg-emerald-500 text-white rounded-full text-[10px] font-sans uppercase tracking-widest font-bold hover:bg-emerald-600 transition-colors shadow-sm"
+              onClick={() => setShowGateway(true)} 
+              className="p-2 text-stone-500 hover:text-stone-500 transition-colors"
+              title="Sign In"
             >
-              Anchor Identity
+              <User size={16} />
             </button>
           ) : (
-            <div className="ml-2 flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 dark:bg-stone-800 rounded-full text-[10px] font-sans uppercase tracking-widest font-bold text-stone-600 dark:text-stone-300">
-              <User size={12} />
-              <span>{profile?.handle || 'Swan'}</span>
+            <div className="relative" ref={profileButtonRef}>
+              <button 
+                onClick={() => setShowProfileHover(!showProfileHover)}
+                className="ml-2 flex items-center gap-1.5 px-3 py-1.5 border border-stone-800 hover:bg-stone-900 transition-colors text-[9px] font-mono uppercase tracking-widest font-bold text-stone-500 hover:text-stone-300"
+              >
+                {profile?.photoURL ? (
+                  <img src={profile.photoURL} alt="Profile" className="w-4 h-4 object-cover grayscale" referrerPolicy="no-referrer" />
+                ) : (
+                  <User size={12} />
+                )}
+                <span>{profile?.handle || 'Swan'}</span>
+              </button>
+              <ProfileHoverCard 
+                isOpen={showProfileHover} 
+                onClose={() => setShowProfileHover(false)} 
+                triggerRef={profileButtonRef}
+              />
             </div>
           )}
         </div>
       </header>
+      )}
 
       {/* Mobile Header */}
+      {appState !== AppState.REVEALED && (
       <header className="md:hidden flex items-center justify-between p-6 mt-4 relative z-[20] bg-transparent">
         <div className="font-['Cormorant_Garamond',serif] text-3xl font-light text-stone-800 dark:text-stone-200 tracking-wide">Mimi</div>
-        <button 
-          onClick={() => {
-            if (!user || user.isAnonymous) {
-              setIsAuthModalOpen(true);
-            } else {
-              setIsMobileProfileOpen(true);
-            }
-          }} 
-          className="p-2 text-stone-800 dark:text-stone-200 hover:opacity-70 transition-opacity"
-        >
-          <User size={24} strokeWidth={1.25} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setViewMode('membership')} 
+            className={`p-2 transition-opacity hover:opacity-70 ${
+              profile?.plan === 'lab' ? 'text-stone-500' :
+              profile?.plan === 'pro' ? 'text-purple-500' :
+              profile?.plan === 'core' ? 'text-orange-500' :
+              'text-stone-800 dark:text-stone-200'
+            }`}
+          >
+            <ShieldCheck size={24} strokeWidth={1.25} />
+          </button>
+          <button 
+            onClick={() => {
+              if (!user || user.isAnonymous) {
+                setShowGateway(true);
+              } else {
+                setIsMobileProfileOpen(true);
+              }
+            }} 
+            className="p-2 text-stone-800 dark:text-stone-200 hover:opacity-70 transition-opacity"
+          >
+            {profile?.photoURL ? (
+              <img src={profile.photoURL} alt="Profile" className="w-6 h-6 object-cover grayscale" referrerPolicy="no-referrer" />
+            ) : (
+              <User size={24} strokeWidth={1.25} />
+            )}
+          </button>
+        </div>
       </header>
+      )}
 
       <div className="flex flex-1 overflow-hidden">
         {/* Dark Spine Sidebar */}
+        {appState !== AppState.REVEALED && (
         <aside 
           onClick={() => setIsNavOpen(!isNavOpen)}
           className="w-16 bg-primary dark:bg-black flex flex-col items-center py-6 border-r border-canvas-border dark:border-white relative z-20 hidden md:flex cursor-pointer hover:bg-stone-900 transition-colors"
@@ -593,7 +706,7 @@ const AppContent: React.FC = () => {
           {/* Binder Rings */}
           <div className="absolute -right-1.5 top-0 bottom-0 flex flex-col justify-around py-20 pointer-events-none z-20">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="w-3 h-6 bg-gradient-to-r from-[#2a2a2a] via-[#4a4a4a] to-[#2a2a2a] rounded-full border border-black/50 shadow-[inset_1px_0_2px_rgba(255,255,255,0.1),1px_1px_3px_rgba(0,0,0,0.4)]"></div>
+              <div key={i} className="w-3 h-6 bg-[#050505] border border-stone-800"></div>
             ))}
           </div>
           
@@ -608,6 +721,7 @@ const AppContent: React.FC = () => {
             systemStatus={systemStatus}
           />
         </aside>
+        )}
 
         {/* Main Content Area */}
         <main className="flex-1 flex flex-col relative overflow-y-auto bg-white dark:bg-background-dark">
@@ -621,26 +735,20 @@ const AppContent: React.FC = () => {
               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} 
               transition={{ duration: 0.6, ease: "easeOut" }}
             >
-              {appState === AppState.THINKING && (
-                <div className="absolute top-0 left-0 w-full z-50">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: "100%" }}
-                    transition={{ duration: isDeepRefraction ? 30 : 15, ease: "linear" }}
-                    className="h-1 bg-emerald-500"
+              <AnimatePresence>
+                {appState === AppState.THINKING && (
+                  <ElevatorLoader 
+                    isDeep={isDeepRefraction} 
+                    loadingMessage={loadingMessage}
                   />
-                  <div className="absolute top-2 right-4 flex items-center gap-2 text-xs font-mono text-stone-500 uppercase tracking-widest bg-white/80 dark:bg-black/80 px-3 py-1 rounded-full backdrop-blur-sm border border-stone-200 dark:border-stone-800">
-                    <Loader2 size={12} className="animate-spin" />
-                    <span>{loadingMessage || 'Synthesizing...'}</span>
-                  </div>
-                </div>
-              )}
-              <Suspense fallback={<div className="flex-1 flex items-center justify-center h-full text-stone-400 font-serif italic">Loading view...</div>}>
+                )}
+              </AnimatePresence>
+              <Suspense fallback={<ViewSkeleton />}>
                 {appState === AppState.REVEALED && zineMetadata ? (
                   <AnalysisDisplay 
                     metadata={zineMetadata} 
                     onReset={() => { setZineMetadata(null); setAppState(AppState.IDLE); }} 
-                    onUpdateMetadata={(updated) => { setZineMetadata(updated); updateZineMetadata(updated); }} 
+                    onUpdateMetadata={(updated) => { setZineMetadata(updated); updateZineMetadata(updated).catch(console.error); }} 
                     onExtractTailorLogic={(logic) => {
                       setTailorOverrides(logic);
                       setViewMode('tailor');
@@ -676,14 +784,14 @@ const AppContent: React.FC = () => {
                                   await saveZineToProfile(user.uid, profile?.handle || 'Swan', profile?.photoURL, zineContent, 'RAW');
                                   setViewMode('stand');
                                 } catch (e) {
-                                  console.error('Failed to save zine:', e);
+                                  console.error('MIMI // Failed to save zine:', e);
                                   alert('Failed to save zine. Please try again.');
                                 }
                               }} 
                               onClose={() => setViewMode('stand')} 
                               onOpenProfile={() => {
                                 if (!user || user.isAnonymous) {
-                                  setIsAuthModalOpen(true);
+                                  login();
                                 } else {
                                   setIsMobileProfileOpen(true);
                                 }
@@ -719,6 +827,14 @@ const AppContent: React.FC = () => {
                           {viewMode === 'the-lens' && <TheLens />}
                           {viewMode === 'notifications' && <NotificationsView />}
                           {viewMode === 'help' && <HelpView />}
+                          {viewMode === 'membership' && <MembershipView />}
+                          {viewMode === 'checkout-success' && checkoutPlan && (
+                            <CheckoutSuccessView 
+                              plan={checkoutPlan} 
+                              interval={checkoutInterval}
+                              onContinue={() => setViewMode('studio')} 
+                            />
+                          )}
                         </>
                       )}
                     </>
@@ -726,13 +842,11 @@ const AppContent: React.FC = () => {
                 </Suspense>
               </motion.div>
           </AnimatePresence>
-          <MobileNavigation currentView={viewMode} setViewMode={setViewMode} />
+          <MobileNavigation currentView={viewMode} setViewMode={setViewMode} profile={profile} />
         </main>
       </div>
     </div>
   );
 };
 
-export const App: React.FC = () => (
-  <ThemeProvider><UserProvider><AgentProvider><AppContent /></AgentProvider></UserProvider></ThemeProvider>
-);
+

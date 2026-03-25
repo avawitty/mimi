@@ -1,6 +1,6 @@
-import { db, isFullyAuthenticated } from "./firebase";
+import { db, isFullyAuthenticated, auth } from "./firebase";
 import { collection, query, where, onSnapshot, updateDoc, doc, orderBy } from "firebase/firestore";
-import { handleFirestoreError, OperationType } from "./firebaseUtils";
+import { logFirestoreError, OperationType } from "./firebaseUtils";
 import { Notification } from "../types";
 
 export const subscribeToNotifications = (userId: string, callback: (notifications: Notification[]) => void) => {
@@ -18,8 +18,12 @@ export const subscribeToNotifications = (userId: string, callback: (notification
   return onSnapshot(q, (snapshot) => {
     const notifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
     callback(notifications);
-  }, (error) => {
-    handleFirestoreError(error, OperationType.LIST, 'notifications');
+  }, (error: any) => {
+    if (error.code === 'permission-denied' && auth.currentUser?.uid !== userId) {
+      console.warn(`MIMI // Ignored permission-denied for notifications/${userId} due to auth state change.`);
+      return;
+    }
+    logFirestoreError(error, OperationType.LIST, 'notifications');
   });
 };
 

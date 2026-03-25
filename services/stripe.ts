@@ -1,5 +1,12 @@
-export const createCheckoutSession = async (priceId: string, userId: string, email?: string | null) => {
+import { STRIPE_PRICES, PlanTier } from '../constants';
+
+export const createCheckoutSession = async (plan: Exclude<PlanTier, 'free'>, userId: string, email?: string | null) => {
   try {
+    const priceId = STRIPE_PRICES[plan];
+    if (!priceId) {
+      throw new Error(`Invalid plan: ${plan}`);
+    }
+
     const response = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: {
@@ -9,6 +16,7 @@ export const createCheckoutSession = async (priceId: string, userId: string, ema
         priceId,
         userId,
         email,
+        plan,
       }),
     });
 

@@ -15,8 +15,9 @@ export default {
     extend: {
       fontFamily: {
         "display": ['"Cormorant Garamond"', "serif"],
-        "sans": ['"Public Sans"', "sans-serif"],
+        "sans": ['"Inter"', '"Public Sans"', "sans-serif"],
         serif: ['"Cormorant Garamond"', 'serif'],
+        bodoni: ['"Bodoni Moda"', 'serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
         header: ['"Cormorant Garamond"', 'serif'],
         hand: ['"La Belle Aurore"', 'cursive'],
@@ -26,6 +27,12 @@ export default {
         "background-light": "#EAE8E3",
         "background-dark": "#191919",
         "canvas-border": "#000000",
+        archival: {
+          beige: '#F2F0E9',
+          border: '#D1CFCA',
+          text: '#2A2A2A',
+          accent: '#8E8C84'
+        },
         nous: {
           base: 'var(--nous-base)',
           text: 'var(--nous-text)',

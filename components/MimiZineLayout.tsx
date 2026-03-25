@@ -2,126 +2,126 @@ import React from 'react';
 import { Waves, Smile, Shirt, Circle, Square, Triangle, Hexagon, Diamond, Star, Image as ImageIcon, Zap, Bell, Moon, Sun } from 'lucide-react';
 
 export const MimiZineLayout: React.FC = () => {
-  const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
+ const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
 
-  return (
-    <div className="flex h-screen w-full bg-stone-100 text-stone-900 overflow-hidden">
-      {/* Black Sidebar Container */}
-      <aside className="relative bg-black text-white flex border-r border-stone-800 z-50">
-        {/* Spine */}
-        <div className="w-16 flex flex-col items-center py-6">
-          <div className="flex flex-col gap-8 cursor-pointer" onClick={() => setIsDrawerOpen(!isDrawerOpen)}>
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="w-3 h-6 bg-stone-700 rounded-full hover:bg-stone-500 transition-colors"></div>
-              ))}
-          </div>
-        </div>
+ return (
+ <div className="flex h-screen w-full bg-stone-100 text-stone-900 overflow-hidden">
+ {/* Black Sidebar Container */}
+ <aside className="relative bg-black text-white flex border-r border-stone-800 z-50">
+ {/* Spine */}
+ <div className="w-16 flex flex-col items-center py-6">
+ <div className="flex flex-col gap-8 cursor-pointer"onClick={() => setIsDrawerOpen(!isDrawerOpen)}>
+ {[...Array(8)].map((_, i) => (
+ <div key={i} className="w-3 h-6 bg-stone-700 rounded-none hover:bg-stone-500 transition-colors"></div>
+ ))}
+ </div>
+ </div>
 
-        {/* Drawer */}
-        <div className={`bg-black border-r border-stone-800 overflow-hidden transition-all duration-300 ease-in-out ${isDrawerOpen ? 'w-64' : 'w-0'}`}>
-          <div className="w-64 p-6 text-stone-300 font-sans text-sm">
-            <h2 className="uppercase tracking-widest mb-6 text-white">Menu</h2>
-            <ul className="space-y-4">
-              <li><a href="#" className="hover:text-white transition-colors">Dashboard</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Studio</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Library</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Settings</a></li>
-            </ul>
-          </div>
-        </div>
-      </aside>
+ {/* Drawer */}
+ <div className={`bg-black border-r border-stone-800 overflow-hidden transition-all duration-300 ease-in-out ${isDrawerOpen ? 'w-64' : 'w-0'}`}>
+ <div className="w-64 p-6 text-stone-300 font-sans text-sm">
+ <h2 className="uppercase tracking-widest mb-6 text-white">Menu</h2>
+ <ul className="space-y-4">
+ <li><a href="#"className="hover:text-white transition-colors">Dashboard</a></li>
+ <li><a href="#"className="hover:text-white transition-colors">Studio</a></li>
+ <li><a href="#"className="hover:text-white transition-colors">Library</a></li>
+ <li><a href="#"className="hover:text-white transition-colors">Settings</a></li>
+ </ul>
+ </div>
+ </div>
+ </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col relative">
-        {/* Header */}
-        <header className="px-12 py-8 flex justify-between items-center">
-            <div className="flex flex-col">
-                <h1 className="font-serif text-4xl italic">Mimi</h1>
-                <p className="font-sans text-[9px] uppercase tracking-[0.2em] text-stone-500">A CREATIVE SANCTUARY FOR YOUR DIGITAL THREADS.</p>
-                <p className="font-sans text-[8px] uppercase tracking-[0.2em] text-stone-400">HOME / STUDIO</p>
-            </div>
-            <div className="flex gap-4 text-stone-500">
-                <Zap size={16} className="hover:text-stone-900 transition-colors cursor-pointer" />
-                <Moon size={16} className="hover:text-stone-900 transition-colors cursor-pointer" />
-                <Sun size={16} className="hover:text-stone-900 transition-colors cursor-pointer" />
-                <Bell size={16} className="hover:text-stone-900 transition-colors cursor-pointer" />
-            </div>
-        </header>
+ {/* Main Content */}
+ <main className="flex-1 flex flex-col relative">
+ {/* Header */}
+ <header className="px-12 py-8 flex justify-between items-center">
+ <div className="flex flex-col">
+ <h1 className="font-serif text-4xl italic">Mimi</h1>
+ <p className="font-sans text-[9px] uppercase tracking-[0.2em] text-stone-500">A CREATIVE SANCTUARY FOR YOUR DIGITAL THREADS.</p>
+ <p className="font-sans text-[8px] uppercase tracking-[0.2em] text-stone-400">HOME / STUDIO</p>
+ </div>
+ <div className="flex gap-4 text-stone-500">
+ <Zap size={16} className="hover:text-stone-900 transition-colors cursor-pointer"/>
+ <Moon size={16} className="hover:text-stone-900 transition-colors cursor-pointer"/>
+ <Sun size={16} className="hover:text-stone-900 transition-colors cursor-pointer"/>
+ <Bell size={16} className="hover:text-stone-900 transition-colors cursor-pointer"/>
+ </div>
+ </header>
 
-        <div className="flex-1 flex">
-            {/* Left Column */}
-            <div className="w-[35%] max-w-[450px] p-12 flex flex-col gap-8">
-                <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-stone-500 font-bold">AUTO AWESOME TITLE</div>
-                <input 
-                type="text" 
-                placeholder="ENTER ZINE TITLE..." 
-                className="w-full bg-transparent border-b border-stone-300 pb-2 text-sm uppercase tracking-widest text-stone-500 placeholder:text-stone-300 outline-none" 
-                />
-                
-                <div className="border border-stone-200 rounded-xl p-8 flex flex-col gap-6 bg-white/50 shadow-sm">
-                <div className="flex justify-end gap-3 text-stone-300">
-                    <ImageIcon size={14} />
-                    <ImageIcon size={14} />
-                    <ImageIcon size={14} />
-                </div>
-                <div className="text-center text-stone-600 font-serif italic text-sm flex flex-col gap-2">
-                    <p>A</p>
-                    <p>Taste Graph</p>
-                    <p>Signature</p>
-                    <p>Narrative Threads</p>
-                    <p>Feed???????</p>
-                    <p>For inspo</p>
-                </div>
-                </div>
-                <a href="#" className="font-sans text-[9px] uppercase tracking-[0.2em] text-stone-400 hover:text-stone-900 transition-colors">INCLUDE IN ZINE ANALYSIS OPTION</a>
-            </div>
+ <div className="flex-1 flex">
+ {/* Left Column */}
+ <div className="w-[35%] max-w-[450px] p-12 flex flex-col gap-8">
+ <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-stone-500 font-bold">AUTO AWESOME TITLE</div>
+ <input 
+ type="text"
+ placeholder="ENTER ZINE TITLE..."
+ className="w-full bg-transparent border-b border-stone-300 pb-2 text-sm uppercase tracking-widest text-stone-500 placeholder:text-stone-300 outline-none"
+ />
+ 
+ <div className="border border-stone-200 rounded-none p-8 flex flex-col gap-6 bg-white/50">
+ <div className="flex justify-end gap-3 text-stone-300">
+ <ImageIcon size={14} />
+ <ImageIcon size={14} />
+ <ImageIcon size={14} />
+ </div>
+ <div className="text-center text-stone-600 font-serif italic text-sm flex flex-col gap-2">
+ <p>A</p>
+ <p>Taste Graph</p>
+ <p>Signature</p>
+ <p>Narrative Threads</p>
+ <p>Feed???????</p>
+ <p>For inspo</p>
+ </div>
+ </div>
+ <a href="#"className="font-sans text-[9px] uppercase tracking-[0.2em] text-stone-400 hover:text-stone-900 transition-colors">INCLUDE IN ZINE ANALYSIS OPTION</a>
+ </div>
 
-            {/* Right Column */}
-            <div className="flex-1 flex flex-col items-center justify-center relative p-12">
-                <div className="text-center flex flex-col gap-3">
-                <p className="font-sans text-[9px] uppercase tracking-[0.3em] text-stone-400">PROMPT CYCLE 6: TRACE THE LINEAGE OF AN IDEA.</p>
-                <h1 className="text-5xl font-serif italic text-stone-900">The specific mood of...</h1>
-                </div>
+ {/* Right Column */}
+ <div className="flex-1 flex flex-col items-center justify-center relative p-12">
+ <div className="text-center flex flex-col gap-3">
+ <p className="font-sans text-[9px] uppercase tracking-[0.3em] text-stone-400">PROMPT CYCLE 6: TRACE THE LINEAGE OF AN IDEA.</p>
+ <h1 className="text-5xl font-serif italic text-stone-900">The specific mood of...</h1>
+ </div>
 
-                {/* Bottom Action Controls */}
-                <div className="absolute bottom-16 flex items-center gap-12">
-                <div className="flex gap-10">
-                    <button className="flex flex-col items-center gap-2 text-stone-500 hover:text-stone-900 transition-colors">
-                    <Waves size={20} strokeWidth={1.5} />
-                    <span className="font-sans text-[9px] uppercase tracking-[0.2em]">SIGNAL</span>
-                    </button>
-                    <button className="flex flex-col items-center gap-2 text-stone-500 hover:text-stone-900 transition-colors">
-                    <Smile size={20} strokeWidth={1.5} />
-                    <span className="font-sans text-[9px] uppercase tracking-[0.2em]">ROOT</span>
-                    </button>
-                    <button className="flex flex-col items-center gap-2 text-stone-500 hover:text-stone-900 transition-colors">
-                    <Shirt size={20} strokeWidth={1.5} />
-                    <span className="font-sans text-[9px] uppercase tracking-[0.2em]">TAILOR</span>
-                    </button>
-                </div>
-                <a href="#" className="font-sans text-[9px] uppercase tracking-[0.2em] text-stone-500 hover:text-stone-900 transition-colors">→ SUBMIT TO ISSUE</a>
-                </div>
-            </div>
-        </div>
+ {/* Bottom Action Controls */}
+ <div className="absolute bottom-16 flex items-center gap-12">
+ <div className="flex gap-10">
+ <button className="flex flex-col items-center gap-2 text-stone-500 hover:text-stone-900 transition-colors">
+ <Waves size={20} strokeWidth={1.5} />
+ <span className="font-sans text-[9px] uppercase tracking-[0.2em]">SIGNAL</span>
+ </button>
+ <button className="flex flex-col items-center gap-2 text-stone-500 hover:text-stone-900 transition-colors">
+ <Smile size={20} strokeWidth={1.5} />
+ <span className="font-sans text-[9px] uppercase tracking-[0.2em]">ROOT</span>
+ </button>
+ <button className="flex flex-col items-center gap-2 text-stone-500 hover:text-stone-900 transition-colors">
+ <Shirt size={20} strokeWidth={1.5} />
+ <span className="font-sans text-[9px] uppercase tracking-[0.2em]">TAILOR</span>
+ </button>
+ </div>
+ <a href="#"className="font-sans text-[9px] uppercase tracking-[0.2em] text-stone-500 hover:text-stone-900 transition-colors">→ SUBMIT TO ISSUE</a>
+ </div>
+ </div>
+ </div>
 
-        {/* Footer */}
-        <footer className="px-12 py-8 flex justify-end items-end">
-            <div className="flex gap-8 font-sans text-[9px] uppercase tracking-[0.2em] text-stone-500">
-                <a href="#">PRIVACY</a>
-                <a href="#">COMMUNITY</a>
-            </div>
-        </footer>
-      </main>
+ {/* Footer */}
+ <footer className="px-12 py-8 flex justify-end items-end">
+ <div className="flex gap-8 font-sans text-[9px] uppercase tracking-[0.2em] text-stone-500">
+ <a href="#">PRIVACY</a>
+ <a href="#">COMMUNITY</a>
+ </div>
+ </footer>
+ </main>
 
-      {/* Far-Right Vertical Toolbar */}
-      <div className="fixed right-8 top-1/2 -translate-y-1/2 flex flex-col gap-8 text-stone-300">
-        <Circle size={14} strokeWidth={1.5} />
-        <Square size={14} strokeWidth={1.5} />
-        <Triangle size={14} strokeWidth={1.5} />
-        <Hexagon size={14} strokeWidth={1.5} />
-        <Diamond size={14} strokeWidth={1.5} />
-        <Star size={14} strokeWidth={1.5} />
-      </div>
-    </div>
-  );
+ {/* Far-Right Vertical Toolbar */}
+ <div className="fixed right-8 top-1/2 -translate-y-1/2 flex flex-col gap-8 text-stone-300">
+ <Circle size={14} strokeWidth={1.5} />
+ <Square size={14} strokeWidth={1.5} />
+ <Triangle size={14} strokeWidth={1.5} />
+ <Hexagon size={14} strokeWidth={1.5} />
+ <Diamond size={14} strokeWidth={1.5} />
+ <Star size={14} strokeWidth={1.5} />
+ </div>
+ </div>
+ );
 };

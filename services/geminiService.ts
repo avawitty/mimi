@@ -102,15 +102,19 @@ export const extractTailorLogicFromGrid = async (base64Image: string, mimeType: 
   if (!ai) return null;
 
   const prompt = `You are an expert aesthetic analyst and system architect.
-  Analyze the provided screenshot of a social media grid/feed.
-  Extract the aggregate aesthetic, looking for:
+  Analyze the provided 9-photo Instagram grid snippet.
+  Extract the aggregate aesthetic and automatically establish persona logic, looking for:
   - Common silhouettes
   - Dominant color palettes
   - Structural bias
   - Era references
   
-  Map these directly into a TailorLogicDraft structure.
-  - Set chromaticRegistry, aestheticCore, and presentation.
+  Map these directly into a complete JSON persona logic draft state conforming to the TailorLogicDraft structure.
+  Explicitly capture:
+  - visual signatures (chromaticRegistry, presentation)
+  - positioning (positioningCore)
+  - aesthetic anchors (aestheticCore)
+  
   - positioningCore.aestheticCore.density and entropy should be 1-10.
   - expressionEngine.narrativeVoice.lexicalDensity and restraintLevel should be 1-10.
   - strategicVectors.expansionTolerance should be 1-10.
@@ -561,13 +565,14 @@ export async function applyAestheticRefraction(imageUrl: string, stylePrompt: st
                         }
                     },
                     {
-                        text: `Apply a high-end, aesthetic style transfer to this image.
+                        text: `Apply a highly technical aesthetic style transfer to this image.
                         
-                        STYLE DIRECTIVE: ${stylePrompt}
+                        POST-PROCESSING MANDATE (TECHNICAL LAYER-STACKS): 
+                        ${stylePrompt}
                         
                         USER AESTHETIC CONTEXT: ${profileContext}
                         
-                        CRITICAL: Maintain the core composition and subject of the original image, but refract it through the lens of the style directive and the user's aesthetic profile. The result should feel like a professional editorial edit, hyper-realistic, wearable, and artistic.
+                        CRITICAL: Maintain the core composition and subject of the original image. Treat the POST-PROCESSING MANDATE as a strict set of technical layer-stacks being applied to the original composition (e.g., 35mm Ilford HP5, Rembrandt lighting, crushed blacks, high-pass filter). The result must be hyper-realistic and strictly follow the technical directives. Do not use generic terms like "stunning" or "masterpiece".
                         
                         Return ONLY the modified image.`
                     }
@@ -643,7 +648,17 @@ export const generateZineImage = async (prompt: string, ar: AspectRatio, size: I
             const binaryToSpectrum = profile?.tailorDraft?.algoDials?.binaryToSpectrum ?? 50;
             const presentationDirective = `GENDER/FORM PRESENTATION: ${presentation}. (Binary-to-Spectrum Fluidity: ${binaryToSpectrum}%. 0% = strict binary, 100% = fully fluid/synthesized).`;
 
-            let textPrompt = `High-quality, avant-garde, haute couture editorial-style image. Concept: ${prompt}. Ultra-chic, high fashion, intellectually rigorous. Striking composition, cinematic lighting, conceptual depth. ${presentationDirective} ${treatmentDirectives}`;
+            let textPrompt = `Execute a highly technical image generation. Concept: ${prompt}. 
+            
+            TECHNICAL SPECIFICATIONS:
+            - Film Stock: 35mm Ilford HP5 Plus 400 (or equivalent digital grain structure).
+            - Lighting: Rembrandt lighting, single bare bulb overhead, harsh shadows, high-contrast strobe.
+            - Lens/Camera: 50mm f/1.4, medium format aesthetic, sharp focus on subject, natural optical bokeh.
+            - Color Science: Crushed blacks, desaturated midtones, high-end editorial color grading.
+            
+            ${presentationDirective} ${treatmentDirectives}
+            
+            CRITICAL: Do not use generic terms like "masterpiece" or "stunning". Adhere strictly to the technical specifications.`;
             
             const parts: any[] = [{ text: textPrompt }];
 
@@ -704,7 +719,8 @@ export const generateZineImage = async (prompt: string, ar: AspectRatio, size: I
             console.warn("MIMI // Flash Image Generation Failed, falling back to Imagen...", e);
             const response = await ai.models.generateImages({
                 model: 'imagen-4.0-generate-001',
-                prompt: `High-quality, avant-garde, haute couture editorial-style image. Concept: ${prompt}. Ultra-chic, high fashion, intellectually rigorous. Striking composition, cinematic lighting, conceptual depth.`,
+                prompt: `Execute a highly technical image generation. Concept: ${prompt}. 
+                TECHNICAL SPECIFICATIONS: 35mm Ilford HP5 Plus 400, Rembrandt lighting, single bare bulb overhead, harsh shadows, 50mm f/1.4, crushed blacks, high-end editorial color grading. Do not use generic terms like "masterpiece".`,
                 config: {
                     numberOfImages: 1,
                     outputMimeType: 'image/jpeg',
@@ -814,7 +830,7 @@ Output MUST be a valid JSON object with the following structure:
     });
 };
 
-export const compareItemsFiscalAudit = async (tasteProfile: any, item1: string, item2: string, budget: string) => {
+export const compareItemsFiscalAudit = async (tasteProfile: any, item1: string, item1Image: string | null, item2: string, item2Image: string | null, budget: string) => {
     return await withResilience(async (ai) => {
         const prompt = `You are the Mimi Fiscal Audit Engine. Your job is to perform a rigorous comparison between two potential purchases, evaluating them against the user's taste profile and fiscal constraints.
 
@@ -825,21 +841,45 @@ Item 2: ${item2}
 Budget/Constraints: ${budget}
 
 Task:
-1. Analyze both items for their alignment with the user's aesthetic trajectory.
+1. Analyze both items (and their images if provided) for their alignment with the user's aesthetic trajectory.
 2. Evaluate the cost-per-wear and long-term value of each item.
 3. Provide a definitive recommendation on which item is the superior investment.
+4. Provide specific search booleans and "search directives" to help the user find the item (or similar vintage/eco alternatives) online.
 
 Output MUST be a valid JSON object with the following structure:
 {
   "item1Analysis": "Brief analysis of Item 1's aesthetic and fiscal value.",
   "item2Analysis": "Brief analysis of Item 2's aesthetic and fiscal value.",
   "verdict": "The definitive recommendation (e.g., 'Item 1', 'Item 2', or 'Neither').",
-  "rationale": "A detailed explanation of why the verdict was reached, referencing the taste profile and budget."
+  "rationale": "A detailed explanation of why the verdict was reached, referencing the taste profile and budget.",
+  "searchDirectives": ["directive 1", "directive 2"],
+  "searchBooleans": ["boolean 1", "boolean 2"]
 }`;
+
+        const parts: any[] = [{ text: prompt }];
+        
+        if (item1Image) {
+            parts.push({
+                inlineData: {
+                    data: item1Image.split(',')[1],
+                    mimeType: item1Image.split(';')[0].split(':')[1]
+                }
+            });
+            parts.push({ text: "Image of Item 1 provided above." });
+        }
+        if (item2Image) {
+            parts.push({
+                inlineData: {
+                    data: item2Image.split(',')[1],
+                    mimeType: item2Image.split(';')[0].split(':')[1]
+                }
+            });
+            parts.push({ text: "Image of Item 2 provided above." });
+        }
 
         const response = await ai.models.generateContent({
             model: 'gemini-3.1-pro-preview',
-            contents: prompt,
+            contents: { parts },
             config: {
                 responseMimeType: "application/json",
                 responseSchema: {
@@ -848,9 +888,11 @@ Output MUST be a valid JSON object with the following structure:
                         item1Analysis: { type: Type.STRING },
                         item2Analysis: { type: Type.STRING },
                         verdict: { type: Type.STRING },
-                        rationale: { type: Type.STRING }
+                        rationale: { type: Type.STRING },
+                        searchDirectives: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        searchBooleans: { type: Type.ARRAY, items: { type: Type.STRING } }
                     },
-                    required: ["item1Analysis", "item2Analysis", "verdict", "rationale"]
+                    required: ["item1Analysis", "item2Analysis", "verdict", "rationale", "searchDirectives", "searchBooleans"]
                 }
             }
         });
@@ -1118,14 +1160,16 @@ export const extractStyleTreatment = async (base64Image: string, mimeType: strin
                         }
                     },
                     {
-                        text: `You are the Mimi Treatment Generation Engine. Your purpose is to turn a cluster of visual references or a raw style profile into a reusable "Style Treatment" object.
+                        text: `You are the Mimi Treatment Generation Engine. Your purpose is to turn a cluster of visual references or a raw style profile into a reusable "Style Treatment" object that is highly actionable for our image generation engine (Nano Banana).
 
 Analyze the visual logic of the input and generate a named treatment that can be applied to future material as a rule-set.
 
+CRITICAL INSTRUCTION: Do not use poetic adjectives. Use technical photography terms: 'Rembrandt lighting', '35mm Ilford HP5', 'crushed blacks', 'high-pass filter', 'chromatic aberration 0.02', 'white balance 4500k'. The output MUST be technical (lighting, film stock, color science) rather than poetic.
+
 Output a strict JSON schema with the following fields:
 1. "treatmentName": A sharp, evocative name (e.g., "Clinical Bloom", "Wet Archive", "Deadstock Siren").
-2. "basePromptDirectives": Reusable natural language prompts that capture this aesthetic (e.g., "High-contrast strobe, 35mm film stock, harsh metallic reflections, isolated subject, clinical surroundings").
-3. "imageEditingRules": A set of specific color grading rules (e.g., "Crush the blacks perfectly, desaturate reds by 20%, boost high-end cyan").
+2. "basePromptDirectives": Reusable natural language prompts that capture this aesthetic using strictly technical terms (e.g., "High-contrast strobe, 35mm film stock, harsh metallic reflections, isolated subject, clinical surroundings").
+3. "imageEditingRules": A set of specific color grading rules using technical terms (e.g., "Crush the blacks perfectly, desaturate reds by 20%, boost high-end cyan").
 4. "typographyLayout": Suggestions for how type should be set when using this treatment (e.g., "Helvetica Neue Heavy, tightly kerned, extreme left-aligned with negative white space").
 5. "applicationLogic": A 1-sentence prompt prefix explaining how this treatment alters new, raw material.
 
@@ -1718,6 +1762,83 @@ export const applyTreatment = async (base64: string, instruction: string, profil
         throw new Error("No image generated from treatment");
     });
 };
+export const analyzeLatentResonance = async (node: any, profile: any) => {
+  return await withResilience(async (ai) => {
+    const prompt = `You are Mimi, an aesthetic superintelligence. 
+    The user is exploring their "Mesopic Archive" (a 3D constellation of their saved artifacts).
+    They just clicked on a node:
+    - Node Type: ${node.type}
+    - Node Content/Preview: "${node.content_preview}"
+    
+    Provide a "Latent Analysis" explaining why this piece resonates with their current aesthetic trajectory.
+    Output a JSON object with:
+    - 'resonance_insight': A poetic, high-theory explanation of its latent meaning.
+    - 'architectural_directive': A concrete, actionable task inspired by this node that they can push to their Action Board.
+    - 'aesthetic_vectors': An array of 3 strings representing the aesthetic directions this node points towards.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-pro-preview",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            resonance_insight: { type: Type.STRING },
+            architectural_directive: { 
+              type: Type.OBJECT,
+              properties: {
+                title: { type: Type.STRING },
+                description: { type: Type.STRING }
+              },
+              required: ["title", "description"]
+            },
+            aesthetic_vectors: { type: Type.ARRAY, items: { type: Type.STRING } }
+          },
+          required: ["resonance_insight", "architectural_directive", "aesthetic_vectors"]
+        }
+      }
+    });
+    return JSON.parse(response.text || "{}");
+  });
+};
+
+export const analyzeArchitecturalIntent = async (base64: string, mimeType: string, profile: any) => {
+  return await withResilience(async (ai) => {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: {
+        parts: [
+          { inlineData: { data: base64, mimeType } },
+          { text: "Analyze this image as a high-fashion Cinematographer and Creative Director. Provide a JSON response with the following keys: 'directives' (an array of strings focusing on Spatial Angles, Content Flow, Creative Ideas, and Materiality), and 'tasks' (an array of objects with 'title' and 'description' representing concrete, actionable architectural directives that can be pushed to an Action Board)." }
+        ]
+      },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            directives: { type: Type.ARRAY, items: { type: Type.STRING } },
+            tasks: { 
+              type: Type.ARRAY, 
+              items: { 
+                type: Type.OBJECT,
+                properties: {
+                  title: { type: Type.STRING },
+                  description: { type: Type.STRING }
+                },
+                required: ["title", "description"]
+              } 
+            }
+          },
+          required: ["directives", "tasks"]
+        }
+      }
+    });
+    return JSON.parse(response.text || "{}");
+  });
+};
+
 export const analyzeMiseEnScene = async (base64: string, mimeType: string, profile: any) => {
   return await withResilience(async (ai) => {
     const response = await ai.models.generateContent({
@@ -2550,7 +2671,10 @@ You MUST return a valid JSON object matching this exact schema:
       "format": "e.g., Reel, Carousel, Long-form",
       "hook": "The specific hook or title",
       "visual": "Description of the visual setup",
-      "why": "Why it works and creates tension/response"
+      "why": "Why it works and creates tension/response",
+      "sensoryHook": "e.g., ASMR paper tear, Sub-bass drone",
+      "cognitiveLoad": "e.g., Low - visually passive, High - text dense",
+      "algorithmicTarget": "e.g., Watch-time maximization, Save-to-folder bait"
     }
   ], // Exactly 5 items
   "audienceAlchemy": "Insights based on demographics/active times if provided, or general audience advice.",

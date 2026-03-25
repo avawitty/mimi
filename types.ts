@@ -1,6 +1,14 @@
 
 import React from 'react';
 
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'stripe-pricing-table': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement> & { 'pricing-table-id'?: string, 'publishable-key'?: string, 'client-reference-id'?: string };
+    }
+  }
+}
+
 export interface AestheticSignature {
   primaryAxis: string;
   secondaryAxis: string;
@@ -11,6 +19,10 @@ export interface AestheticSignature {
   influenceLineage: InfluenceLineageItem[];
   creativeCycles: CreativeCycle[];
   motifEvolution: MotifFrequency[];
+  paletteExtraction?: string[];
+  tactileBias?: { dominant: string; secondary: string };
+  typographicPairing?: { serif: string; sans: string };
+  promptMatrix?: string[];
 }
 
 export interface InfluenceLineageItem {
@@ -511,6 +523,7 @@ export interface TasteProfile {
   dominant_archetypes?: TypographicArchetype[];
   inspirations?: string;
   sovereignIdentity?: SovereignIdentityCard; // NEW
+  constraints?: string[];
 }
 
 export interface AestheticVector {
@@ -746,12 +759,15 @@ export interface Treatment {
 export interface Task {
   id: string;
   text: string;
+  description?: string;
+  notes?: string;
   completed: boolean;
   dueDate?: string;
   createdAt: number;
   platform?: string;
   tags?: string[];
   position?: { x: number; y: number };
+  linkedContext?: { type: 'zine' | 'thimble' | 'dossier' | 'audit'; id: string };
 }
 
 export interface StrategyAudit {
@@ -781,6 +797,9 @@ export interface StrategyAudit {
       hook: string;
       visual: string;
       why: string;
+      sensoryHook?: string;
+      cognitiveLoad?: string;
+      algorithmicTarget?: string;
     }[];
     audienceAlchemy: string;
     experiments: {
@@ -871,6 +890,15 @@ export interface UserPreferences {
   };
 }
 
+export type MembershipPlan = 'core' | 'pro' | 'lab' | 'free';
+
+export interface SubscriptionData {
+  status: 'active' | 'canceled' | 'past_due';
+  planId: string;
+  stripeCustomerId: string;
+  currentPeriodEnd: number;
+}
+
 export interface UserProfile extends UserPreferences {
   uid: string;
   handle: string;
@@ -892,6 +920,11 @@ export interface UserProfile extends UserPreferences {
   isPatron?: boolean;
   patronActivatedAt?: number;
   patronKey?: string;
+  plan?: 'free' | 'core' | 'pro' | 'lab';
+  subscriptionInterval?: 'month' | 'year';
+  subscriptionStatus?: 'active' | 'inactive' | 'past_due' | 'canceled';
+  subscription?: SubscriptionData;
+  membershipPlan?: MembershipPlan;
   generationCount?: number;
   firstVisitAt?: number;
   lastVisitAt?: number;
@@ -900,6 +933,7 @@ export interface UserProfile extends UserPreferences {
   bio?: string;
   displayName?: string;
   externalLinks?: { title: string; url: string }[];
+  pocket?: PocketItem[];
 }
 
 export interface Notification {

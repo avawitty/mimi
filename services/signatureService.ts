@@ -33,6 +33,10 @@ Return a JSON object with:
 - influenceLineage (array of objects: {artist: string, movement: string, connectionStrength: number})
 - creativeCycles (array of objects: {period: string, mood: string, motifSpikes: string[], outputCount: number})
 - motifEvolution (array of objects: {motif: string, frequency: number, date: number})
+- paletteExtraction (array of 4-6 hex codes representing the aesthetic's color palette)
+- tactileBias (object: {dominant: string, secondary: string} representing physical textures like "Brushed Aluminum")
+- typographicPairing (object: {serif: string, sans: string} representing exact font stacks like "Editorial New")
+- promptMatrix (array of 3-4 pre-engineered, copy-pasteable text prompts tailored to generate their exact signature across AI models)
 
 Ensure the output is strictly JSON.`;
 
@@ -66,6 +70,10 @@ Ensure the output is strictly JSON.`;
     influenceLineage: [],
     creativeCycles: [],
     motifEvolution: [],
+    paletteExtraction: ["#000000", "#FFFFFF", "#888888", "#444444"],
+    tactileBias: { dominant: "Unknown", secondary: "Unknown" },
+    typographicPairing: { serif: "Unknown", sans: "Unknown" },
+    promptMatrix: [],
     generatedAt: Date.now()
   };
 };

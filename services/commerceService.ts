@@ -1,4 +1,4 @@
-import { Product, EditIssue } from '../types';
+import { Product, EditIssue, TasteProfile } from '../types';
 import { withResilience, ORACLE_PERSONA } from './geminiService';
 import { Type } from '@google/genai';
 import { CodexState } from './codexService';
@@ -11,10 +11,10 @@ export const MOCK_PRODUCTS: Product[] = [
     brand: 'AvantBrand',
     image: 'https://picsum.photos/seed/harness/400/400',
     price: 450,
-    affiliateLink: '#',
+    affiliateLink: 'https://example.com/p1',
     embedding: [0.1, 0.2, 0.3],
     category: 'Accessories',
-    tags: ['sculptural', 'leather', 'matte']
+    tags: ['sculptural', 'leather', 'matte', 'avant-garde', 'brutalism']
   },
   {
     id: 'p2',
@@ -22,25 +22,67 @@ export const MOCK_PRODUCTS: Product[] = [
     brand: 'NatureCore',
     image: 'https://picsum.photos/seed/knit/400/400',
     price: 280,
-    affiliateLink: '#',
+    affiliateLink: 'https://example.com/p2',
     embedding: [0.4, 0.5, 0.6],
     category: 'Apparel',
-    tags: ['organic', 'moss', 'knit']
+    tags: ['organic', 'moss', 'knit', 'earthy', 'natural']
+  },
+  {
+    id: 'p3',
+    name: 'Chrome Visor Sunglasses',
+    brand: 'CyberOptics',
+    image: 'https://picsum.photos/seed/visor/400/400',
+    price: 320,
+    affiliateLink: 'https://example.com/p3',
+    embedding: [0.7, 0.8, 0.9],
+    category: 'Accessories',
+    tags: ['chrome', 'cyberpunk', 'futuristic', 'synthetic']
+  },
+  {
+    id: 'p4',
+    name: 'Deconstructed Linen Blazer',
+    brand: 'WabiSabi',
+    image: 'https://picsum.photos/seed/blazer/400/400',
+    price: 550,
+    affiliateLink: 'https://example.com/p4',
+    embedding: [0.2, 0.3, 0.4],
+    category: 'Apparel',
+    tags: ['deconstructed', 'linen', 'minimalist', 'wabi-sabi', 'neutral']
+  },
+  {
+    id: 'p5',
+    name: 'Lucite Platform Heels',
+    brand: 'Y2K_Revival',
+    image: 'https://picsum.photos/seed/heels/400/400',
+    price: 190,
+    affiliateLink: 'https://example.com/p5',
+    embedding: [0.8, 0.1, 0.5],
+    category: 'Footwear',
+    tags: ['lucite', 'platform', 'y2k', 'nostalgia', 'plastic']
   }
 ];
 
 export const getPersonalizedEdit = async (
   userId: string, 
   userTasteVector: number[],
-  codexState: CodexState
+  codexState: CodexState,
+  tasteProfile?: TasteProfile
 ): Promise<EditIssue> => {
-  // Mock vector similarity search
-  const matchedProducts = MOCK_PRODUCTS.slice(0, 2); 
+  // Mock vector similarity search - now passing all products to let Gemini choose
+  const matchedProducts = MOCK_PRODUCTS; 
   
+  const archetypeWeights = tasteProfile?.archetype_weights || {};
+  const dominantArchetypes = Object.entries(archetypeWeights)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 2)
+    .map(([archetype]) => archetype)
+    .join(', ');
+
   return await withResilience(async (ai) => {
     const prompt = `Generate an editorial "Edit" issue.
     
     User Taste Vector: ${JSON.stringify(userTasteVector)}
+    Dominant Archetypes: ${dominantArchetypes || 'Unknown'}
 
     Codex State:
     - Entropy: ${codexState.entropy.toFixed(2)} (${codexState.entropy > 0.6 ? 'exploratory' : 'focused'})
@@ -52,7 +94,10 @@ export const getPersonalizedEdit = async (
     - High density → cohesion, archival restraint
     - High velocity → acknowledge transition, frame as movement
 
-    Matched Products: ${JSON.stringify(matchedProducts.map(p => ({ id: p.id, name: p.name, brand: p.brand, tags: p.tags })))}
+    Targeted Ad Selection:
+    Based on the user's Dominant Archetypes and Taste Vector, select products that resonate with their specific aesthetic sectors. For example, if they lean heavily into "Anti-Design" or brutalism, select avant-garde products.
+
+    Matched Products Pool: ${JSON.stringify(matchedProducts.map(p => ({ id: p.id, name: p.name, brand: p.brand, tags: p.tags })))}
     
     Write a narrative that reflects BOTH identity and state.
     Use a tone that is chic, percipient, and slightly mysterious. 
