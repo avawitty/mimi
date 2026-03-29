@@ -36,6 +36,7 @@
     padding: 0;
     overflow: hidden;
     background-color: var(--nous-base);
+    @apply paper-texture;
     color: var(--nous-text);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
