@@ -876,6 +876,10 @@ export const updateZineMetadata = async (metadata: ZineMetadata): Promise<void> 
     console.error("MIMI // updateZineMetadata: metadata.userId is missing");
     throw new Error("MIMI // updateZineMetadata: metadata.userId is missing");
   }
+  if (metadata.userId !== auth.currentUser.uid) {
+    console.warn("MIMI // updateZineMetadata: User is not the owner of this zine. Update aborted.");
+    return;
+  }
   try {
     console.info("MIMI // updateZineMetadata: Attempting update for zine:", metadata.id, "User:", auth.currentUser.uid, "ZineOwner:", metadata.userId);
     const { setDoc, doc } = await import('firebase/firestore');
@@ -911,9 +915,9 @@ export const updateZineMetadata = async (metadata: ZineMetadata): Promise<void> 
     };
 
     // 2. Save Zine without threadData and artifacts
-    console.info("MIMI // updateZineMetadata: Calling setDoc for:", metadata.id);
-    await setDoc(doc(db, "zines", metadata.id), sanitizeFirestoreData(firestoreMetadata));
-    console.info("MIMI // updateZineMetadata: setDoc successful");
+    console.info("MIMI // updateZineMetadata: Calling updateDoc for:", metadata.id);
+    await updateDoc(doc(db, "zines", metadata.id), sanitizeFirestoreData(firestoreMetadata));
+    console.info("MIMI // updateZineMetadata: updateDoc successful");
     
     // 3. Save threadData in subcollection
     for (const [pageNumber, threadData] of threadDataMap) {

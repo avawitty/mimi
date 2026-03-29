@@ -77,6 +77,7 @@ export const AnalysisDisplay: React.FC<{
  onExtractTailorLogic?: (logic: any) => void
 }> = ({ metadata, onReset, onUpdateMetadata, onExtractTailorLogic }) => {
  const { user, profile, activePersona, toggleZineStar } = useUser();
+  const isOwner = user?.uid === metadata.userId;
  const [isPlaying, setIsPlaying] = useState(false);
  const [isVoiceLoading, setIsVoiceLoading] = useState(false);
  const [showExport, setShowExport] = useState(false);
@@ -614,9 +615,11 @@ export const AnalysisDisplay: React.FC<{
  <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-nous-base print:min-h-0 print:py-12">
  <div className="w-full space-y-16 px-6 md:px-24">
  <SectionHeader label="Executive Summary"icon={Sparkles} style={{ color: accentColor }} />
- <button onClick={() => setIsEditing(!isEditing)} className="text-[8px] uppercase tracking-widest font-black text-nous-subtle hover:text-nous-text transition-colors">
- {isEditing ? 'Cancel Edit' : 'Edit Summary'}
- </button>
+ {isOwner && (
+  <button onClick={() => setIsEditing(!isEditing)} className="text-[8px] uppercase tracking-widest font-black text-nous-subtle hover:text-nous-text transition-colors">
+  {isEditing ? 'Cancel Edit' : 'Edit Summary'}
+  </button>
+ )}
  {isEditing ? (
  <div className="space-y-4">
  <textarea value={vocalSummary} onChange={e => setVocalSummary(e.target.value)} className="w-full p-4 bg-nous-base rounded-none"placeholder="Vocal Summary Blurb"/>

@@ -564,16 +564,11 @@ export async function applyAestheticRefraction(imageUrl: string, stylePrompt: st
                         }
                     },
                     {
-                        text: `Apply a highly technical aesthetic style transfer to this image.
-                        
-                        POST-PROCESSING MANDATE (TECHNICAL LAYER-STACKS): 
-                        ${stylePrompt}
+                        text: `${stylePrompt}
                         
                         USER AESTHETIC CONTEXT: ${profileContext}
                         
-                        CRITICAL: Maintain the core composition and subject of the original image. Treat the POST-PROCESSING MANDATE as a strict set of technical layer-stacks being applied to the original composition (e.g., 35mm Ilford HP5, Rembrandt lighting, crushed blacks, high-pass filter). The result must be hyper-realistic and strictly follow the technical directives. Do not use generic terms like "stunning" or "masterpiece".
-                        
-                        Return ONLY the modified image.`
+                        CRITICAL: Maintain the core composition and subject of the original image.`
                     }
                 ]
             }
@@ -647,7 +642,7 @@ export const generateZineImage = async (prompt: string, ar: AspectRatio, size: I
             const binaryToSpectrum = profile?.tailorDraft?.algoDials?.binaryToSpectrum ?? 50;
             const presentationDirective = `GENDER/FORM PRESENTATION: ${presentation}. (Binary-to-Spectrum Fluidity: ${binaryToSpectrum}%. 0% = strict binary, 100% = fully fluid/synthesized).`;
 
-            let textPrompt = `Execute a highly technical image generation. Concept: ${prompt}. 
+            let textPrompt = `${prompt}. 
             
             TECHNICAL SPECIFICATIONS:
             - Film Stock: 35mm Ilford HP5 Plus 400 (or equivalent digital grain structure).
@@ -655,9 +650,7 @@ export const generateZineImage = async (prompt: string, ar: AspectRatio, size: I
             - Lens/Camera: 50mm f/1.4, medium format aesthetic, sharp focus on subject, natural optical bokeh.
             - Color Science: Crushed blacks, desaturated midtones, high-end editorial color grading.
             
-            ${presentationDirective} ${treatmentDirectives}
-            
-            CRITICAL: Do not use generic terms like "masterpiece" or "stunning". Adhere strictly to the technical specifications.`;
+            ${presentationDirective} ${treatmentDirectives}`;
             
             const parts: any[] = [{ text: textPrompt }];
 
@@ -669,7 +662,7 @@ export const generateZineImage = async (prompt: string, ar: AspectRatio, size: I
                     }
                 });
                 parts.push({
-                    text: "Use the provided reference image purely as a strict style guide. Extract the exact color palette and typographic styling from it, and construct the final image using those exact visual touchpoints alongside the prompt."
+                    text: "Reference image for exact color palette and typographic styling."
                 });
             }
 
@@ -718,8 +711,7 @@ export const generateZineImage = async (prompt: string, ar: AspectRatio, size: I
             console.warn("MIMI // Flash Image Generation Failed, falling back to Imagen...", e);
             const response = await ai.models.generateImages({
                 model: 'imagen-4.0-generate-001',
-                prompt: `Execute a highly technical image generation. Concept: ${prompt}. 
-                TECHNICAL SPECIFICATIONS: 35mm Ilford HP5 Plus 400, Rembrandt lighting, single bare bulb overhead, harsh shadows, 50mm f/1.4, crushed blacks, high-end editorial color grading. Do not use generic terms like "masterpiece".`,
+                prompt: `${prompt}. 35mm Ilford HP5 Plus 400, Rembrandt lighting, single bare bulb overhead, harsh shadows, 50mm f/1.4, crushed blacks, high-end editorial color grading.`,
                 config: {
                     numberOfImages: 1,
                     outputMimeType: 'image/jpeg',
@@ -1512,7 +1504,7 @@ export const generateTreatmentFromAesthetic = async (
 export const scryLink = async (url: string, profile: UserProfile | null) => {
     return await withResilience(async (ai) => {
         const response = await ai.models.generateContent({
-            model: 'gemini-3.1-flash-image-preview',
+            model: 'gemini-3.1-pro-preview',
             contents: `Analyze this link: ${url}. 
             
             MANDATE:
@@ -1784,9 +1776,9 @@ export const applyTreatment = async (base64: string, instruction: string, profil
     return await withResilience(async (ai) => {
         const model = isNanoPro2 ? 'gemini-3.1-flash-image-preview' : 'gemini-2.5-flash-image';
         
-        const systemDirective = "Operate as an editorial director for a high-fashion zine. Every output must prioritize 35mm film textures, flat flash lighting, and desaturated palettes. Avoid all digital 'glow' or 'neon' tropes.";
+        const systemDirective = "35mm film textures, flat flash lighting, and desaturated palettes. No digital glow or neon.";
         const tailorTraits = profile?.tailorDraft?.positioningCore?.aestheticCore?.eraBias || profile?.tasteProfile?.dominant_archetypes?.join(', ') || '';
-        const finalPrompt = `SCENE AND SUBJECT INSTRUCTION: ${instruction}\n\nSTYLE AND AESTHETIC: ${systemDirective} Tailor Traits: ${tailorTraits}.`;
+        const finalPrompt = `${instruction}. ${systemDirective} ${tailorTraits}.`;
 
         const response = await ai.models.generateContent({
             model: model,
@@ -2184,7 +2176,7 @@ export const generateRawImage = async (prompt: string, ar: string, profile?: any
     const defaultStyle = "A mystical, introspective reading, reminiscent of 19th-century daguerreotypes and Victorian mirror-gazing. Ethereal, soft-focus, high-contrast black and white with subtle sepia tones. Subject is centered, surrounded by symbolic, reflective objects. Strictly avoid: 3D render, neon, tech-interfaces, or digital glowing lines. Colors: Muted, antique, reflective, atmospheric.";
     const tailorStyle = profile?.tailorDraft?.positioningCore?.aestheticCore?.eraBias || profile?.tasteProfile?.dominant_archetypes?.join(', ') || 'Editorial Observer';
     
-    const finalPrompt = `SCENE AND SUBJECT: ${prompt}\n\nSTYLE AND AESTHETIC: ${tailorStyle}. ${defaultStyle}`;
+    const finalPrompt = `${prompt}. ${tailorStyle}. ${defaultStyle}`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-3.1-flash-image-preview',
@@ -2881,12 +2873,12 @@ export async function generateAestheticSiblings(userTaste: any): Promise<{ name:
 
 export async function generateSignatureImage(signature: AestheticSignature): Promise<string | null> {
   return withResilience(async () => {
-    const prompt = `Generate a highly artistic, abstract visual representation of this aesthetic signature: 
+    const prompt = `A highly artistic, abstract visual representation of this aesthetic signature: 
     Primary Axis: ${signature.primaryAxis}, 
     Secondary Axis: ${signature.secondaryAxis}, 
     Core Trait: ${signature.coreTrait || 'Evolving'}, 
     Motifs: ${signature.motifs.join(', ')}.
-    The style should be ethereal, digital, and evocative of the signature's mood.`;
+    Ethereal, digital, and evocative of the signature's mood.`;
 
     let apiKeyToUse = import.meta.env.VITE_GEMINI_API_KEY;
     if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
