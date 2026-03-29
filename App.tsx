@@ -713,9 +713,6 @@ export const App: React.FC = () => {
  <button onClick={() => setShowScribe(true)} className="p-2 text-nous-subtle hover:text-nous-text transition-colors">
  <Radio size={16} />
  </button>
- <button onClick={() => setCommandDrawerOpen(true)} className="p-2 text-nous-subtle hover:text-nous-text transition-colors">
- <Zap size={16} />
- </button>
  <button onClick={toggleMode} className="p-2 text-nous-subtle hover:text-nous-text transition-colors">
  {currentPalette?.isDark ? <Sun size={16} /> : <Moon size={16} />}
  </button>
