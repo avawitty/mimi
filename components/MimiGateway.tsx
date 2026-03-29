@@ -41,7 +41,11 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
  }
  onClose();
  } catch (err: any) {
- setError(err.message ||"Authentication failed.");
+ if (err.code === 'auth/invalid-credential') {
+   setError("Incorrect password for this email.");
+ } else {
+   setError(err.message ||"Authentication failed.");
+ }
  } finally {
  setIsLoading(false);
  }

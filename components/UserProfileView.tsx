@@ -10,6 +10,7 @@ import { DeveloperSettings } from './DeveloperSettings';
 import { SemanticSteps } from './SemanticSteps';
 import { TheWard } from './TheWard';
 import { ConnectionsManager } from './ConnectionsManager';
+import { ApiKeyRing } from './ApiKeyRing';
 
 const detectIframeContext = (): boolean => {
  if (typeof window === 'undefined') return false;
@@ -597,6 +598,12 @@ export const UserProfileView: React.FC = () => {
  <h3 className="font-serif text-2xl italic mb-6">Social Resonance</h3>
  <div className="flex-grow overflow-y-auto no-scrollbar min-h-[150px]">
  <ConnectionsManager />
+ {keyRing.length === 0 && (
+  <div className="p-4 mb-4 border border-red-500/50 bg-red-950/10 text-red-700 text-xs font-mono">
+    ⚠️ No API keys detected. Zine generation and other functionalities will be unavailable.
+  </div>
+)}
+<ApiKeyRing />
  </div>
  </div>
  </motion.div>

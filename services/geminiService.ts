@@ -222,6 +222,8 @@ export const getClient = (apiKeyOverride?: string, excludeKeys: string[] = []) =
     key = apiKeyOverride || globalKeyRing[0] || process.env.GEMINI_API_KEY || process.env.API_KEY || (typeof import.meta !== 'undefined' && (import.meta as any).env ? (import.meta as any).env.VITE_GEMINI_API_KEY : undefined);
   }
 
+  console.log("MIMI // Oracle: Using key:", key ? `...${key.slice(-4)}` : "NONE");
+
   if (!key) {
     throw new Error("MIMI // Oracle: API Key Missing. Please set GEMINI_API_KEY in your environment.");
   }
