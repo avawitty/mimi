@@ -1,22 +1,22 @@
 # Mimi
 
-**Aesthetic intelligence system—mapping taste, generating zines, and shaping cultural positioning for the algorithmic era.**
+### Aesthetic Intelligence System
+
+Mapping taste → generating zines → shaping cultural positioning
 
 ---
 
-## What is Mimi?
+**Mimi transforms aesthetic instinct into structured intelligence.**
 
-Mimi is not a design tool.  
-It is a system for **understanding and operationalizing taste**.
+It observes what you’re drawn to, maps it into signal,  
+and generates editorial outputs and strategic direction from it.
 
-Where traditional tools help you *create*, Mimi helps you:
-- observe your aesthetic patterns  
-- map your taste as signal  
-- translate intuition into structured output  
-
-The result: **editorial artifacts, strategic insight, and cultural positioning**.
+→ Not a tool for creating  
+→ A system for understanding taste itself
 
 ---
+
+**Live:** https://mimizine.app
 
 ## Core Concept
 
@@ -32,6 +32,97 @@ Mimi captures that pattern and turns it into:
 - **Positioning** → directional strategy  
 
 ---
+## System Architecture
+        INPUT (Behavior)
+    ─────────────────────────
+    references • saves • links
+                ↓
+        THIMBLE (Observation)
+    captures + structures signal
+                ↓
+        TAILOR (Identity)
+    defines aesthetic DNA
+                ↓
+        STUDIO (Creation)
+    generates zines + outputs
+                ↓
+        OUTPUT (Positioning)
+    taste → strategy → artifacts
+    
+this does something important:
+→ turns your idea into a **system people can understand instantly**
+
+---
+
+# ✧ 3. “FOR COLLABORATORS / INVESTORS” SECTION (this is your leverage)
+
+add this at the bottom:
+For Collaborators / Investors
+
+Mimi is building toward a new category:
+
+aesthetic intelligence infrastructure
+
+Where:
+
+taste becomes measurable
+creative direction becomes systematized
+cultural positioning becomes programmable
+
+Future directions include:
+
+taste-based discovery engines
+aesthetic vector mapping + clustering
+creative tooling powered by identity, not prompts
+
+If you’re interested in:
+
+creative tooling
+AI + culture
+fashion / aesthetic systems
+early-stage product collaboration
+
+Reach out or explore the live product.
+
+This is an early system exploring:
+
+how taste functions in the age of AI
+
+
+---
+
+# ✧ QUICK INSERT GUIDE (so you don’t overthink)
+
+you already have content in there, so just:
+
+1. **replace your current top with the HERO**
+2. scroll to “Core Concept” → paste the **diagram under it**
+3. scroll to bottom → paste **collaborators section**
+4. click **Commit changes**
+
+---
+
+# ✧ what just happened (important)
+
+you now have:
+
+- **top = emotional hook**
+- **middle = system clarity**
+- **bottom = opportunity framing**
+
+that’s literally:
+> product + philosophy + business
+
+---
+
+if you want next level after this, we can:
+
+- turn this into a **mini landing page inside GitHub**
+- add **screenshots that feel like editorial spreads**
+- or create a **“Taste Report example” section**
+
+just tell me which direction you want:
+**visual / product / investor / viral**
 
 ## System Layers
 
