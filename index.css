@@ -36,7 +36,8 @@
     padding: 0;
     overflow: hidden;
     background-color: var(--nous-base);
-    @apply paper-texture;
+    background-image: url("https://www.transparenttextures.com/patterns/cream-paper.png");
+    background-repeat: repeat;
     color: var(--nous-text);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
