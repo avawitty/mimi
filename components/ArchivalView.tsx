@@ -171,7 +171,7 @@ const InjectShardModal: React.FC<{ onClose: () => void, onInjected: () => void }
  {(zine.coverImageUrl || zine.content?.hero_image_url) && <img src={zine.coverImageUrl || zine.content?.hero_image_url} className="w-full h-full object-cover grayscale group-hover:grayscale-0"/>}
  </div>
  <div className="flex-1 min-w-0">
- <h4 className="font-serif italic text-lg text-nous-text dark:text-white line-clamp-1">{zine.content?.headlines?.[0] || zine.title}</h4>
+ <h4 className="font-serif italic text-lg text-nous-text text-nous-text line-clamp-1">{zine.content?.headlines?.[0] || zine.title}</h4>
  <p className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">{new Date(zine.timestamp).toLocaleDateString()}</p>
  </div>
  <ArrowRight size={16} className="text-nous-subtle self-center"/>
@@ -183,7 +183,7 @@ const InjectShardModal: React.FC<{ onClose: () => void, onInjected: () => void }
 
  {mode === 'authored' && selectedZine && (
  <div className="space-y-8">
- <button onClick={() => setSelectedZine(null)} className="flex items-center gap-2 text-nous-subtle hover:text-nous-text dark:hover:text-white transition-colors">
+ <button onClick={() => setSelectedZine(null)} className="flex items-center gap-2 text-nous-subtle hover:text-nous-text hover:text-nous-text transition-colors">
  <ArrowRight size={14} className="rotate-180"/>
  <span className="font-sans text-[9px] uppercase tracking-widest font-black">Back to Registry</span>
  </button>
@@ -283,7 +283,7 @@ export const ArchivalView: React.FC<ArchivalViewProps> = ({ onSelectZine }) => {
  
  <div className="px-6 md:px-24 mb-24 flex flex-col md:flex-row md:items-end justify-between gap-12 border-b border-nous-border pb-16">
  <div className="space-y-4">
- <h2 className="font-[Cormorant] font-light text-7xl md:text-9xl italic text-nous-text dark:text-white tracking-tighter luminescent-text leading-none">The Archive.</h2>
+ <h2 className="font-[Cormorant] font-light text-7xl md:text-9xl italic text-nous-text text-nous-text tracking-tighter luminescent-text leading-none">The Archive.</h2>
  <p className="font-sans text-[10px] uppercase tracking-[1em] text-nous-subtle font-black">
  {activeTab === 'issues' ? 'Manifestations of Form' : activeTab === 'folders' ? 'Curated Directories' : activeTab === 'pocket' ? 'Curated Physical Debris' : 'List View'}
  </p>
@@ -292,32 +292,32 @@ export const ArchivalView: React.FC<ArchivalViewProps> = ({ onSelectZine }) => {
  <div className="flex gap-16 items-end">
  <button 
  onClick={() => setShowInjectModal(true)}
- className="flex items-center gap-2 px-6 py-2 bg-nous-base0/10 text-nous-subtle border border-nous-border/20 rounded-none font-sans text-[9px] uppercase tracking-widest font-black hover:bg-nous-base0 hover:text-white transition-all mb-1"
+ className="flex items-center gap-2 px-6 py-2 bg-nous-base0/10 text-nous-subtle border border-nous-border/20 rounded-none font-sans text-[9px] uppercase tracking-widest font-black hover:bg-nous-base0 hover:text-nous-text transition-all mb-1"
  >
  <Plus size={14} /> Inject Shard
  </button>
  <div className="flex gap-16">
  <button 
  onClick={() => setActiveTab('issues')}
- className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'issues' ? 'text-nous-text dark:text-white border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text '}`}
+ className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'issues' ? 'text-nous-text text-nous-text border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text '}`}
  >
  Authored
  </button>
  <button 
  onClick={() => setActiveTab('folders')}
- className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'folders' ? 'text-nous-text dark:text-white border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text0'}`}
+ className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'folders' ? 'text-nous-text text-nous-text border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text0'}`}
  >
  Folders
  </button>
  <button 
  onClick={() => setActiveTab('pocket')}
- className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'pocket' ? 'text-nous-text dark:text-white border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text0'}`}
+ className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'pocket' ? 'text-nous-text text-nous-text border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text0'}`}
  >
  Curated
  </button>
  <button 
  onClick={() => setActiveTab('list')}
- className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'list' ? 'text-nous-text dark:text-white border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text0'}`}
+ className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'list' ? 'text-nous-text text-nous-text border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text0'}`}
  >
  List
  </button>

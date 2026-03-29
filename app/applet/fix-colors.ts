@@ -29,6 +29,86 @@ files.forEach(file => {
     modified = true;
   }
   
+  if (content.includes('bg-nous-text text-white')) {
+    content = content.replace(/bg-nous-text text-white/g, 'bg-nous-text text-nous-base');
+    modified = true;
+  }
+
+  if (content.includes('bg-nous-text dark:bg-white text-white dark:text-black')) {
+    content = content.replace(/bg-nous-text dark:bg-white text-white dark:text-black/g, 'bg-nous-text text-nous-base');
+    modified = true;
+  }
+
+  if (content.includes('bg-nous-text dark:bg-white text-white dark:text-stone-900')) {
+    content = content.replace(/bg-nous-text dark:bg-white text-white dark:text-stone-900/g, 'bg-nous-text text-nous-base');
+    modified = true;
+  }
+
+  if (content.includes('bg-stone-900 dark:bg-stone-100 text-white dark:text-black')) {
+    content = content.replace(/bg-stone-900 dark:bg-stone-100 text-white dark:text-black/g, 'bg-nous-text text-nous-base');
+    modified = true;
+  }
+
+  if (content.includes('bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900')) {
+    content = content.replace(/bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900/g, 'bg-nous-text text-nous-base');
+    modified = true;
+  }
+
+  if (content.includes('bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900')) {
+    content = content.replace(/bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900/g, 'bg-nous-text text-nous-base');
+    modified = true;
+  }
+
+  if (content.includes('bg-stone-800 dark:bg-stone-200 text-white dark:text-black')) {
+    content = content.replace(/bg-stone-800 dark:bg-stone-200 text-white dark:text-black/g, 'bg-nous-text text-nous-base');
+    modified = true;
+  }
+
+  if (content.includes('bg-stone-800 text-white')) {
+    content = content.replace(/bg-stone-800 text-white/g, 'bg-nous-text text-nous-base');
+    modified = true;
+  }
+
+  if (content.includes('bg-stone-900 text-white')) {
+    content = content.replace(/bg-stone-900 text-white/g, 'bg-nous-text text-nous-base');
+    modified = true;
+  }
+
+  if (content.includes('text-white dark:text-black')) {
+    content = content.replace(/text-white dark:text-black/g, 'text-nous-base');
+    modified = true;
+  }
+  
+  if (content.includes('text-white dark:text-stone-900')) {
+    content = content.replace(/text-white dark:text-stone-900/g, 'text-nous-base');
+    modified = true;
+  }
+
+  if (content.includes('text-black dark:text-white')) {
+    content = content.replace(/text-black dark:text-white/g, 'text-nous-text');
+    modified = true;
+  }
+
+  if (content.includes('text-stone-900 dark:text-white')) {
+    content = content.replace(/text-stone-900 dark:text-white/g, 'text-nous-text');
+    modified = true;
+  }
+
+  if (content.includes('dark:hover:text-white')) {
+    content = content.replace(/dark:hover:text-white/g, 'hover:text-nous-text');
+    modified = true;
+  }
+
+  if (content.includes('dark:text-white')) {
+    content = content.replace(/dark:text-white/g, 'text-nous-text');
+    modified = true;
+  }
+
+  if (content.includes('hover:text-white')) {
+    content = content.replace(/hover:text-white/g, 'hover:text-nous-text');
+    modified = true;
+  }
+
   // Replace `bg-white text-black` with `bg-nous-base text-nous-text`
   if (content.includes('bg-white text-black')) {
     content = content.replace(/bg-white text-black/g, 'bg-nous-base text-nous-text');

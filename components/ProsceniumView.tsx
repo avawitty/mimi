@@ -270,21 +270,21 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
  <div className="flex justify-center gap-8 mb-12 border-b border-nous-border pb-4">
  <button 
  onClick={() => setActiveChannel('global')}
- className={`font-sans text-[10px] uppercase tracking-[0.2em] font-black pb-4 transition-all ${activeChannel === 'global' ? 'text-nous-text dark:text-white border-b-2 border-nous-text ' : 'text-nous-subtle hover:text-nous-text '}`}
+ className={`font-sans text-[10px] uppercase tracking-[0.2em] font-black pb-4 transition-all ${activeChannel === 'global' ? 'text-nous-text text-nous-text border-b-2 border-nous-text ' : 'text-nous-subtle hover:text-nous-text '}`}
  >
  Global Exhibition
  </button>
  {user && (
  <button 
  onClick={() => setActiveChannel('following')}
- className={`font-sans text-[10px] uppercase tracking-[0.2em] font-black pb-4 transition-all ${activeChannel === 'following' ? 'text-nous-text dark:text-white border-b-2 border-nous-text ' : 'text-nous-subtle hover:text-nous-text '}`}
+ className={`font-sans text-[10px] uppercase tracking-[0.2em] font-black pb-4 transition-all ${activeChannel === 'following' ? 'text-nous-text text-nous-text border-b-2 border-nous-text ' : 'text-nous-subtle hover:text-nous-text '}`}
  >
  Following
  </button>
  )}
  <button 
  onClick={() => setActiveChannel('local')}
- className={`font-sans text-[10px] uppercase tracking-[0.2em] font-black pb-4 transition-all ${activeChannel === 'local' ? 'text-nous-text dark:text-white border-b-2 border-nous-text ' : 'text-nous-subtle hover:text-nous-text0'}`}
+ className={`font-sans text-[10px] uppercase tracking-[0.2em] font-black pb-4 transition-all ${activeChannel === 'local' ? 'text-nous-text text-nous-text border-b-2 border-nous-text ' : 'text-nous-subtle hover:text-nous-text0'}`}
  >
  Local Echoes
  </button>
@@ -319,7 +319,7 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
  <div className={`w-1.5 h-1.5 rounded-none ${t.type === 'signal' ? 'bg-nous-base0' : t.type === 'manifest' ? 'bg-indigo-500' : 'bg-stone-400'}`} />
  <button 
  onClick={(e) => handleOpenProfile(t.userId, e)}
- className="font-sans text-[8px] uppercase tracking-widest font-black text-white/70 hover:text-white transition-colors"
+ className="font-sans text-[8px] uppercase tracking-widest font-black text-white/70 hover:text-nous-text transition-colors"
  >
  {t.userHandle}
  </button>
@@ -337,7 +337,7 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
  <button onClick={(e) => handleWitness(t.id, e)} className="flex items-center gap-1.5 hover:text-nous-subtle transition-colors">
  <Eye size={12} /> <span className="font-mono text-[9px] uppercase tracking-widest">Resonate ({t.likes})</span>
  </button>
- <button onClick={(e) => handleAbsorb(t, e)} className="flex items-center gap-1.5 hover:text-white transition-colors ml-auto">
+ <button onClick={(e) => handleAbsorb(t, e)} className="flex items-center gap-1.5 hover:text-nous-text transition-colors ml-auto">
  <Maximize2 size={12} /> <span className="font-mono text-[9px] uppercase tracking-widest">Absorb</span>
  </button>
  </div>
@@ -418,7 +418,7 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
  <div className={`w-2 h-2 rounded-none ${selectedArtifact.type === 'signal' ? 'bg-nous-base0' : 'bg-indigo-500'}`} />
  <button 
  onClick={() => handleOpenProfile(selectedArtifact.userId)}
- className="font-sans text-[10px] uppercase tracking-widest font-black text-white/50 hover:text-white transition-colors"
+ className="font-sans text-[10px] uppercase tracking-widest font-black text-white/50 hover:text-nous-text transition-colors"
  >
  {selectedArtifact.userHandle}
  </button>
@@ -497,7 +497,7 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
  
  <button 
  onClick={() => setSelectedArtifact(null)}
- className="absolute top-4 right-4 p-2 text-white/50 hover:text-white transition-colors"
+ className="absolute top-4 right-4 p-2 text-white/50 hover:text-nous-text transition-colors"
  >
  <Zap size={20} className="rotate-45"/>
  </button>

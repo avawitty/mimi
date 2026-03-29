@@ -157,7 +157,7 @@ export const ThreadGraph: React.FC<ThreadGraphProps> = ({ metadata, accentColor 
  </div>
  
  <div className="mt-3 text-center w-32">
- <span className="font-mono text-[8px] md:text-[9px] uppercase tracking-widest text-nous-subtle group-hover:text-white transition-colors bg-black/50 px-2 py-1 rounded-none backdrop-blur-sm">
+ <span className="font-mono text-[8px] md:text-[9px] uppercase tracking-widest text-nous-subtle group-hover:text-nous-text transition-colors bg-black/50 px-2 py-1 rounded-none backdrop-blur-sm">
  {node.label}
  </span>
  </div>

@@ -138,7 +138,7 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = ({ isOpen, onCl
  </div>
  ) : (
  <div className="flex items-center gap-2 mb-1 group cursor-pointer"onClick={() => setIsEditingUsername(true)}>
- <h3 className="font-serif italic text-xl text-nous-text dark:text-white truncate">
+ <h3 className="font-serif italic text-xl text-nous-text text-nous-text truncate">
  @{profile?.handle || 'Swan'}
  </h3>
  <Edit2 size={12} className="text-nous-subtle opacity-0 group-hover:opacity-100 transition-opacity"/>

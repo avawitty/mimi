@@ -100,7 +100,7 @@ export const TheStand: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> 
  </div>
  <div className="hidden md:flex flex-col items-end gap-2">
  <span className="font-mono text-[9px] uppercase tracking-widest text-nous-subtle">Vol. 44</span>
- <span className="font-serif italic text-2xl text-nous-text dark:text-white">{new Date().toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</span>
+ <span className="font-serif italic text-2xl text-nous-text text-nous-text">{new Date().toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</span>
  </div>
  </div>
 

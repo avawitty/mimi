@@ -22,10 +22,10 @@ export const MimiZineLayout: React.FC = () => {
  <div className="w-64 p-6 text-nous-subtle font-sans text-sm">
  <h2 className="uppercase tracking-widest mb-6 text-white">Menu</h2>
  <ul className="space-y-4">
- <li><a href="#"className="hover:text-white transition-colors">Dashboard</a></li>
- <li><a href="#"className="hover:text-white transition-colors">Studio</a></li>
- <li><a href="#"className="hover:text-white transition-colors">Library</a></li>
- <li><a href="#"className="hover:text-white transition-colors">Settings</a></li>
+ <li><a href="#"className="hover:text-nous-text transition-colors">Dashboard</a></li>
+ <li><a href="#"className="hover:text-nous-text transition-colors">Studio</a></li>
+ <li><a href="#"className="hover:text-nous-text transition-colors">Library</a></li>
+ <li><a href="#"className="hover:text-nous-text transition-colors">Settings</a></li>
  </ul>
  </div>
  </div>

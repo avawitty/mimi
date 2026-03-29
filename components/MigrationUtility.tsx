@@ -79,7 +79,7 @@ export const MigrationUtility: React.FC = () => {
  <button 
  onClick={startMigration} 
  disabled={isMigrating}
- className="px-4 py-2 bg-nous-text text-white rounded-none text-xs uppercase tracking-widest font-black"
+ className="px-4 py-2 bg-nous-text text-nous-base rounded-none text-xs uppercase tracking-widest font-black"
  >
  {isMigrating ? 'Migrating...' : 'Start Migration'}
  </button>

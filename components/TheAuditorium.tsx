@@ -77,7 +77,7 @@ export const TheAuditorium: React.FC = () => {
  <a 
  href={activeEp.link} 
  target="_blank"
- className="px-10 py-4 bg-nous-base text-nous-text font-sans text-[10px] uppercase tracking-[0.5em] font-black rounded-none active:scale-95 transition-all flex items-center gap-4 hover:bg-nous-base0 hover:text-white"
+ className="px-10 py-4 bg-nous-base text-nous-text font-sans text-[10px] uppercase tracking-[0.5em] font-black rounded-none active:scale-95 transition-all flex items-center gap-4 hover:bg-nous-base0 hover:text-nous-text"
  >
  <Youtube size={16} /> Witness on YouTube
  </a>
@@ -100,7 +100,7 @@ export const TheAuditorium: React.FC = () => {
  <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">{ep.episode}</span>
  {activeEp.id === ep.id && <Activity size={12} className="text-nous-text0 animate-pulse"/>}
  </div>
- <h4 className="font-serif text-2xl italic tracking-tighter leading-none group-hover:text-nous-text dark:group-hover:text-white">{ep.title}</h4>
+ <h4 className="font-serif text-2xl italic tracking-tighter leading-none group-hover:text-nous-text dark:group-hover:text-nous-text">{ep.title}</h4>
  <p className="font-serif italic text-sm text-nous-text0 leading-tight">{ep.desc}</p>
  <div className="pt-4 mt-auto border-t border-nous-border flex justify-between items-center">
  <span className="font-mono text-[8px] opacity-40">{ep.status}</span>
@@ -127,7 +127,7 @@ export const TheAuditorium: React.FC = () => {
  navigator.clipboard.writeText(window.location.origin).catch(e => console.error("MIMI // Clipboard error", e));
  alert("Imperial URL Copied. Ready for sync.");
  }}
- className="w-full px-10 py-6 bg-nous-text text-white dark:text-stone-950 font-sans text-[10px] uppercase tracking-[0.6em] font-black rounded-none active:scale-95 transition-all border border-white/20"
+ className="w-full px-10 py-6 bg-nous-text text-nous-base dark:text-stone-950 font-sans text-[10px] uppercase tracking-[0.6em] font-black rounded-none active:scale-95 transition-all border border-white/20"
  >
  Copy Link for Series
  </button>

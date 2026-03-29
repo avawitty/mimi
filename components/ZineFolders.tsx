@@ -160,7 +160,7 @@ export const ZineFolders: React.FC<ZineFoldersProps> = ({ onSelectZine }) => {
  <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] text-nous-subtle font-black">Directories</h3>
  <button 
  onClick={() => { setShowCreateModal(true); setNewFolderName(''); }}
- className="p-1.5 bg-nous-base rounded-none hover:bg-nous-base0 hover:text-white transition-colors"
+ className="p-1.5 bg-nous-base rounded-none hover:bg-nous-base0 hover:text-nous-text transition-colors"
  >
  <Plus size={14} />
  </button>
@@ -260,7 +260,7 @@ export const ZineFolders: React.FC<ZineFoldersProps> = ({ onSelectZine }) => {
  >
  <div className="bg-white w-full max-w-md p-6 rounded-none border border-nous-border">
  <div className="flex justify-between items-center mb-6">
- <h3 className="font-serif italic text-2xl text-nous-text dark:text-white">
+ <h3 className="font-serif italic text-2xl text-nous-text text-nous-text">
  {editingFolder ? 'Rename Directory' : 'New Directory'}
  </h3>
  <button 
@@ -292,7 +292,7 @@ export const ZineFolders: React.FC<ZineFoldersProps> = ({ onSelectZine }) => {
  <button 
  onClick={editingFolder ? handleUpdateFolder : handleCreateFolder}
  disabled={!newFolderName.trim()}
- className="w-full py-3 bg-nous-text text-nous-base rounded-none font-sans text-[10px] uppercase tracking-[0.2em] font-black hover:bg-nous-base0 hover:text-white transition-all disabled:opacity-50"
+ className="w-full py-3 bg-nous-text text-nous-base rounded-none font-sans text-[10px] uppercase tracking-[0.2em] font-black hover:bg-nous-base0 hover:text-nous-text transition-all disabled:opacity-50"
  >
  {editingFolder ? 'Save Changes' : 'Create Directory'}
  </button>

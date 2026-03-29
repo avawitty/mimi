@@ -111,7 +111,7 @@ export const LiveMentor: React.FC<LiveMentorProps> = ({ name, role, voiceName, s
  ? 'border-red-500/50 text-red-500 hover:bg-red-500/10' 
  : isConnecting
  ? 'border-nous-border text-nous-subtle cursor-not-allowed'
- : 'border-nous-border text-nous-subtle hover:text-nous-text dark:hover:text-white hover:border-nous-border dark:hover:border-white'
+ : 'border-nous-border text-nous-subtle hover:text-nous-text hover:text-nous-text hover:border-nous-border dark:hover:border-white'
  }`}
  >
  {isConnecting ? <Loader2 size={20} strokeWidth={1} className="animate-spin"/> : isConnected ? <MicOff size={20} strokeWidth={1} /> : <Mic size={20} strokeWidth={1} />}

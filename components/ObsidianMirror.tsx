@@ -172,7 +172,7 @@ export const ObsidianMirror: React.FC = () => {
  </div>
  </div>
  <div className="max-w-lg space-y-6">
- <p className="font-serif text-2xl md:text-4xl italic text-nous-text dark:text-white leading-tight px-4 font-medium">"{omen}"</p>
+ <p className="font-serif text-2xl md:text-4xl italic text-nous-text text-nous-text leading-tight px-4 font-medium">"{omen}"</p>
  
  <AnimatePresence>
  {showLogic && provenance && (
@@ -197,7 +197,7 @@ export const ObsidianMirror: React.FC = () => {
  <button onClick={fetchOmen} className="p-4 rounded-none border border-nous-border text-nous-subtle hover:text-nous-text transition-all active:rotate-180"><RefreshCw size={14} /></button>
  <button 
  onClick={() => setShowLogic(!showLogic)} 
- className={`p-4 rounded-none border transition-all ${showLogic ? 'bg-nous-text text-white border-nous-text  ' : 'border-nous-border text-nous-subtle hover:text-nous-text'}`}
+ className={`p-4 rounded-none border transition-all ${showLogic ? 'bg-nous-text text-nous-base border-nous-text  ' : 'border-nous-border text-nous-subtle hover:text-nous-text'}`}
  >
  <Info size={14} />
  </button>
@@ -230,13 +230,13 @@ export const ObsidianMirror: React.FC = () => {
  <CornerDownRight size={18} />
  </div>
  <div className="flex flex-col text-left">
- <span className="font-sans text-[9px] md:text-[10px] uppercase tracking-[0.4em] font-black text-nous-text dark:text-white">
+ <span className="font-sans text-[9px] md:text-[10px] uppercase tracking-[0.4em] font-black text-nous-text text-nous-text">
  Shadow Studio
  </span>
  <span className="font-serif italic text-[10px] md:text-xs text-nous-subtle">Commit Omens to form</span>
  </div>
  </div>
- <ExternalLink size={14} className="text-nous-subtle group-hover:text-nous-text dark:group-hover:text-white transition-colors"/>
+ <ExternalLink size={14} className="text-nous-subtle group-hover:text-nous-text dark:group-hover:text-nous-text transition-colors"/>
  </button>
  </div>
  </div>

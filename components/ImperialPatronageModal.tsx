@@ -141,7 +141,7 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
  <button 
  onClick={() => handleSubscribe('core')}
  disabled={!!isCheckoutLoading || profile?.planStatus === 'core'}
- className={`w-full py-3 border border font-sans text-[10px] uppercase tracking-[0.2em] font-bold transition-colors flex justify-center items-center gap-2 ${profile?.planStatus === 'core' ? 'bg-nous-base text-nous-subtle border-nous-border cursor-not-allowed' : 'hover:bg hover:text-white'}`}
+ className={`w-full py-3 border border font-sans text-[10px] uppercase tracking-[0.2em] font-bold transition-colors flex justify-center items-center gap-2 ${profile?.planStatus === 'core' ? 'bg-nous-base text-nous-subtle border-nous-border cursor-not-allowed' : 'hover:bg hover:text-nous-text'}`}
  >
  {isCheckoutLoading === 'core' ? <Loader2 size={14} className="animate-spin"/> : profile?.planStatus === 'core' ? 'Current Plan' : 'Understand Your Taste'}
  </button>
@@ -211,7 +211,7 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
  <button 
  onClick={handleValidate}
  disabled={status === 'validating' || !keyInput}
- className={`w-full mt-4 py-3 border border rounded-none font-sans text-[9px] uppercase tracking-[0.3em] font-black transition-all flex items-center justify-center gap-3 relative overflow-hidden group ${status === 'success' ? 'bg text-white' : 'hover:bg hover:text-white text'}`}
+ className={`w-full mt-4 py-3 border border rounded-none font-sans text-[9px] uppercase tracking-[0.3em] font-black transition-all flex items-center justify-center gap-3 relative overflow-hidden group ${status === 'success' ? 'bg text-white' : 'hover:bg hover:text-nous-text text'}`}
  >
  {status === 'validating' ? <Loader2 size={12} className="animate-spin"/> : status === 'success' ? <Check size={12} /> : <Fingerprint size={12} />}
  <span>{status === 'validating' ? 'Verifying...' : status === 'success' ? 'Access Granted' : status === 'error' ? 'Invalid Key' : 'Acquire Access'}</span>

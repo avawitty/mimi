@@ -66,7 +66,7 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
  >
  <button
  onClick={onClose}
- className="absolute top-4 right-4 p-2 text-nous-subtle hover:text-nous-text dark:hover:text-white transition-colors"
+ className="absolute top-4 right-4 p-2 text-nous-subtle hover:text-nous-text hover:text-nous-text transition-colors"
  >
  <X size={20} />
  </button>
@@ -106,7 +106,7 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
  
  <button
  onClick={() => setMode('email')}
- className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-nous-base hover:bg-stone-200 dark:hover:bg-stone-700 text-nous-text dark:text-white rounded-none transition-colors font-sans text-sm font-medium"
+ className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-nous-base hover:bg-stone-200 dark:hover:bg-stone-700 text-nous-text text-nous-text rounded-none transition-colors font-sans text-sm font-medium"
  >
  <Mail size={18} />
  {t('auth.continueEmail')}
@@ -121,7 +121,7 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
  value={email}
  onChange={(e) => setEmail(e.target.value)}
  required
- className="w-full px-4 py-3 bg-nous-base border border-nous-border rounded-none focus:outline-none focus:border-nous-border dark:focus:border-nous-border dark:focus:border-nous-border transition-colors text-nous-text dark:text-white"
+ className="w-full px-4 py-3 bg-nous-base border border-nous-border rounded-none focus:outline-none focus:border-nous-border dark:focus:border-nous-border dark:focus:border-nous-border transition-colors text-nous-text text-nous-text"
  placeholder="you@example.com"
  />
  </div>
@@ -132,7 +132,7 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
  value={password}
  onChange={(e) => setPassword(e.target.value)}
  required
- className="w-full px-4 py-3 bg-nous-base border border-nous-border rounded-none focus:outline-none focus:border-nous-border dark:focus:border-nous-border transition-colors text-nous-text dark:text-white"
+ className="w-full px-4 py-3 bg-nous-base border border-nous-border rounded-none focus:outline-none focus:border-nous-border dark:focus:border-nous-border transition-colors text-nous-text text-nous-text"
  placeholder="••••••••"
  />
  </div>
@@ -150,7 +150,7 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
  <button
  type="button"
  onClick={() => setIsRegistering(!isRegistering)}
- className="text-xs text-nous-text0 hover:text-nous-text dark:hover:text-white transition-colors"
+ className="text-xs text-nous-text0 hover:text-nous-text hover:text-nous-text transition-colors"
  >
  {isRegistering ? 'Already have access? Sign in' :"Don't have an account? Join Waitlist"}
  </button>

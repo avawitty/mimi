@@ -197,7 +197,7 @@ export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBy
  {/* Diagnostics Ticker */}
  <div className="p-4 bg-nous-base border border-nous-border rounded-none font-mono text-[9px] text-nous-text0 uppercase tracking-wide flex justify-between items-center">
  <span>SYS_DIAG:</span>
- <span className="text-nous-text dark:text-white animate-pulse">{NOUS_DIAGNOSTICS[diagIndex]}</span>
+ <span className="text-nous-text text-nous-text animate-pulse">{NOUS_DIAGNOSTICS[diagIndex]}</span>
  </div>
 
  {/* Bypass Control */}

@@ -88,7 +88,7 @@ const FinancialBriefOverlay: React.FC<{ report: InvestmentReport; onClose: () =>
  <Wallet size={20} />
  <span className="font-sans text-[10px] uppercase tracking-[0.6em] font-black italic">The Strategist // Fiscal Audit</span>
  </div>
- <button onClick={onClose} className="p-2 text-nous-text0 hover:text-white"><X size={20} /></button>
+ <button onClick={onClose} className="p-2 text-nous-text0 hover:text-nous-text"><X size={20} /></button>
  </header>
  
  <div className="flex-1 overflow-y-auto p-8 md:p-12 space-y-12">
@@ -214,7 +214,7 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
 
  return (
  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9000] bg-white flex flex-col md:flex-row overflow-hidden">
- <button onClick={onClose} className="absolute top-8 right-8 z-50 p-4 bg-black/10 /10 rounded-none hover:bg-red-500 hover:text-white transition-all">
+ <button onClick={onClose} className="absolute top-8 right-8 z-50 p-4 bg-black/10 /10 rounded-none hover:bg-red-500 hover:text-nous-text transition-all">
  <X size={24} />
  </button>
  
@@ -239,11 +239,11 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  <div className="grid grid-cols-2 gap-4">
  <div>
  <span className="block font-mono text-[7px] text-nous-subtle uppercase tracking-widest">Detected Era</span>
- <span className="font-serif italic text-sm text-nous-text dark:text-white">{item.agentEnrichment.detectedEra || 'Unknown'}</span>
+ <span className="font-serif italic text-sm text-nous-text text-nous-text">{item.agentEnrichment.detectedEra || 'Unknown'}</span>
  </div>
  <div>
  <span className="block font-mono text-[7px] text-nous-subtle uppercase tracking-widest">Cultural Ref</span>
- <span className="font-serif italic text-sm text-nous-text dark:text-white">{item.agentEnrichment.culturalReference || 'N/A'}</span>
+ <span className="font-serif italic text-sm text-nous-text text-nous-text">{item.agentEnrichment.culturalReference || 'N/A'}</span>
  </div>
  </div>
  </div>
@@ -271,7 +271,7 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  <div className="w-full max-w-2xl bg-white p-6 md:p-12 space-y-8 overflow-y-auto max-h-[80vh] border border-nous-border">
  <div className="space-y-2 border-b border-nous-border pb-6">
  <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-nous-text0 font-black">Zine Inspection</span>
- <h2 className="font-serif text-4xl italic text-nous-text dark:text-white">{item.content.title}</h2>
+ <h2 className="font-serif text-4xl italic text-nous-text text-nous-text">{item.content.title}</h2>
  </div>
  
  <div className="grid grid-cols-2 gap-4">
@@ -323,7 +323,7 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  )}
  {(item.type === 'voicenote' || item.type === 'audio') && <SonicShardPlayer url={item.content.audioUrl} />}
  {item.type === 'analysis_report' && (
- <div className="w-full max-w-2xl bg-nous-base text-white p-6 md:p-12 space-y-8 overflow-y-auto max-h-[80vh]">
+ <div className="w-full max-w-2xl bg-nous-text text-nous-base p-6 md:p-12 space-y-8 overflow-y-auto max-h-[80vh]">
  <div className="space-y-2 border-b border-white/10 pb-6">
  <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-nous-text0 font-black">The Lens Analysis</span>
  <h2 className="font-serif text-4xl italic">{item.content.title}</h2>
@@ -379,7 +379,7 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  <div className="flex justify-between items-center border-b border-nous-border pb-2">
  <span className="font-sans text-[10px] uppercase tracking-[0.5em] text-nous-subtle font-black italic">Shard Metadata</span>
  {!isEditing ? (
- <button onClick={() => setIsEditing(true)} className="text-nous-subtle hover:text-nous-text dark:hover:text-white"><Pencil size={14} /></button>
+ <button onClick={() => setIsEditing(true)} className="text-nous-subtle hover:text-nous-text hover:text-nous-text"><Pencil size={14} /></button>
  ) : (
  <button onClick={handleSave} className="text-nous-text0 hover:text-nous-subtle"><Check size={14} /></button>
  )}
@@ -402,7 +402,7 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  </div>
  ) : (
  <div className="space-y-4">
- <h2 className="font-serif text-4xl italic text-nous-text dark:text-white leading-tight">{title || 'Untitled Fragment'}</h2>
+ <h2 className="font-serif text-4xl italic text-nous-text text-nous-text leading-tight">{title || 'Untitled Fragment'}</h2>
  {description && <p className="font-serif text-sm text-nous-text0 italic leading-relaxed">{description}</p>}
  {price && (
  <div className="flex items-center gap-2 text-nous-text0 font-mono text-sm bg-nous-base0/5 px-3 py-2 rounded-none w-fit border border-nous-border/10">
@@ -781,7 +781,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[7000] bg-white/80 /80 backdrop-blur-xl flex flex-col items-center justify-center gap-8">
  <Loader2 size={48} className={`animate-spin ${activeAgent === 'strategist' ? 'text-nous-text0' : 'text-indigo-500'}`} />
  <div className="text-center space-y-2">
- <h3 className="font-serif text-3xl italic text-nous-text dark:text-white">
+ <h3 className="font-serif text-3xl italic text-nous-text text-nous-text">
  {activeAgent === 'strategist' ?"Summoning The Strategist...":"Invoking The Curator..."}
  </h3>
  <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-black text-nous-subtle">
@@ -844,11 +844,11 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  <button onClick={() => setShowInjectModal(false)} className="p-2 text-nous-subtle hover:text-red-500 transition-colors"><X size={20}/></button>
  </div>
  <div className="grid gap-4">
- <button onClick={() => { fileInputRef.current?.click(); setShowInjectModal(false); }} className="w-full py-4 bg-nous-base hover:bg-nous-base0 hover:text-white transition-all rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 group">
- <Upload size={14} className="text-nous-subtle group-hover:text-white"/> Upload Local File
+ <button onClick={() => { fileInputRef.current?.click(); setShowInjectModal(false); }} className="w-full py-4 bg-nous-base hover:bg-nous-base0 hover:text-nous-text transition-all rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 group">
+ <Upload size={14} className="text-nous-subtle group-hover:text-nous-text"/> Upload Local File
  </button>
- <button onClick={() => { window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'archival' })); setShowInjectModal(false); }} className="w-full py-4 bg-nous-base hover:bg-nous-base0 hover:text-white transition-all rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 group">
- <FileText size={14} className="text-nous-subtle group-hover:text-white"/> From Authored Registry
+ <button onClick={() => { window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'archival' })); setShowInjectModal(false); }} className="w-full py-4 bg-nous-base hover:bg-nous-base0 hover:text-nous-text transition-all rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 group">
+ <FileText size={14} className="text-nous-subtle group-hover:text-nous-text"/> From Authored Registry
  </button>
  </div>
  </div>
@@ -880,13 +880,13 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  {/* REPORT OVERLAYS */}
  <AnimatePresence>
  {activeTrendReport && (
- <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="mb-24 p-10 md:p-20 bg-nous-base text-white border border-nous-border/30 rounded-none relative overflow-hidden group">
+ <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="mb-24 p-10 md:p-20 bg-nous-text text-nous-base border border-nous-border/30 rounded-none relative overflow-hidden group">
  <div className="flex justify-between items-start mb-16">
  <div className="flex items-center gap-4 text-nous-text0">
  <Radar size={20} className="animate-pulse"/>
  <span className="font-sans text-[11px] uppercase tracking-[0.6em] font-black italic">Anti-WGSN Trend Synthesis</span>
  </div>
- <button onClick={() => setActiveTrendReport(null)} className="p-3 text-nous-subtle hover:text-white transition-all"><X size={24} /></button>
+ <button onClick={() => setActiveTrendReport(null)} className="p-3 text-nous-subtle hover:text-nous-text transition-all"><X size={24} /></button>
  </div>
  <div className="grid md:grid-cols-12 gap-16 md:gap-24">
  <div className="md:col-span-7 space-y-12">
@@ -919,7 +919,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  <div className="md:col-span-7 space-y-12">
  <div className="space-y-4">
  <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Conceptual Throughline</span>
- <h3 className="font-serif text-3xl md:text-6xl italic tracking-tighter leading-tight text-nous-text dark:text-white">{activeAudit.conceptualThroughline}</h3>
+ <h3 className="font-serif text-3xl md:text-6xl italic tracking-tighter leading-tight text-nous-text text-nous-text">{activeAudit.conceptualThroughline}</h3>
  </div>
  <div className="space-y-6 pt-8 border-t border-stone-50">
  <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Color Story</span>
@@ -941,7 +941,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  <div className="relative aspect-[3/4] bg-nous-base overflow-hidden">
  {item.type === 'image' && <img src={item.content.thumbnailUrl || item.content.imageUrl} className="w-full h-full object-cover transition-all duration-[2s]"loading="lazy"/>}
  {item.type === 'analysis_report' && (
- <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-nous-base text-white gap-4 text-center border border-nous-border/20">
+ <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-nous-text text-nous-base gap-4 text-center border border-nous-border/20">
  <Radar size={32} className="text-nous-text0 opacity-50"/>
  <h3 className="font-serif italic text-xl text-white line-clamp-2">{item.content.title}</h3>
  <span className="font-sans text-[6px] uppercase tracking-widest text-nous-text0 font-black">The Lens Analysis</span>
@@ -962,7 +962,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  );
  })}
  {(!item.content.itemIds || item.content.itemIds.length === 0) && (
- <div className="col-span-2 row-span-2 flex flex-col items-center justify-center p-8 bg-nous-base text-white gap-4 text-center">
+ <div className="col-span-2 row-span-2 flex flex-col items-center justify-center p-8 bg-nous-text text-nous-base gap-4 text-center">
  <FolderOpen size={32} className="text-nous-text0 opacity-30"/>
  <span className="font-sans text-[6px] uppercase tracking-widest text-nous-text0 font-black">Empty Stack</span>
  </div>
@@ -993,7 +993,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  )}
  </div>
  <div className="p-4 md:p-6">
- <h5 className="font-serif italic text-lg md:text-xl text-nous-text dark:text-white line-clamp-1">{item.content.prompt || item.content.name || item.content.title || 'Untitled'}</h5>
+ <h5 className="font-serif italic text-lg md:text-xl text-nous-text text-nous-text line-clamp-1">{item.content.prompt || item.content.name || item.content.title || 'Untitled'}</h5>
  </div>
  </motion.div>
  ))}
@@ -1015,7 +1015,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  <button 
  onClick={() => setShowFolderModal(true)} 
  disabled={selectedIds.size === 0}
- className="flex flex-col items-center gap-1 px-4 py-2 rounded-none text-nous-subtle hover:text-white hover:bg-white/5 transition-all disabled:opacity-30"
+ className="flex flex-col items-center gap-1 px-4 py-2 rounded-none text-nous-subtle hover:text-nous-text hover:bg-white/5 transition-all disabled:opacity-30"
  >
  <FolderPlus size={18} />
  <span className="font-sans text-[7px] uppercase tracking-widest font-black">Stack</span>
@@ -1092,7 +1092,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  } else {
  setSelectedIds(new Set(filteredItems.map(i => i.id)));
  }
- }} className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle hover:text-white transition-colors">
+ }} className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle hover:text-nous-text transition-colors">
  {selectedIds.size === filteredItems.length ? 'Deselect All' : 'Select All'}
  </button>
  <button onClick={() => { setIsSelectionMode(!isSelectionMode); if(isSelectionMode) setSelectedIds(new Set()); }} className={`p-2 rounded-none transition-colors ${isSelectionMode ? 'bg-red-500 text-white' : 'bg-white/10 text-nous-subtle hover:bg-white/20'}`}>

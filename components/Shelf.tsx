@@ -142,7 +142,7 @@ export const Shelf: React.FC<ShelfProps> = ({ variant, onSelectZine }) => {
  {variant === 'personal' ? 'PERMANENT_RECORD' : 'BROADCAST_FEED'}
  </span>
  </div>
- <button onClick={refreshManually} className="p-4 bg-transparent hover:bg-nous-base rounded-none text-nous-subtle hover:text-nous-text dark:hover:text-white transition-all active:rotate-180"title="Refresh">
+ <button onClick={refreshManually} className="p-4 bg-transparent hover:bg-nous-base rounded-none text-nous-subtle hover:text-nous-text hover:text-nous-text transition-all active:rotate-180"title="Refresh">
  <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
  </button>
  </div>

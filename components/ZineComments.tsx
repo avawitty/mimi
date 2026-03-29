@@ -107,7 +107,7 @@ export const ZineComments: React.FC<{ zineId: string; onClose?: () => void }> = 
  <span className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold">Collaborative Discourse</span>
  </div>
  {onClose && (
- <button onClick={onClose} className="text-nous-subtle hover:text-nous-text dark:hover:text-white transition-colors">
+ <button onClick={onClose} className="text-nous-subtle hover:text-nous-text hover:text-nous-text transition-colors">
  <X size={16} />
  </button>
  )}
@@ -202,7 +202,7 @@ export const ZineComments: React.FC<{ zineId: string; onClose?: () => void }> = 
  <button
  type="submit"
  disabled={!newComment.trim() || isSubmitting}
- className="absolute bottom-3 right-3 p-2 bg-nous-base  text-nous-base rounded-none hover:bg-nous-base0 0 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+ className="absolute bottom-3 right-3 p-2 bg-nous-base  text-nous-base rounded-none hover:bg-nous-base0 0 hover:text-nous-text transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
  >
  {isSubmitting ? <Loader2 size={14} className="animate-spin"/> : <Send size={14} />}
  </button>

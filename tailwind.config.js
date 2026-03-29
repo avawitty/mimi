@@ -35,7 +35,9 @@ export default {
         },
         nous: {
           base: 'var(--nous-base)',
+          base0: 'var(--nous-base)',
           text: 'var(--nous-text)',
+          text0: 'var(--nous-text)',
           subtle: 'var(--nous-subtle)',
           accent: 'var(--nous-accent)',
           border: 'var(--nous-border)',

@@ -327,7 +327,7 @@ export const UserProfileView: React.FC = () => {
  <div className="mt-auto space-y-2">
  {user?.isAnonymous ? (
  <>
- <button onClick={() => handleGoogleLink()} className="w-full flex items-center justify-center gap-2 py-4 border border-nous-border text-[10px] uppercase tracking-widest hover:bg-nous-base hover:text-white dark:hover:bg-stone-200 dark:hover:text-black transition-all rounded-none">
+ <button onClick={() => handleGoogleLink()} className="w-full flex items-center justify-center gap-2 py-4 border border-nous-border text-[10px] uppercase tracking-widest hover:bg-nous-base hover:text-nous-text dark:hover:bg-stone-200 dark:hover:text-black transition-all rounded-none">
  Sign in with Google
  </button>
  <button onClick={() => {
@@ -335,7 +335,7 @@ export const UserProfileView: React.FC = () => {
  if (email) {
  loginWithEmail(email, window.location.href);
  }
- }} className="w-full flex items-center justify-center gap-2 py-4 border border-nous-border text-[10px] uppercase tracking-widest hover:bg-nous-base hover:text-white dark:hover:bg-stone-200 dark:hover:text-black transition-all rounded-none">
+ }} className="w-full flex items-center justify-center gap-2 py-4 border border-nous-border text-[10px] uppercase tracking-widest hover:bg-nous-base hover:text-nous-text dark:hover:bg-stone-200 dark:hover:text-black transition-all rounded-none">
  Sign in with Email Link
  </button>
  </>

@@ -114,7 +114,7 @@ export const OnboardingModal: React.FC = () => {
  </div>
  </div>
  <div className="space-y-4">
- <h2 className="font-serif text-4xl md:text-5xl italic tracking-tighter text-nous-text dark:text-white">Your Moniker.</h2>
+ <h2 className="font-serif text-4xl md:text-5xl italic tracking-tighter text-nous-text text-nous-text">Your Moniker.</h2>
  <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold text-nous-text0">Establish Identity</p>
  </div>
  
@@ -123,7 +123,7 @@ export const OnboardingModal: React.FC = () => {
  value={displayName}
  onChange={(e) => setDisplayName(e.target.value)}
  placeholder="e.g. Architect, Void, 0xMimi..."
- className="w-full bg-transparent border-b-2 border-nous-border py-4 text-center font-serif text-3xl italic focus:outline-none focus:border-nous-border dark:focus:border-nous-border transition-colors placeholder:text-nous-subtle dark:placeholder:text-nous-subtle text-nous-text dark:text-white"
+ className="w-full bg-transparent border-b-2 border-nous-border py-4 text-center font-serif text-3xl italic focus:outline-none focus:border-nous-border dark:focus:border-nous-border transition-colors placeholder:text-nous-subtle dark:placeholder:text-nous-subtle text-nous-text text-nous-text"
  autoFocus
  onKeyDown={(e) => e.key === 'Enter' && displayName.trim() && setStep(2)}
  />
@@ -152,7 +152,7 @@ export const OnboardingModal: React.FC = () => {
  <Hash size={32} className="text-nous-text"/>
  </div>
  </div>
- <h2 className="font-serif text-4xl md:text-5xl italic tracking-tighter text-nous-text dark:text-white">Aesthetic Vectors.</h2>
+ <h2 className="font-serif text-4xl md:text-5xl italic tracking-tighter text-nous-text text-nous-text">Aesthetic Vectors.</h2>
  <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold text-nous-text0">Select 3 or more</p>
  </div>
  

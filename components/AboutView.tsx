@@ -43,11 +43,11 @@ const ProposalShell: React.FC<{
  <div className="hidden md:flex items-center gap-2 font-mono text-[9px] uppercase tracking-widest text-nous-subtle">
  <span className={step === 'ENTRY' ? 'text-nous-text  font-black' : ''}>01 Entry</span>
  <span className="opacity-30">/</span>
- <span className={step === 'BINDING' ? 'text-nous-text dark:text-white font-black' : ''}>02 Binding</span>
+ <span className={step === 'BINDING' ? 'text-nous-text text-nous-text font-black' : ''}>02 Binding</span>
  <span className="opacity-30">/</span>
- <span className={step === 'REFINEMENT' ? 'text-nous-text dark:text-white font-black' : ''}>03 Refinement</span>
+ <span className={step === 'REFINEMENT' ? 'text-nous-text text-nous-text font-black' : ''}>03 Refinement</span>
  <span className="opacity-30">/</span>
- <span className={step === 'EXPORT' ? 'text-nous-text dark:text-white font-black' : ''}>04 Manifest</span>
+ <span className={step === 'EXPORT' ? 'text-nous-text text-nous-text font-black' : ''}>04 Manifest</span>
  </div>
  </div>
  <span className="font-serif italic text-sm text-nous-text0">{title}</span>
@@ -225,7 +225,7 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
  className="flex-1 h-full overflow-y-auto no-scrollbar p-6 md:p-12 flex flex-col items-center justify-center relative"
  >
- <button onClick={() => setViewState('ENTRY')} className="absolute top-8 left-8 p-3 text-nous-subtle hover:text-nous-subtle dark:hover:text-white hidden md:block">
+ <button onClick={() => setViewState('ENTRY')} className="absolute top-8 left-8 p-3 text-nous-subtle hover:text-nous-subtle hover:text-nous-text hidden md:block">
  <ArrowLeft size={20}/>
  </button>
  
@@ -235,7 +235,7 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  <Layers size={20} />
  <span className="font-sans text-[9px] uppercase tracking-[0.5em] font-black italic">Material Binding</span>
  </div>
- <h2 className="font-serif text-4xl md:text-5xl italic tracking-tighter text-nous-text dark:text-white">Configure Output.</h2>
+ <h2 className="font-serif text-4xl md:text-5xl italic tracking-tighter text-nous-text text-nous-text">Configure Output.</h2>
  </div>
  
  <div className="grid md:grid-cols-2 gap-12">
@@ -256,7 +256,7 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  <div className="flex items-center gap-4">
  <div className="w-12 h-12 bg-stone-200 rounded-none flex items-center justify-center text-nous-subtle"><FolderOpen size={20} /></div>
  <div>
- <p className="font-serif italic text-xl text-nous-text dark:text-white line-clamp-2">{folderData?.name || availableFolders.find(f => f.id === selectedFolderId)?.content.name || 'Selected Folder'}</p>
+ <p className="font-serif italic text-xl text-nous-text text-nous-text line-clamp-2">{folderData?.name || availableFolders.find(f => f.id === selectedFolderId)?.content.name || 'Selected Folder'}</p>
  <p className="font-sans text-[8px] uppercase tracking-widest text-nous-text0 font-black">Source Locked</p>
  </div>
  </div>
@@ -308,7 +308,7 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  <Briefcase size={12} />
  <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black">Strategic Suite</span>
  </div>
- <h1 className="font-serif text-6xl md:text-8xl italic tracking-tighter text-nous-text dark:text-white leading-none">The Proposal.</h1>
+ <h1 className="font-serif text-6xl md:text-8xl italic tracking-tighter text-nous-text text-nous-text leading-none">The Proposal.</h1>
  <p className="font-serif italic text-xl md:text-2xl text-nous-text0 leading-relaxed max-w-xl mx-auto">
  Transmute your archival debris into defensible strategic artifacts.
  </p>
@@ -326,7 +326,7 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  {availableFolders.map(folder => (
  <button key={folder.id} onClick={() => handleSelectFolder(folder.id)} className="group p-8 bg-white border border-nous-border rounded-none hover:border-nous-border hover: transition-all text-left flex flex-col gap-6">
  <div className="flex justify-between items-start"><FolderOpen size={24} className="text-nous-subtle group-hover:text-nous-text0 transition-colors"/><ArrowRight size={16} className="text-nous-subtle opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all"/></div>
- <div><h4 className="font-serif italic text-2xl text-nous-text dark:text-white line-clamp-1">{folder.content.name}</h4><span className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle font-black">{folder.content.itemIds?.length || 0} Artifacts</span></div>
+ <div><h4 className="font-serif italic text-2xl text-nous-text text-nous-text line-clamp-1">{folder.content.name}</h4><span className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle font-black">{folder.content.itemIds?.length || 0} Artifacts</span></div>
  </button>
  ))}
  {availableFolders.length === 0 && <div className="col-span-full py-12 text-center opacity-30 border-2 border-dashed border-nous-border rounded-none"><Archive size={48} className="mx-auto mb-4"/><p className="font-serif italic text-2xl">No Stacks Found.</p></div>}
@@ -348,7 +348,7 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  <div className="p-2 bg-white rounded-none text-nous-subtle group-hover:text-nous-text0"><FileText size={14} /></div>
  <span className="font-mono text-[8px] text-nous-subtle">{new Date(p.updatedAt).toLocaleDateString()}</span>
  </div>
- <h4 className="font-serif italic text-lg text-nous-text dark:text-white line-clamp-2 leading-tight">{p.title}</h4>
+ <h4 className="font-serif italic text-lg text-nous-text text-nous-text line-clamp-2 leading-tight">{p.title}</h4>
  <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle mt-2 block">{p.content.sections.length} Slides</span>
  </button>
  ))}

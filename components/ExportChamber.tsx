@@ -235,7 +235,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  <div className="flex justify-between items-center mb-12">
  <div className="space-y-1">
  <span className="font-sans text-[8px] uppercase tracking-[0.5em] font-black text-nous-text0">Extraction Protocol</span>
- <h2 className="font-serif text-3xl italic tracking-tighter text-nous-text dark:text-white">Extract Artifact.</h2>
+ <h2 className="font-serif text-3xl italic tracking-tighter text-nous-text text-nous-text">Extract Artifact.</h2>
  </div>
  <button onClick={onClose} className="p-2 text-nous-subtle hover:text-red-500 transition-all rounded-none hover:bg-nous-base"><X size={20}/></button>
  </div>
@@ -249,7 +249,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  <div className="flex items-center justify-between mb-2">
  <div className="flex items-center gap-3">
  <div className={exportMode === m.id ? 'text-nous-text0' : 'text-nous-subtle'}>{m.icon}</div>
- <p className={`font-serif italic text-lg ${exportMode === m.id ? 'text-nous-text dark:text-white' : 'text-nous-text0'}`}>{m.label}</p>
+ <p className={`font-serif italic text-lg ${exportMode === m.id ? 'text-nous-text text-nous-text' : 'text-nous-text0'}`}>{m.label}</p>
  </div>
  {exportMode === m.id && <CheckCircle2 size={14} className="text-nous-text0"/>}
  </div>
@@ -263,7 +263,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle block border-b border-nous-border pb-2">Includes</span>
  <div className="grid grid-cols-2 gap-2">
  {SECTION_DEFS.map(s => (
- <button key={s.id} onClick={() => toggleSection(s.id)} className={`flex items-center gap-3 p-3 rounded-none border transition-all ${selectedSections.has(s.id) ? 'bg-nous-base border-nous-border text-nous-text dark:text-white' : 'text-nous-subtle border-transparent hover:bg-nous-base '}`}>
+ <button key={s.id} onClick={() => toggleSection(s.id)} className={`flex items-center gap-3 p-3 rounded-none border transition-all ${selectedSections.has(s.id) ? 'bg-nous-base border-nous-border text-nous-text text-nous-text' : 'text-nous-subtle border-transparent hover:bg-nous-base '}`}>
  <div className={selectedSections.has(s.id) ? 'text-nous-text0' : ''}>{s.icon}</div>
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">{s.label}</span>
  </button>
@@ -283,7 +283,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
 
  {/* PREVIEW AREA */}
  <main className="flex-1 bg-stone-200/50 dark:bg overflow-y-auto p-4 md:p-12 flex justify-center no-scrollbar">
- <AnimatePresence>{isGenerating && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-white/80 /80 backdrop-blur-md z-50 flex items-center justify-center"><div className="bg-white p-12 rounded-none text-center space-y-6 border border-nous-border"><Loader2 size={40} className="animate-spin text-nous-text0 mx-auto"/><div className="space-y-2"><p className="font-serif italic text-2xl text-nous-text dark:text-white">“Compressing Reality...”</p><p className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle">Preparing High-Fidelity Output</p></div></div></motion.div>}</AnimatePresence>
+ <AnimatePresence>{isGenerating && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-white/80 /80 backdrop-blur-md z-50 flex items-center justify-center"><div className="bg-white p-12 rounded-none text-center space-y-6 border border-nous-border"><Loader2 size={40} className="animate-spin text-nous-text0 mx-auto"/><div className="space-y-2"><p className="font-serif italic text-2xl text-nous-text text-nous-text">“Compressing Reality...”</p><p className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle">Preparing High-Fidelity Output</p></div></div></motion.div>}</AnimatePresence>
  
  <div id="export-target"className={`transition-all duration-500 ${exportMode === 'scroll' ? 'bg-white ' : ''}`} style={containerStyle}>
  
@@ -293,7 +293,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  <div className="flex-1 flex flex-col justify-center space-y-10">
  <div className="space-y-4">
  <span className="font-sans text-[10px] uppercase tracking-[0.6em] font-black text-nous-subtle">Issue Manifest</span>
- <h1 className="font-serif text-6xl md:text-8xl italic tracking-tighter leading-[0.85] uppercase text-nous-text dark:text-white">
+ <h1 className="font-serif text-6xl md:text-8xl italic tracking-tighter leading-[0.85] uppercase text-nous-text text-nous-text">
  {metadata.title}
  </h1>
  </div>
@@ -352,7 +352,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  crossOrigin="anonymous"
  />
  </div>
- <h2 className="font-serif text-3xl italic tracking-tight uppercase mb-4 text-nous-text dark:text-white">{page.headline}</h2>
+ <h2 className="font-serif text-3xl italic tracking-tight uppercase mb-4 text-nous-text text-nous-text">{page.headline}</h2>
  <p className="font-serif italic text-base text-nous-text0 leading-relaxed">{page.bodyCopy}</p>
  </div>
  ))}
@@ -364,13 +364,13 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  <div className="flex-1 flex flex-col justify-center gap-8">
  <div className="space-y-2">
  <span className="font-sans text-[7px] uppercase tracking-[0.2em] font-black text-nous-subtle block">Strategic Thesis</span>
- <p className="font-serif italic text-lg text-nous-text dark:text-white leading-snug border-b border-nous-border pb-4">
+ <p className="font-serif italic text-lg text-nous-text text-nous-text leading-snug border-b border-nous-border pb-4">
  {content.roadmap.strategicThesis}
  </p>
  </div>
  <div className="space-y-2">
  <span className="font-sans text-[7px] uppercase tracking-[0.2em] font-black text-nous-subtle block">Positioning Axis</span>
- <p className="font-serif italic text-lg text-nous-text dark:text-white leading-snug border-b border-nous-border pb-4">
+ <p className="font-serif italic text-lg text-nous-text text-nous-text leading-snug border-b border-nous-border pb-4">
  {content.roadmap.positioningAxis}
  </p>
  </div>

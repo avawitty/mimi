@@ -81,7 +81,7 @@ export const GlobalSearchOverlay: React.FC<{ isOpen: boolean; onClose: () => voi
  <Search size={18} />
  <span className="font-sans text-[10px] uppercase tracking-[0.5em] font-black italic">Global Registry Audit</span>
  </div>
- <button onClick={onClose} className="p-3 bg-nous-base rounded-none hover:bg-red-500 hover:text-white transition-all"><X size={20}/></button>
+ <button onClick={onClose} className="p-3 bg-nous-base rounded-none hover:bg-red-500 hover:text-nous-text transition-all"><X size={20}/></button>
  </header>
 
  <div className="relative mb-16 shrink-0">
@@ -113,7 +113,7 @@ export const GlobalSearchOverlay: React.FC<{ isOpen: boolean; onClose: () => voi
  className="w-full text-left p-6 bg-white border border-nous-border rounded-none hover:border-nous-border transition-all flex justify-between items-center group"
  >
  <div className="space-y-1">
- <h4 className="font-serif italic text-xl text-nous-text dark:text-white">{z.content?.headlines?.[0] || z.title ||"Untitled"}</h4>
+ <h4 className="font-serif italic text-xl text-nous-text text-nous-text">{z.content?.headlines?.[0] || z.title ||"Untitled"}</h4>
  <span className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle">{z.tone} // {new Date(z.timestamp).toLocaleDateString()}</span>
  </div>
  <ChevronRight size={14} className="text-nous-subtle group-hover:translate-x-1 transition-transform"/>

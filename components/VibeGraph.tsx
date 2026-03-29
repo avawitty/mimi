@@ -315,7 +315,7 @@ export const VibeGraph: React.FC<VibeGraphProps> = ({ onGenerateZine, onNodeSele
  Weave into Zine
  </button>
  )}
- <button onClick={() => setActiveThread(null)} className="text-nous-text0 hover:text-nous-text dark:hover:text-white transition-colors">
+ <button onClick={() => setActiveThread(null)} className="text-nous-text0 hover:text-nous-text hover:text-nous-text transition-colors">
  <X size={16} />
  </button>
  </div>

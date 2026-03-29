@@ -123,7 +123,7 @@ export const TheWard: React.FC<{ onClose: () => void }> = ({ onClose }) => {
  <h2 className="font-serif text-4xl italic tracking-tighter text-nous-text ">The Ward.</h2>
  <p className="font-sans text-[10px] uppercase tracking-widest text-nous-text0">Aesthetic Interrogation Room</p>
  </div>
- <button onClick={onClose} className="text-nous-text0 hover:text-nous-text dark:hover:text-white transition-colors">
+ <button onClick={onClose} className="text-nous-text0 hover:text-nous-text hover:text-nous-text transition-colors">
  <X size={24} />
  </button>
  </div>

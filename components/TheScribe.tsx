@@ -236,14 +236,14 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  <div className="absolute top-8 right-8 flex items-center gap-4 z-20">
  <button 
  onClick={clearCanvas}
- className="p-4 text-nous-subtle hover:text-nous-text dark:hover:text-white transition-colors flex items-center gap-2"
+ className="p-4 text-nous-subtle hover:text-nous-text hover:text-nous-text transition-colors flex items-center gap-2"
  >
  <Eraser size={16} strokeWidth={1} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Clear</span>
  </button>
  <button 
  onClick={onClose}
- className="p-4 text-nous-subtle hover:text-nous-text dark:hover:text-white transition-colors"
+ className="p-4 text-nous-subtle hover:text-nous-text hover:text-nous-text transition-colors"
  >
  <X size={24} strokeWidth={1} />
  </button>
@@ -295,7 +295,7 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  value={inputValue}
  onChange={(e) => setInputValue(e.target.value)}
  placeholder="Search the archive or ask the oracle..."
- className="w-full bg-transparent border-b border-nous-border py-2 pl-6 pr-4 font-mono text-sm text-nous-text dark:text-white outline-none placeholder:text-nous-subtle"
+ className="w-full bg-transparent border-b border-nous-border py-2 pl-6 pr-4 font-mono text-sm text-nous-text text-nous-text outline-none placeholder:text-nous-subtle"
  />
  </div>
  </motion.div>
@@ -351,7 +351,7 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  <motion.div key="synthesis"initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
  <div className="space-y-2">
  <span className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle block">Dual-Agent Protocol</span>
- <h2 className="font-serif text-3xl italic text-nous-text dark:text-white">The Synthesis.</h2>
+ <h2 className="font-serif text-3xl italic text-nous-text text-nous-text">The Synthesis.</h2>
  </div>
  
  {!isGeneratingDebate && !debateAudioUrl && (
@@ -363,13 +363,13 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  value={inputValue}
  onChange={(e) => setInputValue(e.target.value)}
  placeholder="Enter a topic for debate..."
- className="w-full bg-transparent border-b border-nous-border py-2 pl-6 pr-4 font-mono text-sm text-nous-text dark:text-white outline-none placeholder:text-nous-subtle"
+ className="w-full bg-transparent border-b border-nous-border py-2 pl-6 pr-4 font-mono text-sm text-nous-text text-nous-text outline-none placeholder:text-nous-subtle"
  />
  </div>
  <button 
  onClick={handleGenerateDebate}
  disabled={!inputValue.trim()}
- className="w-full py-3 border border-nous-border  text-nous-text dark:text-white font-sans text-[9px] uppercase tracking-widest font-black hover:bg-nous-base hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+ className="w-full py-3 border border-nous-border  text-nous-text text-nous-text font-sans text-[9px] uppercase tracking-widest font-black hover:bg-nous-base hover:text-nous-text dark:hover:bg-white dark:hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
  >
  Generate Audio Debate
  </button>
@@ -405,7 +405,7 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  <div className="flex items-center justify-center gap-4">
  <button 
  onClick={toggleDebateAudio}
- className="w-12 h-12 rounded-full border border-nous-border  flex items-center justify-center text-nous-text dark:text-white hover:bg-nous-base transition-colors"
+ className="w-12 h-12 rounded-full border border-nous-border  flex items-center justify-center text-nous-text text-nous-text hover:bg-nous-base transition-colors"
  >
  {isPlayingDebate ? <Pause size={16} /> : <Play size={16} className="ml-1"/>}
  </button>
@@ -449,7 +449,7 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  setSynthesisText(null);
  setInputValue('');
  }}
- className="text-[10px] font-mono text-nous-subtle hover:text-nous-text dark:hover:text-white uppercase tracking-widest underline underline-offset-4"
+ className="text-[10px] font-mono text-nous-subtle hover:text-nous-text hover:text-nous-text uppercase tracking-widest underline underline-offset-4"
  >
  Reset Protocol
  </button>

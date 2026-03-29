@@ -63,21 +63,21 @@ export const ProsceniumView: React.FC<{ onSelectZine: (z: ZineMetadata) => void,
  <div className="space-y-2">
  <h2 className="font-serif text-6xl md:text-9xl italic tracking-tighter luminescent-text text-nous-text  leading-none">The Floor.</h2>
  <p className="font-serif italic text-base md:text-xl text-nous-subtle max-w-xl leading-tight">
- Where private manifests achieving <span className="text-nous-text dark:text-white">Witness Density</span> are committed to the collective field.
+ Where private manifests achieving <span className="text-nous-text text-nous-text">Witness Density</span> are committed to the collective field.
  </p>
  </div>
  </div>
  
  <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
  <div className="flex gap-8">
- <button onClick={() => setActiveTab('showroom')} className={`font-serif italic text-xl md:text-2xl pb-2 border-b-2 transition-all ${activeTab === 'showroom' ? 'text-nous-text dark:text-white border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text '}`}>Showroom</button>
- <button onClick={() => setActiveTab('portal')} className={`font-serif italic text-xl md:text-2xl pb-2 border-b-2 transition-all ${activeTab === 'portal' ? 'text-nous-text dark:text-white border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text '}`}>My Portal</button>
+ <button onClick={() => setActiveTab('showroom')} className={`font-serif italic text-xl md:text-2xl pb-2 border-b-2 transition-all ${activeTab === 'showroom' ? 'text-nous-text text-nous-text border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text '}`}>Showroom</button>
+ <button onClick={() => setActiveTab('portal')} className={`font-serif italic text-xl md:text-2xl pb-2 border-b-2 transition-all ${activeTab === 'portal' ? 'text-nous-text text-nous-text border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text '}`}>My Portal</button>
  </div>
  
  <div className="flex items-center gap-4 bg-white/50 /50 backdrop-blur-xl px-6 py-3 rounded-none border border-nous-border">
  <div className="flex flex-col items-end">
  <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Portal Status</span>
- <span className="font-serif italic text-sm text-nous-text dark:text-white">{myPublicZines.length} Public Manifests</span>
+ <span className="font-serif italic text-sm text-nous-text text-nous-text">{myPublicZines.length} Public Manifests</span>
  </div>
  <Activity size={14} className="text-nous-text0 animate-pulse"/>
  </div>
@@ -92,7 +92,7 @@ export const ProsceniumView: React.FC<{ onSelectZine: (z: ZineMetadata) => void,
  <div key={zine.id} className="space-y-6 group">
  <ZineCard zine={zine} onClick={() => onSelectZine(zine)} />
  <div className="flex justify-between items-center px-4 opacity-0 group-hover:opacity-100 transition-opacity">
- <button onClick={() => onSelectZine(zine)} className="flex items-center gap-2 font-serif italic text-nous-subtle hover:text-nous-text dark:hover:text-white">
+ <button onClick={() => onSelectZine(zine)} className="flex items-center gap-2 font-serif italic text-nous-subtle hover:text-nous-text hover:text-nous-text">
  Witness Full Manifest <ArrowRight size={12} />
  </button>
  <button onClick={() => handleShare(zine.id)} className="p-2 text-nous-subtle hover:text-nous-text0">

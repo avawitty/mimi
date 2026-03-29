@@ -55,7 +55,7 @@ export const ShardAnalyzer: React.FC<ShardAnalyzerProps> = ({ shards, draft, onC
  <button 
  onClick={performAudit}
  disabled={!shards || shards.length === 0}
- className="px-8 py-3 bg-nous-text text-white rounded-none font-sans text-[9px] uppercase tracking-widest font-black active:scale-95 transition-all disabled:opacity-30"
+ className="px-8 py-3 bg-nous-text text-nous-base rounded-none font-sans text-[9px] uppercase tracking-widest font-black active:scale-95 transition-all disabled:opacity-30"
  >
  Conduct Audit
  </button>

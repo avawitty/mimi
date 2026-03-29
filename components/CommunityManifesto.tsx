@@ -29,25 +29,25 @@ export const CommunityManifesto: React.FC = () => {
  </div>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
  <div className="p-8 border border-nous-border bg-white space-y-4">
- <h3 className="font-serif italic text-2xl text-nous-text dark:text-white">Embodiment</h3>
+ <h3 className="font-serif italic text-2xl text-nous-text text-nous-text">Embodiment</h3>
  <p className="font-sans text-sm text-nous-text0 leading-relaxed">
  Real life, not just AI aesthetics. We ground our digital creations in physical reality, honoring the messy, beautiful truth of lived experience.
  </p>
  </div>
  <div className="p-8 border border-nous-border bg-white space-y-4">
- <h3 className="font-serif italic text-2xl text-nous-text dark:text-white">Intimacy</h3>
+ <h3 className="font-serif italic text-2xl text-nous-text text-nous-text">Intimacy</h3>
  <p className="font-sans text-sm text-nous-text0 leading-relaxed">
  Smallness is a feature. We reject the pressure to scale infinitely. True connection happens in quiet, curated spaces.
  </p>
  </div>
  <div className="p-8 border border-nous-border bg-white space-y-4">
- <h3 className="font-serif italic text-2xl text-nous-text dark:text-white">Craft</h3>
+ <h3 className="font-serif italic text-2xl text-nous-text text-nous-text">Craft</h3>
  <p className="font-sans text-sm text-nous-text0 leading-relaxed">
  Zine energy meets editorial standards. We care about the details—typography, pacing, and the tactile feel of our digital artifacts.
  </p>
  </div>
  <div className="p-8 border border-nous-border bg-white space-y-4">
- <h3 className="font-serif italic text-2xl text-nous-text dark:text-white">Consent</h3>
+ <h3 className="font-serif italic text-2xl text-nous-text text-nous-text">Consent</h3>
  <p className="font-sans text-sm text-nous-text0 leading-relaxed">
  Boundaries, moderation, and safety. We protect our peace and the peace of our community. No fake urgency. No harsh perfectionism.
  </p>
@@ -63,19 +63,19 @@ export const CommunityManifesto: React.FC = () => {
  </div>
  <div className="bg-white border border-nous-border p-8 md:p-12 space-y-8">
  <div className="space-y-4">
- <h3 className="font-serif italic text-2xl text-nous-text dark:text-white">Two Tempos</h3>
+ <h3 className="font-serif italic text-2xl text-nous-text text-nous-text">Two Tempos</h3>
  <p className="font-sans text-sm text-nous-text0 leading-relaxed">
  We design for two distinct reading experiences. The <strong>Short Read (2–4 min)</strong> is punchy, clear, and highly visual. The <strong>Slow Read (10–15 min)</strong> is deep, expansive, and invites lingering reflection. Choose your tempo.
  </p>
  </div>
  <div className="space-y-4">
- <h3 className="font-serif italic text-2xl text-nous-text dark:text-white">Taste Without Cruelty</h3>
+ <h3 className="font-serif italic text-2xl text-nous-text text-nous-text">Taste Without Cruelty</h3>
  <p className="font-sans text-sm text-nous-text0 leading-relaxed">
  Our guidelines for feedback and critique. We believe in rigorous aesthetic standards, but we deliver them with warmth. Critique the work, not the worth. Offer pathways for evolution, not dead ends.
  </p>
  </div>
  <div className="pt-6 border-t border-nous-border">
- <button className="font-sans text-[10px] uppercase tracking-widest font-black text-nous-text0 hover:text-nous-text dark:hover:text-white transition-colors flex items-center gap-2">
+ <button className="font-sans text-[10px] uppercase tracking-widest font-black text-nous-text0 hover:text-nous-text hover:text-nous-text transition-colors flex items-center gap-2">
  Download Contributor Style Sheet <span className="text-nous-subtle">→</span>
  </button>
  </div>
@@ -91,21 +91,21 @@ export const CommunityManifesto: React.FC = () => {
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
  <div className="p-6 border border-nous-border bg-white space-y-3">
  <Users size={16} className="text-nous-subtle mb-4"/>
- <h3 className="font-serif italic text-lg text-nous-text dark:text-white">Weekly Rituals</h3>
+ <h3 className="font-serif italic text-lg text-nous-text text-nous-text">Weekly Rituals</h3>
  <p className="font-sans text-xs text-nous-text0 leading-relaxed">
  Join our"1 prompt, 3 responses"exercise or drop into the"Open Studio"to co-create in silence.
  </p>
  </div>
  <div className="p-6 border border-nous-border bg-white space-y-3">
  <Shield size={16} className="text-nous-subtle mb-4"/>
- <h3 className="font-serif italic text-lg text-nous-text dark:text-white">Trusted Moderation</h3>
+ <h3 className="font-serif italic text-lg text-nous-text text-nous-text">Trusted Moderation</h3>
  <p className="font-sans text-xs text-nous-text0 leading-relaxed">
  A small team of trusted moderators ensures safety. We maintain a clear, transparent reporting flow.
  </p>
  </div>
  <div className="p-6 border border-nous-border bg-white space-y-3">
  <Heart size={16} className="text-nous-subtle mb-4"/>
- <h3 className="font-serif italic text-lg text-nous-text dark:text-white">Aligned Partnerships</h3>
+ <h3 className="font-serif italic text-lg text-nous-text text-nous-text">Aligned Partnerships</h3>
  <p className="font-sans text-xs text-nous-text0 leading-relaxed">
  We collaborate with creators who share our micro-audience ethos for special co-issue releases.
  </p>

@@ -69,7 +69,7 @@ export const CliqueProtocol: React.FC<{ isOpen: boolean; onClose: () => void }> 
  <h2 className="font-serif text-4xl italic tracking-tighter">Clique Protocol.</h2>
  <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-nous-subtle font-black">Anchoring New Muses</p>
  </div>
- <button onClick={onClose} className="p-2 text-nous-subtle hover:text-nous-text dark:hover:text-white transition-colors">
+ <button onClick={onClose} className="p-2 text-nous-subtle hover:text-nous-text hover:text-nous-text transition-colors">
  <X size={24} />
  </button>
  </div>
@@ -115,7 +115,7 @@ export const CliqueProtocol: React.FC<{ isOpen: boolean; onClose: () => void }> 
  <button 
  onClick={handleAnchorMuse}
  disabled={!frequencyKey.trim() || isBinding || success}
- className={`w-full py-6 flex items-center justify-center gap-4 font-sans text-xs tracking-[0.6em] uppercase font-black transition-all active:scale-95 rounded-none ${success ? 'bg-nous-base text-white' : 'bg-nous-text text-nous-base'}`}
+ className={`w-full py-6 flex items-center justify-center gap-4 font-sans text-xs tracking-[0.6em] uppercase font-black transition-all active:scale-95 rounded-none ${success ? 'bg-nous-text text-nous-base' : 'bg-nous-text text-nous-base'}`}
  >
  {isBinding ? <Loader2 size={16} className="animate-spin"/> : success ? <Check size={16} /> : <Anchor size={16} />}
  <span>{isBinding ? 'Calibrating Sync' : success ? 'Frequency Locked' : 'Anchor Muse'}</span>

@@ -58,7 +58,7 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({ currentViewMode,
  onMouseEnter={() => setHoveredItem(category)}
  onMouseLeave={() => setHoveredItem(null)}
  >
- <button className="font-sans text-[10px] uppercase tracking-[0.2em] font-medium text-nous-text0 hover:text-white transition-colors">
+ <button className="font-sans text-[10px] uppercase tracking-[0.2em] font-medium text-nous-text0 hover:text-nous-text transition-colors">
  {category}
  </button>
 

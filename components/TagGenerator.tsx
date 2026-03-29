@@ -59,7 +59,7 @@ export const TagGenerator: React.FC<TagGeneratorProps> = ({ onAddTags, context }
  <button
  onClick={handleGenerateTags}
  disabled={isLoading || !inputText.trim()}
- className="w-full py-3 border border-black  bg-nous-text text-nous-base   font-mono text-[9px] uppercase tracking-[0.3em] hover:bg-white hover:text-black dark:hover:bg-black dark:hover:text-white transition-colors disabled:opacity-50 disabled:hover:bg-black disabled:hover:text-white dark:disabled:hover:bg-white dark:disabled:hover:text-black"
+ className="w-full py-3 border border-black  bg-nous-text text-nous-base   font-mono text-[9px] uppercase tracking-[0.3em] hover:bg-white hover:text-black dark:hover:bg-black hover:text-nous-text transition-colors disabled:opacity-50 disabled:hover:bg-black disabled:hover:text-nous-text dark:disabled:hover:bg-white dark:disabled:hover:text-black"
  >
  {isLoading ? <Loader2 size={12} className="animate-spin mx-auto"strokeWidth={1} /> : 'GENERATE TAGS'}
  </button>
@@ -90,7 +90,7 @@ export const TagGenerator: React.FC<TagGeneratorProps> = ({ onAddTags, context }
  {selectedTags.size > 0 && (
  <button
  onClick={handleAddSelected}
- className="w-full py-3 flex items-center justify-center gap-3 border border-black  bg-nous-base text-nous-text  dark:text-white font-mono text-[9px] uppercase tracking-[0.3em] hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
+ className="w-full py-3 flex items-center justify-center gap-3 border border-black  bg-nous-base text-nous-text  text-nous-text font-mono text-[9px] uppercase tracking-[0.3em] hover:bg-black hover:text-nous-text dark:hover:bg-white dark:hover:text-black transition-colors"
  >
  <Check size={12} strokeWidth={1} /> SAVE {selectedTags.size} TAGS
  </button>

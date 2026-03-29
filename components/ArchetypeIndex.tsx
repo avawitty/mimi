@@ -95,7 +95,7 @@ export const ArchetypeIndex: React.FC<ArchetypeIndexProps> = ({ onSelectZine }) 
  {filtered.length > 0 && (
  <button 
  onClick={handleSynthesize}
- className="px-6 py-3 bg-nous-text text-white font-sans text-[9px] uppercase tracking-widest font-black rounded-none hover:bg-stone-600 transition-all"
+ className="px-6 py-3 bg-nous-text text-nous-base font-sans text-[9px] uppercase tracking-widest font-black rounded-none hover:bg-stone-600 transition-all"
  >
  Synthesize {filtered.length}
  </button>

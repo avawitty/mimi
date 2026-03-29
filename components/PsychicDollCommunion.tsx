@@ -121,7 +121,7 @@ export const PsychicDollCommunion: React.FC<PsychicDollCommunionProps> = ({ onCo
  <button 
  onClick={() => setStep(3)}
  disabled={!glossaryTerm.trim()}
- className="px-8 py-4 bg-nous-base text-nous-text hover:bg-nous-base0 hover:text-white transition-all text-xs font-mono uppercase tracking-widest font-black disabled:opacity-50 disabled:cursor-not-allowed"
+ className="px-8 py-4 bg-nous-base text-nous-text hover:bg-nous-base0 hover:text-nous-text transition-all text-xs font-mono uppercase tracking-widest font-black disabled:opacity-50 disabled:cursor-not-allowed"
  >
  Define
  </button>

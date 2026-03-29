@@ -123,7 +123,7 @@ export const CommandDrawer: React.FC<CommandDrawerProps> = ({ isOpen, onClose, c
  console.error("MIMI // Failed to save artifact locally:", error);
  }
  }}
- className="w-full bg-nous-base text-nous-subtle py-2 text-xs uppercase tracking-widest hover:bg-nous-base hover:text-white transition-colors"
+ className="w-full bg-nous-base text-nous-subtle py-2 text-xs uppercase tracking-widest hover:bg-nous-base hover:text-nous-text transition-colors"
  >
  Save to Archive
  </button>
@@ -189,7 +189,7 @@ export const CommandDrawer: React.FC<CommandDrawerProps> = ({ isOpen, onClose, c
  </div>
  )}
  </div>
- <button onClick={onClose} className="absolute top-12 right-12 text-nous-text0 hover:text-white transition-colors">
+ <button onClick={onClose} className="absolute top-12 right-12 text-nous-text0 hover:text-nous-text transition-colors">
  <X size={32} />
  </button>
  </motion.div>

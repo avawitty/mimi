@@ -60,7 +60,7 @@ export const MimiGawdTerminal: React.FC<MimiGawdTerminalProps> = ({ isOpen, onCl
  {/* Close Button */}
  <button 
  onClick={onClose}
- className="fixed top-8 right-8 z-[100] text font-mono text-sm tracking-widest hover:text-white transition-colors opacity-50 hover:opacity-100"
+ className="fixed top-8 right-8 z-[100] text font-mono text-sm tracking-widest hover:text-nous-text transition-colors opacity-50 hover:opacity-100"
  >
  [ DISCONNECT ]
  </button>

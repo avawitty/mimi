@@ -441,7 +441,7 @@ const PresetStrip: React.FC<{ options: string[], current: string | string[], onS
  <button
  key={opt}
  onClick={() => onSelect(opt)}
- className={`px-3 py-1 rounded-none font-sans text-[7px] md:text-[8px] uppercase tracking-widest font-black border transition-all ${active ? 'bg-nous-text text-white border-current ' : 'border-nous-border text-nous-subtle hover:border-nous-border'}`}
+ className={`px-3 py-1 rounded-none font-sans text-[7px] md:text-[8px] uppercase tracking-widest font-black border transition-all ${active ? 'bg-nous-text text-nous-base border-current ' : 'border-nous-border text-nous-subtle hover:border-nous-border'}`}
  >
  {opt}
  </button>
@@ -1084,7 +1084,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <Scissors size={14} className="text-nous-accent"/>
  <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-medium italic">Aesthetic Logic Engine v2.0</span>
  </div>
- <h2 className="font-serif text-5xl md:text-7xl italic tracking-tighter text-nous-text dark:text-white leading-none">The Tailor.</h2>
+ <h2 className="font-serif text-5xl md:text-7xl italic tracking-tighter text-nous-text text-nous-text leading-none">The Tailor.</h2>
  <p className="font-serif italic text-lg text-nous-text0 max-w-xl">
  Define the physics of your world. This logic informs every generation.
  </p>
@@ -1097,7 +1097,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <div className="flex flex-col">
  <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Active Mask</span>
  <div className="flex items-center gap-2">
- <span className="font-serif italic text-sm text-nous-text dark:text-white">{activePersona?.name}</span>
+ <span className="font-serif italic text-sm text-nous-text text-nous-text">{activePersona?.name}</span>
  {draft?.aiSignature && (
  <span className="font-mono text-[8px] text-nous-text bg-nous-base px-1.5 py-0.5 rounded-none">
  {draft.aiSignature}
@@ -1208,7 +1208,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <div className="space-y-6">
  <div className="space-y-1">
  <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">Primary Reference</span>
- <p className="font-serif italic text-2xl md:text-3xl text-nous-text dark:text-white leading-tight">
+ <p className="font-serif italic text-2xl md:text-3xl text-nous-text text-nous-text leading-tight">
  {draft.positioningCore.anchors.culturalReferences[0] ||"Undefined Anchor"}
  </p>
  </div>
@@ -1450,7 +1450,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <button
  key={step}
  onClick={() => setActiveStep(step as any)}
- className={`text-left px-4 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center justify-between whitespace-nowrap ${activeStep === step ? 'bg-nous-base text-nous-text dark:text-white border border-black/5 /5' : 'text-nous-subtle hover:text-nous-subtle'}`}
+ className={`text-left px-4 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center justify-between whitespace-nowrap ${activeStep === step ? 'bg-nous-base text-nous-text text-nous-text border border-black/5 /5' : 'text-nous-subtle hover:text-nous-subtle'}`}
  >
  {step} {activeStep === step && <ChevronRight size={12} />}
  </button>
@@ -1469,7 +1469,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  >
  {/* HEADER */}
  <div className="space-y-2 border-b border-black/5 /5 pb-8">
- <h3 className="font-serif text-4xl italic tracking-tighter text-nous-text dark:text-white capitalize">{activeStep.replace(/([A-Z])/g, ' $1').trim()}.</h3>
+ <h3 className="font-serif text-4xl italic tracking-tighter text-nous-text text-nous-text capitalize">{activeStep.replace(/([A-Z])/g, ' $1').trim()}.</h3>
  <p className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle font-black">Define the parameters of your world.</p>
  </div>
 
@@ -2477,7 +2477,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <div className="flex items-center gap-4">
  <span className="font-serif italic text-sm text-nous-subtle line-through">{event.before.archetype || event.before.color}</span>
  <ArrowRight size={12} className="text-nous-text"/>
- <span className="font-serif italic text-sm text-nous-text dark:text-white">{event.after.archetype || event.after.color}</span>
+ <span className="font-serif italic text-sm text-nous-text text-nous-text">{event.after.archetype || event.after.color}</span>
  </div>
  </div>
  ))}
@@ -2541,7 +2541,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <button 
  onClick={handleUpdatePersonaSettings}
  disabled={isSaving || !personaName.trim()}
- className="px-6 py-2 bg-nous-text text-white rounded-none font-sans text-[9px] uppercase tracking-widest font-black hover: active:scale-95 transition-all flex items-center gap-2"
+ className="px-6 py-2 bg-nous-text text-nous-base rounded-none font-sans text-[9px] uppercase tracking-widest font-black hover: active:scale-95 transition-all flex items-center gap-2"
  >
  {isSaving ? <Loader2 size={12} className="animate-spin"/> : <Save size={12} />}
  Update Protocols
@@ -2568,7 +2568,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  }
  }}
  disabled={personas.length <= 1}
- className={`px-6 py-2 bg-transparent border rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 ${personas.length <= 1 ? 'text-nous-subtle border-nous-border cursor-not-allowed opacity-50' : 'text-red-500 border-red-500 hover:bg-red-500 hover:text-white'}`}
+ className={`px-6 py-2 bg-transparent border rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 ${personas.length <= 1 ? 'text-nous-subtle border-nous-border cursor-not-allowed opacity-50' : 'text-red-500 border-red-500 hover:bg-red-500 hover:text-nous-text'}`}
  >
  <Trash2 size={12} />
  Burn Mask

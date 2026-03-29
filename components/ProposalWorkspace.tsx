@@ -565,18 +565,18 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  <button onClick={() => setMode('content')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'content' ? 'bg-white text-nous-text  ' : 'text-nous-subtle'}`}>
  <Edit3 size={12} /> Content
  </button>
- <button onClick={() => setMode('design')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'design' ? 'bg-white text-nous-text dark:text-white ' : 'text-nous-subtle'}`}>
+ <button onClick={() => setMode('design')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'design' ? 'bg-white text-nous-text text-nous-text ' : 'text-nous-subtle'}`}>
  <Palette size={12} /> Design
  </button>
- <button onClick={() => setMode('assets')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'assets' ? 'bg-white text-nous-text dark:text-white ' : 'text-nous-subtle'}`}
+ <button onClick={() => setMode('assets')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'assets' ? 'bg-white text-nous-text text-nous-text ' : 'text-nous-subtle'}`}
  >
  <FolderOpen size={12} /> Folder
  </button>
- <button onClick={() => setMode('assistant')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'assistant' ? 'bg-white text-nous-text dark:text-white ' : 'text-nous-subtle'}`}
+ <button onClick={() => setMode('assistant')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'assistant' ? 'bg-white text-nous-text text-nous-text ' : 'text-nous-subtle'}`}
  >
  <Sparkles size={12} /> Assistant
  </button>
- <button onClick={() => setMode('collaborators')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'collaborators' ? 'bg-white text-nous-text dark:text-white ' : 'text-nous-subtle'}`}
+ <button onClick={() => setMode('collaborators')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'collaborators' ? 'bg-white text-nous-text text-nous-text ' : 'text-nous-subtle'}`}
  >
  <Users size={12} /> Team
  </button>
@@ -910,7 +910,7 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  handleUpdateSectionElements(section.id, updatedElements);
  setSelectedElementId(null);
  }}
- className="w-full py-2 bg-red-500/10 text-red-500 rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-red-500 hover:text-white transition-all"
+ className="w-full py-2 bg-red-500/10 text-red-500 rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-red-500 hover:text-nous-text transition-all"
  >
  Delete Element
  </button>
@@ -1012,7 +1012,7 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  <button 
  key={f.label}
  onClick={() => handleUpdateElementStyle(section.id, selectedImageElement.id, { filter: f.val })}
- className={`px-2 py-1.5 border rounded-none font-sans text-[7px] uppercase font-black transition-all ${selectedImageElement.style.filter === f.val ? 'bg-nous-text text-white border-transparent' : 'border-nous-border text-nous-subtle hover:border-nous-border'}`}
+ className={`px-2 py-1.5 border rounded-none font-sans text-[7px] uppercase font-black transition-all ${selectedImageElement.style.filter === f.val ? 'bg-nous-text text-nous-base border-transparent' : 'border-nous-border text-nous-subtle hover:border-nous-border'}`}
  >
  {f.label}
  </button>
@@ -1032,7 +1032,7 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
 
  {/* 4. CHAPTER NAVIGATION & PAGE TOOLS */}
  <div className="h-16 bg-white border-t border-nous-border flex items-center justify-between px-6 shrink-0 gap-4 fixed bottom-0 left-0 right-0 md:relative z-50">
- <button onClick={() => scrollToSlide(Math.max(0, activeSlideIndex - 1))} className="p-2 text-nous-subtle hover:text-nous-text dark:hover:text-white disabled:opacity-30"disabled={activeSlideIndex === 0}><ArrowLeft size={16}/></button>
+ <button onClick={() => scrollToSlide(Math.max(0, activeSlideIndex - 1))} className="p-2 text-nous-subtle hover:text-nous-text hover:text-nous-text disabled:opacity-30"disabled={activeSlideIndex === 0}><ArrowLeft size={16}/></button>
  
  <div className="flex items-center gap-4">
  <div className="flex gap-2 overflow-x-auto no-scrollbar max-w-[40vw]">
@@ -1045,7 +1045,7 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  ))}
  </div>
  <div className="h-4 w-px bg-stone-200 hidden md:block"/>
- <button onClick={handleAddPage} className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-nous-base border border-nous-border rounded-none font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0 hover:text-nous-text dark:hover:text-white transition-all">
+ <button onClick={handleAddPage} className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-nous-base border border-nous-border rounded-none font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0 hover:text-nous-text hover:text-nous-text transition-all">
  <Plus size={10} /> Add Slide
  </button>
  {proposal.content.sections.length > 1 && (
@@ -1055,7 +1055,7 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  )}
  </div>
 
- <button onClick={() => scrollToSlide(Math.min(proposal.content.sections.length - 1, activeSlideIndex + 1))} className="p-2 text-nous-subtle hover:text-nous-text dark:hover:text-white disabled:opacity-30"disabled={activeSlideIndex === proposal.content.sections.length - 1}><ArrowRight size={16}/></button>
+ <button onClick={() => scrollToSlide(Math.min(proposal.content.sections.length - 1, activeSlideIndex + 1))} className="p-2 text-nous-subtle hover:text-nous-text hover:text-nous-text disabled:opacity-30"disabled={activeSlideIndex === proposal.content.sections.length - 1}><ArrowRight size={16}/></button>
  </div>
 
  </div>

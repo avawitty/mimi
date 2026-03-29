@@ -18,7 +18,7 @@ export const ManifestSignet: React.FC<{ isOpen: boolean; onClose: () => void }> 
  exit={{ opacity: 0, scale: 0.9, y: 20 }}
  className="relative w-full max-md bg-white border border-nous-border rounded-none p-10 md:p-14 text-center space-y-10"
  >
- <button onClick={onClose} className="absolute top-6 right-6 p-2 text-nous-subtle hover:text-nous-text dark:hover:text-white transition-colors">
+ <button onClick={onClose} className="absolute top-6 right-6 p-2 text-nous-subtle hover:text-nous-text hover:text-nous-text transition-colors">
  <X size={24} />
  </button>
 
@@ -46,7 +46,7 @@ export const ManifestSignet: React.FC<{ isOpen: boolean; onClose: () => void }> 
  navigator.clipboard.writeText(IMPERIAL_URL).catch(e => console.error("MIMI // Clipboard error", e));
  alert("Imperial Link Preserved.");
  }}
- className="flex items-center justify-center gap-3 w-full py-4 border border-nous-border rounded-none font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle hover:text-nous-text dark:hover:text-white transition-all"
+ className="flex items-center justify-center gap-3 w-full py-4 border border-nous-border rounded-none font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle hover:text-nous-text hover:text-nous-text transition-all"
  >
  <Smartphone size={14} /> Copy Imperial URL
  </button>

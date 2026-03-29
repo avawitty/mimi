@@ -66,7 +66,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ metadata, on
  </div>
  <h2 className="font-serif text-3xl italic tracking-tighter">Share Manifest.</h2>
  </div>
- <button onClick={onClose} className="p-2 text-nous-subtle hover:text-nous-text dark:hover:text-white transition-all"><X size={20}/></button>
+ <button onClick={onClose} className="p-2 text-nous-subtle hover:text-nous-text hover:text-nous-text transition-all"><X size={20}/></button>
  </div>
 
  <div className="space-y-6">
@@ -110,7 +110,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ metadata, on
  onClick={shareToX}
  className="flex flex-col items-center justify-center gap-3 py-6 bg-nous-base border border-nous-border rounded-none hover:bg-nous-base dark:hover:bg-stone-700 transition-all group"
  >
- <Twitter size={20} className="text-nous-text dark:text-white group-hover:scale-110 transition-transform"/>
+ <Twitter size={20} className="text-nous-text text-nous-text group-hover:scale-110 transition-transform"/>
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Twitter / X</span>
  </button>
 
@@ -130,7 +130,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ metadata, on
  <span className="font-sans text-[8px] uppercase tracking-widest font-black italic">The Story Protocol</span>
  </div>
  <p className="font-serif italic text-xs text-nous-text0 leading-relaxed">
- Download the high-fidelity plates from the <span className="text-nous-text dark:text-white underline">Export Chamber</span>. Attach your <span className="font-bold">Imperial Link</span> to IG Stories to anchor the witness.
+ Download the high-fidelity plates from the <span className="text-nous-text text-nous-text underline">Export Chamber</span>. Attach your <span className="font-bold">Imperial Link</span> to IG Stories to anchor the witness.
  </p>
  </div>
  </div>

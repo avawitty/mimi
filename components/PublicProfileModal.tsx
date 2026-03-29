@@ -202,7 +202,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  case 'none':
  default:
  return (
- <button onClick={handleConnectAction} className="px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 border border-nous-text  text-nous-text  hover:bg-nous-text hover:text-white dark:hover:bg-white dark:hover:text-black"title="Add Friend">
+ <button onClick={handleConnectAction} className="px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 border border-nous-text  text-nous-text  hover:bg-nous-text hover:text-nous-text dark:hover:bg-white dark:hover:text-black"title="Add Friend">
  <UserPlus size={14} /> Add Friend
  </button>
  );
@@ -226,7 +226,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  >
  {/* Header */}
  <div className="relative p-8 border-b border-nous-border flex flex-col items-center text-center">
- <button onClick={onClose} className="absolute top-4 right-4 p-2 text-nous-subtle hover:text-nous-text dark:hover:text-white transition-colors">
+ <button onClick={onClose} className="absolute top-4 right-4 p-2 text-nous-subtle hover:text-nous-text hover:text-nous-text transition-colors">
  <X size={20} />
  </button>
  
@@ -238,7 +238,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  <img src={profile.photoURL || `https://ui-avatars.com/api/?name=${profile.handle || 'U'}&background=1c1917&color=fff`} className="w-full h-full object-cover grayscale"alt=""/>
  </div>
  <div className="flex items-center gap-3 mb-2">
- <h2 className="font-serif text-4xl italic tracking-tighter text-nous-text dark:text-white">The Stand // @{profile.handle}</h2>
+ <h2 className="font-serif text-4xl italic tracking-tighter text-nous-text text-nous-text">The Stand // @{profile.handle}</h2>
  {getStatusIcon()}
  </div>
  
@@ -258,12 +258,12 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  
  <div className="flex items-center gap-6 mt-6 mb-8">
  <div className="text-center">
- <span className="block font-serif text-2xl italic text-nous-text dark:text-white">{followerCount}</span>
+ <span className="block font-serif text-2xl italic text-nous-text text-nous-text">{followerCount}</span>
  <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Resonators</span>
  </div>
  <div className="w-px h-8 bg-stone-200"/>
  <div className="text-center">
- <span className="block font-serif text-2xl italic text-nous-text dark:text-white">{followingCount}</span>
+ <span className="block font-serif text-2xl italic text-nous-text text-nous-text">{followingCount}</span>
  <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Resonating</span>
  </div>
  </div>

@@ -62,7 +62,7 @@ export const TreatmentPanel: React.FC<TreatmentPanelProps> = ({ treatments, onAp
  <span className="font-mono text-[7px] text-nous-text0 uppercase tracking-widest">Registry_Darkroom_v2</span>
  </div>
  </div>
- <button onClick={onClose} className="p-3 text-nous-text0 hover:text-white transition-all bg-white/5 border border-white/10"><X size={20}/></button>
+ <button onClick={onClose} className="p-3 text-nous-text0 hover:text-nous-text transition-all bg-white/5 border border-white/10"><X size={20}/></button>
  </header>
 
  <div className="flex-1 overflow-y-auto no-scrollbar p-8">
@@ -120,7 +120,7 @@ export const TreatmentPanel: React.FC<TreatmentPanelProps> = ({ treatments, onAp
  
  <button 
  onClick={() => setMode('create')}
- className="w-full py-10 border border-dashed border-nous-border text-nous-text0 hover:text-white hover:border-indigo-500 transition-all flex flex-col items-center justify-center gap-4 bg-white/2 hover:bg-indigo-500/5 group"
+ className="w-full py-10 border border-dashed border-nous-border text-nous-text0 hover:text-nous-text hover:border-indigo-500 transition-all flex flex-col items-center justify-center gap-4 bg-white/2 hover:bg-indigo-500/5 group"
  >
  <div className="p-4 bg-nous-base border border-nous-border group-hover:scale-110 transition-transform">
  <Plus size={32} strokeWidth={1} />
@@ -131,7 +131,7 @@ export const TreatmentPanel: React.FC<TreatmentPanelProps> = ({ treatments, onAp
  </motion.div>
  ) : (
  <motion.div key="create"initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-12">
- <button onClick={() => setMode('list')} className="flex items-center gap-4 text-nous-text0 mb-8 hover:text-white transition-colors group">
+ <button onClick={() => setMode('list')} className="flex items-center gap-4 text-nous-text0 mb-8 hover:text-nous-text transition-colors group">
  <ArrowRight size={16} className="rotate-180 group-hover:-translate-x-1 transition-transform"/>
  <span className="font-sans text-[9px] uppercase tracking-widest font-black">Back to Vault</span>
  </button>
@@ -170,7 +170,7 @@ export const TreatmentPanel: React.FC<TreatmentPanelProps> = ({ treatments, onAp
  onClick={() => useSuggestion(s)}
  className="text-left p-4 bg-white/5 border border-white/5 hover:border-white/20 transition-all group"
  >
- <span className="font-header italic text-sm text-nous-subtle group-hover:text-white block mb-1">{s.name}</span>
+ <span className="font-header italic text-sm text-nous-subtle group-hover:text-nous-text block mb-1">{s.name}</span>
  <div className="h-1 w-8 bg-nous-base group-hover:bg-indigo-50 transition-all"/>
  </button>
  ))}

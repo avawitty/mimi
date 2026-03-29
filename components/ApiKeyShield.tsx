@@ -35,7 +35,7 @@ export const ApiKeyShield: React.FC<{ isOpen: boolean; onClose: () => void }> = 
  <div className="max-w-md w-full text-center space-y-12 py-10 relative">
  <button 
  onClick={onClose}
- className="absolute -top-4 -right-4 p-4 text-nous-subtle hover:text-nous-text dark:hover:text-white transition-colors"
+ className="absolute -top-4 -right-4 p-4 text-nous-subtle hover:text-nous-text hover:text-nous-text transition-colors"
  >
  <X size={24} />
  </button>
@@ -73,7 +73,7 @@ export const ApiKeyShield: React.FC<{ isOpen: boolean; onClose: () => void }> = 
 
  <button 
  onClick={handleManualRecheck}
- className="w-full py-4 border border-nous-border rounded-none font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle hover:text-nous-text dark:hover:text-white transition-all flex items-center justify-center gap-3"
+ className="w-full py-4 border border-nous-border rounded-none font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle hover:text-nous-text hover:text-nous-text transition-all flex items-center justify-center gap-3"
  >
  <RefreshCw size={12} /> Verify Handshake
  </button>

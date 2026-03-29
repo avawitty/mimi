@@ -216,19 +216,19 @@ export const Visualizer: React.FC<{
  key={i} 
  disabled={!variants[i]}
  onClick={(e) => handleSelectVariant(i, e)} 
- className={`w-6 h-6 rounded-none font-sans text-[8px] font-black transition-all ${!variants[i] ? 'opacity-10' : selectedIdx === i ? 'bg-nous-base text-nous-text' : 'text-white/40 hover:text-white'}`}
+ className={`w-6 h-6 rounded-none font-sans text-[8px] font-black transition-all ${!variants[i] ? 'opacity-10' : selectedIdx === i ? 'bg-nous-base text-nous-text' : 'text-white/40 hover:text-nous-text'}`}
  >
  0{i+1}
  </button>
  ))}
  </div>
- <button onClick={(e) => { e.stopPropagation(); setIsEditing(true); }} className="p-2.5 text-nous-subtle hover:text-white transition-colors"><Pencil size={14}/></button>
- <button onClick={saveToPocket} className={`p-2.5 transition-all ${isPocketSaved ? 'text-nous-text0' : 'text-nous-subtle hover:text-white'}`}>{isPocketSaved ? <Check size={14}/> : <Bookmark size={14}/>}</button>
+ <button onClick={(e) => { e.stopPropagation(); setIsEditing(true); }} className="p-2.5 text-nous-subtle hover:text-nous-text transition-colors"><Pencil size={14}/></button>
+ <button onClick={saveToPocket} className={`p-2.5 transition-all ${isPocketSaved ? 'text-nous-text0' : 'text-nous-subtle hover:text-nous-text'}`}>{isPocketSaved ? <Check size={14}/> : <Bookmark size={14}/>}</button>
  <button onClick={handleAnalyze} disabled={isAnalyzing} className="p-2.5 text-nous-subtle hover:text-indigo-400"><Eye size={14}/></button>
  <button onClick={handleAnimate} disabled={isAnimating} className="p-2.5 text-nous-subtle hover:text-amber-400"><Film size={14}/></button>
  <div className="w-px h-6 bg-white/10 mx-1"/>
- <button onClick={cycleRatio} className="p-2.5 text-nous-subtle hover:text-white font-mono text-[8px]">{aspectRatio}</button>
- <button onClick={cycleSize} className="p-2.5 text-nous-subtle hover:text-white font-mono text-[8px]">{imageSize}</button>
+ <button onClick={cycleRatio} className="p-2.5 text-nous-subtle hover:text-nous-text font-mono text-[8px]">{aspectRatio}</button>
+ <button onClick={cycleSize} className="p-2.5 text-nous-subtle hover:text-nous-text font-mono text-[8px]">{imageSize}</button>
  <button onClick={handleDevelop} className="p-2.5 text-nous-subtle hover:text-nous-subtle"><RefreshCw size={14}/></button>
  </div>
  </div>

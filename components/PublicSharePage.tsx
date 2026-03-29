@@ -31,7 +31,7 @@ export const PublicSharePage: React.FC = () => {
  </div>
  
  <div className="w-full bg-white rounded-none border border-nous-border p-8">
- <h2 className="font-serif italic text-2xl text-nous-text dark:text-white mb-2">Aesthetic Identity</h2>
+ <h2 className="font-serif italic text-2xl text-nous-text text-nous-text mb-2">Aesthetic Identity</h2>
  <p className="font-sans text-[10px] uppercase tracking-widest text-nous-text0 mb-6">Semantic Baseline</p>
 
  {profile?.tasteProfile ? (

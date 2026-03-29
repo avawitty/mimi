@@ -606,7 +606,7 @@ export const ThimbleDashboard = () => {
  </td>
  <td className="px-4 py-4 text-right">
  <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
- <button onClick={(e) => { e.stopPropagation(); saveToPocket(target); }} className="p-1.5 border border-nous-border bg-white hover:bg-nous-base hover:text-white transition-colors"title="Save to Pocket">
+ <button onClick={(e) => { e.stopPropagation(); saveToPocket(target); }} className="p-1.5 border border-nous-border bg-white hover:bg-nous-base hover:text-nous-text transition-colors"title="Save to Pocket">
  <ShoppingBag size={14} />
  </button>
  </div>
@@ -642,7 +642,7 @@ export const ThimbleDashboard = () => {
  <button 
  key={platform}
  onClick={() => openSearch(target.keywordBoolean, platform)}
- className="px-3 py-1.5 border border-nous-border bg-white hover:bg-nous-base hover:text-white transition-colors text-[10px] uppercase tracking-wider flex items-center gap-2"
+ className="px-3 py-1.5 border border-nous-border bg-white hover:bg-nous-base hover:text-nous-text transition-colors text-[10px] uppercase tracking-wider flex items-center gap-2"
  >
  {platform} <ExternalLink size={10} />
  </button>
@@ -782,7 +782,7 @@ export const ThimbleDashboard = () => {
  <button 
  onClick={handleAuditBoard}
  disabled={isAuditingBoard || boardItems.length === 0}
- className="w-full py-3 border border-nous-border text-nous-text text-[10px] uppercase tracking-widest hover:bg-nous-base hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+ className="w-full py-3 border border-nous-border text-nous-text text-[10px] uppercase tracking-widest hover:bg-nous-base hover:text-nous-text transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
  >
  {isAuditingBoard ? <Loader2 className="animate-spin"size={14} /> : <Scale size={14} />}
  {isAuditingBoard ? 'Auditing...' : 'Run Board Audit'}

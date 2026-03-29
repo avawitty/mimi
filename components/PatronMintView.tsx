@@ -73,13 +73,13 @@ export const PatronMintView: React.FC<{ onExit: () => void }> = ({ onExit }) => 
  <div className="w-16 h-16 bg-amber-500 text-white rounded-none flex items-center justify-center mx-auto mb-6">
  <Key size={32} />
  </div>
- <h1 className="font-serif text-5xl md:text-6xl italic text-nous-text dark:text-white tracking-tighter">Sovereign Grant.</h1>
+ <h1 className="font-serif text-5xl md:text-6xl italic text-nous-text text-nous-text tracking-tighter">Sovereign Grant.</h1>
  <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-nous-subtle font-black">Your Imperial Access Code</p>
  </div>
 
  <div className="p-8 bg-white border border-nous-border rounded-none relative overflow-hidden group">
  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-300 to-amber-600"/>
- <p className="font-mono text-2xl md:text-3xl text-center tracking-widest text-nous-text dark:text-white font-black select-all">
+ <p className="font-mono text-2xl md:text-3xl text-center tracking-widest text-nous-text text-nous-text font-black select-all">
  {key}
  </p>
  <div className="flex justify-center mt-6">

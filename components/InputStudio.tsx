@@ -374,7 +374,7 @@ export const InputStudio: React.FC<{
  </div>
  )}
  <div className="flex items-center justify-center gap-2 mb-4 w-full max-w-lg mx-auto">
- <Sparkles size={16} className="text-nous-subtle cursor-pointer hover:text-primary dark:hover:text-white transition-colors flex-shrink-0"onClick={handleAutoGenerateTitle} />
+ <Sparkles size={16} className="text-nous-subtle cursor-pointer hover:text-primary hover:text-nous-text transition-colors flex-shrink-0"onClick={handleAutoGenerateTitle} />
  <input 
  type="text"
  placeholder="ENTER ZINE TITLE..."
@@ -411,7 +411,7 @@ export const InputStudio: React.FC<{
  {/* Studio Toolbar - Neomorphic with Tooltips */}
  <div className="flex items-center gap-2 p-1.5 px-4 mb-6 rounded-none bg-nous-base dark: border border-white/20 /20">
  <div className="relative group flex items-center justify-center">
- <button onClick={() => mediaInputRef.current?.click()} className="p-1.5 text-nous-text0 hover:text-primary dark:hover:text-white transition-colors">
+ <button onClick={() => mediaInputRef.current?.click()} className="p-1.5 text-nous-text0 hover:text-primary hover:text-nous-text transition-colors">
  <Paperclip size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
@@ -420,7 +420,7 @@ export const InputStudio: React.FC<{
  </div>
 
  <div className="relative group flex items-center justify-center">
- <button onClick={startRecording} className={`p-1.5 transition-colors ${isRecording ? 'text-red-500' : 'text-nous-text0 hover:text-primary dark:hover:text-white'}`}>
+ <button onClick={startRecording} className={`p-1.5 transition-colors ${isRecording ? 'text-red-500' : 'text-nous-text0 hover:text-primary hover:text-nous-text'}`}>
  <Mic size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
@@ -643,7 +643,7 @@ export const InputStudio: React.FC<{
  setIsAnalyzing(prev => ({ ...prev, [index]: false }));
  }
  }}
- className="mt-1 text-[8px] uppercase tracking-widest text-primary dark:text-white underline"
+ className="mt-1 text-[8px] uppercase tracking-widest text-primary text-nous-text underline"
  >
  {isAnalyzing[index] ? 'Analyzing...' : 'Analyze'}
  </button>
@@ -719,7 +719,7 @@ export const InputStudio: React.FC<{
  setIsAnalyzing(prev => ({ ...prev, [index]: false }));
  }
  }}
- className="text-[8px] uppercase tracking-widest text-primary dark:text-white underline"
+ className="text-[8px] uppercase tracking-widest text-primary text-nous-text underline"
  >
  {isAnalyzing[index] ? 'Analyzing...' : 'Analyze'}
  </button>
@@ -744,7 +744,7 @@ export const InputStudio: React.FC<{
  </div>
 
  {/* Submit Button */}
- <button onClick={() => setShowConfirmation(true)} className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 /20 hover:border-primary dark:hover:border-white transition-colors text-primary dark:text-white mb-4">
+ <button onClick={() => setShowConfirmation(true)} className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 /20 hover:border-primary dark:hover:border-white transition-colors text-primary text-nous-text mb-4">
  → SUBMIT TO ISSUE
  </button>
  </div>
@@ -765,7 +765,7 @@ export const InputStudio: React.FC<{
  exit={{ scale: 0.95, y: 20 }}
  className="bg-white p-8 max-w-lg w-full border border-nous-border flex flex-col items-center text-center shadow-2xl"
  >
- <h2 className="font-serif italic text-2xl mb-4 text-primary dark:text-white">Confirm Submission</h2>
+ <h2 className="font-serif italic text-2xl mb-4 text-primary text-nous-text">Confirm Submission</h2>
  <p className="text-sm text-nous-subtle mb-8">
  You are about to submit this artifact to the issue. This action will initiate the synthesis process.
  </p>
@@ -831,8 +831,8 @@ export const InputStudio: React.FC<{
  >
  <div className="flex-1">
  <div className="flex justify-between items-center mb-8 border-b border-nous-border pb-4">
- <h2 className="font-serif italic text-2xl text-primary dark:text-white capitalize">{activePanel}</h2>
- <button onClick={() => setActivePanel(null)} className="text-nous-subtle hover:text-primary dark:hover:text-white transition-colors"><X size={20} /></button>
+ <h2 className="font-serif italic text-2xl text-primary text-nous-text capitalize">{activePanel}</h2>
+ <button onClick={() => setActivePanel(null)} className="text-nous-subtle hover:text-primary hover:text-nous-text transition-colors"><X size={20} /></button>
  </div>
  
  <div className="text-nous-subtle">
@@ -872,7 +872,7 @@ export const InputStudio: React.FC<{
  >
  <span>Signal_Density</span>
  </GlossaryTooltip>
- <span className="text-primary dark:text-white">{((input?.length || 0) / 100).toFixed(2)} ℌ</span>
+ <span className="text-primary text-nous-text">{((input?.length || 0) / 100).toFixed(2)} ℌ</span>
  </div>
  <div className="flex justify-between items-center">
  <GlossaryTooltip 
@@ -882,7 +882,7 @@ export const InputStudio: React.FC<{
  >
  <span>Media_Nodes</span>
  </GlossaryTooltip>
- <span className="text-primary dark:text-white">{mediaFiles.length}</span>
+ <span className="text-primary text-nous-text">{mediaFiles.length}</span>
  </div>
  <div className="flex justify-between items-center">
  <GlossaryTooltip 
@@ -892,7 +892,7 @@ export const InputStudio: React.FC<{
  >
  <span>Entropy_Level</span>
  </GlossaryTooltip>
- <span className="text-primary dark:text-white">{deepThinking ? 'Maximum' : 'Optimized'}</span>
+ <span className="text-primary text-nous-text">{deepThinking ? 'Maximum' : 'Optimized'}</span>
  </div>
  </div>
 
@@ -906,7 +906,7 @@ export const InputStudio: React.FC<{
  animate={{ opacity: 1, y: 0 }}
  exit={{ opacity: 0, y: -5 }}
  transition={{ duration: 0.5 }}
- className="font-serif italic text-sm text-primary dark:text-white leading-relaxed"
+ className="font-serif italic text-sm text-primary text-nous-text leading-relaxed"
  >
 "{PROVOCATIONS[provocationIndex]}"
  </motion.p>
@@ -994,11 +994,11 @@ export const InputStudio: React.FC<{
  <div className="flex gap-8 pointer-events-auto relative group">
  <button 
  onClick={() => setLegalType('privacy')} 
- className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 /20 hover:border-primary dark:hover:border-white transition-colors text-primary dark:text-white"
+ className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 /20 hover:border-primary dark:hover:border-white transition-colors text-primary text-nous-text"
  >
  Privacy
  </button>
- <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'proscenium' }))} className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 /20 hover:border-primary dark:hover:border-white transition-colors text-primary dark:text-white">Community</button>
+ <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'proscenium' }))} className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 /20 hover:border-primary dark:hover:border-white transition-colors text-primary text-nous-text">Community</button>
  </div>
  </footer>
  

@@ -130,7 +130,7 @@ export const ContentAnalyzerModal: React.FC<ContentAnalyzerModalProps> = ({ onCl
  <button
  onClick={handleAnalyze}
  disabled={isAnalyzing}
- className="w-full py-4 bg-nous-base text-white font-mono text-[10px] tracking-widest uppercase hover:bg-black transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+ className="w-full py-4 bg-nous-text text-nous-base font-mono text-[10px] tracking-widest uppercase hover:bg-nous-text0 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
  >
  {isAnalyzing ? (
  <><Loader2 size={14} className="animate-spin"/> [ ANALYZING... ]</>
@@ -153,7 +153,7 @@ export const ContentAnalyzerModal: React.FC<ContentAnalyzerModalProps> = ({ onCl
  </p>
  </div>
  
- <div className="border border-nous-border bg-nous-base text-white p-6">
+ <div className="border border-nous-border bg-nous-text text-nous-base p-6">
  <h4 className="text-[10px] font-mono tracking-widest uppercase text-nous-subtle mb-4 border-b border-nous-border pb-2">
  Actionable Directives
  </h4>

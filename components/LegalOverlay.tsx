@@ -65,7 +65,7 @@ export const LegalOverlay: React.FC<LegalOverlayProps> = ({ type, onClose }) => 
  <h2 className="font-serif text-5xl italic tracking-tighter">{content.title}.</h2>
  <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-nous-subtle font-black">{content.subtitle}</p>
  </div>
- <button onClick={onClose} className="p-3 text-nous-subtle hover:text-nous-text dark:hover:text-white transition-all">
+ <button onClick={onClose} className="p-3 text-nous-subtle hover:text-nous-text hover:text-nous-text transition-all">
  <X size={24} />
  </button>
  </div>

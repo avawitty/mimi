@@ -516,7 +516,7 @@ export const AnalysisDisplay: React.FC<{
  >
  <button 
  onClick={onReset} 
- className="fixed top-8 right-8 z-[10000] font-mono text-[10px] uppercase tracking-[0.2em] font-black text-nous-subtle hover:text-nous-text dark:hover:text-white transition-all bg-white/80 /80 backdrop-blur-md px-6 py-3 border border-nous-border /10 hover:scale-105 active:scale-95 shadow-lg"
+ className="fixed top-8 right-8 z-[10000] font-mono text-[10px] uppercase tracking-[0.2em] font-black text-nous-subtle hover:text-nous-text hover:text-nous-text transition-all bg-white/80 /80 backdrop-blur-md px-6 py-3 border border-nous-border /10 hover:scale-105 active:scale-95 shadow-lg"
  >
  [ X CLOSE ]
  </button>
@@ -830,7 +830,7 @@ export const AnalysisDisplay: React.FC<{
  <span className="font-serif italic text-4xl text-nous-text">{i+1}.</span>
  <div className="h-px flex-1 bg-nous-base"/>
  </div>
- <h3 className={`${fontStyle} text-5xl md:text-7xl italic tracking-tighter leading-[0.9] text-nous-text dark:text-white`}>
+ <h3 className={`${fontStyle} text-5xl md:text-7xl italic tracking-tighter leading-[0.9] text-nous-text text-nous-text`}>
  {page.headline}
  </h3>
  <div className="pl-6 border-l"style={{ borderColor: `${accentColor}40` }}>
@@ -878,7 +878,7 @@ export const AnalysisDisplay: React.FC<{
  <div className="space-y-4 group">
  <div className="flex items-center gap-4 border-b border-nous-border pb-2">
  <span className="font-mono text-xs"style={{ color: accentColor }}>01</span>
- <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle group-hover:text-white transition-colors">Strategic Thesis</span>
+ <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle group-hover:text-nous-text transition-colors">Strategic Thesis</span>
  </div>
  <p className="font-mono text-sm text-nous-subtle leading-relaxed pl-8 border-l border-white/5 transition-colors">
  {metadata.content.roadmap.strategicThesis}
@@ -887,7 +887,7 @@ export const AnalysisDisplay: React.FC<{
  <div className="space-y-4 group">
  <div className="flex items-center gap-4 border-b border-nous-border pb-2">
  <span className="font-mono text-xs"style={{ color: accentColor }}>02</span>
- <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle group-hover:text-white transition-colors">Positioning Axis</span>
+ <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle group-hover:text-nous-text transition-colors">Positioning Axis</span>
  </div>
  <p className="font-mono text-sm text-nous-subtle leading-relaxed pl-8 border-l border-white/5 transition-colors">
  {metadata.content.roadmap.positioningAxis}
@@ -896,7 +896,7 @@ export const AnalysisDisplay: React.FC<{
  <div className="col-span-1 md:col-span-2 space-y-4 group">
  <div className="flex items-center gap-4 border-b border-nous-border pb-2">
  <span className="font-mono text-xs"style={{ color: accentColor }}>03</span>
- <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle group-hover:text-white transition-colors">Authority Anchor</span>
+ <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle group-hover:text-nous-text transition-colors">Authority Anchor</span>
  </div>
  <div className="grid md:grid-cols-3 gap-8 pl-8 border-l border-white/5">
  <div>
@@ -918,7 +918,7 @@ export const AnalysisDisplay: React.FC<{
  <div className="col-span-1 md:col-span-2 space-y-4 group mt-8">
  <div className="flex items-center gap-4 border-b border-nous-border pb-2">
  <span className="font-mono text-xs"style={{ color: accentColor }}>04</span>
- <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle group-hover:text-white transition-colors">Authority Phases</span>
+ <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle group-hover:text-nous-text transition-colors">Authority Phases</span>
  </div>
  <div className="grid md:grid-cols-2 gap-8 pl-8 border-l border-white/5">
  {metadata.content.roadmap.phases.map((phase, idx) => (
@@ -937,7 +937,7 @@ export const AnalysisDisplay: React.FC<{
  <div className="col-span-1 md:col-span-2 space-y-4 group mt-8">
  <div className="flex items-center gap-4 border-b border-nous-border pb-2">
  <span className="font-mono text-xs"style={{ color: accentColor }}>05</span>
- <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle group-hover:text-white transition-colors">Drift Forecast</span>
+ <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle group-hover:text-nous-text transition-colors">Drift Forecast</span>
  </div>
  <div className="grid md:grid-cols-2 gap-8 pl-8 border-l border-white/5">
  <div>
@@ -956,7 +956,7 @@ export const AnalysisDisplay: React.FC<{
  <div key={i} className="space-y-4 group">
  <div className="flex items-center gap-4 border-b border-nous-border pb-2">
  <span className="font-mono text-xs"style={{ color: accentColor }}>0{i+1}</span>
- <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle group-hover:text-white transition-colors">{key.replace('_', ' ')}</span>
+ <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle group-hover:text-nous-text transition-colors">{key.replace('_', ' ')}</span>
  </div>
  <p className="font-mono text-sm text-nous-subtle leading-relaxed pl-8 border-l border-white/5 transition-colors"style={{ '--hover-color': accentColor } as React.CSSProperties}>
  {String(val)}
@@ -980,7 +980,7 @@ export const AnalysisDisplay: React.FC<{
 
  {/* 10. SIGNAL FEED (The Cultural Air) */}
  {metadata.transmissionsUsed && metadata.transmissionsUsed.length > 0 && (
- <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-nous-base text-nous-text dark:text-white print:min-h-0 print:py-12">
+ <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-nous-base text-nous-text text-nous-text print:min-h-0 print:py-12">
  <div className="max-w-4xl w-full space-y-16">
  <SectionHeader label="Signal Feed"icon={Radio} style={{ color: accentColor }} />
  <div className="space-y-8">
@@ -1011,7 +1011,7 @@ export const AnalysisDisplay: React.FC<{
  )}
 
  {/* 10. NARRATIVE THREAD (RAW INPUT + ANALYSIS + THUMBNAILS) */}
- <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-nous-base  text-nous-text dark:text-white print:min-h-0 print:py-12">
+ <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-nous-base  text-nous-text text-nous-text print:min-h-0 print:py-12">
  <div className="w-full space-y-16 px-6 md:px-24">
  <SectionHeader label="Narrative Thread"icon={History} style={{ color: accentColor }} />
  {originalDebris ? (
@@ -1049,7 +1049,7 @@ export const AnalysisDisplay: React.FC<{
  <button 
  onClick={handleSaveThread} 
  disabled={isThreadSaved || isSavingThread}
- className="font-mono text-[10px] uppercase tracking-[0.2em] font-black text-nous-subtle hover:text-white transition-colors bg-black/50 backdrop-blur-md px-6 py-3 border border-white/10 flex items-center gap-2"
+ className="font-mono text-[10px] uppercase tracking-[0.2em] font-black text-nous-subtle hover:text-nous-text transition-colors bg-black/50 backdrop-blur-md px-6 py-3 border border-white/10 flex items-center gap-2"
  >
  {isSavingThread ? <Loader2 size={12} className="animate-spin"/> : isThreadSaved ? <Check size={12} /> : <History size={12} />}
  [ {isThreadSaved ? 'APPENDED TO THREAD' : '+ APPEND TO THREAD'} ]
@@ -1097,8 +1097,8 @@ export const AnalysisDisplay: React.FC<{
  >
  {/* Header */}
  <div className="h-16 border-b border-nous-border flex items-center justify-between px-6 shrink-0 bg-white/50 /20 backdrop-blur-sm">
- <span className="font-sans text-[10px] uppercase tracking-[0.4em] font-black text-nous-text dark:text-white">FIELD NOTE — 01</span>
- <button onClick={() => setShowNotes(false)} className="p-2 text-nous-subtle hover:text-nous-subtle dark:hover:text-white transition-colors">
+ <span className="font-sans text-[10px] uppercase tracking-[0.4em] font-black text-nous-text text-nous-text">FIELD NOTE — 01</span>
+ <button onClick={() => setShowNotes(false)} className="p-2 text-nous-subtle hover:text-nous-subtle hover:text-nous-text transition-colors">
  <X size={16} />
  </button>
  </div>
@@ -1143,7 +1143,7 @@ export const AnalysisDisplay: React.FC<{
  )}
  <button 
  onClick={isRecording ? stopRecording : startRecording} 
- className={`p-2 transition-all opacity-50 hover:opacity-100 ${isRecording ? 'text-red-500 animate-pulse' : 'text-nous-subtle hover:text-nous-subtle dark:hover:text-white'}`}
+ className={`p-2 transition-all opacity-50 hover:opacity-100 ${isRecording ? 'text-red-500 animate-pulse' : 'text-nous-subtle hover:text-nous-subtle hover:text-nous-text'}`}
  >
  {isRecording ? <Square size={14} fill="currentColor"/> : <Mic size={14} />}
  </button>
@@ -1156,7 +1156,7 @@ export const AnalysisDisplay: React.FC<{
  <button 
  onClick={handleSaveToPocket}
  disabled={isSaved}
- className={`flex items-center gap-2 font-sans text-[8px] uppercase tracking-[0.2em] font-black transition-all ${isSaved ? 'text-nous-text0' : 'text-nous-subtle hover:text-nous-subtle dark:hover:text-white'}`}
+ className={`flex items-center gap-2 font-sans text-[8px] uppercase tracking-[0.2em] font-black transition-all ${isSaved ? 'text-nous-text0' : 'text-nous-subtle hover:text-nous-subtle hover:text-nous-text'}`}
  >
  {isSaved ? <Check size={12} /> : <Bookmark size={12} />}
  {isSaved ? 'Anchored' : 'Commit Note'}
@@ -1168,32 +1168,32 @@ export const AnalysisDisplay: React.FC<{
  </div>
 
  {/* MINIMALIST FOOTER */}
- <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-8 px-10 py-4 bg-white/90 /90 backdrop-blur-xl border border-nous-border /10 text-nous-text0 dark:text-white/70 font-mono text-[10px] uppercase tracking-[0.2em] print:hidden shadow-2xl rounded-none">
- <span className="text-nous-subtle dark:text-white/50">RESONANCE: 98%</span>
+ <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-8 px-10 py-4 bg-white/90 /90 backdrop-blur-xl border border-nous-border /10 text-nous-text0 text-nous-text/70 font-mono text-[10px] uppercase tracking-[0.2em] print:hidden shadow-2xl rounded-none">
+ <span className="text-nous-subtle text-nous-text/50">RESONANCE: 98%</span>
  <div className="w-px h-4 bg-stone-200 /20"/>
  
  <div className="flex items-center gap-3 group cursor-pointer"onClick={handleVoiceToggle}>
  <div className="relative flex items-center justify-center w-8 h-8 rounded-full border border-nous-border /20 group-hover:border-nous-border dark:group-hover:border-white/50 transition-colors">
  {isVoiceLoading ? (
- <Loader2 size={12} className="animate-spin text-nous-text0 dark:text-white/70"/>
+ <Loader2 size={12} className="animate-spin text-nous-text0 text-nous-text/70"/>
  ) : isPlaying ? (
- <Pause size={10} className="text-nous-text0 dark:text-white/70 group-hover:text-nous-text dark:group-hover:text-white"/>
+ <Pause size={10} className="text-nous-text0 text-nous-text/70 group-hover:text-nous-text dark:group-hover:text-nous-text"/>
  ) : (
- <Play size={10} className="text-nous-text0 dark:text-white/70 group-hover:text-nous-text dark:group-hover:text-white ml-0.5"/>
+ <Play size={10} className="text-nous-text0 text-nous-text/70 group-hover:text-nous-text dark:group-hover:text-nous-text ml-0.5"/>
  )}
  <svg className="absolute inset-0 w-full h-full -rotate-90"viewBox="0 0 32 32">
- <circle cx="16"cy="16"r="15"fill="none"stroke="currentColor"strokeWidth="2"strokeDasharray="94.2"strokeDashoffset={94.2 - (audioProgress * 94.2)} className="text-nous-text dark:text-white transition-all duration-100"/>
+ <circle cx="16"cy="16"r="15"fill="none"stroke="currentColor"strokeWidth="2"strokeDasharray="94.2"strokeDashoffset={94.2 - (audioProgress * 94.2)} className="text-nous-text text-nous-text transition-all duration-100"/>
  </svg>
  </div>
- <span className="group-hover:text-nous-text dark:group-hover:text-white transition-colors">[ THE DIAL ]</span>
+ <span className="group-hover:text-nous-text dark:group-hover:text-nous-text transition-colors">[ THE DIAL ]</span>
  </div>
 
  <div className="w-px h-4 bg-stone-200 /20"/>
- <button onClick={() => setShowNotes(!showNotes)} className={`${showNotes ? 'text-nous-text dark:text-white' : 'hover:text-nous-text dark:hover:text-white'} transition-colors`}>
+ <button onClick={() => setShowNotes(!showNotes)} className={`${showNotes ? 'text-nous-text text-nous-text' : 'hover:text-nous-text hover:text-nous-text'} transition-colors`}>
  [ FIELD NOTES ]
  </button>
  <div className="w-px h-4 bg-stone-200 /20"/>
- <button onClick={() => setShowExport(true)} className="hover:text-nous-text dark:hover:text-white transition-colors">
+ <button onClick={() => setShowExport(true)} className="hover:text-nous-text hover:text-nous-text transition-colors">
  [ EXTRACT ARTIFACT ]
  </button>
  <div className="w-px h-4 bg-stone-200 /20"/>
@@ -1201,7 +1201,7 @@ export const AnalysisDisplay: React.FC<{
  [ {isSaved ? <Heart className="fill-current"size={12} /> : <Heart size={12} />} SAVE ]
  </button>
  <div className="w-px h-4 bg-stone-200 /20"/>
- <button onClick={() => setShowComments(true)} className="hover:text-nous-text dark:hover:text-white transition-colors flex items-center gap-2">
+ <button onClick={() => setShowComments(true)} className="hover:text-nous-text hover:text-nous-text transition-colors flex items-center gap-2">
  [ <MessageSquare size={12} /> DISCUSS ]
  </button>
  </div>

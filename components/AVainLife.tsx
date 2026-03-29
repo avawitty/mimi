@@ -61,9 +61,9 @@ export const AVainLife: React.FC = () => {
  <footer className="p-6 md:p-12 text-[10px] uppercase tracking-[0.3em] font-mono text flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-auto">
  <div>A philosophy of taste</div>
  <div className="flex gap-8">
- <span className="hover:text-white cursor-pointer transition-colors">Manifesto</span>
- <span className="hover:text-white cursor-pointer transition-colors">Index</span>
- <span className="hover:text-white cursor-pointer transition-colors">Contact</span>
+ <span className="hover:text-nous-text cursor-pointer transition-colors">Manifesto</span>
+ <span className="hover:text-nous-text cursor-pointer transition-colors">Index</span>
+ <span className="hover:text-nous-text cursor-pointer transition-colors">Contact</span>
  </div>
  </footer>
  </div>

@@ -29,7 +29,7 @@ export const DeveloperSettings: React.FC<{ onClose: () => void }> = ({ onClose }
  </div>
  <h2 className="font-serif text-3xl italic text-white">Agent Protocols.</h2>
  </div>
- <button onClick={onClose} className="p-2 text-nous-text0 hover:text-white"><X size={24} /></button>
+ <button onClick={onClose} className="p-2 text-nous-text0 hover:text-nous-text"><X size={24} /></button>
  </div>
 
  <div className="flex gap-8 border-b border-white/5 shrink-0">

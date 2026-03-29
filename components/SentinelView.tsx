@@ -163,7 +163,7 @@ export const SentinelView: React.FC = () => {
  </div>
  <button 
  onClick={() => setIsWardOpen(true)}
- className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-none hover:bg-red-500 hover:text-white transition-all group"
+ className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-none hover:bg-red-500 hover:text-nous-text transition-all group"
  >
  <Mic size={12} className="group-hover:animate-pulse"/>
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Enter The Ward</span>

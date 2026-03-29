@@ -196,12 +196,12 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  <button onClick={(e) => { e.stopPropagation(); /* TODO: Implement Mix */ }} className="p-2 rounded-none backdrop-blur-md bg-white/10 text-white hover:bg-white hover:text-black"title="Mix">
  <Shuffle size={12} />
  </button>
- <button onClick={(e) => { e.stopPropagation(); handleRegenerate(); }} className={`p-2 rounded-none backdrop-blur-md ${isRegenerating ? 'bg-nous-base text-white ' : 'bg-white/10 text-white hover:bg-white hover:text-black'} `} title="Regenerate">
+ <button onClick={(e) => { e.stopPropagation(); handleRegenerate(); }} className={`p-2 rounded-none backdrop-blur-md ${isRegenerating ? 'bg-nous-text text-nous-base ' : 'bg-white/10 text-white hover:bg-white hover:text-black'} `} title="Regenerate">
  <RotateCcw size={12} className={isRegenerating ? 'animate-spin' : ''} />
  </button>
  <button 
  onClick={handlePublishToggle}
- className={`p-2 rounded-none transition-all backdrop-blur-md ${zine.isPublic ? 'bg-nous-base text-white ' : 'bg-white/10 text-white hover:bg-white hover:text-black'}`}
+ className={`p-2 rounded-none transition-all backdrop-blur-md ${zine.isPublic ? 'bg-nous-text text-nous-base ' : 'bg-white/10 text-white hover:bg-white hover:text-black'}`}
  title={zine.isPublic ?"Unpublish":"Publish"}
  >
  {zine.isPublic ? <Radio size={12} /> : <EyeOff size={12} />}
@@ -210,7 +210,7 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  )}
  <button 
  onClick={handleArchive}
- className={`p-2 rounded-none transition-all backdrop-blur-md ${isArchived ? 'bg-nous-base text-white ' : 'bg-white/10 text-white hover:bg-white hover:text-black'}`}
+ className={`p-2 rounded-none transition-all backdrop-blur-md ${isArchived ? 'bg-nous-text text-nous-base ' : 'bg-white/10 text-white hover:bg-white hover:text-black'}`}
  title="Archive to Pocket"
  >
  {isArchived ? <Check size={12} /> : <Bookmark size={12} />}
@@ -234,7 +234,7 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  <button 
  onClick={handleEdit}
  disabled={isEditing}
- className="w-full py-2 bg-nous-base text-white rounded-none text-xs font-bold uppercase tracking-widest"
+ className="w-full py-2 bg-nous-text text-nous-base rounded-none text-xs font-bold uppercase tracking-widest"
  >
  {isEditing ? 'Refracting...' : 'Apply Edit'}
  </button>

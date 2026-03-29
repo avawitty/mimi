@@ -101,7 +101,7 @@ export const PromptOrchestrator: React.FC<PromptOrchestratorProps> = ({ isOpen, 
  </p>
  <button 
  onClick={() => handleCopy(p.id, p.text)}
- className="text-nous-subtle hover:text-nous-text dark:hover:text-white transition-colors flex-shrink-0"
+ className="text-nous-subtle hover:text-nous-text hover:text-nous-text transition-colors flex-shrink-0"
  >
  {copiedId === p.id ? <Check size={14} className="text-nous-text0"/> : <Copy size={14} />}
  </button>

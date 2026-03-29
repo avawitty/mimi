@@ -101,7 +101,7 @@ export const CliqueRadar: React.FC<{ onSelectZine: (zine: ZineMetadata) => void 
  <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
  {siblings.map((sibling, i) => (
  <div key={i} className="border-l border-nous-border pl-8">
- <h4 className="font-serif italic text-3xl text-nous-text dark:text-white mb-4">{sibling.name}</h4>
+ <h4 className="font-serif italic text-3xl text-nous-text text-nous-text mb-4">{sibling.name}</h4>
  <p className="font-sans text-[10px] leading-relaxed text-nous-text0">{sibling.explanation}</p>
  </div>
  ))}

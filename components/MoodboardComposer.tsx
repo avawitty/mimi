@@ -136,7 +136,7 @@ export const MoodboardComposer: React.FC<MoodboardComposerProps> = ({ selectedIt
  <span className="font-mono text-[9px] uppercase tracking-widest text-nous-text0 font-bold">Composition Cycle</span>
  <span className="font-serif italic text-sm text-nous-subtle">{elements.length} Constituent Fragments</span>
  </div>
- <button onClick={() => onFinalize(elements, { backgroundColor: '#050505', aspectRatio:"16:9"})} className="px-6 py-3 border border-nous-border text-nous-subtle font-mono text-[9px] uppercase tracking-widest font-bold hover:bg-nous-base hover:text-white transition-all flex items-center gap-3">
+ <button onClick={() => onFinalize(elements, { backgroundColor: '#050505', aspectRatio:"16:9"})} className="px-6 py-3 border border-nous-border text-nous-subtle font-mono text-[9px] uppercase tracking-widest font-bold hover:bg-nous-base hover:text-nous-text transition-all flex items-center gap-3">
  [ FINALIZE ARTIFACT ] <ArrowRight size={12} />
  </button>
  </div>

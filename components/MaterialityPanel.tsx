@@ -22,7 +22,7 @@ export const MaterialityPanel: React.FC<MaterialityPanelProps> = ({ config, onCh
  onClick={() => onChange({ ...config, paperStock: stock })}
  className={`py-2 border rounded-none text-[8px] font-sans font-black uppercase transition-all ${
  config.paperStock === stock
- ? 'bg-nous-text text-white   border-transparent'
+ ? 'bg-nous-text text-nous-base   border-transparent'
  : 'border-nous-border text-nous-subtle'
  }`}
  >
@@ -43,7 +43,7 @@ export const MaterialityPanel: React.FC<MaterialityPanelProps> = ({ config, onCh
  onClick={() => onChange({ ...config, typographyLineage: lineage })}
  className={`py-3 px-4 border rounded-none text-left text-[10px] font-sans font-black uppercase transition-all ${
  config.typographyLineage === lineage
- ? 'bg-nous-text text-white   border-transparent'
+ ? 'bg-nous-text text-nous-base   border-transparent'
  : 'border-nous-border text-nous-subtle'
  }`}
  >
@@ -64,7 +64,7 @@ export const MaterialityPanel: React.FC<MaterialityPanelProps> = ({ config, onCh
  onClick={() => onChange({ ...config, colorScheme: scheme })}
  className={`py-2 px-4 border rounded-none text-[8px] font-sans font-black uppercase transition-all ${
  config.colorScheme === scheme
- ? 'bg-nous-text text-white   border-transparent'
+ ? 'bg-nous-text text-nous-base   border-transparent'
  : 'border-nous-border text-nous-subtle'
  }`}
  >

@@ -129,7 +129,7 @@ export const CaptiveSentinel: React.FC<{ onClose: () => void }> = ({ onClose }) 
  <div className="space-y-6 pt-4">
  <button 
  onClick={handleCopy}
- className={`w-full py-6 rounded-none font-sans text-[11px] uppercase tracking-[0.5em] font-black transition-all active:scale-95 flex items-center justify-center gap-4 border-2 ${copied ? 'bg-nous-base0 text-white border-nous-border' : 'bg-nous-base text-nous-text border-transparent hover:bg-red-600 hover:text-white'}`}
+ className={`w-full py-6 rounded-none font-sans text-[11px] uppercase tracking-[0.5em] font-black transition-all active:scale-95 flex items-center justify-center gap-4 border-2 ${copied ? 'bg-nous-base0 text-white border-nous-border' : 'bg-nous-base text-nous-text border-transparent hover:bg-red-600 hover:text-nous-text'}`}
  >
  {copied ? <Check size={16} /> : <Zap size={16} />}
  {copied ? 'Signal Preserved' : 'Copy Sovereign Link'}

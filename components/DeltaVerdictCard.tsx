@@ -59,7 +59,7 @@ export const DeltaVerdictCard: React.FC<DeltaVerdictCardProps> = ({ verdict, com
  </div>
  </div>
  {!compact && (
- <button className="text-nous-subtle hover:text-primary dark:hover:text-white transition-colors">
+ <button className="text-nous-subtle hover:text-primary hover:text-nous-text transition-colors">
  {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
  </button>
  )}

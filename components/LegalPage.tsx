@@ -30,7 +30,7 @@ const CONTENT = {
  <p>
  She follows the **Sovereign Sequence**: *I before E, except after C.* 
  <br/><br/>
- <span className="text-nous-text dark:text-white font-bold">Identity</span> before <span className="text-nous-text dark:text-white font-bold">Expression</span>, except after <span className="text-nous-text dark:text-white font-bold">Curation</span>. Without Curation, the Expression is mere noise.
+ <span className="text-nous-text text-nous-text font-bold">Identity</span> before <span className="text-nous-text text-nous-text font-bold">Expression</span>, except after <span className="text-nous-text text-nous-text font-bold">Curation</span>. Without Curation, the Expression is mere noise.
  </p>
  </div>
  )
@@ -44,15 +44,15 @@ const CONTENT = {
  <ul className="space-y-6 font-serif italic text-base text-nous-subtle">
  <li className="flex gap-4">
  <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0 pt-1">01</span>
- <span><strong className="text-nous-text dark:text-white">The Memetic Engine:</strong> Transmutes raw debris into units of cultural transmission (Zines).</span>
+ <span><strong className="text-nous-text text-nous-text">The Memetic Engine:</strong> Transmutes raw debris into units of cultural transmission (Zines).</span>
  </li>
  <li className="flex gap-4">
  <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0 pt-1">02</span>
- <span><strong className="text-nous-text dark:text-white">Meme Appreciation:</strong> Audits fragments for latent architectural intent.</span>
+ <span><strong className="text-nous-text text-nous-text">Meme Appreciation:</strong> Audits fragments for latent architectural intent.</span>
  </li>
  <li className="flex gap-4">
  <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0 pt-1">03</span>
- <span><strong className="text-nous-text dark:text-white">The Art of Self:</strong> Refines personal brand language into a defensible conceptual form.</span>
+ <span><strong className="text-nous-text text-nous-text">The Art of Self:</strong> Refines personal brand language into a defensible conceptual form.</span>
  </li>
  </ul>
  </div>
@@ -114,10 +114,10 @@ export const StructuralPage: React.FC<StructuralPageProps> = ({ type: initialTyp
  
  <div className="flex justify-between items-center p-8 border-b border-nous-border shrink-0">
  <div className="space-y-1">
- <h2 className="font-serif text-3xl italic tracking-tighter text-nous-text dark:text-white">Mimi Colophon.</h2>
+ <h2 className="font-serif text-3xl italic tracking-tighter text-nous-text text-nous-text">Mimi Colophon.</h2>
  <p className="font-sans text-[8px] uppercase tracking-[0.4em] text-nous-subtle font-black">System v4.4 // Identity Registry</p>
  </div>
- <button onClick={onClose} className="p-2 text-nous-subtle hover:text-nous-text dark:hover:text-white transition-colors">
+ <button onClick={onClose} className="p-2 text-nous-subtle hover:text-nous-text hover:text-nous-text transition-colors">
  <X size={24} />
  </button>
  </div>
@@ -128,7 +128,7 @@ export const StructuralPage: React.FC<StructuralPageProps> = ({ type: initialTyp
  <button
  key={key}
  onClick={() => setActiveTab(key)}
- className={`flex-1 md:flex-none p-6 text-left flex items-center gap-3 transition-all ${activeTab === key ? 'bg-white text-nous-text dark:text-white' : 'text-nous-subtle hover:text-nous-subtle '}`}
+ className={`flex-1 md:flex-none p-6 text-left flex items-center gap-3 transition-all ${activeTab === key ? 'bg-white text-nous-text text-nous-text' : 'text-nous-subtle hover:text-nous-subtle '}`}
  >
  <div className={activeTab === key ? 'text-nous-text0' : 'opacity-50'}>{CONTENT[key].icon}</div>
  <span className="font-sans text-[9px] uppercase tracking-widest font-black hidden md:block">{CONTENT[key].title}</span>
@@ -148,7 +148,7 @@ export const StructuralPage: React.FC<StructuralPageProps> = ({ type: initialTyp
  >
  <div className="space-y-2 mb-8">
  <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black text-nous-subtle">{content.title}</span>
- <h3 className="font-serif text-4xl italic tracking-tighter text-nous-text dark:text-white">{content.subtitle}</h3>
+ <h3 className="font-serif text-4xl italic tracking-tighter text-nous-text text-nous-text">{content.subtitle}</h3>
  </div>
  {content.body}
  </motion.div>

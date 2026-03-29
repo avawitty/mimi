@@ -65,7 +65,7 @@ export const ArchiveView: React.FC<ArchiveViewProps> = ({ onSelectZine }) => {
 
  <div className="flex gap-16 items-end">
  <button 
- className="flex items-center gap-2 px-6 py-2 bg-nous-base0/10 text-nous-subtle border border-nous-border/20 rounded-none font-sans text-[9px] uppercase tracking-widest font-black hover:bg-nous-base0 hover:text-white transition-all mb-1"
+ className="flex items-center gap-2 px-6 py-2 bg-nous-base0/10 text-nous-subtle border border-nous-border/20 rounded-none font-sans text-[9px] uppercase tracking-widest font-black hover:bg-nous-base0 hover:text-nous-text transition-all mb-1"
  >
  + Inject Shard
  </button>
@@ -78,13 +78,13 @@ export const ArchiveView: React.FC<ArchiveViewProps> = ({ onSelectZine }) => {
  </button>
  <button 
  onClick={() => setActiveTab('pocket')}
- className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'pocket' ? 'text-nous-text dark:text-white border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text '}`}
+ className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'pocket' ? 'text-nous-text text-nous-text border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text '}`}
  >
  Curated
  </button>
  <button 
  onClick={() => setActiveTab('list')}
- className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'list' ? 'text-nous-text dark:text-white border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text0'}`}
+ className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'list' ? 'text-nous-text text-nous-text border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text0'}`}
  >
  List
  </button>

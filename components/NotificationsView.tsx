@@ -28,7 +28,7 @@ export const NotificationsView: React.FC = () => {
  {notifications.map(n => (
  <li key={n.id} className={`p-6 rounded-none border ${n.read ? 'bg-nous-base border-nous-border ' : 'bg-white border-nous-border/20'}`}>
  <div className="flex justify-between items-start mb-2">
- <h3 className="font-sans font-black text-xs uppercase tracking-widest text-nous-text dark:text-white">{n.title}</h3>
+ <h3 className="font-sans font-black text-xs uppercase tracking-widest text-nous-text text-nous-text">{n.title}</h3>
  <span className="font-sans text-[9px] text-nous-subtle">{new Date(n.timestamp).toLocaleString()}</span>
  </div>
  <p className="font-sans text-sm text-nous-subtle">{n.message}</p>

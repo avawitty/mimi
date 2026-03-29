@@ -131,7 +131,7 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
  <div className="flex items-center gap-0 bg-white border border-nous-border rounded-none overflow-hidden">
  <button 
  onClick={() => setNebulaMode('strategist')}
- className={`flex items-center gap-3 px-6 md:px-8 py-3 transition-all ${nebulaMode === 'strategist' ? 'bg-nous-base text-nous-text dark:text-white' : 'text-nous-text0 hover:text-nous-subtle'}`}
+ className={`flex items-center gap-3 px-6 md:px-8 py-3 transition-all ${nebulaMode === 'strategist' ? 'bg-nous-base text-nous-text text-nous-text' : 'text-nous-text0 hover:text-nous-subtle'}`}
  >
  <Wind size={14} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Strategist</span>
@@ -209,26 +209,26 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
  placeholder="Trace an issue by title, theme, or frequency..."
- className="w-full bg-nous-base/50 /50 border-b-2 border-nous-border py-10 pl-40 pr-8 font-serif italic text-2xl md:text-3xl focus:outline-none focus:border-nous-border dark:focus:border-nous-border transition-all placeholder:text-nous-text placeholder:opacity-50 text-nous-text dark:text-white"
+ className="w-full bg-nous-base/50 /50 border-b-2 border-nous-border py-10 pl-40 pr-8 font-serif italic text-2xl md:text-3xl focus:outline-none focus:border-nous-border dark:focus:border-nous-border transition-all placeholder:text-nous-text placeholder:opacity-50 text-nous-text text-nous-text"
  />
  </div>
  {nebulaMode === 'strategist' && (
  <div className="flex border border-nous-border bg-white/50 /50 p-2 gap-2 self-start lg:self-center">
  <button 
  onClick={() => setShowcaseMode('bento')}
- className={`px-4 py-2 flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono transition-colors ${showcaseMode === 'bento' ? 'bg-stone-200 text-nous-text dark:text-white' : 'text-nous-subtle hover:bg-nous-base '}`}
+ className={`px-4 py-2 flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono transition-colors ${showcaseMode === 'bento' ? 'bg-stone-200 text-nous-text text-nous-text' : 'text-nous-subtle hover:bg-nous-base '}`}
  >
  <LayoutGrid size={14} /> Bento Archive
  </button>
  <button 
  onClick={() => setShowcaseMode('dossier')}
- className={`px-4 py-2 flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono transition-colors ${showcaseMode === 'dossier' ? 'bg-stone-200 text-nous-text dark:text-white' : 'text-nous-subtle hover:bg-nous-base '}`}
+ className={`px-4 py-2 flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono transition-colors ${showcaseMode === 'dossier' ? 'bg-stone-200 text-nous-text text-nous-text' : 'text-nous-subtle hover:bg-nous-base '}`}
  >
  <Archive size={14} /> Archival Dossier
  </button>
  <button 
  onClick={() => setShowcaseMode('minimalist')}
- className={`px-4 py-2 flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono transition-colors ${showcaseMode === 'minimalist' ? 'bg-stone-200 text-nous-text dark:text-white' : 'text-nous-subtle hover:bg-nous-base '}`}
+ className={`px-4 py-2 flex items-center gap-2 text-[10px] uppercase tracking-widest font-mono transition-colors ${showcaseMode === 'minimalist' ? 'bg-stone-200 text-nous-text text-nous-text' : 'text-nous-subtle hover:bg-nous-base '}`}
  >
  <Maximize2 size={14} /> Minimalist
  </button>
@@ -256,7 +256,7 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
  <div className="w-16 h-16 rounded-none overflow-hidden mb-4 bg-nous-base border border-nous-border">
  <img src={p.photoURL || `https://ui-avatars.com/api/?name=${p.handle || 'U'}&background=1c1917&color=fff`} className="w-full h-full object-cover transition-all"alt=""/>
  </div>
- <h4 className="font-serif text-2xl italic text-nous-text dark:text-white group-hover:text-indigo-500 transition-colors">@{p.handle}</h4>
+ <h4 className="font-serif text-2xl italic text-nous-text text-nous-text group-hover:text-indigo-500 transition-colors">@{p.handle}</h4>
  {p.tasteProfile?.definition && (
  <p className="mt-3 font-serif italic text-xs text-nous-subtle line-clamp-2">"{p.tasteProfile.definition}"</p>
  )}
@@ -370,7 +370,7 @@ const ZineShelfItem: React.FC<{ zine: ZineMetadata, onSelect: () => void, isClou
  </div>
  <div className="p-6 flex-grow flex flex-col justify-center cursor-pointer z-10"onClick={onSelect}>
  <div className="text-[10px] uppercase tracking-widest font-mono text-nous-text0 mb-4">REF_{shortId}</div>
- <h2 className="font-serif text-4xl italic leading-tight mb-2 text-nous-text dark:text-white hover:text-nous-subtle transition-colors">{zine.title}</h2>
+ <h2 className="font-serif text-4xl italic leading-tight mb-2 text-nous-text text-nous-text hover:text-nous-subtle transition-colors">{zine.title}</h2>
  <p className="font-mono text-xs text-nous-subtle mt-4">SYNTHESIS_SCORE: {synthesisScore}</p>
  </div>
  <div className="border-t border-nous-border bg-nous-base p-4 grid grid-cols-2 gap-4 font-mono text-[9px] uppercase tracking-widest text-nous-subtle cursor-pointer z-10"onClick={onSelect}>
@@ -425,7 +425,7 @@ const ZineShelfItem: React.FC<{ zine: ZineMetadata, onSelect: () => void, isClou
  </div>
  <div className="flex-grow cursor-pointer"onClick={onSelect}>
  <div className="text-[9px] uppercase tracking-widest font-mono text-nous-text0 mb-2">REF_{shortId}</div>
- <h2 className="font-serif text-3xl italic leading-tight text-nous-text dark:text-white hover:text-nous-subtle transition-colors">{zine.title}</h2>
+ <h2 className="font-serif text-3xl italic leading-tight text-nous-text text-nous-text hover:text-nous-subtle transition-colors">{zine.title}</h2>
  </div>
  <div className="mt-8 pt-4 border-t border-nous-border/50 /50 flex justify-between items-end cursor-pointer"onClick={onSelect}>
  <div className="font-mono text-[9px] uppercase tracking-widest text-nous-subtle">
@@ -453,7 +453,7 @@ const ZineShelfItem: React.FC<{ zine: ZineMetadata, onSelect: () => void, isClou
  onClick={onSelect}
  >
  <div className="flex-grow flex items-center justify-between">
- <h2 className="font-serif text-4xl md:text-5xl italic leading-tight text-nous-text group-hover:text-black dark:group-hover:text-white transition-colors">{zine.title}</h2>
+ <h2 className="font-serif text-4xl md:text-5xl italic leading-tight text-nous-text group-hover:text-black dark:group-hover:text-nous-text transition-colors">{zine.title}</h2>
  <div className="flex items-center gap-4">
  {onSaveToPocket && (
  <button 

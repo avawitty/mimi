@@ -72,7 +72,7 @@ export default function MimiIntroSequence({ onComplete }: MimiIntroSequenceProps
  initial={{ opacity: 0, y: 15 }}
  animate={{ opacity: 1, y: 0 }}
  transition={{ duration: 1.2, ease: 'easeOut', delay: 0.3 }}
- className="font-serif italic text-6xl md:text-8xl text-nous-text dark:text-white tracking-tight"
+ className="font-serif italic text-6xl md:text-8xl text-nous-text text-nous-text tracking-tight"
  >
  Mimi
  </motion.h1>

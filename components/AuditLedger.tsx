@@ -25,13 +25,13 @@ export const AuditLedger: React.FC<{ onClose: () => void }> = ({ onClose }) => {
  </div>
  <p className="font-serif italic text-sm text-nous-text0">Black-box recording of protocol evolution and form-reclamation.</p>
  </div>
- <button onClick={onClose} className="p-2 text-nous-subtle hover:text-white transition-colors"><X size={24} /></button>
+ <button onClick={onClose} className="p-2 text-nous-subtle hover:text-nous-text transition-colors"><X size={24} /></button>
  </div>
 
  <div className="flex gap-4 border-b border-nous-border pb-6">
  <button 
  onClick={() => setFilter('manifest')}
- className={`flex-1 py-4 px-6 rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 transition-all ${filter === 'manifest' ? 'bg-nous-base text-nous-text' : 'border border-nous-border text-nous-text0 hover:text-white'}`}
+ className={`flex-1 py-4 px-6 rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 transition-all ${filter === 'manifest' ? 'bg-nous-base text-nous-text' : 'border border-nous-border text-nous-text0 hover:text-nous-text'}`}
  >
  <Sparkles size={12} /> Structural Expansion
  </button>
