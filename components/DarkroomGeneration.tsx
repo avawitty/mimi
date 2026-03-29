@@ -48,10 +48,10 @@ export const DarkroomGeneration: React.FC = () => {
  
  try {
  let apiKeyToUse = import.meta.env.VITE_GEMINI_API_KEY;
-      if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
-        apiKeyToUse = process.env.API_KEY;
-      }
-      const ai = new GoogleGenAI({ apiKey: apiKeyToUse });
+ if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+ apiKeyToUse = process.env.API_KEY;
+ }
+ const ai = new GoogleGenAI({ apiKey: apiKeyToUse });
  const analysisPrompt = `Analyze this image and provide the following data in JSON format:
  1. palette: An array of 4 dominant hex color codes.
  2. dof: Estimated depth of field (e.g.,"f/2.8 (SHALLOW)","f/8 (DEEP)").
@@ -138,10 +138,10 @@ export const DarkroomGeneration: React.FC = () => {
 
  try {
  let apiKeyToUse = import.meta.env.VITE_GEMINI_API_KEY;
-      if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
-        apiKeyToUse = process.env.API_KEY;
-      }
-      const ai = new GoogleGenAI({ apiKey: apiKeyToUse });
+ if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+ apiKeyToUse = process.env.API_KEY;
+ }
+ const ai = new GoogleGenAI({ apiKey: apiKeyToUse });
  
  if (generationType === 'video') {
  addLog("ALLOCATING VEO-3.1-FAST COMPUTE...");

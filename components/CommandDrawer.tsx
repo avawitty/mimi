@@ -67,19 +67,19 @@ export const CommandDrawer: React.FC<CommandDrawerProps> = ({ isOpen, onClose, c
  animate={{ opacity: 1, scale: 1, y: 0 }}
  exit={{ opacity: 0, scale: 0.95, y: 20 }}
  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
- className="fixed inset-0 z-[5000] bg-stone-950/90 backdrop-blur-xl flex items-center justify-center p-8"
+ className="fixed inset-0 z-[5000] bg-nous-base/90 backdrop-blur-xl flex items-center justify-center p-8"
  >
  <div className="max-w-5xl w-full">
  <div className="flex gap-2 mb-12">
  <button 
  onClick={() => setActiveTab('image')} 
- className={`px-6 py-2 rounded-none font-sans text-xs uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'image' ? 'bg-white text-stone-900' : 'bg-stone-900 text-stone-500 hover:bg-stone-800'}`}
+ className={`px-6 py-2 rounded-none font-sans text-xs uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'image' ? 'bg-white text-nous-text' : 'bg-nous-base text-nous-text0 hover:bg-nous-base'}`}
  >
  Manifest
  </button>
  <button 
  onClick={() => setActiveTab('search')} 
- className={`px-6 py-2 rounded-none font-sans text-xs uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'search' ? 'bg-white text-stone-900' : 'bg-stone-900 text-stone-500 hover:bg-stone-800'}`}
+ className={`px-6 py-2 rounded-none font-sans text-xs uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'search' ? 'bg-white text-nous-text' : 'bg-nous-base text-nous-text0 hover:bg-nous-base'}`}
  >
  Scry
  </button>
@@ -89,26 +89,26 @@ export const CommandDrawer: React.FC<CommandDrawerProps> = ({ isOpen, onClose, c
  <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
  <div className="flex flex-col gap-6">
  <div className="flex items-center gap-3 text-white">
- <Sparkles size={24} className="text-stone-400"/>
+ <Sparkles size={24} className="text-nous-subtle"/>
  <h2 className="font-serif italic text-4xl">Manifest</h2>
  </div>
  <textarea
  value={prompt}
  onChange={(e) => setPrompt(e.target.value)}
  placeholder="Describe the aesthetic..."
- className="w-full bg-stone-900/50 border border-stone-700 p-6 text-white font-mono text-sm focus:outline-none focus:border-stone-800 dark:focus:border-stone-300 transition-colors"
+ className="w-full bg-nous-base/50 border border-nous-border p-6 text-white font-mono text-sm focus:outline-none focus:border-nous-border dark:focus:border-nous-border transition-colors"
  rows={6}
  />
  <button
  onClick={handleGenerate}
  disabled={generating}
- className="bg-white text-stone-900 py-4 font-sans text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-stone-400 transition-colors"
+ className="bg-white text-nous-text py-4 font-sans text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-stone-400 transition-colors"
  >
  {generating ? <Loader2 size={16} className="animate-spin mx-auto"/> : 'Manifest'}
  </button>
  {generatedImage && (
  <div className="mt-4 space-y-2">
- <img src={generatedImage} alt="Generated"className="w-full h-80 object-cover border border-stone-700"/>
+ <img src={generatedImage} alt="Generated"className="w-full h-80 object-cover border border-nous-border"/>
  <button 
  onClick={async () => {
  try {
@@ -123,7 +123,7 @@ export const CommandDrawer: React.FC<CommandDrawerProps> = ({ isOpen, onClose, c
  console.error("MIMI // Failed to save artifact locally:", error);
  }
  }}
- className="w-full bg-stone-800 text-stone-300 py-2 text-xs uppercase tracking-widest hover:bg-stone-900 hover:text-white transition-colors"
+ className="w-full bg-nous-base text-nous-subtle py-2 text-xs uppercase tracking-widest hover:bg-nous-base hover:text-white transition-colors"
  >
  Save to Archive
  </button>
@@ -135,7 +135,7 @@ export const CommandDrawer: React.FC<CommandDrawerProps> = ({ isOpen, onClose, c
  <Radar size={24} className="text-indigo-400"/>
  <h2 className="font-serif italic text-4xl">Signature</h2>
  </div>
- <div className="h-80 bg-stone-900/50 border border-stone-700 p-4 overflow-hidden">
+ <div className="h-80 bg-nous-base/50 border border-nous-border p-4 overflow-hidden">
  <SignatureUI />
  </div>
  </div>
@@ -143,7 +143,7 @@ export const CommandDrawer: React.FC<CommandDrawerProps> = ({ isOpen, onClose, c
  ) : (
  <div className="space-y-8 text-white">
  <div className="flex items-center gap-3">
- <Search size={24} className="text-stone-400"/>
+ <Search size={24} className="text-nous-subtle"/>
  <h2 className="font-serif italic text-4xl">Scry Artifacts</h2>
  </div>
  
@@ -153,20 +153,20 @@ export const CommandDrawer: React.FC<CommandDrawerProps> = ({ isOpen, onClose, c
  value={searchQuery} 
  onChange={(e) => setSearchQuery(e.target.value)} 
  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
- className="w-full bg-stone-900/50 border border-stone-700 p-6 text-white font-mono text-lg focus:outline-none focus:border-stone-500 transition-colors"
+ className="w-full bg-nous-base/50 border border-nous-border p-6 text-white font-mono text-lg focus:outline-none focus:border-nous-border transition-colors"
  placeholder="What are you looking for?"
  />
  <button 
  onClick={handleSearch} 
  disabled={searching} 
- className="absolute right-4 top-4 bg-stone-600 text-white p-3 rounded-none hover:bg-stone-500 transition-colors"
+ className="absolute right-4 top-4 bg-stone-600 text-white p-3 rounded-none hover:bg-nous-base0 transition-colors"
  >
  {searching ? <Loader2 className="animate-spin"/> : <Search size={20} />}
  </button>
  </div>
 
  {searchSummary && (
- <div className="bg-stone-900/30 border-l-2 border-stone-500 p-6 font-serif italic text-stone-200 text-lg">
+ <div className="bg-nous-base/30 border-l-2 border-nous-border p-6 font-serif italic text-nous-text text-lg">
  {searchSummary}
  </div>
  )}
@@ -178,18 +178,18 @@ export const CommandDrawer: React.FC<CommandDrawerProps> = ({ isOpen, onClose, c
  initial={{ opacity: 0, y: 20 }}
  animate={{ opacity: 1, y: 0 }}
  transition={{ delay: i * 0.05 }}
- className="bg-stone-900 border border-stone-800 p-6 hover:border-stone-800 dark:hover:border-stone-300/50 transition-colors group"
+ className="bg-nous-base border border-nous-border p-6 hover:border-nous-border /50 transition-colors group"
  >
- <h3 className="font-medium text-white mb-2 group-hover:text-stone-400 transition-colors">{res.title || 'Untitled Fragment'}</h3>
- <p className="text-stone-400 text-sm font-mono">{res.type || 'Fragment'}</p>
- {res.snippet && <p className="text-stone-500 text-xs mt-4 line-clamp-3">{res.snippet}</p>}
+ <h3 className="font-medium text-white mb-2 group-hover:text-nous-subtle transition-colors">{res.title || 'Untitled Fragment'}</h3>
+ <p className="text-nous-subtle text-sm font-mono">{res.type || 'Fragment'}</p>
+ {res.snippet && <p className="text-nous-text0 text-xs mt-4 line-clamp-3">{res.snippet}</p>}
  </motion.div>
  ))}
  </div>
  </div>
  )}
  </div>
- <button onClick={onClose} className="absolute top-12 right-12 text-stone-500 hover:text-white transition-colors">
+ <button onClick={onClose} className="absolute top-12 right-12 text-nous-text0 hover:text-white transition-colors">
  <X size={32} />
  </button>
  </motion.div>

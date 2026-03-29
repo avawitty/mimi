@@ -55,36 +55,36 @@ export const ArchiveView: React.FC<ArchiveViewProps> = ({ onSelectZine }) => {
  return (
  <div className="w-full pt-32 md:pt-48 animate-fade-in transition-all duration-1000">
  
- <div className="px-12 md:px-24 mb-24 flex flex-col md:flex-row md:items-end justify-between gap-12 border-b border-stone-100 dark:border-stone-800 pb-16">
+ <div className="px-12 md:px-24 mb-24 flex flex-col md:flex-row md:items-end justify-between gap-12 border-b border-nous-border pb-16">
  <div className="space-y-4">
  <h2 className="font-serif text-7xl md:text-9xl italic text-nous-text dark:text-nous-dark-text tracking-tighter luminescent-text leading-none">The Archive.</h2>
- <p className="font-sans text-[10px] uppercase tracking-[1em] text-stone-400 font-black">
+ <p className="font-sans text-[10px] uppercase tracking-[1em] text-nous-subtle font-black">
  {activeTab === 'issues' ? 'Manifestations of Form' : activeTab === 'pocket' ? 'Curated Physical Debris' : 'List View'}
  </p>
  </div>
 
  <div className="flex gap-16 items-end">
  <button 
- className="flex items-center gap-2 px-6 py-2 bg-stone-500/10 text-stone-600 dark:text-stone-400 border border-stone-500/20 rounded-none font-sans text-[9px] uppercase tracking-widest font-black hover:bg-stone-500 hover:text-white transition-all mb-1"
+ className="flex items-center gap-2 px-6 py-2 bg-nous-base0/10 text-nous-subtle border border-nous-border/20 rounded-none font-sans text-[9px] uppercase tracking-widest font-black hover:bg-nous-base0 hover:text-white transition-all mb-1"
  >
  + Inject Shard
  </button>
  <div className="flex gap-16">
  <button 
  onClick={() => setActiveTab('issues')}
- className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'issues' ? 'text-nous-text dark:text-white border-nous-text dark:border-white' : 'text-stone-300 border-transparent hover:text-stone-800 dark:hover:text-stone-300'}`}
+ className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'issues' ? 'text-nous-text  border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text '}`}
  >
  Authored
  </button>
  <button 
  onClick={() => setActiveTab('pocket')}
- className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'pocket' ? 'text-nous-text dark:text-white border-nous-text dark:border-white' : 'text-stone-300 border-transparent hover:text-stone-800 dark:hover:text-stone-300'}`}
+ className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'pocket' ? 'text-nous-text dark:text-white border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text '}`}
  >
  Curated
  </button>
  <button 
  onClick={() => setActiveTab('list')}
- className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'list' ? 'text-nous-text dark:text-white border-nous-text dark:border-white' : 'text-stone-300 border-transparent hover:text-stone-500'}`}
+ className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'list' ? 'text-nous-text dark:text-white border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text0'}`}
  >
  List
  </button>

@@ -81,13 +81,13 @@ export const ContentAnalyzerModal: React.FC<ContentAnalyzerModalProps> = ({ onCl
  exit={{ x: '100%' }}
  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
  onClick={(e) => e.stopPropagation()}
- className="bg w-full max-w-md h-full flex flex-col border-l border-stone-300"
+ className="bg w-full max-w-md h-full flex flex-col border-l border-nous-border"
  >
- <div className="p-6 border-b border-stone-300 flex items-center justify-between">
+ <div className="p-6 border-b border-nous-border flex items-center justify-between">
  <div className="flex items-center gap-3">
- <h3 className="font-mono text-[10px] uppercase tracking-widest text-stone-800">Ingestion Room</h3>
+ <h3 className="font-mono text-[10px] uppercase tracking-widest text-nous-text">Ingestion Room</h3>
  </div>
- <button onClick={onClose} className="p-2 text-stone-400 hover:text-stone-800 transition-colors">
+ <button onClick={onClose} className="p-2 text-nous-subtle hover:text-nous-text transition-colors">
  <X size={16} />
  </button>
  </div>
@@ -95,25 +95,25 @@ export const ContentAnalyzerModal: React.FC<ContentAnalyzerModalProps> = ({ onCl
  <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
  {!analysisResult ? (
  <div className="flex flex-col h-full">
- <h4 className="text-2xl font-serif italic text-stone-800 mb-2">Artifact Analysis</h4>
- <p className="text-stone-500 text-xs font-mono uppercase tracking-widest mb-8">Upload media for deep diagnostic</p>
+ <h4 className="text-2xl font-serif italic text-nous-text mb-2">Artifact Analysis</h4>
+ <p className="text-nous-text0 text-xs font-mono uppercase tracking-widest mb-8">Upload media for deep diagnostic</p>
  
  {!file ? (
  <div 
- className="w-full border border-dashed border-stone-300 p-12 hover:border-stone-800 hover:bg-stone-100 transition-all cursor-pointer group text-center"
+ className="w-full border border-dashed border-nous-border p-12 hover:border-nous-border hover:bg-nous-base transition-all cursor-pointer group text-center"
  onClick={() => fileInputRef.current?.click()}
  >
- <Upload className="mx-auto mb-4 text-stone-400 group-hover:text-stone-800 transition-colors"size={24} />
- <p className="text-[10px] font-mono uppercase tracking-widest text-stone-600">Ingest Artifact (Drag & Drop)</p>
+ <Upload className="mx-auto mb-4 text-nous-subtle group-hover:text-nous-text transition-colors"size={24} />
+ <p className="text-[10px] font-mono uppercase tracking-widest text-nous-subtle">Ingest Artifact (Drag & Drop)</p>
  <input type="file"ref={fileInputRef} className="hidden"accept="image/*,video/*"onChange={handleFileChange} />
  </div>
  ) : (
  <div className="w-full flex flex-col flex-1">
- <div className="relative w-full aspect-square bg-stone-100 border border-stone-300 mb-6 flex items-center justify-center overflow-hidden">
+ <div className="relative w-full aspect-square bg-nous-base border border-nous-border mb-6 flex items-center justify-center overflow-hidden">
  {file.type === 'image' ? (
  <img src={file.data} alt="Upload"className="w-full h-full object-cover"/>
  ) : (
- <div className="flex flex-col items-center text-stone-400">
+ <div className="flex flex-col items-center text-nous-subtle">
  <Video size={32} className="mb-2"/>
  <span className="font-mono text-[10px] uppercase tracking-widest">Video Ready</span>
  </div>
@@ -130,7 +130,7 @@ export const ContentAnalyzerModal: React.FC<ContentAnalyzerModalProps> = ({ onCl
  <button
  onClick={handleAnalyze}
  disabled={isAnalyzing}
- className="w-full py-4 bg-stone-900 text-white font-mono text-[10px] tracking-widest uppercase hover:bg-black transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+ className="w-full py-4 bg-nous-base text-white font-mono text-[10px] tracking-widest uppercase hover:bg-black transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
  >
  {isAnalyzing ? (
  <><Loader2 size={14} className="animate-spin"/> [ ANALYZING... ]</>
@@ -144,23 +144,23 @@ export const ContentAnalyzerModal: React.FC<ContentAnalyzerModalProps> = ({ onCl
  </div>
  ) : (
  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
- <div className="border border-stone-300 p-6">
- <h4 className="text-[10px] font-mono tracking-widest uppercase text-stone-500 mb-4 border-b border-stone-300 pb-2">
+ <div className="border border-nous-border p-6">
+ <h4 className="text-[10px] font-mono tracking-widest uppercase text-nous-text0 mb-4 border-b border-nous-border pb-2">
  Diagnostic Read
  </h4>
- <p className="text-stone-800 font-serif text-sm leading-relaxed">
+ <p className="text-nous-text font-serif text-sm leading-relaxed">
  {analysisResult.analysis}
  </p>
  </div>
  
- <div className="border border-stone-900 bg-stone-900 text-white p-6">
- <h4 className="text-[10px] font-mono tracking-widest uppercase text-stone-400 mb-4 border-b border-stone-700 pb-2">
+ <div className="border border-nous-border bg-nous-base text-white p-6">
+ <h4 className="text-[10px] font-mono tracking-widest uppercase text-nous-subtle mb-4 border-b border-nous-border pb-2">
  Actionable Directives
  </h4>
  <ul className="space-y-4">
  {analysisResult.actionPlan.map((action, idx) => (
  <li key={idx} className="flex items-start gap-3 text-xs font-mono">
- <span className="text-stone-500 mt-0.5">✦</span>
+ <span className="text-nous-text0 mt-0.5">✦</span>
  <span className="leading-relaxed">{action}</span>
  </li>
  ))}
@@ -170,7 +170,7 @@ export const ContentAnalyzerModal: React.FC<ContentAnalyzerModalProps> = ({ onCl
  <div className="flex justify-center pt-4">
  <button 
  onClick={() => { setFile(null); setAnalysisResult(null); }}
- className="text-[10px] font-mono tracking-widest uppercase text-stone-500 hover:text-stone-800 transition-colors"
+ className="text-[10px] font-mono tracking-widest uppercase text-nous-text0 hover:text-nous-text transition-colors"
  >
  [ INGEST ANOTHER ARTIFACT ]
  </button>

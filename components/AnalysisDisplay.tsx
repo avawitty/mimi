@@ -40,10 +40,10 @@ const ChromaticDial: React.FC<{ activeTheme: string, onChange: (theme: string) =
 
  return (
  <div className={`flex items-center gap-4 print:hidden ${className || ''}`}>
- <span className="font-mono text-[8px] uppercase tracking-widest text-stone-400">Tune</span>
+ <span className="font-mono text-[8px] uppercase tracking-widest text-nous-subtle">Tune</span>
  <div 
  onClick={handleRotate}
- className="w-12 h-12 rounded-none border border-stone-300 dark:border-stone-700 cursor-pointer relative flex items-center justify-center hover:scale-105 bg-white/5 backdrop-blur-md pointer-events-auto"
+ className="w-12 h-12 rounded-none border border-nous-border cursor-pointer relative flex items-center justify-center hover:scale-105 bg-white/5 backdrop-blur-md pointer-events-auto"
  style={{ 
  transform: `rotate(${rotation}deg) rotateY(${isFlipped ? 180 : 0}deg)`, 
  transition: 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)' 
@@ -53,20 +53,20 @@ const ChromaticDial: React.FC<{ activeTheme: string, onChange: (theme: string) =
  <div key={i} className="absolute w-[1px] h-1.5 bg-stone-400/40"style={{ transform: `rotate(${i * 30}deg) translateY(-20px)` }} />
  ))}
  <div className="absolute w-1.5 h-3 rounded-none"style={{ transform: `translateY(-14px)`, backgroundColor: accent, boxShadow: `0 0 10px ${accent}` }} />
- <div className="w-3 h-3 rounded-none border border-stone-400/50"/>
+ <div className="w-3 h-3 rounded-none border border-nous-border/50"/>
  </div>
  <span className="font-mono text-[8px] uppercase tracking-widest"style={{ color: accent }}>{activeTheme}</span>
  </div>
  );
 };
 
-const SectionHeader: React.FC<{ label: string; icon: any; color?: string; style?: React.CSSProperties }> = ({ label, icon: Icon, color ="text-stone-500", style }) => (
+const SectionHeader: React.FC<{ label: string; icon: any; color?: string; style?: React.CSSProperties }> = ({ label, icon: Icon, color ="text-nous-text0", style }) => (
  <div className="flex items-center gap-4 mb-12 print:mb-4 opacity-50 hover:opacity-100 transition-opacity duration-700">
- <div className={`p-2 bg-stone-50 dark:bg-stone-900 rounded-none ${!style ? color : ''}`} style={style ? { color: style.color } : {}}>
+ <div className={`p-2 bg-nous-base rounded-none ${!style ? color : ''}`} style={style ? { color: style.color } : {}}>
  <Icon size={14} />
  </div>
- <span className="font-sans text-[9px] uppercase tracking-[0.4em] font-black text-stone-400">{label}</span>
- <div className="h-px flex-1 bg-stone-200 dark:bg-stone-800"/>
+ <span className="font-sans text-[9px] uppercase tracking-[0.4em] font-black text-nous-subtle">{label}</span>
+ <div className="h-px flex-1 bg-stone-200"/>
  </div>
 );
 
@@ -121,39 +121,39 @@ export const AnalysisDisplay: React.FC<{
  
  const handleResonanceFlip = async () => {
  try {
-  if (!showLineage) {
-  const entry = await fetchLineageEntry(metadata.id);
-  setLineageEntry(entry);
-  }
-  setShowLineage(!showLineage);
+ if (!showLineage) {
+ const entry = await fetchLineageEntry(metadata.id);
+ setLineageEntry(entry);
+ }
+ setShowLineage(!showLineage);
  } catch (e) {
-  console.error("MIMI // Error in handleResonanceFlip: ", e);
+ console.error("MIMI // Error in handleResonanceFlip:", e);
  }
  };
  
  const exportZine = async (format: 'pdf' | 'png') => {
  try {
-  const element = document.getElementById('zine-content');
-  if (!element) return;
-  
-  const displayTitle = metadata.content?.headlines?.[0] || metadata.title ||"Untitled";
-  const canvas = await html2canvas(element);
-  if (format === 'png') {
-  const link = document.createElement('a');
-  link.download = `${displayTitle}.png`;
-  link.href = canvas.toDataURL('image/png');
-  link.click();
-  } else {
-  const imgData = canvas.toDataURL('image/png');
-  const pdf = new jsPDF('p', 'mm', 'a4');
-  const imgProps = pdf.getImageProperties(imgData);
-  const pdfWidth = pdf.internal.pageSize.getWidth();
-  const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-  pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-  pdf.save(`${displayTitle}.pdf`);
-  }
+ const element = document.getElementById('zine-content');
+ if (!element) return;
+ 
+ const displayTitle = metadata.content?.headlines?.[0] || metadata.title ||"Untitled";
+ const canvas = await html2canvas(element);
+ if (format === 'png') {
+ const link = document.createElement('a');
+ link.download = `${displayTitle}.png`;
+ link.href = canvas.toDataURL('image/png');
+ link.click();
+ } else {
+ const imgData = canvas.toDataURL('image/png');
+ const pdf = new jsPDF('p', 'mm', 'a4');
+ const imgProps = pdf.getImageProperties(imgData);
+ const pdfWidth = pdf.internal.pageSize.getWidth();
+ const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+ pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+ pdf.save(`${displayTitle}.pdf`);
+ }
  } catch (e) {
-  console.error("MIMI // Error in exportZine: ", e);
+ console.error("MIMI // Error in exportZine:", e);
  }
  };
  
@@ -339,8 +339,8 @@ export const AnalysisDisplay: React.FC<{
  source.buffer = audioBuffer;
  source.connect(audioCtxRef.current.destination);
  source.onended = () => {
-   setIsPlaying(false);
-   setAudioProgress(0);
+ setIsPlaying(false);
+ setAudioProgress(0);
  };
  source.start(0);
  startTimeRef.current = audioCtxRef.current.currentTime;
@@ -516,15 +516,15 @@ export const AnalysisDisplay: React.FC<{
  >
  <button 
  onClick={onReset} 
- className="fixed top-8 right-8 z-[10000] font-mono text-[10px] uppercase tracking-[0.2em] font-black text-stone-400 hover:text-stone-900 dark:hover:text-white transition-all bg-white/80 dark:bg-black/80 backdrop-blur-md px-6 py-3 border border-stone-200 dark:border-white/10 hover:scale-105 active:scale-95 shadow-lg"
+ className="fixed top-8 right-8 z-[10000] font-mono text-[10px] uppercase tracking-[0.2em] font-black text-nous-subtle hover:text-nous-text dark:hover:text-white transition-all bg-white/80 /80 backdrop-blur-md px-6 py-3 border border-nous-border /10 hover:scale-105 active:scale-95 shadow-lg"
  >
  [ X CLOSE ]
  </button>
  <style>{`
  .zine-theme-root section { background-color: transparent !important; }
- .zine-theme-root .bg-white, .zine-theme-root .dark\\:bg-\\[\\#0A0A0A\\], .zine-theme-root .dark\\:bg-stone-900 { background-color: var(--zine-surface) !important; }
- .zine-theme-root .border-stone-100, .zine-theme-root .dark\\:border-stone-900, .zine-theme-root .dark\\:border-stone-800 { border-color: var(--zine-border) !important; }
- .zine-theme-root .text-stone-800, .zine-theme-root .dark\\:text-stone-200, .zine-theme-root .text-nous-text { color: var(--zine-text) !important; }
+ .zine-theme-root .bg-white, .zine-theme-root .dark\\:bg-\\[\\#0A0A0A\\], .zine-theme-root .dark\\:bg-nous-base { background-color: var(--zine-surface) !important; }
+ .zine-theme-root .border-nous-border, .zine-theme-root .dark\\:border-nous-border, .zine-theme-root .dark\\:border-nous-border { border-color: var(--zine-border) !important; }
+ .zine-theme-root .text-nous-text, .zine-theme-root .dark\\:text-nous-text, .zine-theme-root .text-nous-text { color: var(--zine-text) !important; }
  .zine-theme-root .bg-\\[\\#FDFBF7\\], .zine-theme-root .dark\\:bg-\\[\\#080808\\], .zine-theme-root .bg-\\[\\#FAFAFA\\] { background-color: var(--zine-bg) !important; }
  .zine-theme-root .font-serif { font-family: inherit !important; }
  `}</style>
@@ -565,7 +565,7 @@ export const AnalysisDisplay: React.FC<{
  initial={{ opacity: 0 }} 
  animate={{ opacity: 1 }} 
  exit={{ opacity: 0 }}
- className="fixed inset-0 z-[11000] flex items-center justify-center p-6 bg-stone-950/80 backdrop-blur-xl"
+ className="fixed inset-0 z-[11000] flex items-center justify-center p-6 bg-nous-base/80 backdrop-blur-xl"
  >
  <ZineComments zineId={metadata.id} onClose={() => setShowComments(false)} />
  </motion.div>
@@ -579,31 +579,31 @@ export const AnalysisDisplay: React.FC<{
  <div className="flex-1 overflow-y-auto snap-y snap-mandatory no-scrollbar scroll-smooth print:overflow-visible print:snap-none">
  
  {/* 1. HEADLINES (TITLE/TONE) */}
- <section className="min-h-[100dvh] flex flex-col justify-center snap-start border-b border-stone-100 dark:border-stone-900 print:min-h-0 print:py-12 bg-white dark:bg-black">
+ <section className="min-h-[100dvh] flex flex-col justify-center snap-start border-b border-nous-border print:min-h-0 print:py-12 bg-nous-base">
  <div className="w-full space-y-16 px-6 md:px-24">
  <div className="flex items-center gap-4">
- <span className="font-mono text-[9px] uppercase tracking-[0.5em] text-stone-400">Issue_0{Math.floor(Math.random() * 10)}</span>
+ <span className="font-mono text-[9px] uppercase tracking-[0.5em] text-nous-subtle">Issue_0{Math.floor(Math.random() * 10)}</span>
  {metadata.isDeepThinking && <div className="flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-none text-amber-500 font-sans text-[7px] font-black uppercase tracking-widest"><Radar size={10} className="animate-pulse"/> Deep Refraction</div>}
- <button onClick={handleResonanceFlip} className="p-2 bg-stone-100 dark:bg-stone-800 rounded-none hover:bg-stone-500 transition-colors">
- <Layers size={14} className="text-stone-500 dark:text-stone-400"/>
+ <button onClick={handleResonanceFlip} className="p-2 bg-nous-base rounded-none hover:bg-nous-base0 transition-colors">
+ <Layers size={14} className="text-nous-text0"/>
  </button>
  </div>
- <h1 className={`${fontStyle} text-7xl md:text-[11rem] tracking-tighter leading-[0.8] text-nous-text dark:text-stone-100 uppercase italic break-words hyphens-auto`}>
+ <h1 className={`${fontStyle} text-7xl md:text-[11rem] tracking-tighter leading-[0.8] text-nous-text uppercase italic break-words hyphens-auto`}>
  {metadata.content?.headlines?.[0] || metadata.title}
  </h1>
- <div className="flex flex-col md:flex-row md:items-center gap-12 pt-12 border-t border-stone-100 dark:border-stone-900">
+ <div className="flex flex-col md:flex-row md:items-center gap-12 pt-12 border-t border-nous-border">
  <div className="flex flex-col gap-1">
- <span className="font-sans text-[8px] uppercase tracking-[0.3em] font-black text-stone-400">Tone</span>
+ <span className="font-sans text-[8px] uppercase tracking-[0.3em] font-black text-nous-subtle">Tone</span>
  <span className="font-serif italic text-3xl"style={{ color: accentColor }}>{metadata.tone}</span>
  </div>
- <div className="hidden md:block h-12 w-px bg-stone-200 dark:bg-stone-800"/>
+ <div className="hidden md:block h-12 w-px bg-stone-200"/>
  <div className="flex flex-col gap-1">
- <span className="font-sans text-[8px] uppercase tracking-[0.3em] font-black text-stone-400">Date</span>
+ <span className="font-sans text-[8px] uppercase tracking-[0.3em] font-black text-nous-subtle">Date</span>
  <span className="font-serif italic text-3xl">{new Date(metadata.timestamp).toLocaleDateString()}</span>
  </div>
- <div className="hidden md:block h-12 w-px bg-stone-200 dark:bg-stone-800"/>
+ <div className="hidden md:block h-12 w-px bg-stone-200"/>
  <div className="flex flex-col gap-1">
- <span className="font-sans text-[8px] uppercase tracking-[0.3em] font-black text-stone-400">Author</span>
+ <span className="font-sans text-[8px] uppercase tracking-[0.3em] font-black text-nous-subtle">Author</span>
  <span className="font-serif italic text-3xl">@{metadata.userHandle}</span>
  </div>
  </div>
@@ -611,20 +611,20 @@ export const AnalysisDisplay: React.FC<{
  </section>
 
  {/* 2. SUMMARY (WITH VOCAL TRANSMISSION) */}
- <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-white dark:bg print:min-h-0 print:py-12">
+ <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-nous-base print:min-h-0 print:py-12">
  <div className="w-full space-y-16 px-6 md:px-24">
  <SectionHeader label="Executive Summary"icon={Sparkles} style={{ color: accentColor }} />
- <button onClick={() => setIsEditing(!isEditing)} className="text-[8px] uppercase tracking-widest font-black text-stone-400 hover:text-stone-800 dark:hover:text-stone-300 transition-colors">
+ <button onClick={() => setIsEditing(!isEditing)} className="text-[8px] uppercase tracking-widest font-black text-nous-subtle hover:text-nous-text transition-colors">
  {isEditing ? 'Cancel Edit' : 'Edit Summary'}
  </button>
  {isEditing ? (
  <div className="space-y-4">
- <textarea value={vocalSummary} onChange={e => setVocalSummary(e.target.value)} className="w-full p-4 bg-stone-100 dark:bg-stone-900 rounded-none"placeholder="Vocal Summary Blurb"/>
- <textarea value={poeticInterpretation} onChange={e => setPoeticInterpretation(e.target.value)} className="w-full p-4 bg-stone-100 dark:bg-stone-900 rounded-none"placeholder="Poetic Interpretation"/>
- <button onClick={handleSaveMetadata} className="px-4 py-2 bg-stone-500 text-white rounded-none font-sans text-[8px] uppercase tracking-widest font-black">Save Changes</button>
+ <textarea value={vocalSummary} onChange={e => setVocalSummary(e.target.value)} className="w-full p-4 bg-nous-base rounded-none"placeholder="Vocal Summary Blurb"/>
+ <textarea value={poeticInterpretation} onChange={e => setPoeticInterpretation(e.target.value)} className="w-full p-4 bg-nous-base rounded-none"placeholder="Poetic Interpretation"/>
+ <button onClick={handleSaveMetadata} className="px-4 py-2 bg-nous-base0 text-white rounded-none font-sans text-[8px] uppercase tracking-widest font-black">Save Changes</button>
  </div>
  ) : (
- <p className="font-serif italic text-3xl md:text-6xl text-stone-800 dark:text-stone-200 leading-[1.1] md:leading-[1.1]">
+ <p className="font-serif italic text-3xl md:text-6xl text-nous-text leading-[1.1] md:leading-[1.1]">
 "{vocalSummary || poeticInterpretation}"
  </p>
  )}
@@ -640,21 +640,21 @@ export const AnalysisDisplay: React.FC<{
  </section>
 
  {/* 4. THE READING (ORACULAR MIRROR) */}
- <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-white dark:bg-black print:min-h-0 print:py-12">
+ <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-nous-base print:min-h-0 print:py-12">
  <div className="w-full space-y-12 px-6 md:px-24">
  <SectionHeader label="Oracular Mirror"icon={Eye} style={{ color: accentColor }} />
- <p className="font-serif italic text-3xl md:text-5xl text-nous-text dark:text-stone-200 leading-tight">
+ <p className="font-serif italic text-3xl md:text-5xl text-nous-text leading-tight">
 "{metadata.content.oracular_mirror || metadata.content.the_reading ||"The mirror is silent."}"
  </p>
  </div>
  </section>
 
  {/* 5. STRATEGIC HYPOTHESIS (VISUALIZED) */}
- <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-white dark:bg-black print:min-h-0 print:py-12">
+ <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-nous-base print:min-h-0 print:py-12">
  <div className="w-full space-y-12 px-6 md:px-24">
  <SectionHeader label="Strategic Hypothesis"icon={Target} style={{ color: accentColor }} />
  <div className="grid md:grid-cols-2 gap-12 items-center">
- <div className="aspect-square w-full relative border border-stone-100 dark:border-stone-800 rounded-none overflow-hidden bg-stone-50 dark:bg-stone-900">
+ <div className="aspect-square w-full relative border border-nous-border rounded-none overflow-hidden bg-nous-base">
  {/* Use Visualizer to render the hypothesis visually */}
  <Visualizer 
  prompt={`A high-contrast, moody, abstract, conceptual editorial photograph representing the concept:"${metadata.content.strategic_hypothesis}". Focus on deep shadows, dramatic lighting, and texture. No text, no typography. Cinematic, architectural.`} 
@@ -671,10 +671,10 @@ export const AnalysisDisplay: React.FC<{
  <div className="absolute bottom-4 right-4 bg-black/80 text-white px-2 py-1 text-[8px] font-mono rounded-none">FIG 2.1 — ABSTRACT</div>
  </div>
  <div className="p-8 md:p-12 border-l-4"style={{ borderColor: `${accentColor}30` }}>
- <p className="font-serif italic text-2xl md:text-4xl leading-relaxed text-stone-800 dark:text-stone-200">
+ <p className="font-serif italic text-2xl md:text-4xl leading-relaxed text-nous-text">
  {metadata.content.strategic_hypothesis}
  </p>
- <div className="mt-8 flex items-center gap-4 text-stone-400">
+ <div className="mt-8 flex items-center gap-4 text-nous-subtle">
  <Layers size={16} />
  <span className="font-sans text-[9px] uppercase tracking-widest font-black">Visual Perception Generated</span>
  </div>
@@ -686,7 +686,7 @@ export const AnalysisDisplay: React.FC<{
  </section>
 
  {/* 6. SEMIOTIC SIGNALS - REDESIGNED GRID */}
- <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-white dark:bg-black print:min-h-0 print:py-12">
+ <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-nous-base print:min-h-0 print:py-12">
  <div className="w-full space-y-16 px-6 md:px-24">
  <SectionHeader label="Semiotics & Visual Directives"icon={Radar} style={{ color: accentColor }} />
  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -695,42 +695,42 @@ export const AnalysisDisplay: React.FC<{
  const label = t.type === 'acquisition' ? 'Buy this' : t.type === 'lexical' ? 'Add to Lexicon' : 'Imagine this';
  
  return (
- <div key={i} className="group relative p-8 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-none hover: transition-all flex flex-col justify-between min-h-[300px] hover:border-transparent"style={{ '--hover-accent': accentColor } as React.CSSProperties}>
+ <div key={i} className="group relative p-8 bg-white border border-nous-border rounded-none hover: transition-all flex flex-col justify-between min-h-[300px] hover:border-transparent"style={{ '--hover-accent': accentColor } as React.CSSProperties}>
  <div className="absolute top-4 right-4 opacity-30 font-mono text-[9px]">SIG_0{i+1}</div>
  
  <div className="space-y-4">
  <div className="flex items-center gap-2 mb-2">
- <Icon size={12} className="text-stone-400 group-hover:text-[var(--hover-accent)] transition-colors"/>
- <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">{label}</span>
+ <Icon size={12} className="text-nous-subtle group-hover:text-[var(--hover-accent)] transition-colors"/>
+ <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle">{label}</span>
  </div>
- <h4 className="font-serif text-3xl italic tracking-tighter text-nous-text dark:text-white group-hover:text-[var(--hover-accent)] transition-colors">
+ <h4 className="font-serif text-3xl italic tracking-tighter text-nous-text  group-hover:text-[var(--hover-accent)] transition-colors">
  {t.motif}
  </h4>
- <p className="font-serif italic text-sm text-stone-500 dark:text-stone-400 leading-relaxed border-l-2 border-stone-100 dark:border-stone-800 pl-4">
+ <p className="font-serif italic text-sm text-nous-text0 leading-relaxed border-l-2 border-nous-border pl-4">
  {t.context}
  </p>
  {t.visual_directive && (
- <div className="mt-4 pt-4 border-t border-stone-100 dark:border-stone-800">
- <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 block mb-2">Directive</span>
- <p className="font-mono text-[9px] text-stone-500">{t.visual_directive}</p>
+ <div className="mt-4 pt-4 border-t border-nous-border">
+ <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle block mb-2">Directive</span>
+ <p className="font-mono text-[9px] text-nous-text0">{t.visual_directive}</p>
  </div>
  )}
  
  {/* SOVEREIGN AD TARGETING LOGIC */}
  {(t.semantic_trigger || t.targeting_rationale) && (
- <div className="mt-4 pt-4 border-t border-stone-100 dark:border-stone-800">
+ <div className="mt-4 pt-4 border-t border-nous-border">
  <div className="flex items-center gap-2 mb-2">
- <Target size={10} className="text-stone-400"/>
- <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Targeting Rationale</span>
+ <Target size={10} className="text-nous-subtle"/>
+ <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle">Targeting Rationale</span>
  </div>
  {t.semantic_trigger && (
  <div className="mb-2">
- <span className="font-mono text-[8px] text-stone-400">Trigger: </span>
+ <span className="font-mono text-[8px] text-nous-subtle">Trigger: </span>
  <span className="font-mono text-[9px] text-[var(--hover-accent)] bg-[var(--hover-accent)]/10 px-1 py-0.5 rounded-none">{t.semantic_trigger}</span>
  </div>
  )}
  {t.targeting_rationale && (
- <p className="font-sans text-[10px] text-stone-500 leading-relaxed">
+ <p className="font-sans text-[10px] text-nous-text0 leading-relaxed">
  {t.targeting_rationale}
  </p>
  )}
@@ -742,7 +742,7 @@ export const AnalysisDisplay: React.FC<{
  <div className="flex gap-4">
  <button
  onClick={() => handleScrySignal(t.motif + (t.visual_directive ?""+ t.visual_directive :""))} 
- className="flex items-center gap-2 font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 hover:text-[var(--hover-accent)] transition-colors border-b border-transparent hover:border-current pb-0.5"
+ className="flex items-center gap-2 font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle hover:text-[var(--hover-accent)] transition-colors border-b border-transparent hover:border-current pb-0.5"
  >
  <Search size={10} /> Scry Signal
  </button>
@@ -750,7 +750,7 @@ export const AnalysisDisplay: React.FC<{
  <a 
  href={t.link} 
  target="_blank"
- className="flex items-center gap-2 font-sans text-[8px] uppercase tracking-widest font-black text-stone-500 hover:text-stone-400 transition-colors border-b border-transparent hover:border-current pb-0.5"
+ className="flex items-center gap-2 font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0 hover:text-nous-subtle transition-colors border-b border-transparent hover:border-current pb-0.5"
  >
  <Briefcase size={10} /> Grounding
  </a>
@@ -759,7 +759,7 @@ export const AnalysisDisplay: React.FC<{
  <a 
  href={`https://www.google.com/search?q=${encodeURIComponent(t.motif +"aesthetic meaning")}`} 
  target="_blank"
- className="text-stone-300 hover:text-[var(--hover-accent)] transition-colors"
+ className="text-nous-subtle hover:text-[var(--hover-accent)] transition-colors"
  >
  <ExternalLink size={14} />
  </a>
@@ -779,7 +779,7 @@ export const AnalysisDisplay: React.FC<{
  <div className="p-8 rounded-none border border-white/10 bg-white/5 animate-pulse-slow">
  <CelestialIcon size={48} style={{ color: accentColor }} />
  </div>
- <p className="font-mono text-xl md:text-3xl text-stone-200 uppercase tracking-widest leading-relaxed max-w-2xl border-l-2 pl-8 text-left"style={{ borderColor: accentColor }}>
+ <p className="font-mono text-xl md:text-3xl text-nous-text uppercase tracking-widest leading-relaxed max-w-2xl border-l-2 pl-8 text-left"style={{ borderColor: accentColor }}>
  {metadata.content.celestial_calibration}
  </p>
  </div>
@@ -787,7 +787,7 @@ export const AnalysisDisplay: React.FC<{
  </section>
 
  {/* 8. VISUAL PLATES - REDESIGNED AS EDITORIAL SPREADS */}
- <div className="bg-white dark:bg-stone-950 py-32 space-y-32">
+ <div className="bg-white py-32 space-y-32">
  <div className="px-6 md:px-24 w-full">
  <SectionHeader label="Visual Plates"icon={Grid3X3} style={{ color: accentColor }} />
  </div>
@@ -800,7 +800,7 @@ export const AnalysisDisplay: React.FC<{
  
  {/* VISUAL COMPONENT */}
  <div className="w-full md:w-1/2 relative group h-[50dvh] md:h-full">
- <div className="relative w-full h-full bg-stone-100 dark:bg-stone-900 overflow-hidden">
+ <div className="relative w-full h-full bg-nous-base overflow-hidden">
  <Visualizer 
  prompt={page.imagePrompt} 
  defaultAspectRatio="3:4"
@@ -826,19 +826,19 @@ export const AnalysisDisplay: React.FC<{
 
  {/* TEXT COMPONENT */}
  <div className="w-full md:w-1/2 space-y-8 md:space-y-12">
- <div className="flex items-center gap-4 text-stone-300 dark:text-stone-600">
- <span className="font-serif italic text-4xl text-stone-200 dark:text-stone-800">{i+1}.</span>
- <div className="h-px flex-1 bg-stone-100 dark:bg-stone-800"/>
+ <div className="flex items-center gap-4 text-nous-subtle">
+ <span className="font-serif italic text-4xl text-nous-text">{i+1}.</span>
+ <div className="h-px flex-1 bg-nous-base"/>
  </div>
  <h3 className={`${fontStyle} text-5xl md:text-7xl italic tracking-tighter leading-[0.9] text-nous-text dark:text-white`}>
  {page.headline}
  </h3>
  <div className="pl-6 border-l"style={{ borderColor: `${accentColor}40` }}>
- <p className="font-serif italic text-lg md:text-xl text-stone-500 dark:text-stone-400 leading-relaxed text-balance">
+ <p className="font-serif italic text-lg md:text-xl text-nous-text0 leading-relaxed text-balance">
  {page.bodyCopy}
  </p>
  {page.supportingText && (i >= metadata.content.pages.length - 3) && (
- <p className="mt-4 font-mono text-xs text-stone-400 dark:text-stone-500 uppercase tracking-widest">
+ <p className="mt-4 font-mono text-xs text-nous-subtle 0 uppercase tracking-widest">
  {page.supportingText}
  </p>
  )}
@@ -867,66 +867,66 @@ export const AnalysisDisplay: React.FC<{
  
  <div className="w-full space-y-16 relative z-10 px-6 md:px-24">
  <SectionHeader label="Authority Roadmap"icon={RoadmapIcon} color="text-white"/>
- <div className="border border-stone-800 bg/90 p-12 relative">
+ <div className="border border-nous-border bg/90 p-12 relative">
  {/* CAD MARKERS */}
- <div className="absolute top-0 left-0 p-2 border-r border-b border-stone-800"><span className="font-mono text-[8px] text-stone-500">TL_REF_01</span></div>
- <div className="absolute bottom-0 right-0 p-2 border-l border-t border-stone-800"><span className="font-mono text-[8px] text-stone-500">BR_REF_04</span></div>
+ <div className="absolute top-0 left-0 p-2 border-r border-b border-nous-border"><span className="font-mono text-[8px] text-nous-text0">TL_REF_01</span></div>
+ <div className="absolute bottom-0 right-0 p-2 border-l border-t border-nous-border"><span className="font-mono text-[8px] text-nous-text0">BR_REF_04</span></div>
  
  <div className="grid md:grid-cols-2 gap-16">
  {metadata.content.roadmap ? (
  <>
  <div className="space-y-4 group">
- <div className="flex items-center gap-4 border-b border-stone-800 pb-2">
+ <div className="flex items-center gap-4 border-b border-nous-border pb-2">
  <span className="font-mono text-xs"style={{ color: accentColor }}>01</span>
- <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400 group-hover:text-white transition-colors">Strategic Thesis</span>
+ <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle group-hover:text-white transition-colors">Strategic Thesis</span>
  </div>
- <p className="font-mono text-sm text-stone-300 leading-relaxed pl-8 border-l border-white/5 transition-colors">
+ <p className="font-mono text-sm text-nous-subtle leading-relaxed pl-8 border-l border-white/5 transition-colors">
  {metadata.content.roadmap.strategicThesis}
  </p>
  </div>
  <div className="space-y-4 group">
- <div className="flex items-center gap-4 border-b border-stone-800 pb-2">
+ <div className="flex items-center gap-4 border-b border-nous-border pb-2">
  <span className="font-mono text-xs"style={{ color: accentColor }}>02</span>
- <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400 group-hover:text-white transition-colors">Positioning Axis</span>
+ <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle group-hover:text-white transition-colors">Positioning Axis</span>
  </div>
- <p className="font-mono text-sm text-stone-300 leading-relaxed pl-8 border-l border-white/5 transition-colors">
+ <p className="font-mono text-sm text-nous-subtle leading-relaxed pl-8 border-l border-white/5 transition-colors">
  {metadata.content.roadmap.positioningAxis}
  </p>
  </div>
  <div className="col-span-1 md:col-span-2 space-y-4 group">
- <div className="flex items-center gap-4 border-b border-stone-800 pb-2">
+ <div className="flex items-center gap-4 border-b border-nous-border pb-2">
  <span className="font-mono text-xs"style={{ color: accentColor }}>03</span>
- <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400 group-hover:text-white transition-colors">Authority Anchor</span>
+ <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle group-hover:text-white transition-colors">Authority Anchor</span>
  </div>
  <div className="grid md:grid-cols-3 gap-8 pl-8 border-l border-white/5">
  <div>
- <span className="font-mono text-[8px] text-stone-500 uppercase block mb-2">Core Claim</span>
- <p className="font-mono text-sm text-stone-300">{metadata.content.roadmap.authorityAnchor?.coreClaim}</p>
+ <span className="font-mono text-[8px] text-nous-text0 uppercase block mb-2">Core Claim</span>
+ <p className="font-mono text-sm text-nous-subtle">{metadata.content.roadmap.authorityAnchor?.coreClaim}</p>
  </div>
  <div>
- <span className="font-mono text-[8px] text-stone-500 uppercase block mb-2">Repetition Vector</span>
- <p className="font-mono text-sm text-stone-300">{metadata.content.roadmap.authorityAnchor?.repetitionVector}</p>
+ <span className="font-mono text-[8px] text-nous-text0 uppercase block mb-2">Repetition Vector</span>
+ <p className="font-mono text-sm text-nous-subtle">{metadata.content.roadmap.authorityAnchor?.repetitionVector}</p>
  </div>
  <div>
- <span className="font-mono text-[8px] text-stone-500 uppercase block mb-2">Exclusion Principle</span>
- <p className="font-mono text-sm text-stone-300">{metadata.content.roadmap.authorityAnchor?.exclusionPrinciple}</p>
+ <span className="font-mono text-[8px] text-nous-text0 uppercase block mb-2">Exclusion Principle</span>
+ <p className="font-mono text-sm text-nous-subtle">{metadata.content.roadmap.authorityAnchor?.exclusionPrinciple}</p>
  </div>
  </div>
  </div>
  
  {metadata.content.roadmap.phases && metadata.content.roadmap.phases.length > 0 && (
  <div className="col-span-1 md:col-span-2 space-y-4 group mt-8">
- <div className="flex items-center gap-4 border-b border-stone-800 pb-2">
+ <div className="flex items-center gap-4 border-b border-nous-border pb-2">
  <span className="font-mono text-xs"style={{ color: accentColor }}>04</span>
- <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400 group-hover:text-white transition-colors">Authority Phases</span>
+ <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle group-hover:text-white transition-colors">Authority Phases</span>
  </div>
  <div className="grid md:grid-cols-2 gap-8 pl-8 border-l border-white/5">
  {metadata.content.roadmap.phases.map((phase, idx) => (
- <div key={idx} className="space-y-2 border border-stone-800/50 p-4 bg-stone-900/20">
- <span className="font-mono text-[10px] text-stone-500 uppercase tracking-widest block mb-1">Phase: {phase.type}</span>
- <p className="font-mono text-sm text-stone-300"><strong>Objective:</strong> {phase.objective}</p>
- <p className="font-mono text-sm text-stone-300"><strong>Move:</strong> {phase.strategicMove}</p>
- <p className="font-mono text-xs text-stone-500 mt-2"><strong>Risk:</strong> {phase.riskToIntegrity}</p>
+ <div key={idx} className="space-y-2 border border-nous-border/50 p-4 bg-nous-base/20">
+ <span className="font-mono text-[10px] text-nous-text0 uppercase tracking-widest block mb-1">Phase: {phase.type}</span>
+ <p className="font-mono text-sm text-nous-subtle"><strong>Objective:</strong> {phase.objective}</p>
+ <p className="font-mono text-sm text-nous-subtle"><strong>Move:</strong> {phase.strategicMove}</p>
+ <p className="font-mono text-xs text-nous-text0 mt-2"><strong>Risk:</strong> {phase.riskToIntegrity}</p>
  </div>
  ))}
  </div>
@@ -935,18 +935,18 @@ export const AnalysisDisplay: React.FC<{
  
  {metadata.content.roadmap.driftForecast && (
  <div className="col-span-1 md:col-span-2 space-y-4 group mt-8">
- <div className="flex items-center gap-4 border-b border-stone-800 pb-2">
+ <div className="flex items-center gap-4 border-b border-nous-border pb-2">
  <span className="font-mono text-xs"style={{ color: accentColor }}>05</span>
- <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400 group-hover:text-white transition-colors">Drift Forecast</span>
+ <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle group-hover:text-white transition-colors">Drift Forecast</span>
  </div>
  <div className="grid md:grid-cols-2 gap-8 pl-8 border-l border-white/5">
  <div>
- <span className="font-mono text-[8px] text-stone-500 uppercase block mb-1">Predicted Shift</span>
- <p className="font-mono text-sm text-stone-300">{metadata.content.roadmap.driftForecast.predictedClusterShift}</p>
+ <span className="font-mono text-[8px] text-nous-text0 uppercase block mb-1">Predicted Shift</span>
+ <p className="font-mono text-sm text-nous-subtle">{metadata.content.roadmap.driftForecast.predictedClusterShift}</p>
  </div>
  <div>
- <span className="font-mono text-[8px] text-stone-500 uppercase block mb-1">Refusal Point</span>
- <p className="font-mono text-sm text-stone-300">{metadata.content.roadmap.driftForecast.refusalPoint}</p>
+ <span className="font-mono text-[8px] text-nous-text0 uppercase block mb-1">Refusal Point</span>
+ <p className="font-mono text-sm text-nous-subtle">{metadata.content.roadmap.driftForecast.refusalPoint}</p>
  </div>
  </div>
  </div>
@@ -954,21 +954,21 @@ export const AnalysisDisplay: React.FC<{
  </>
  ) : metadata.content.blueprint ? Object.entries(metadata.content.blueprint).map(([key, val], i) => (
  <div key={i} className="space-y-4 group">
- <div className="flex items-center gap-4 border-b border-stone-800 pb-2">
+ <div className="flex items-center gap-4 border-b border-nous-border pb-2">
  <span className="font-mono text-xs"style={{ color: accentColor }}>0{i+1}</span>
- <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400 group-hover:text-white transition-colors">{key.replace('_', ' ')}</span>
+ <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle group-hover:text-white transition-colors">{key.replace('_', ' ')}</span>
  </div>
- <p className="font-mono text-sm text-stone-300 leading-relaxed pl-8 border-l border-white/5 transition-colors"style={{ '--hover-color': accentColor } as React.CSSProperties}>
+ <p className="font-mono text-sm text-nous-subtle leading-relaxed pl-8 border-l border-white/5 transition-colors"style={{ '--hover-color': accentColor } as React.CSSProperties}>
  {String(val)}
  </p>
  </div>
  )) : (
  <div className="col-span-2 space-y-4">
- <div className="flex items-center gap-4 border-b border-stone-800 pb-2">
+ <div className="flex items-center gap-4 border-b border-nous-border pb-2">
  <span className="font-mono text-xs"style={{ color: accentColor }}>01</span>
- <span className="font-mono text-[10px] uppercase tracking-widest text-stone-400">Roadmap</span>
+ <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle">Roadmap</span>
  </div>
- <p className="font-mono text-sm text-stone-300 leading-relaxed pl-8 border-l border-white/5">
+ <p className="font-mono text-sm text-nous-subtle leading-relaxed pl-8 border-l border-white/5">
  {metadata.content.the_roadmap ||"No architectural blueprint detected."}
  </p>
  </div>
@@ -980,25 +980,25 @@ export const AnalysisDisplay: React.FC<{
 
  {/* 10. SIGNAL FEED (The Cultural Air) */}
  {metadata.transmissionsUsed && metadata.transmissionsUsed.length > 0 && (
- <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-white dark:bg-black text-nous-text dark:text-white print:min-h-0 print:py-12">
+ <section className="min-h-[100dvh] flex flex-col justify-center px-6 md:px-24 snap-start bg-nous-base text-nous-text dark:text-white print:min-h-0 print:py-12">
  <div className="max-w-4xl w-full space-y-16">
  <SectionHeader label="Signal Feed"icon={Radio} style={{ color: accentColor }} />
  <div className="space-y-8">
- <p className="font-serif italic text-2xl text-stone-400 leading-relaxed">
+ <p className="font-serif italic text-2xl text-nous-subtle leading-relaxed">
 "The manifest does not exist in a vacuum. It is a refraction of the collective frequency."
  </p>
  <div className="grid gap-6">
  {metadata.transmissionsUsed.map((t, idx) => (
- <div key={idx} className="flex items-start gap-4 p-4 border border-stone-100 dark:border-stone-800 rounded-none bg-stone-50/50 dark:bg-stone-900/30">
- <div className="w-8 h-8 rounded-none bg-stone-200 dark:bg-stone-800 flex items-center justify-center shrink-0">
- <Radio size={14} className="text-stone-400"/>
+ <div key={idx} className="flex items-start gap-4 p-4 border border-nous-border rounded-none bg-nous-base/50 /30">
+ <div className="w-8 h-8 rounded-none bg-stone-200 flex items-center justify-center shrink-0">
+ <Radio size={14} className="text-nous-subtle"/>
  </div>
  <div className="space-y-1">
  <div className="flex items-center gap-2">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-500">@{t.userHandle}</span>
- <span className="font-mono text-[8px] text-stone-300">{new Date(t.timestamp).toLocaleTimeString()}</span>
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0">@{t.userHandle}</span>
+ <span className="font-mono text-[8px] text-nous-subtle">{new Date(t.timestamp).toLocaleTimeString()}</span>
  </div>
- <p className="font-serif italic text-sm text-stone-600 dark:text-stone-400 leading-relaxed">
+ <p className="font-serif italic text-sm text-nous-subtle leading-relaxed">
  {t.content}
  </p>
  </div>
@@ -1011,28 +1011,28 @@ export const AnalysisDisplay: React.FC<{
  )}
 
  {/* 10. NARRATIVE THREAD (RAW INPUT + ANALYSIS + THUMBNAILS) */}
- <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-stone-100 dark:bg-black text-nous-text dark:text-white print:min-h-0 print:py-12">
+ <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-nous-base  text-nous-text dark:text-white print:min-h-0 print:py-12">
  <div className="w-full space-y-16 px-6 md:px-24">
  <SectionHeader label="Narrative Thread"icon={History} style={{ color: accentColor }} />
  {originalDebris ? (
  <div className="space-y-12">
- <div className="space-y-8 pl-8 md:pl-12 border-l-4 border-stone-300 dark:border-stone-800">
- <div className="font-mono text-[10px] text-stone-400 mb-4 uppercase tracking-widest">
+ <div className="space-y-8 pl-8 md:pl-12 border-l-4 border-nous-border">
+ <div className="font-mono text-[10px] text-nous-subtle mb-4 uppercase tracking-widest">
  // RAW_INPUT_LOG_{metadata.id.slice(-4)}
  </div>
- <p className="font-mono text-lg md:text-2xl text-stone-600 dark:text-stone-400 leading-relaxed whitespace-pre-wrap tracking-tight">
+ <p className="font-mono text-lg md:text-2xl text-nous-subtle leading-relaxed whitespace-pre-wrap tracking-tight">
 "{originalDebris}"
  </p>
  
  {/* THUMBNAIL DISPLAY */}
  {metadata.artifacts && metadata.artifacts.length > 0 && (
- <div className="flex flex-wrap gap-4 pt-8 border-t border-stone-200 dark:border-stone-800">
+ <div className="flex flex-wrap gap-4 pt-8 border-t border-nous-border">
  {metadata.artifacts.map((art, idx) => (
- <div key={idx} className="relative w-24 h-24 border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 rounded-none overflow-hidden hover:scale-105 transition-transform">
+ <div key={idx} className="relative w-24 h-24 border border-nous-border bg-white rounded-none overflow-hidden hover:scale-105 transition-transform">
  {art.type === 'image' ? (
  <img src={art.url || `data:${art.mimeType};base64,${art.data}`} className="w-full h-full object-cover"/>
  ) : (
- <div className="w-full h-full flex items-center justify-center text-stone-400">
+ <div className="w-full h-full flex items-center justify-center text-nous-subtle">
  <Volume2 size={24} />
  </div>
  )}
@@ -1049,20 +1049,20 @@ export const AnalysisDisplay: React.FC<{
  <button 
  onClick={handleSaveThread} 
  disabled={isThreadSaved || isSavingThread}
- className="font-mono text-[10px] uppercase tracking-[0.2em] font-black text-stone-400 hover:text-white transition-colors bg-black/50 backdrop-blur-md px-6 py-3 border border-white/10 flex items-center gap-2"
+ className="font-mono text-[10px] uppercase tracking-[0.2em] font-black text-nous-subtle hover:text-white transition-colors bg-black/50 backdrop-blur-md px-6 py-3 border border-white/10 flex items-center gap-2"
  >
- {isSavingThread ? <Loader2 size={12} className="animate-spin" /> : isThreadSaved ? <Check size={12} /> : <History size={12} />}
+ {isSavingThread ? <Loader2 size={12} className="animate-spin"/> : isThreadSaved ? <Check size={12} /> : <History size={12} />}
  [ {isThreadSaved ? 'APPENDED TO THREAD' : '+ APPEND TO THREAD'} ]
  </button>
  </div>
  </div>
  </div>
  ) : (
- <div className="opacity-30 text-center py-12 border-2 border-dashed border-stone-300 dark:border-stone-800 rounded-none">
+ <div className="opacity-30 text-center py-12 border-2 border-dashed border-nous-border rounded-none">
  <p className="font-serif italic text-xl">Debris data lost in transit.</p>
  </div>
  )}
- <div className="pt-12 border-t border-stone-200 dark:border-white/5 opacity-40">
+ <div className="pt-12 border-t border-nous-border /5 opacity-40">
  <p className="font-serif italic text-xs">"The debris is the foundation of the manifest."</p>
  </div>
  </div>
@@ -1078,7 +1078,7 @@ export const AnalysisDisplay: React.FC<{
  </div>
 
  <div className="flex flex-col gap-6 w-full max-w-md">
- <button onClick={onReset} className="w-full py-4 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 font-sans text-[9px] uppercase tracking-widest font-black transition-all">
+ <button onClick={onReset} className="w-full py-4 text-nous-subtle hover:text-nous-subtle font-sans text-[9px] uppercase tracking-widest font-black transition-all">
  Purge & Return
  </button>
  </div>
@@ -1093,31 +1093,31 @@ export const AnalysisDisplay: React.FC<{
  animate={{ x: 0 }}
  exit={{ x:"100%"}}
  transition={{ type:"spring", stiffness: 300, damping: 30 }}
- className="w-full md:w-[400px] border-l border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-950 z-40 flex flex-col absolute right-0 top-0 bottom-0"
+ className="w-full md:w-[400px] border-l border-nous-border bg-white z-40 flex flex-col absolute right-0 top-0 bottom-0"
  >
  {/* Header */}
- <div className="h-16 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between px-6 shrink-0 bg-white/50 dark:bg-black/20 backdrop-blur-sm">
- <span className="font-sans text-[10px] uppercase tracking-[0.4em] font-black text-stone-900 dark:text-white">FIELD NOTE — 01</span>
- <button onClick={() => setShowNotes(false)} className="p-2 text-stone-400 hover:text-stone-600 dark:hover:text-white transition-colors">
+ <div className="h-16 border-b border-nous-border flex items-center justify-between px-6 shrink-0 bg-white/50 /20 backdrop-blur-sm">
+ <span className="font-sans text-[10px] uppercase tracking-[0.4em] font-black text-nous-text dark:text-white">FIELD NOTE — 01</span>
+ <button onClick={() => setShowNotes(false)} className="p-2 text-nous-subtle hover:text-nous-subtle dark:hover:text-white transition-colors">
  <X size={16} />
  </button>
  </div>
 
  {/* Metadata Strip */}
- <div className="flex items-center gap-6 px-6 py-4 border-b border-stone-100 dark:border-stone-800 opacity-60 shrink-0">
+ <div className="flex items-center gap-6 px-6 py-4 border-b border-nous-border opacity-60 shrink-0">
  <div className="flex items-center gap-2">
- <span className="font-mono text-[9px] uppercase tracking-widest text-stone-500">REF:</span>
- <span className="font-mono text-[9px] uppercase tracking-widest text-stone-800 dark:text-stone-300">001.NOTE</span>
+ <span className="font-mono text-[9px] uppercase tracking-widest text-nous-text0">REF:</span>
+ <span className="font-mono text-[9px] uppercase tracking-widest text-nous-text">001.NOTE</span>
  </div>
  <div className="h-3 w-px bg-stone-300 dark:bg-stone-700"/>
  <div className="flex items-center gap-2">
- <span className="font-mono text-[9px] uppercase tracking-widest text-stone-500">TONE:</span>
- <span className="font-mono text-[9px] uppercase tracking-widest text-stone-800 dark:text-stone-300">{metadata.tone}</span>
+ <span className="font-mono text-[9px] uppercase tracking-widest text-nous-text0">TONE:</span>
+ <span className="font-mono text-[9px] uppercase tracking-widest text-nous-text">{metadata.tone}</span>
  </div>
  <div className="h-3 w-px bg-stone-300 dark:bg-stone-700"/>
  <div className="flex items-center gap-2">
- <span className="font-mono text-[9px] uppercase tracking-widest text-stone-500">DATE:</span>
- <span className="font-mono text-[9px] uppercase tracking-widest text-stone-800 dark:text-stone-300">{new Date().toLocaleDateString(undefined, { month: '2-digit', day: '2-digit', year: '2-digit' })}</span>
+ <span className="font-mono text-[9px] uppercase tracking-widest text-nous-text0">DATE:</span>
+ <span className="font-mono text-[9px] uppercase tracking-widest text-nous-text">{new Date().toLocaleDateString(undefined, { month: '2-digit', day: '2-digit', year: '2-digit' })}</span>
  </div>
  </div>
 
@@ -1130,20 +1130,20 @@ export const AnalysisDisplay: React.FC<{
  value={noteContent} 
  onChange={(e) => setNoteContent(e.target.value)} 
  placeholder="Annotation layer active..."
- className="w-full h-full bg-transparent p-8 pl-12 resize-none outline-none font-serif text-sm leading-relaxed text-stone-700 dark:text-stone-300 placeholder:text-stone-300 dark:placeholder:text-stone-700"
+ className="w-full h-full bg-transparent p-8 pl-12 resize-none outline-none font-serif text-sm leading-relaxed text-nous-subtle placeholder:text-nous-subtle dark:placeholder:text-nous-subtle"
  />
 
  {/* Voice Trigger (Bottom Right) */}
  <div className="absolute bottom-6 right-6">
  {isTranscribing && (
- <div className="absolute right-full mr-4 bottom-1/2 translate-y-1/2 flex items-center gap-2 bg-white dark:bg-stone-800 px-3 py-1 rounded-none whitespace-nowrap">
- <Loader2 size={10} className="animate-spin text-stone-500"/>
- <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Parsing...</span>
+ <div className="absolute right-full mr-4 bottom-1/2 translate-y-1/2 flex items-center gap-2 bg-white px-3 py-1 rounded-none whitespace-nowrap">
+ <Loader2 size={10} className="animate-spin text-nous-text0"/>
+ <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle">Parsing...</span>
  </div>
  )}
  <button 
  onClick={isRecording ? stopRecording : startRecording} 
- className={`p-2 transition-all opacity-50 hover:opacity-100 ${isRecording ? 'text-red-500 animate-pulse' : 'text-stone-400 hover:text-stone-600 dark:hover:text-white'}`}
+ className={`p-2 transition-all opacity-50 hover:opacity-100 ${isRecording ? 'text-red-500 animate-pulse' : 'text-nous-subtle hover:text-nous-subtle dark:hover:text-white'}`}
  >
  {isRecording ? <Square size={14} fill="currentColor"/> : <Mic size={14} />}
  </button>
@@ -1151,12 +1151,12 @@ export const AnalysisDisplay: React.FC<{
  </div>
 
  {/* Footer Actions */}
- <div className="p-6 border-t border-stone-100 dark:border-stone-800 flex justify-between items-center bg-white/50 dark:bg-black/20 backdrop-blur-sm shrink-0">
- <span className="font-mono text-[8px] text-stone-300 uppercase tracking-widest">Auto-Saved</span>
+ <div className="p-6 border-t border-nous-border flex justify-between items-center bg-white/50 /20 backdrop-blur-sm shrink-0">
+ <span className="font-mono text-[8px] text-nous-subtle uppercase tracking-widest">Auto-Saved</span>
  <button 
  onClick={handleSaveToPocket}
  disabled={isSaved}
- className={`flex items-center gap-2 font-sans text-[8px] uppercase tracking-[0.2em] font-black transition-all ${isSaved ? 'text-stone-500' : 'text-stone-400 hover:text-stone-600 dark:hover:text-white'}`}
+ className={`flex items-center gap-2 font-sans text-[8px] uppercase tracking-[0.2em] font-black transition-all ${isSaved ? 'text-nous-text0' : 'text-nous-subtle hover:text-nous-subtle dark:hover:text-white'}`}
  >
  {isSaved ? <Check size={12} /> : <Bookmark size={12} />}
  {isSaved ? 'Anchored' : 'Commit Note'}
@@ -1168,40 +1168,40 @@ export const AnalysisDisplay: React.FC<{
  </div>
 
  {/* MINIMALIST FOOTER */}
- <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-8 px-10 py-4 bg-white/90 dark:bg-black/90 backdrop-blur-xl border border-stone-200 dark:border-white/10 text-stone-500 dark:text-white/70 font-mono text-[10px] uppercase tracking-[0.2em] print:hidden shadow-2xl rounded-none">
- <span className="text-stone-400 dark:text-white/50">RESONANCE: 98%</span>
- <div className="w-px h-4 bg-stone-200 dark:bg-white/20" />
+ <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-8 px-10 py-4 bg-white/90 /90 backdrop-blur-xl border border-nous-border /10 text-nous-text0 dark:text-white/70 font-mono text-[10px] uppercase tracking-[0.2em] print:hidden shadow-2xl rounded-none">
+ <span className="text-nous-subtle dark:text-white/50">RESONANCE: 98%</span>
+ <div className="w-px h-4 bg-stone-200 /20"/>
  
- <div className="flex items-center gap-3 group cursor-pointer" onClick={handleVoiceToggle}>
-   <div className="relative flex items-center justify-center w-8 h-8 rounded-full border border-stone-300 dark:border-white/20 group-hover:border-stone-500 dark:group-hover:border-white/50 transition-colors">
-     {isVoiceLoading ? (
-       <Loader2 size={12} className="animate-spin text-stone-500 dark:text-white/70" />
-     ) : isPlaying ? (
-       <Pause size={10} className="text-stone-500 dark:text-white/70 group-hover:text-stone-800 dark:group-hover:text-white" />
-     ) : (
-       <Play size={10} className="text-stone-500 dark:text-white/70 group-hover:text-stone-800 dark:group-hover:text-white ml-0.5" />
-     )}
-     <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 32 32">
-       <circle cx="16" cy="16" r="15" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="94.2" strokeDashoffset={94.2 - (audioProgress * 94.2)} className="text-stone-800 dark:text-white transition-all duration-100" />
-     </svg>
-   </div>
-   <span className="group-hover:text-stone-900 dark:group-hover:text-white transition-colors">[ THE DIAL ]</span>
+ <div className="flex items-center gap-3 group cursor-pointer"onClick={handleVoiceToggle}>
+ <div className="relative flex items-center justify-center w-8 h-8 rounded-full border border-nous-border /20 group-hover:border-nous-border dark:group-hover:border-white/50 transition-colors">
+ {isVoiceLoading ? (
+ <Loader2 size={12} className="animate-spin text-nous-text0 dark:text-white/70"/>
+ ) : isPlaying ? (
+ <Pause size={10} className="text-nous-text0 dark:text-white/70 group-hover:text-nous-text dark:group-hover:text-white"/>
+ ) : (
+ <Play size={10} className="text-nous-text0 dark:text-white/70 group-hover:text-nous-text dark:group-hover:text-white ml-0.5"/>
+ )}
+ <svg className="absolute inset-0 w-full h-full -rotate-90"viewBox="0 0 32 32">
+ <circle cx="16"cy="16"r="15"fill="none"stroke="currentColor"strokeWidth="2"strokeDasharray="94.2"strokeDashoffset={94.2 - (audioProgress * 94.2)} className="text-nous-text dark:text-white transition-all duration-100"/>
+ </svg>
+ </div>
+ <span className="group-hover:text-nous-text dark:group-hover:text-white transition-colors">[ THE DIAL ]</span>
  </div>
 
- <div className="w-px h-4 bg-stone-200 dark:bg-white/20" />
- <button onClick={() => setShowNotes(!showNotes)} className={`${showNotes ? 'text-stone-900 dark:text-white' : 'hover:text-stone-900 dark:hover:text-white'} transition-colors`}>
+ <div className="w-px h-4 bg-stone-200 /20"/>
+ <button onClick={() => setShowNotes(!showNotes)} className={`${showNotes ? 'text-nous-text dark:text-white' : 'hover:text-nous-text dark:hover:text-white'} transition-colors`}>
  [ FIELD NOTES ]
  </button>
- <div className="w-px h-4 bg-stone-200 dark:bg-white/20" />
- <button onClick={() => setShowExport(true)} className="hover:text-stone-900 dark:hover:text-white transition-colors">
+ <div className="w-px h-4 bg-stone-200 /20"/>
+ <button onClick={() => setShowExport(true)} className="hover:text-nous-text dark:hover:text-white transition-colors">
  [ EXTRACT ARTIFACT ]
  </button>
- <div className="w-px h-4 bg-stone-200 dark:bg-white/20" />
+ <div className="w-px h-4 bg-stone-200 /20"/>
  <button onClick={handleSaveToPocket} className={`${isSaved ? 'text-red-500' : 'hover:text-red-500'} transition-colors flex items-center gap-2`}>
- [ {isSaved ? <Heart className="fill-current" size={12} /> : <Heart size={12} />} SAVE ]
+ [ {isSaved ? <Heart className="fill-current"size={12} /> : <Heart size={12} />} SAVE ]
  </button>
- <div className="w-px h-4 bg-stone-200 dark:bg-white/20" />
- <button onClick={() => setShowComments(true)} className="hover:text-stone-900 dark:hover:text-white transition-colors flex items-center gap-2">
+ <div className="w-px h-4 bg-stone-200 /20"/>
+ <button onClick={() => setShowComments(true)} className="hover:text-nous-text dark:hover:text-white transition-colors flex items-center gap-2">
  [ <MessageSquare size={12} /> DISCUSS ]
  </button>
  </div>

@@ -121,8 +121,8 @@ export const Shelf: React.FC<ShelfProps> = ({ variant, onSelectZine }) => {
  if (loading && zines.length === 0) {
  return (
  <div className="w-full flex flex-col items-center justify-center p-24 gap-4 animate-pulse">
- <LoadingSkeleton lines={4} className="w-full max-w-sm" />
- <span className="font-sans text-[8px] uppercase tracking-[0.4em] text-stone-400 font-black italic">Consulting Archives...</span>
+ <LoadingSkeleton lines={4} className="w-full max-w-sm"/>
+ <span className="font-sans text-[8px] uppercase tracking-[0.4em] text-nous-subtle font-black italic">Consulting Archives...</span>
  </div>
  );
  }
@@ -130,32 +130,32 @@ export const Shelf: React.FC<ShelfProps> = ({ variant, onSelectZine }) => {
  return (
  <div className="w-full pb-32 animate-fade-in">
  <div className="px-6 md:px-12 pt-8">
- <div className="flex items-center justify-between mb-24 border-b border-stone-100 dark:border-stone-800 pb-10">
+ <div className="flex items-center justify-between mb-24 border-b border-nous-border pb-10">
  <div className="flex flex-col gap-4">
  <div className="flex items-center gap-3">
- {variant === 'personal' ? <Archive size={18} className="text-stone-400"/> : <Zap size={18} className="text-amber-400"/>}
- <h3 className="font-[Cormorant] font-light text-5xl italic text-nous-text dark:text-white luminescent-text tracking-tighter">
+ {variant === 'personal' ? <Archive size={18} className="text-nous-subtle"/> : <Zap size={18} className="text-amber-400"/>}
+ <h3 className="font-[Cormorant] font-light text-5xl italic text-nous-text  luminescent-text tracking-tighter">
  {variant === 'personal' ? 'Deep Archive' : variant === 'clique' ? 'Clique Radar' : 'Transmissions'}
  </h3>
  </div>
- <span className="font-sans text-[8px] uppercase tracking-[0.5em] text-stone-400 font-black">
+ <span className="font-sans text-[8px] uppercase tracking-[0.5em] text-nous-subtle font-black">
  {variant === 'personal' ? 'PERMANENT_RECORD' : 'BROADCAST_FEED'}
  </span>
  </div>
- <button onClick={refreshManually} className="p-4 bg-transparent hover:bg-stone-50 dark:hover:bg-stone-900 rounded-none text-stone-300 hover:text-nous-text dark:hover:text-white transition-all active:rotate-180"title="Refresh">
+ <button onClick={refreshManually} className="p-4 bg-transparent hover:bg-nous-base rounded-none text-nous-subtle hover:text-nous-text dark:hover:text-white transition-all active:rotate-180"title="Refresh">
  <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
  </button>
  </div>
 
  {zines.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-48 text-center space-y-8">
- <div className="p-8 bg-stone-50 dark:bg-stone-900 rounded-none mb-4">
- <Ghost size={48} className="text-stone-300"/>
+ <div className="p-8 bg-nous-base rounded-none mb-4">
+ <Ghost size={48} className="text-nous-subtle"/>
  </div>
  <p className="font-serif italic text-3xl">“The archive is currently a void.”</p>
  <button 
  onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'studio' }))}
- className="px-10 py-4 bg-nous-text dark:bg-white text-white dark:text-black rounded-none font-sans text-[9px] uppercase tracking-[0.4em] font-black active:scale-95 transition-all flex items-center gap-3"
+ className="px-10 py-4 bg-nous-text text-nous-base rounded-none font-sans text-[9px] uppercase tracking-[0.4em] font-black active:scale-95 transition-all flex items-center gap-3"
  >
  <Plus size={14} /> Initialize Registry
  </button>

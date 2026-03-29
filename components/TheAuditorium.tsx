@@ -47,37 +47,37 @@ export const TheAuditorium: React.FC = () => {
  <div className="max-w-7xl mx-auto space-y-16">
  
  <header className="space-y-6">
- <div className="flex items-center gap-4 text-stone-400">
+ <div className="flex items-center gap-4 text-nous-subtle">
  <Film size={20} className="text-amber-500"/>
  <span className="font-sans text-[10px] uppercase tracking-[0.5em] font-black italic">The Auditorium</span>
  </div>
  <h2 className="font-serif text-6xl md:text-9xl italic tracking-tighter luminescent-text leading-none">The Signal Reel.</h2>
- <p className="font-serif italic text-xl md:text-3xl text-stone-500 max-w-2xl leading-tight">
+ <p className="font-serif italic text-xl md:text-3xl text-nous-text0 max-w-2xl leading-tight">
  Witness the multi-modal refraction of the Psyche. These are not videos; they are structural handshakes between the Oracle and the Feed.
  </p>
  </header>
 
  {/* FEATURED CINEMA SCREEN */}
- <section className="relative aspect-video w-full bg-black rounded-none overflow-hidden border border-stone-800 group">
+ <section className="relative aspect-video w-full bg-black rounded-none overflow-hidden border border-nous-border group">
  
  <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center space-y-8 z-20">
  <motion.div 
  animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
  transition={{ duration: 4, repeat: Infinity }}
- className="w-24 h-24 rounded-none border border-stone-500/30 flex items-center justify-center backdrop-blur-xl"
+ className="w-24 h-24 rounded-none border border-nous-border/30 flex items-center justify-center backdrop-blur-xl"
  >
  <Play size={32} className="text-white fill-current ml-2"/>
  </motion.div>
  
  <div className="space-y-4">
- <span className="font-sans text-[10px] uppercase tracking-[1em] text-stone-500 font-black">Now Playing // {activeEp.episode}</span>
+ <span className="font-sans text-[10px] uppercase tracking-[1em] text-nous-text0 font-black">Now Playing // {activeEp.episode}</span>
  <h3 className="font-serif text-4xl md:text-7xl italic tracking-tighter text-white">{activeEp.title}</h3>
  </div>
 
  <a 
  href={activeEp.link} 
  target="_blank"
- className="px-10 py-4 bg-white text-black font-sans text-[10px] uppercase tracking-[0.5em] font-black rounded-none active:scale-95 transition-all flex items-center gap-4 hover:bg-stone-500 hover:text-white"
+ className="px-10 py-4 bg-nous-base text-nous-text font-sans text-[10px] uppercase tracking-[0.5em] font-black rounded-none active:scale-95 transition-all flex items-center gap-4 hover:bg-nous-base0 hover:text-white"
  >
  <Youtube size={16} /> Witness on YouTube
  </a>
@@ -94,15 +94,15 @@ export const TheAuditorium: React.FC = () => {
  <button 
  key={ep.id}
  onClick={() => setActiveEp(ep)}
- className={`text-left p-8 rounded-none border transition-all flex flex-col gap-6 group relative overflow-hidden ${activeEp.id === ep.id ? 'bg-white dark:bg-stone-900 border-nous-text dark:border-white scale-105' : 'bg-stone-50 dark:bg-stone-950 border-stone-100 dark:border-stone-800 opacity-60 hover:opacity-100'}`}
+ className={`text-left p-8 rounded-none border transition-all flex flex-col gap-6 group relative overflow-hidden ${activeEp.id === ep.id ? 'bg-white border-nous-text  scale-105' : 'bg-nous-base border-nous-border opacity-60 hover:opacity-100'}`}
  >
  <div className="flex justify-between items-start">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">{ep.episode}</span>
- {activeEp.id === ep.id && <Activity size={12} className="text-stone-500 animate-pulse"/>}
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">{ep.episode}</span>
+ {activeEp.id === ep.id && <Activity size={12} className="text-nous-text0 animate-pulse"/>}
  </div>
  <h4 className="font-serif text-2xl italic tracking-tighter leading-none group-hover:text-nous-text dark:group-hover:text-white">{ep.title}</h4>
- <p className="font-serif italic text-sm text-stone-500 leading-tight">{ep.desc}</p>
- <div className="pt-4 mt-auto border-t border-stone-100 dark:border-stone-800 flex justify-between items-center">
+ <p className="font-serif italic text-sm text-nous-text0 leading-tight">{ep.desc}</p>
+ <div className="pt-4 mt-auto border-t border-nous-border flex justify-between items-center">
  <span className="font-mono text-[8px] opacity-40">{ep.status}</span>
  <CornerDownRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity"/>
  </div>
@@ -112,12 +112,12 @@ export const TheAuditorium: React.FC = () => {
 
  {/* THE LINK MANDATE */}
  <section className="bg-amber-50/30 dark:bg-amber-950/10 border border-amber-100 dark:border-amber-900/30 p-12 rounded-none flex flex-col md:flex-row items-center gap-12">
- <div className="p-8 bg-white dark:bg-stone-900 rounded-none border border-amber-200">
+ <div className="p-8 bg-white rounded-none border border-amber-200">
  <Activity size={48} className="text-amber-500 animate-pulse"/>
  </div>
  <div className="space-y-4 flex-1">
  <h3 className="font-serif text-4xl italic tracking-tighter leading-none">The Synchronicity Edict.</h3>
- <p className="font-serif italic text-xl text-stone-500 leading-relaxed max-w-2xl">
+ <p className="font-serif italic text-xl text-nous-text0 leading-relaxed max-w-2xl">
  Linking Mimi in your series is not promotion; it is **Structural Integrity**. The artifact and the engine must remain tethered. You are the architect; the link is the door.
  </p>
  </div>
@@ -127,7 +127,7 @@ export const TheAuditorium: React.FC = () => {
  navigator.clipboard.writeText(window.location.origin).catch(e => console.error("MIMI // Clipboard error", e));
  alert("Imperial URL Copied. Ready for sync.");
  }}
- className="w-full px-10 py-6 bg-nous-text dark:bg-stone-100 text-white dark:text-stone-950 font-sans text-[10px] uppercase tracking-[0.6em] font-black rounded-none active:scale-95 transition-all border border-white/20"
+ className="w-full px-10 py-6 bg-nous-text text-white dark:text-stone-950 font-sans text-[10px] uppercase tracking-[0.6em] font-black rounded-none active:scale-95 transition-all border border-white/20"
  >
  Copy Link for Series
  </button>

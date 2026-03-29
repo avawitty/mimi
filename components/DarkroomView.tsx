@@ -306,7 +306,7 @@ export const DarkroomView: React.FC = () => {
  {/* LEFT: EXPOSURE TRAY */}
  <div className="space-y-6">
  <div className="flex items-center gap-3 mb-4">
- <div className="w-2 h-2 rounded-none bg-stone-500 animate-pulse"/>
+ <div className="w-2 h-2 rounded-none bg-nous-base0 animate-pulse"/>
  <h2 className="text-[10px] uppercase tracking-[0.2em] font-bold text">Exposure Tray</h2>
  {uploadedImage && (
  <button onClick={resetDarkroom} className="ml-auto text-[10px] uppercase tracking-widest text/50 hover:text transition-colors flex items-center gap-2">

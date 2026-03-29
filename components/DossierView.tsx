@@ -309,7 +309,7 @@ export default function DossierView() {
  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
  const response = await ai.models.generateContent({
  model: 'gemini-3-flash-preview',
- contents: `Generate a short, actionable punchlist (3-5 items) for the project "${activeFolder.name}".
+ contents: `Generate a short, actionable punchlist (3-5 items) for the project"${activeFolder.name}".
  Consider the user's sourcing boards: ${JSON.stringify(boards)} and items: ${JSON.stringify(items)}.
  Return ONLY a JSON array of strings representing the tasks.`,
  config: {
@@ -560,7 +560,7 @@ export default function DossierView() {
  await savePocketItem(moodboardItem);
  
  window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
- detail: { message:"Moodboard Manifested in Archive.", icon: <Check size={14} className="text-stone-500"/> } 
+ detail: { message:"Moodboard Manifested in Archive.", icon: <Check size={14} className="text-nous-text0"/> } 
  }));
  
  setViewMode('grid');
@@ -621,20 +621,20 @@ export default function DossierView() {
  }, [artifacts, selectedArtifactIds, pocketItems, selectedPocketItemIds]);
 
  return (
- <div className="w-full h-full flex flex-col bg-[#1C1917] text-stone-200 font-mono transition-colors duration-1000 overflow-hidden relative">
+ <div className="w-full h-full flex flex-col bg-[#1C1917] text-nous-text font-mono transition-colors duration-1000 overflow-hidden relative">
  {/* Grid Background */}
  <div className="absolute inset-0 bg-[radial-gradient(#1C1917_1px,transparent_1px)] [background-size:20px_20px] opacity-10 pointer-events-none"/>
 
  <AnimatePresence>
  {taskToDelete && (
  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[8000] flex items-center justify-center bg-black/80 backdrop-blur-sm">
- <div className="bg-[#1C1917] p-8 max-w-sm w-full space-y-6 border border-stone-800">
+ <div className="bg-[#1C1917] p-8 max-w-sm w-full space-y-6 border border-nous-border">
  <div className="space-y-2">
- <h3 className="font-serif italic text-xl text-stone-200">Purge Imperative?</h3>
- <p className="font-mono text-[10px] text-stone-500 uppercase tracking-widest">This action cannot be undone.</p>
+ <h3 className="font-serif italic text-xl text-nous-text">Purge Imperative?</h3>
+ <p className="font-mono text-[10px] text-nous-text0 uppercase tracking-widest">This action cannot be undone.</p>
  </div>
  <div className="flex gap-4">
- <button onClick={() => setTaskToDelete(null)} className="flex-1 py-3 text-stone-500 hover:text-stone-300 font-mono text-[9px] uppercase tracking-widest font-bold border border-stone-800 hover:border-stone-600 transition-all">Cancel</button>
+ <button onClick={() => setTaskToDelete(null)} className="flex-1 py-3 text-nous-text0 hover:text-nous-subtle font-mono text-[9px] uppercase tracking-widest font-bold border border-nous-border hover:border-nous-border transition-all">Cancel</button>
  <button onClick={confirmDeleteTask} className="flex-1 py-3 bg-red-900/20 text-red-500 border border-red-900/50 hover:bg-red-900/40 font-mono text-[9px] uppercase tracking-widest font-bold transition-all">Confirm</button>
  </div>
  </div>
@@ -642,13 +642,13 @@ export default function DossierView() {
  )}
  {artifactToDelete && (
  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[8000] flex items-center justify-center bg-black/80 backdrop-blur-sm">
- <div className="bg-[#1C1917] p-8 max-w-sm w-full space-y-6 border border-stone-800">
+ <div className="bg-[#1C1917] p-8 max-w-sm w-full space-y-6 border border-nous-border">
  <div className="space-y-2">
- <h3 className="font-serif italic text-xl text-stone-200">Purge Artifact?</h3>
- <p className="font-mono text-[10px] text-stone-500 uppercase tracking-widest">This action cannot be undone.</p>
+ <h3 className="font-serif italic text-xl text-nous-text">Purge Artifact?</h3>
+ <p className="font-mono text-[10px] text-nous-text0 uppercase tracking-widest">This action cannot be undone.</p>
  </div>
  <div className="flex gap-4">
- <button onClick={() => setArtifactToDelete(null)} className="flex-1 py-3 text-stone-500 hover:text-stone-300 font-mono text-[9px] uppercase tracking-widest font-bold border border-stone-800 hover:border-stone-600 transition-all">Cancel</button>
+ <button onClick={() => setArtifactToDelete(null)} className="flex-1 py-3 text-nous-text0 hover:text-nous-subtle font-mono text-[9px] uppercase tracking-widest font-bold border border-nous-border hover:border-nous-border transition-all">Cancel</button>
  <button onClick={confirmDeleteArtifact} className="flex-1 py-3 bg-red-900/20 text-red-500 border border-red-900/50 hover:bg-red-900/40 font-mono text-[9px] uppercase tracking-widest font-bold transition-all">Confirm</button>
  </div>
  </div>
@@ -665,33 +665,33 @@ export default function DossierView() {
  initial={{ width: 0, opacity: 0 }}
  animate={{ width: 288, opacity: 1 }}
  exit={{ width: 0, opacity: 0 }}
- className="border-r border-stone-800 bg-[#1C1917] flex flex-col hidden md:flex shrink-0 print:hidden overflow-hidden"
+ className="border-r border-nous-border bg-[#1C1917] flex flex-col hidden md:flex shrink-0 print:hidden overflow-hidden"
  >
- <div className="p-6 border-b border-stone-800 space-y-6 w-72">
- <div className="flex items-center justify-between text-stone-500">
+ <div className="p-6 border-b border-nous-border space-y-6 w-72">
+ <div className="flex items-center justify-between text-nous-text0">
  <div className="flex items-center gap-3">
  <Briefcase size={14} />
  <span className="font-mono text-[9px] uppercase tracking-[0.2em] font-bold">Project Registry</span>
  </div>
- <button onClick={() => setIsSidebarOpen(false)} className="hover:text-stone-300 transition-colors">
+ <button onClick={() => setIsSidebarOpen(false)} className="hover:text-nous-subtle transition-colors">
  <X size={14} />
  </button>
  </div>
  
  <div className="relative group">
- <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-600 group-focus-within:text-stone-500 transition-colors"/>
+ <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-nous-subtle group-focus-within:text-nous-text0 transition-colors"/>
  <input 
  type="text"
  value={folderSearchTerm}
  onChange={e => setFolderSearchTerm(e.target.value)}
  placeholder="Filter Dossiers..."
- className="w-full pl-9 pr-4 py-2.5 bg-stone-900/50 border border-stone-800 font-mono text-[10px] focus:outline-none focus:border-stone-800 dark:focus:border-stone-300/50 transition-all text-stone-300 placeholder:text-stone-700"
+ className="w-full pl-9 pr-4 py-2.5 bg-nous-base/50 border border-nous-border font-mono text-[10px] focus:outline-none focus:border-nous-border dark:focus:border-nous-border/50 transition-all text-nous-subtle placeholder:text-nous-subtle"
  />
  </div>
 
  <button 
  onClick={() => setShowNewFolder(true)}
- className="w-full py-3 border border-dashed border-stone-800 hover:border-stone-800 dark:hover:border-stone-300/50 font-mono text-[9px] uppercase tracking-widest font-bold text-stone-500 hover:text-stone-800 dark:hover:text-stone-300 transition-all flex items-center justify-center gap-2 group"
+ className="w-full py-3 border border-dashed border-nous-border hover:border-nous-border /50 font-mono text-[9px] uppercase tracking-widest font-bold text-nous-text0 hover:text-nous-text transition-all flex items-center justify-center gap-2 group"
  >
  <Plus size={12} className="group-hover:rotate-90 transition-transform"/> Initialize Project
  </button>
@@ -705,18 +705,18 @@ export default function DossierView() {
  <button
  key={folder.id}
  onClick={() => setActiveFolder(folder)}
- className={`w-full text-left px-4 py-3 border border-transparent transition-all group relative overflow-hidden ${activeFolder?.id === folder.id ? 'bg-stone-500/5 border-stone-500/20 text-stone-500' : 'hover:bg-stone-900 hover:border-stone-800 text-stone-500'}`}
+ className={`w-full text-left px-4 py-3 border border-transparent transition-all group relative overflow-hidden ${activeFolder?.id === folder.id ? 'bg-nous-base0/5 border-nous-border/20 text-nous-text0' : 'hover:bg-nous-base hover:border-nous-border text-nous-text0'}`}
  >
  <div className="flex justify-between items-start relative z-10">
- <h4 className={`font-serif italic text-sm truncate pr-4 transition-colors ${activeFolder?.id === folder.id ? 'text-stone-400' : 'group-hover:text-stone-300'}`}>{folder.name}</h4>
+ <h4 className={`font-serif italic text-sm truncate pr-4 transition-colors ${activeFolder?.id === folder.id ? 'text-nous-subtle' : 'group-hover:text-nous-subtle'}`}>{folder.name}</h4>
  <span className="font-mono text-[8px] opacity-50">{new Date(folder.createdAt).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' })}</span>
  </div>
- {activeFolder?.id === folder.id && <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-stone-500"/>}
+ {activeFolder?.id === folder.id && <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-nous-base0"/>}
  </button>
  ))
  )}
  {filteredFolders.length === 0 && folderSearchTerm && (
- <div className="p-8 text-center opacity-30 font-mono text-[9px] uppercase tracking-widest text-stone-500">No matches found.</div>
+ <div className="p-8 text-center opacity-30 font-mono text-[9px] uppercase tracking-widest text-nous-text0">No matches found.</div>
  )}
  </div>
  </motion.aside>
@@ -727,9 +727,9 @@ export default function DossierView() {
  <main className="flex-1 flex flex-col relative overflow-hidden bg-[#F2F0E9]">
  
  {/* MOBILE FOLDER SELECTOR */}
- <div className="md:hidden p-4 border-b border-stone-800 bg-stone-900 flex gap-2 items-center print:hidden">
+ <div className="md:hidden p-4 border-b border-nous-border bg-nous-base flex gap-2 items-center print:hidden">
  <select 
- className="flex-1 bg-transparent font-serif italic text-lg outline-none text-stone-200"
+ className="flex-1 bg-transparent font-serif italic text-lg outline-none text-nous-text"
  value={activeFolder?.id || ''}
  onChange={(e) => {
  if (e.target.value === 'new') {
@@ -749,7 +749,7 @@ export default function DossierView() {
  </div>
 
  {activeFolder ? (
- <div className="flex-1 relative w-full h-full overflow-hidden text-[#1C1917]" id="dossier-canvas">
+ <div className="flex-1 relative w-full h-full overflow-hidden text-[#1C1917]"id="dossier-canvas">
  <motion.div 
  drag 
  dragConstraints={{ left: -2000, right: 2000, top: -2000, bottom: 2000 }}
@@ -768,7 +768,7 @@ export default function DossierView() {
  <h2 className="font-serif text-4xl md:text-6xl italic tracking-tighter text-[#1C1917] leading-none">{activeFolder.name}</h2>
  </div>
 
-        {/* Memo Widget */}
+ {/* Memo Widget */}
  <AnimatePresence>
  {showMemoWidget && (
  <motion.div
@@ -782,7 +782,7 @@ export default function DossierView() {
  onPointerDownCapture={(e) => e.stopPropagation()}
  >
  {/* Tape */}
- <div className="tape-top z-10 border border-stone-200/50" />
+ <div className="tape-top z-10 border border-nous-border/50"/>
  
  <div className="flex justify-between items-start mb-4">
  <h3 className="font-serif italic text-2xl text-[#1C1917]">Strategic Memo</h3>
@@ -795,7 +795,7 @@ export default function DossierView() {
  value={folderMemo}
  onChange={(e) => setFolderMemo(e.target.value)}
  onBlur={handleSaveFolderMemo}
- className="w-full h-64 bg-transparent border-none resize-none font-sans text-sm leading-relaxed text-[#1C1917] focus:outline-none placeholder:text-stone-400"
+ className="w-full h-64 bg-transparent border-none resize-none font-sans text-sm leading-relaxed text-[#1C1917] focus:outline-none placeholder:text-nous-subtle"
  placeholder="Define the project intent, core pillars, and desired outcomes..."
  />
  </motion.div>
@@ -818,8 +818,8 @@ export default function DossierView() {
  <div className="flex justify-between items-start mb-6 border-b border-[#1C1917] pb-2">
  <div className="flex items-center gap-2">
  <h3 className="font-mono text-[10px] uppercase tracking-widest font-bold text-[#1C1917]">Micro-Log // Punchlist</h3>
- <button onClick={handleAutoPunchlist} disabled={isGeneratingPunchlist} className="text-[#1C1917] hover:text-stone-500 transition-colors" title="Auto-Awesome Directives">
- {isGeneratingPunchlist ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+ <button onClick={handleAutoPunchlist} disabled={isGeneratingPunchlist} className="text-[#1C1917] hover:text-nous-text0 transition-colors"title="Auto-Awesome Directives">
+ {isGeneratingPunchlist ? <Loader2 size={12} className="animate-spin"/> : <Sparkles size={12} />}
  </button>
  </div>
  <button onClick={() => setShowPunchlistWidget(false)} className="opacity-0 group-hover:opacity-100 text-[#1C1917] hover:text-red-600 transition-opacity print:hidden">
@@ -845,7 +845,7 @@ export default function DossierView() {
  onChange={e => setNewTaskText(e.target.value)} 
  onKeyDown={e => e.key === 'Enter' && handleAddTask()}
  placeholder="ADD ITEM..."
- className="flex-1 bg-transparent border-none font-mono text-[11px] uppercase tracking-wider focus:outline-none text-[#1C1917] placeholder:text-stone-400"
+ className="flex-1 bg-transparent border-none font-mono text-[11px] uppercase tracking-wider focus:outline-none text-[#1C1917] placeholder:text-nous-subtle"
  />
  </div>
  </div>
@@ -866,9 +866,9 @@ export default function DossierView() {
  >
  <div className="border border-[#1C1917] bg-white shadow-sm overflow-hidden">
  {art.elements[0].type === 'image' ? (
- <img src={art.elements[0].content} className="w-full h-auto object-cover grayscale hover:grayscale-0 transition-all duration-500" draggable={false} />
+ <img src={art.elements[0].content} className="w-full h-auto object-cover grayscale hover:grayscale-0 transition-all duration-500"draggable={false} />
  ) : (
- <div className="w-full aspect-square p-4 flex flex-col justify-center bg-stone-100">
+ <div className="w-full aspect-square p-4 flex flex-col justify-center bg-nous-base">
  <p className="font-serif italic text-sm text-[#1C1917] line-clamp-4">"{art.elements[0].content}"</p>
  </div>
  )}
@@ -886,24 +886,24 @@ export default function DossierView() {
  {/* Floating Tool Palette */}
  <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-[#1C1917] text-[#F2F0E9] px-6 py-3 shadow-2xl print:hidden">
  {!isSidebarOpen && (
- <button onClick={() => setIsSidebarOpen(true)} className="font-mono text-[10px] uppercase tracking-widest hover:text-stone-400 transition-colors">
+ <button onClick={() => setIsSidebarOpen(true)} className="font-mono text-[10px] uppercase tracking-widest hover:text-nous-subtle transition-colors">
  [ REGISTRY ]
  </button>
  )}
- <button onClick={() => fileInputRef.current?.click()} className="font-mono text-[10px] uppercase tracking-widest hover:text-stone-400 transition-colors">
+ <button onClick={() => fileInputRef.current?.click()} className="font-mono text-[10px] uppercase tracking-widest hover:text-nous-subtle transition-colors">
  [ ADD ARTIFACT ]
  </button>
- <button onClick={() => setShowMemoWidget(true)} className="font-mono text-[10px] uppercase tracking-widest hover:text-stone-400 transition-colors">
+ <button onClick={() => setShowMemoWidget(true)} className="font-mono text-[10px] uppercase tracking-widest hover:text-nous-subtle transition-colors">
  [ ADD MEMO ]
  </button>
- <button onClick={() => setShowPunchlistWidget(true)} className="font-mono text-[10px] uppercase tracking-widest hover:text-stone-400 transition-colors">
+ <button onClick={() => setShowPunchlistWidget(true)} className="font-mono text-[10px] uppercase tracking-widest hover:text-nous-subtle transition-colors">
  [ ADD PUNCHLIST ]
  </button>
- <div className="w-px h-4 bg-stone-700 mx-2" />
+ <div className="w-px h-4 bg-stone-700 mx-2"/>
  <button onClick={() => {
- window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Dossier Compiled to PDF.", icon: <Check size={14} /> } }));
+ window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message:"Dossier Compiled to PDF.", icon: <Check size={14} /> } }));
  window.print();
- }} className="font-mono text-[10px] uppercase tracking-widest font-bold text-white hover:text-stone-300 transition-colors">
+ }} className="font-mono text-[10px] uppercase tracking-widest font-bold text-white hover:text-nous-subtle transition-colors">
  [ EXPORT DOSSIER ]
  </button>
  </div>
@@ -911,10 +911,10 @@ export default function DossierView() {
  </div>
  ) : (
  <div className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-8 opacity-20">
- <Briefcase size={64} strokeWidth={1} className="text-stone-500"/>
+ <Briefcase size={64} strokeWidth={1} className="text-nous-text0"/>
  <div className="space-y-2">
- <h3 className="font-serif italic text-3xl text-stone-400">Select a Project Dossier.</h3>
- <p className="font-mono text-[9px] uppercase tracking-widest font-bold text-stone-600">Or initialize a new container from the registry.</p>
+ <h3 className="font-serif italic text-3xl text-nous-subtle">Select a Project Dossier.</h3>
+ <p className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-subtle">Or initialize a new container from the registry.</p>
  </div>
  </div>
  )}
@@ -925,16 +925,16 @@ export default function DossierView() {
  <AnimatePresence>
  {showNewFolder && (
  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[7000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
- <div className="bg-[#1C1917] p-10 max-w-sm w-full space-y-8 border border-stone-800 relative overflow-hidden">
+ <div className="bg-[#1C1917] p-10 max-w-sm w-full space-y-8 border border-nous-border relative overflow-hidden">
  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-stone-500 to-transparent opacity-50"/>
  <div className="text-center space-y-2">
- <FolderPlus size={32} className="mx-auto text-stone-500"/>
- <h3 className="font-serif italic text-2xl text-stone-200">New Dossier.</h3>
+ <FolderPlus size={32} className="mx-auto text-nous-text0"/>
+ <h3 className="font-serif italic text-2xl text-nous-text">New Dossier.</h3>
  </div>
- <input value={newFolderName} onChange={e => setNewFolderName(e.target.value)} placeholder="Project Name..."className="w-full border-b border-stone-800 bg-transparent py-2 text-center font-mono text-lg focus:outline-none focus:border-stone-500 transition-colors text-stone-500 placeholder:text-stone-700"autoFocus />
+ <input value={newFolderName} onChange={e => setNewFolderName(e.target.value)} placeholder="Project Name..."className="w-full border-b border-nous-border bg-transparent py-2 text-center font-mono text-lg focus:outline-none focus:border-nous-border transition-colors text-nous-text0 placeholder:text-nous-subtle"autoFocus />
  <div className="flex gap-4">
- <button onClick={() => setShowNewFolder(false)} className="flex-1 py-3 text-stone-500 hover:text-stone-300 font-mono text-[9px] uppercase font-bold tracking-widest border border-stone-800 hover:border-stone-600 transition-all">Cancel</button>
- <button onClick={handleCreateFolder} className="flex-[2] py-3 bg-stone-500 text-black font-mono text-[9px] uppercase font-bold tracking-widest hover:scale-105 transition-all">Initialize</button>
+ <button onClick={() => setShowNewFolder(false)} className="flex-1 py-3 text-nous-text0 hover:text-nous-subtle font-mono text-[9px] uppercase font-bold tracking-widest border border-nous-border hover:border-nous-border transition-all">Cancel</button>
+ <button onClick={handleCreateFolder} className="flex-[2] py-3 bg-nous-base0 text-black font-mono text-[9px] uppercase font-bold tracking-widest hover:scale-105 transition-all">Initialize</button>
  </div>
  </div>
  </motion.div>
@@ -942,16 +942,16 @@ export default function DossierView() {
  
  {showNoteModal && (
  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[7000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
- <div className="bg-[#1C1917] p-8 max-w-lg w-full space-y-6 border border-stone-800">
- <div className="flex justify-between items-center border-b border-stone-800 pb-4">
- <h3 className="font-serif italic text-2xl text-stone-200">New Field Note.</h3>
- <button onClick={() => setShowNoteModal(false)}><X size={20} className="text-stone-500 hover:text-stone-300"/></button>
+ <div className="bg-[#1C1917] p-8 max-w-lg w-full space-y-6 border border-nous-border">
+ <div className="flex justify-between items-center border-b border-nous-border pb-4">
+ <h3 className="font-serif italic text-2xl text-nous-text">New Field Note.</h3>
+ <button onClick={() => setShowNoteModal(false)}><X size={20} className="text-nous-text0 hover:text-nous-subtle"/></button>
  </div>
  <div className="space-y-4">
- <input value={noteTitle} onChange={e => setNoteTitle(e.target.value)} placeholder="Note Title..."className="w-full bg-stone-900/50 border border-stone-800 p-3 font-mono text-sm focus:outline-none focus:border-stone-500 text-stone-300 placeholder:text-stone-700"/>
- <textarea value={noteContent} onChange={e => setNoteContent(e.target.value)} placeholder="Capture thought..."className="w-full h-48 bg-stone-900/50 border border-stone-800 p-4 font-serif italic text-base focus:outline-none focus:border-stone-500 resize-none text-stone-300 placeholder:text-stone-700"/>
+ <input value={noteTitle} onChange={e => setNoteTitle(e.target.value)} placeholder="Note Title..."className="w-full bg-nous-base/50 border border-nous-border p-3 font-mono text-sm focus:outline-none focus:border-nous-border text-nous-subtle placeholder:text-nous-subtle"/>
+ <textarea value={noteContent} onChange={e => setNoteContent(e.target.value)} placeholder="Capture thought..."className="w-full h-48 bg-nous-base/50 border border-nous-border p-4 font-serif italic text-base focus:outline-none focus:border-nous-border resize-none text-nous-subtle placeholder:text-nous-subtle"/>
  </div>
- <button onClick={handleSaveNote} disabled={isSavingNote || !noteContent.trim()} className="w-full py-4 bg-stone-900/20 border border-stone-500/50 text-stone-500 font-mono text-[9px] uppercase font-bold tracking-widest flex items-center justify-center gap-2 hover:bg-stone-900/40 transition-colors disabled:opacity-50">
+ <button onClick={handleSaveNote} disabled={isSavingNote || !noteContent.trim()} className="w-full py-4 bg-nous-base/20 border border-nous-border/50 text-nous-text0 font-mono text-[9px] uppercase font-bold tracking-widest flex items-center justify-center gap-2 hover:bg-nous-base/40 transition-colors disabled:opacity-50">
  {isSavingNote ? <Loader2 size={14} className="animate-spin"/> : <Save size={14} />} Anchor Note
  </button>
  </div>
@@ -960,65 +960,65 @@ export default function DossierView() {
 
  {showBlueprintModal && activeBlueprint && (
  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[7000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
- <div className="bg-[#1C1917] p-8 max-w-2xl w-full space-y-6 border border-stone-800 max-h-[80vh] overflow-y-auto">
- <div className="flex justify-between items-center border-b border-stone-800 pb-4">
- <h3 className="font-serif italic text-2xl text-stone-500">Strategic Blueprint.</h3>
- <button onClick={() => setShowBlueprintModal(false)}><X size={20} className="text-stone-500 hover:text-stone-300"/></button>
+ <div className="bg-[#1C1917] p-8 max-w-2xl w-full space-y-6 border border-nous-border max-h-[80vh] overflow-y-auto">
+ <div className="flex justify-between items-center border-b border-nous-border pb-4">
+ <h3 className="font-serif italic text-2xl text-nous-text0">Strategic Blueprint.</h3>
+ <button onClick={() => setShowBlueprintModal(false)}><X size={20} className="text-nous-text0 hover:text-nous-subtle"/></button>
  </div>
- <div className="space-y-6 font-mono text-xs text-stone-300">
- <div><h4 className="text-stone-500 uppercase tracking-widest mb-1">Inciting Debris</h4><p>{activeBlueprint.inciting_debris}</p></div>
- <div><h4 className="text-stone-500 uppercase tracking-widest mb-1">Structural Pivot</h4><p>{activeBlueprint.structural_pivot}</p></div>
- <div><h4 className="text-stone-500 uppercase tracking-widest mb-1">Climax Manifest</h4><p>{activeBlueprint.climax_manifest}</p></div>
- <div><h4 className="text-stone-500 uppercase tracking-widest mb-1">End Product Spec</h4><p>{activeBlueprint.end_product_spec}</p></div>
+ <div className="space-y-6 font-mono text-xs text-nous-subtle">
+ <div><h4 className="text-nous-text0 uppercase tracking-widest mb-1">Inciting Debris</h4><p>{activeBlueprint.inciting_debris}</p></div>
+ <div><h4 className="text-nous-text0 uppercase tracking-widest mb-1">Structural Pivot</h4><p>{activeBlueprint.structural_pivot}</p></div>
+ <div><h4 className="text-nous-text0 uppercase tracking-widest mb-1">Climax Manifest</h4><p>{activeBlueprint.climax_manifest}</p></div>
+ <div><h4 className="text-nous-text0 uppercase tracking-widest mb-1">End Product Spec</h4><p>{activeBlueprint.end_product_spec}</p></div>
  </div>
- <button onClick={() => setShowBlueprintModal(false)} className="w-full py-3 border border-stone-800 text-stone-500 hover:text-stone-300 font-mono text-[9px] uppercase font-bold tracking-widest hover:border-stone-600 transition-all">Close</button>
+ <button onClick={() => setShowBlueprintModal(false)} className="w-full py-3 border border-nous-border text-nous-text0 hover:text-nous-subtle font-mono text-[9px] uppercase font-bold tracking-widest hover:border-nous-border transition-all">Close</button>
  </div>
  </motion.div>
  )}
 
  {showImportModal && (
  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[7000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
- <div className="bg-[#1C1917] p-8 max-w-2xl w-full space-y-6 border border-stone-800 flex flex-col max-h-[80vh]">
- <div className="flex justify-between items-center border-b border-stone-800 pb-4">
+ <div className="bg-[#1C1917] p-8 max-w-2xl w-full space-y-6 border border-nous-border flex flex-col max-h-[80vh]">
+ <div className="flex justify-between items-center border-b border-nous-border pb-4">
  <div className="space-y-1">
- <h3 className="font-serif italic text-2xl text-stone-200">Import from Archival.</h3>
- <p className="font-mono text-[9px] uppercase tracking-widest font-bold text-stone-500">Select shards to manifest in this dossier.</p>
+ <h3 className="font-serif italic text-2xl text-nous-text">Import from Archival.</h3>
+ <p className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-text0">Select shards to manifest in this dossier.</p>
  </div>
- <button onClick={() => setShowImportModal(false)}><X size={20} className="text-stone-500 hover:text-stone-300"/></button>
+ <button onClick={() => setShowImportModal(false)}><X size={20} className="text-nous-text0 hover:text-nous-subtle"/></button>
  </div>
  
  <div className="flex-1 overflow-y-auto no-scrollbar min-h-[300px]">
  {isImporting ? (
- <div className="h-full flex items-center justify-center p-8"><LoadingSkeleton lines={8} className="w-full max-w-lg" /></div>
+ <div className="h-full flex items-center justify-center p-8"><LoadingSkeleton lines={8} className="w-full max-w-lg"/></div>
  ) : (
  <div className="grid grid-cols-2 gap-4">
  {pocketItems.map(item => (
  <div 
  key={item.id} 
  onClick={() => handleImportItem(item)}
- className="group relative aspect-video bg-stone-900 border border-stone-800 overflow-hidden cursor-pointer hover:border-stone-500 transition-all"
+ className="group relative aspect-video bg-nous-base border border-nous-border overflow-hidden cursor-pointer hover:border-nous-border transition-all"
  >
  {item.type === 'image' || item.type === 'zine_card' ? (
  <img src={item.content.imageUrl} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all opacity-60 group-hover:opacity-100"/>
  ) : (
  <div className="w-full h-full p-4 flex flex-col justify-center">
- <span className="font-mono text-[8px] uppercase font-bold text-stone-500 mb-1">{item.type}</span>
- <p className="font-serif italic text-xs line-clamp-3 text-stone-400">"{item.content.prompt || item.content.text || 'Sonic shard'}"</p>
+ <span className="font-mono text-[8px] uppercase font-bold text-nous-text0 mb-1">{item.type}</span>
+ <p className="font-serif italic text-xs line-clamp-3 text-nous-subtle">"{item.content.prompt || item.content.text || 'Sonic shard'}"</p>
  </div>
  )}
- <div className="absolute inset-0 bg-stone-500/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+ <div className="absolute inset-0 bg-nous-base0/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
  <Plus size={24} className="text-white drop-"/>
  </div>
  </div>
  ))}
  {pocketItems.length === 0 && (
- <div className="col-span-full py-12 text-center opacity-30 font-serif italic text-stone-500">The Pocket is empty.</div>
+ <div className="col-span-full py-12 text-center opacity-30 font-serif italic text-nous-text0">The Pocket is empty.</div>
  )}
  </div>
  )}
  </div>
  
- <button onClick={() => setShowImportModal(false)} className="w-full py-4 border border-stone-800 font-mono text-[9px] uppercase font-bold tracking-widest hover:bg-stone-900 transition-colors text-stone-400">
+ <button onClick={() => setShowImportModal(false)} className="w-full py-4 border border-nous-border font-mono text-[9px] uppercase font-bold tracking-widest hover:bg-nous-base transition-colors text-nous-subtle">
  Close Registry
  </button>
  </div>
@@ -1026,7 +1026,7 @@ export default function DossierView() {
  )}
  </AnimatePresence>
 
- <input type="file" ref={fileInputRef} className="hidden" accept="image/*" multiple onChange={handleManualUpload} />
+ <input type="file"ref={fileInputRef} className="hidden"accept="image/*"multiple onChange={handleManualUpload} />
  </div>
  );
 };

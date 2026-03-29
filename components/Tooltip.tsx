@@ -53,18 +53,18 @@ export const Tooltip: React.FC<TooltipProps> = ({ text, binaryText, children, po
  initial={{ opacity: 0, y: position === 'top' ? 10 : -10, scale: 0.95 }}
  animate={{ opacity: 1, y: 0, scale: 1 }}
  exit={{ opacity: 0, scale: 0.95 }}
- className={`absolute z-[20000] w-64 p-5 bg-white/95 dark:bg-stone-900/98 backdrop-blur-3xl border border-stone-100 dark:border-stone-800 rounded-none pointer-events-none ${positions[position]}`}
+ className={`absolute z-[20000] w-64 p-5 bg-white/95 /98 backdrop-blur-3xl border border-nous-border rounded-none pointer-events-none ${positions[position]}`}
  >
  <div className="space-y-4">
- <div className="flex justify-between items-center border-b border-stone-50 dark:border-stone-800 pb-2">
+ <div className="flex justify-between items-center border-b border-stone-50 pb-2">
  <div className="flex items-center gap-2">
- <div className="w-1.5 h-1.5 rounded-none bg-stone-500 animate-pulse"/>
- <span className="font-sans text-[7px] uppercase tracking-[0.3em] font-black text-stone-400">Definition_Audit</span>
+ <div className="w-1.5 h-1.5 rounded-none bg-nous-base0 animate-pulse"/>
+ <span className="font-sans text-[7px] uppercase tracking-[0.3em] font-black text-nous-subtle">Definition_Audit</span>
  </div>
  {binaryText && (
  <button 
  onClick={(e) => { e.stopPropagation(); setShowBinary(!showBinary); }}
- className={`p-1 rounded-none transition-all pointer-events-auto ${showBinary ? 'bg-stone-500 text-white' : 'bg-stone-50 text-stone-300'}`}
+ className={`p-1 rounded-none transition-all pointer-events-auto ${showBinary ? 'bg-nous-base0 text-white' : 'bg-nous-base text-nous-subtle'}`}
  >
  <Binary size={10} />
  </button>
@@ -75,13 +75,13 @@ export const Tooltip: React.FC<TooltipProps> = ({ text, binaryText, children, po
  <AnimatePresence mode="wait">
  {showBinary && binaryText ? (
  <motion.div key="binary"initial={{ opacity: 0, x: 5 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -5 }} className="space-y-2">
- <span className="font-sans text-[6px] uppercase tracking-widest font-black text-stone-500">Clinical ID:</span>
- <p className="font-mono text-[10px] leading-tight text-stone-600 dark:text-stone-400 uppercase tracking-tighter">
+ <span className="font-sans text-[6px] uppercase tracking-widest font-black text-nous-text0">Clinical ID:</span>
+ <p className="font-mono text-[10px] leading-tight text-nous-subtle uppercase tracking-tighter">
  {binaryText}
  </p>
  </motion.div>
  ) : (
- <motion.p key="metaphor"initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 5 }} className="font-serif italic text-xs leading-relaxed text-stone-600 dark:text-stone-300 text-balance">
+ <motion.p key="metaphor"initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 5 }} className="font-serif italic text-xs leading-relaxed text-nous-subtle text-balance">
  {text}
  </motion.p>
  )}
@@ -89,7 +89,7 @@ export const Tooltip: React.FC<TooltipProps> = ({ text, binaryText, children, po
  </div>
  </div>
  
- <div className={`absolute w-2 h-2 bg-white/95 dark:bg-stone-900/98 border-stone-100 dark:border-stone-800 rotate-45 border-b border-r ${
+ <div className={`absolute w-2 h-2 bg-white/95 /98 border-nous-border rotate-45 border-b border-r ${
  position === 'top' ? '-bottom-1 left-1/2 -translate-x-1/2' : 
  position === 'bottom' ? '-top-1 left-1/2 -translate-x-1/2 border-t border-l border-b-0 border-r-0' : ''
  }`} />

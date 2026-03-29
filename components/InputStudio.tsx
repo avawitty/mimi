@@ -159,15 +159,15 @@ export const InputStudio: React.FC<{
  const newMedia = await Promise.all(files.map(async (f) => {
  let data: string;
  if (f.type.startsWith('image/')) {
-   const { compressImage } = await import('../services/imageUtils');
-   data = await compressImage(f, 800, 800, 0.7);
+ const { compressImage } = await import('../services/imageUtils');
+ data = await compressImage(f, 800, 800, 0.7);
  } else {
-   data = await new Promise<string>((resolve, reject) => {
-   const reader = new FileReader();
-   reader.onloadend = () => resolve(reader.result as string);
-   reader.onerror = reject;
-   reader.readAsDataURL(f);
-   });
+ data = await new Promise<string>((resolve, reject) => {
+ const reader = new FileReader();
+ reader.onloadend = () => resolve(reader.result as string);
+ reader.onerror = reject;
+ reader.readAsDataURL(f);
+ });
  }
  return {
  file: f,
@@ -360,13 +360,13 @@ export const InputStudio: React.FC<{
  <div className="text-center mb-8 mt-12 w-full">
  {activeThread && (
  <div className="mb-6 flex items-center justify-center gap-2">
- <div className="w-2 h-2 rounded-none bg-stone-500 dark:bg-stone-400 animate-pulse"/>
- <span className="text-[10px] uppercase tracking-widest text-stone-600 dark:text-stone-400 font-bold">
+ <div className="w-2 h-2 rounded-none bg-nous-base0 dark:bg-stone-400 animate-pulse"/>
+ <span className="text-[10px] uppercase tracking-widest text-nous-subtle font-bold">
  Actively Weaving: {activeThread.title}
  </span>
  <button 
  onClick={() => setActiveThread(null)}
- className="text-stone-400 hover:text-red-500 transition-colors ml-2"
+ className="text-nous-subtle hover:text-red-500 transition-colors ml-2"
  title="Clear Active Thread"
  >
  <X size={12} />
@@ -374,17 +374,17 @@ export const InputStudio: React.FC<{
  </div>
  )}
  <div className="flex items-center justify-center gap-2 mb-4 w-full max-w-lg mx-auto">
- <Sparkles size={16} className="text-stone-400 cursor-pointer hover:text-primary dark:hover:text-white transition-colors flex-shrink-0"onClick={handleAutoGenerateTitle} />
+ <Sparkles size={16} className="text-nous-subtle cursor-pointer hover:text-primary dark:hover:text-white transition-colors flex-shrink-0"onClick={handleAutoGenerateTitle} />
  <input 
  type="text"
  placeholder="ENTER ZINE TITLE..."
  value={title || ''}
  onChange={(e) => setTitle(e.target.value)}
- className="w-full bg-transparent border-b border-stone-300 dark:border-stone-700 pb-2 text-sm uppercase tracking-widest text-stone-500 placeholder:text-stone-400 outline-none text-center"
+ className="w-full bg-transparent border-b border-nous-border pb-2 text-sm uppercase tracking-widest text-nous-text0 placeholder:text-nous-subtle outline-none text-center"
  />
  </div>
- <p className="text-[8px] uppercase tracking-widest text-stone-400">PROMPT_CYCLE {promptIndex + 1}</p>
- <p className="text-[10px] uppercase tracking-widest text-stone-500">"{DEFAULT_PROMPTS[promptIndex]}"</p>
+ <p className="text-[8px] uppercase tracking-widest text-nous-subtle">PROMPT_CYCLE {promptIndex + 1}</p>
+ <p className="text-[10px] uppercase tracking-widest text-nous-text0">"{DEFAULT_PROMPTS[promptIndex]}"</p>
  </div>
 
  {/* Fragments of a conversation regarding... (textarea) */}
@@ -393,10 +393,10 @@ export const InputStudio: React.FC<{
  <motion.div 
  initial={{ opacity: 0, y: 10 }}
  animate={{ opacity: 1, y: 0 }}
- className="mb-4 px-3 py-1 bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-none flex items-center gap-2"
+ className="mb-4 px-3 py-1 bg-nous-base border border-nous-border rounded-none flex items-center gap-2"
  >
- <Sparkles size={10} className="text-stone-500 dark:text-stone-400"/>
- <span className="text-[9px] uppercase tracking-widest text-stone-600 dark:text-stone-400 font-bold">Task Intelligence Active</span>
+ <Sparkles size={10} className="text-nous-text0"/>
+ <span className="text-[9px] uppercase tracking-widest text-nous-subtle font-bold">Task Intelligence Active</span>
  </motion.div>
  )}
 
@@ -404,83 +404,83 @@ export const InputStudio: React.FC<{
  ref={textareaRef}
  value={input || ''}
  onChange={(e) => setInput(e.target.value)}
- className="w-full bg-transparent border-none focus:ring-0 text-2xl md:text-3xl font-serif italic text-center mb-2 text-primary dark:text-white outline-none resize-none p-8 min-h-[200px]"
+ className="w-full bg-transparent border-none focus:ring-0 text-2xl md:text-3xl font-serif italic text-center mb-2 text-primary  outline-none resize-none p-8 min-h-[200px]"
  placeholder="Fragments of a conversation regarding..."
  />
 
  {/* Studio Toolbar - Neomorphic with Tooltips */}
- <div className="flex items-center gap-2 p-1.5 px-4 mb-6 rounded-none bg-stone-100 dark:bg-stone-900 dark: border border-white/20 dark:border-black/20">
+ <div className="flex items-center gap-2 p-1.5 px-4 mb-6 rounded-none bg-nous-base dark: border border-white/20 /20">
  <div className="relative group flex items-center justify-center">
- <button onClick={() => mediaInputRef.current?.click()} className="p-1.5 text-stone-500 hover:text-primary dark:hover:text-white transition-colors">
+ <button onClick={() => mediaInputRef.current?.click()} className="p-1.5 text-nous-text0 hover:text-primary dark:hover:text-white transition-colors">
  <Paperclip size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
- <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Upload Media</div>
+ <div className="bg-nous-base dark:bg-stone-200 text-nous-base text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Upload Media</div>
  </div>
  </div>
 
  <div className="relative group flex items-center justify-center">
- <button onClick={startRecording} className={`p-1.5 transition-colors ${isRecording ? 'text-red-500' : 'text-stone-500 hover:text-primary dark:hover:text-white'}`}>
+ <button onClick={startRecording} className={`p-1.5 transition-colors ${isRecording ? 'text-red-500' : 'text-nous-text0 hover:text-primary dark:hover:text-white'}`}>
  <Mic size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
- <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Voice Transcription</div>
+ <div className="bg-nous-base dark:bg-stone-200 text-nous-base text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Voice Transcription</div>
  </div>
  </div>
  
  <div className="w-px h-3 bg-stone-300 dark:bg-stone-700 mx-1"/>
 
  <div className="relative group flex items-center justify-center">
- <button onClick={() => setLiteMode(!liteMode)} className={`p-1.5 transition-colors ${liteMode ? 'text-yellow-500' : 'text-stone-500 hover:text-yellow-500'}`}>
+ <button onClick={() => setLiteMode(!liteMode)} className={`p-1.5 transition-colors ${liteMode ? 'text-yellow-500' : 'text-nous-text0 hover:text-yellow-500'}`}>
  <Zap size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
- <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Lite Mode</div>
+ <div className="bg-nous-base dark:bg-stone-200 text-nous-base text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Lite Mode</div>
  </div>
  </div>
 
  <div className="relative group flex items-center justify-center">
- <button onClick={() => setDeepThinking(!deepThinking)} className={`p-1.5 transition-colors ${deepThinking ? 'text-purple-500' : 'text-stone-500 hover:text-purple-500'}`}>
+ <button onClick={() => setDeepThinking(!deepThinking)} className={`p-1.5 transition-colors ${deepThinking ? 'text-purple-500' : 'text-nous-text0 hover:text-purple-500'}`}>
  <BrainCircuit size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
- <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Deep Thinking</div>
+ <div className="bg-nous-base dark:bg-stone-200 text-nous-base text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Deep Thinking</div>
  </div>
  </div>
 
  <div className="relative group flex items-center justify-center">
- <button onClick={() => setUseSearch(!useSearch)} className={`p-1.5 transition-colors ${useSearch ? 'text-blue-500' : 'text-stone-500 hover:text-blue-500'}`}>
+ <button onClick={() => setUseSearch(!useSearch)} className={`p-1.5 transition-colors ${useSearch ? 'text-blue-500' : 'text-nous-text0 hover:text-blue-500'}`}>
  <Globe size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
- <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Search Grounding</div>
+ <div className="bg-nous-base dark:bg-stone-200 text-nous-base text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Search Grounding</div>
  </div>
  </div>
 
  <div className="relative group flex items-center justify-center">
- <button onClick={() => setUseMaps(!useMaps)} className={`p-1.5 transition-colors ${useMaps ? 'text-orange-500' : 'text-stone-500 hover:text-orange-500'}`}>
+ <button onClick={() => setUseMaps(!useMaps)} className={`p-1.5 transition-colors ${useMaps ? 'text-orange-500' : 'text-nous-text0 hover:text-orange-500'}`}>
  <MapPin size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
- <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Maps Grounding</div>
+ <div className="bg-nous-base dark:bg-stone-200 text-nous-base text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Maps Grounding</div>
  </div>
  </div>
 
  <div className="relative group flex items-center justify-center">
- <button onClick={() => setTaskMode(!taskMode)} className={`p-1.5 transition-colors ${taskMode ? 'text-stone-900 dark:text-stone-100' : 'text-stone-500 hover:text-stone-900 dark:hover:text-stone-100'}`}>
+ <button onClick={() => setTaskMode(!taskMode)} className={`p-1.5 transition-colors ${taskMode ? 'text-nous-text ' : 'text-nous-text0 hover:text-nous-text '}`}>
  <Sparkles size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
- <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Task Intelligence</div>
+ <div className="bg-nous-base dark:bg-stone-200 text-nous-base text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Task Intelligence</div>
  </div>
  </div>
 
  <div className="relative group flex items-center justify-center">
- <button onClick={() => setUseTailorProfile(!useTailorProfile)} className={`p-1.5 transition-colors ${useTailorProfile ? 'text-indigo-500' : 'text-stone-500 hover:text-indigo-500'}`}>
+ <button onClick={() => setUseTailorProfile(!useTailorProfile)} className={`p-1.5 transition-colors ${useTailorProfile ? 'text-indigo-500' : 'text-nous-text0 hover:text-indigo-500'}`}>
  <Scissors size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
- <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Tailor Profile</div>
+ <div className="bg-nous-base dark:bg-stone-200 text-nous-base text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Tailor Profile</div>
  </div>
  </div>
 
@@ -500,21 +500,21 @@ export const InputStudio: React.FC<{
  }
  }} 
  disabled={isGeneratingPrompt}
- className={`p-1.5 transition-colors ${isGeneratingPrompt ? 'text-red-500 animate-pulse' : 'text-stone-500 hover:text-red-500'}`}
+ className={`p-1.5 transition-colors ${isGeneratingPrompt ? 'text-red-500 animate-pulse' : 'text-nous-text0 hover:text-red-500'}`}
  >
  <Wand2 size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
- <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Mimi Prompt Engine</div>
+ <div className="bg-nous-base dark:bg-stone-200 text-nous-base text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Mimi Prompt Engine</div>
  </div>
  </div>
 
  <div className="relative group flex items-center justify-center">
- <button onClick={() => setInput('')} className="p-1.5 text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 transition-colors">
+ <button onClick={() => setInput('')} className="p-1.5 text-nous-text0 hover:text-nous-text transition-colors">
  <Eraser size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
- <div className="bg-stone-800 dark:bg-stone-200 text-white dark:text-black text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Clear Input</div>
+ <div className="bg-nous-base dark:bg-stone-200 text-nous-base text-[9px] uppercase tracking-widest px-2 py-1 rounded-none whitespace-nowrap">Clear Input</div>
  </div>
  </div>
  </div>
@@ -524,13 +524,13 @@ export const InputStudio: React.FC<{
  {mediaFiles.length > 0 && (
  <div className="flex flex-col items-center w-full">
  <div className="flex items-center justify-between w-full max-w-4xl mb-4 px-4">
- <h3 className="text-[10px] uppercase tracking-widest text-stone-500 font-bold">Artifacts ({mediaFiles.length})</h3>
+ <h3 className="text-[10px] uppercase tracking-widest text-nous-text0 font-bold">Artifacts ({mediaFiles.length})</h3>
  <button 
  onClick={() => {
  setIsSelectionMode(!isSelectionMode);
  if (isSelectionMode) setSelectedMediaIndices(new Set());
  }}
- className={`text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-none transition-colors ${isSelectionMode ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900' : 'bg-stone-200 dark:bg-stone-800 text-stone-600 dark:text-stone-400 hover:bg-stone-300 dark:hover:bg-stone-700'}`}
+ className={`text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-none transition-colors ${isSelectionMode ? 'bg-nous-text text-nous-base ' : 'bg-stone-200 text-nous-subtle hover:bg-stone-300 dark:hover:bg-stone-700'}`}
  >
  {isSelectionMode ? 'Cancel Selection' : 'Select'}
  </button>
@@ -542,21 +542,21 @@ export const InputStudio: React.FC<{
  initial={{ opacity: 0, y: -20 }}
  animate={{ opacity: 1, y: 0 }}
  exit={{ opacity: 0, y: -20 }}
- className="flex flex-wrap items-center gap-4 bg-stone-900 dark:bg-stone-100 text-white dark:text-black px-6 py-3 rounded-none mb-6 z-50 sticky top-4"
+ className="flex flex-wrap items-center gap-4 bg-nous-base text-nous-base px-6 py-3 rounded-none mb-6 z-50 sticky top-4"
  >
  <span className="text-xs font-mono">{selectedMediaIndices.size} Selected</span>
- <div className="h-4 w-px bg-white/20 dark:bg-black/20"></div>
+ <div className="h-4 w-px bg-white/20 /20"></div>
  <button onClick={() => {
  if (selectedMediaIndices.size === mediaFiles.length) {
  setSelectedMediaIndices(new Set());
  } else {
  setSelectedMediaIndices(new Set(mediaFiles.map((_, i) => i)));
  }
- }} className="text-[10px] uppercase tracking-widest hover:text-stone-300 dark:hover:text-stone-600 transition-colors">
+ }} className="text-[10px] uppercase tracking-widest hover:text-nous-subtle transition-colors">
  {selectedMediaIndices.size === mediaFiles.length ? 'Deselect All' : 'Select All'}
  </button>
- <div className="h-4 w-px bg-white/20 dark:bg-black/20"></div>
- <button onClick={handleBatchAnalyze} className="text-[10px] uppercase tracking-widest hover:text-stone-900 dark:hover:text-stone-100 transition-colors flex items-center gap-2">
+ <div className="h-4 w-px bg-white/20 /20"></div>
+ <button onClick={handleBatchAnalyze} className="text-[10px] uppercase tracking-widest hover:text-nous-text transition-colors flex items-center gap-2">
  <Radar size={14} /> Analyze
  </button>
  <button onClick={handleBatchRefract} className="text-[10px] uppercase tracking-widest hover:text-red-400 dark:hover:text-red-600 transition-colors flex items-center gap-2">
@@ -609,15 +609,15 @@ export const InputStudio: React.FC<{
  >
  {isSelectionMode && (
  <div className="absolute top-2 right-2 z-10">
- <div className={`w-5 h-5 rounded-none border-2 flex items-center justify-center transition-colors ${selectedMediaIndices.has(index) ? 'bg-stone-900 border-stone-900 dark:bg-stone-100 dark:border-stone-100' : 'bg-black/20 border-white'}`}>
+ <div className={`w-5 h-5 rounded-none border-2 flex items-center justify-center transition-colors ${selectedMediaIndices.has(index) ? 'bg-nous-base border-nous-border ' : 'bg-black/20 border-white'}`}>
  {selectedMediaIndices.has(index) && <Check size={12} className="text-white"/>}
  </div>
  </div>
  )}
- <div className="w-full h-24 bg-stone-100 overflow-hidden relative">
+ <div className="w-full h-24 bg-nous-base overflow-hidden relative">
  <img src={media.url || media.data} alt="upload"className="w-full h-full object-cover"referrerPolicy="no-referrer"/>
  </div>
- <div className="mt-auto text-[8px] text-stone-400 uppercase truncate text-center font-mono">
+ <div className="mt-auto text-[8px] text-nous-subtle uppercase truncate text-center font-mono">
  {media.name || 'IMAGE_01'}
  </div>
  <button 
@@ -648,7 +648,7 @@ export const InputStudio: React.FC<{
  {isAnalyzing[index] ? 'Analyzing...' : 'Analyze'}
  </button>
  {mediaAnalysis[index] && (
- <div className="mt-1 text-[7px] text-stone-500 leading-tight">
+ <div className="mt-1 text-[7px] text-nous-text0 leading-tight">
  <p className="truncate">{mediaAnalysis[index].tags.slice(0, 3).join(', ')}</p>
  <button 
  onClick={async (e) => {
@@ -677,7 +677,7 @@ export const InputStudio: React.FC<{
  )}
  {media.type === 'audio' && (
  <div 
- className={`bg-stone-100 dark:bg-stone-800 p-3 border border-stone-200 dark:border-stone-700 w-40 h-auto flex flex-col items-center gap-2 rounded-none cursor-pointer relative transition-all duration-300 ${isSelectionMode && selectedMediaIndices.has(index) ? 'ring-2 ring-stone-900 dark:ring-stone-100 scale-105' : ''}`}
+ className={`bg-nous-base p-3 border border-nous-border w-40 h-auto flex flex-col items-center gap-2 rounded-none cursor-pointer relative transition-all duration-300 ${isSelectionMode && selectedMediaIndices.has(index) ? 'ring-2 ring-stone-900 dark:ring-stone-100 scale-105' : ''}`}
  onClick={() => {
  if (isSelectionMode) {
  setSelectedMediaIndices(prev => {
@@ -691,7 +691,7 @@ export const InputStudio: React.FC<{
  >
  {isSelectionMode && (
  <div className="absolute top-2 right-2 z-10">
- <div className={`w-5 h-5 rounded-none border-2 flex items-center justify-center transition-colors ${selectedMediaIndices.has(index) ? 'bg-stone-900 border-stone-900 dark:bg-stone-100 dark:border-stone-100' : 'bg-black/20 border-white'}`}>
+ <div className={`w-5 h-5 rounded-none border-2 flex items-center justify-center transition-colors ${selectedMediaIndices.has(index) ? 'bg-nous-base border-nous-border ' : 'bg-black/20 border-white'}`}>
  {selectedMediaIndices.has(index) && <Check size={12} className="text-white"/>}
  </div>
  </div>
@@ -702,7 +702,7 @@ export const InputStudio: React.FC<{
  key={i}
  animate={{ height: ['20%', '80%', '20%'] }}
  transition={{ duration: 1 + Math.random(), repeat: Infinity, ease:"easeInOut", delay: Math.random() }}
- className="w-0.5 bg-primary dark:bg-white rounded-none"
+ className="w-0.5 bg-primary  rounded-none"
  />
  ))}
  </div>
@@ -724,7 +724,7 @@ export const InputStudio: React.FC<{
  {isAnalyzing[index] ? 'Analyzing...' : 'Analyze'}
  </button>
  {mediaAnalysis[index] && (
- <div className="mt-1 text-[7px] text-stone-500 w-full leading-tight">
+ <div className="mt-1 text-[7px] text-nous-text0 w-full leading-tight">
  <p className="truncate">{mediaAnalysis[index].tags.slice(0, 3).join(', ')}</p>
  <p className="truncate">Mood: {mediaAnalysis[index].aesthetic.mood[0]}</p>
  {mediaAnalysis[index].deltaVerdict && (
@@ -744,7 +744,7 @@ export const InputStudio: React.FC<{
  </div>
 
  {/* Submit Button */}
- <button onClick={() => setShowConfirmation(true)} className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 dark:border-white/20 hover:border-primary dark:hover:border-white transition-colors text-primary dark:text-white mb-4">
+ <button onClick={() => setShowConfirmation(true)} className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 /20 hover:border-primary dark:hover:border-white transition-colors text-primary dark:text-white mb-4">
  → SUBMIT TO ISSUE
  </button>
  </div>
@@ -757,22 +757,22 @@ export const InputStudio: React.FC<{
  initial={{ opacity: 0 }}
  animate={{ opacity: 1 }}
  exit={{ opacity: 0 }}
- className="fixed inset-0 z-[100] flex items-center justify-center bg-stone-100/90 dark:bg-stone-900/90 backdrop-blur-md"
+ className="fixed inset-0 z-[100] flex items-center justify-center bg-nous-base/90 /90 backdrop-blur-md"
  >
  <motion.div
  initial={{ scale: 0.95, y: 20 }}
  animate={{ scale: 1, y: 0 }}
  exit={{ scale: 0.95, y: 20 }}
- className="bg-white dark:bg-stone-800 p-8 max-w-lg w-full border border-stone-200 dark:border-stone-700 flex flex-col items-center text-center shadow-2xl"
+ className="bg-white p-8 max-w-lg w-full border border-nous-border flex flex-col items-center text-center shadow-2xl"
  >
  <h2 className="font-serif italic text-2xl mb-4 text-primary dark:text-white">Confirm Submission</h2>
- <p className="text-sm text-stone-600 dark:text-stone-400 mb-8">
+ <p className="text-sm text-nous-subtle mb-8">
  You are about to submit this artifact to the issue. This action will initiate the synthesis process.
  </p>
  <div className="flex gap-4 w-full">
  <button
  onClick={() => setShowConfirmation(false)}
- className="flex-1 py-3 text-[10px] uppercase tracking-widest border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors"
+ className="flex-1 py-3 text-[10px] uppercase tracking-widest border border-nous-border text-nous-subtle hover:bg-nous-base dark:hover:bg-stone-700 transition-colors"
  >
  Cancel
  </button>
@@ -781,7 +781,7 @@ export const InputStudio: React.FC<{
  setShowConfirmation(false);
  triggerAccession();
  }}
- className="flex-1 py-3 text-[10px] uppercase tracking-widest bg-primary dark:bg-white text-white dark:text-black hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors"
+ className="flex-1 py-3 text-[10px] uppercase tracking-widest bg-primary  text-nous-base hover:bg-nous-base dark:hover:bg-stone-200 transition-colors"
  >
  Confirm & Submit
  </button>
@@ -794,14 +794,14 @@ export const InputStudio: React.FC<{
  {/* ... (rest of the component) */}
 
  {/* FLOATING ORACULAR TABS */}
- <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 pointer-events-auto flex items-center gap-2 bg/90 dark:bg/90 backdrop-blur-xl px-6 py-3 rounded-none border border-stone-200 dark:border-stone-800 dark:">
+ <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-50 pointer-events-auto flex items-center gap-2 bg/90 dark:bg/90 backdrop-blur-xl px-6 py-3 rounded-none border border-nous-border dark:">
  {(['signal', 'inspo', 'treatments', 'orchestrator', 'procurement', 'telemetry'] as const).map((mode) => {
  const isActive = activePanel === mode;
  return (
  <button
  key={mode}
  onClick={() => togglePanel(mode)}
- className={`relative px-4 py-2 rounded-none transition-all duration-300 ${isActive ? 'bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900' : 'text-stone-500 hover:text-stone-900 dark:hover:text-stone-100'}`}
+ className={`relative px-4 py-2 rounded-none transition-all duration-300 ${isActive ? 'bg-nous-text text-nous-base ' : 'text-nous-text0 hover:text-nous-text '}`}
  >
  <span className={`text-[10px] uppercase tracking-widest font-bold ${isActive ? 'font-serif italic text-sm' : ''}`}>
  {mode}
@@ -811,7 +811,7 @@ export const InputStudio: React.FC<{
  {isActive && (
  <motion.div 
  layoutId="activeTabGlow"
- className="absolute inset-0 rounded-none border border-stone-900/30 dark:border-stone-100/30 dark:"
+ className="absolute inset-0 rounded-none border border-nous-border/30 /30 dark:"
  transition={{ type:"spring", stiffness: 300, damping: 30 }}
  />
  )}
@@ -827,15 +827,15 @@ export const InputStudio: React.FC<{
  initial={{ opacity: 0, y: 20, scale: 0.95 }}
  animate={{ opacity: 1, y: 0, scale: 1 }}
  exit={{ opacity: 0, y: 20, scale: 0.95 }}
- className="fixed bottom-32 left-1/2 -translate-x-1/2 w-[400px] max-h-[60vh] bg-stone-100/95 dark:bg-stone-900/95 backdrop-blur-xl border border-stone-300 dark:border-stone-700 rounded-none pointer-events-auto overflow-y-auto p-8 flex flex-col z-50"
+ className="fixed bottom-32 left-1/2 -translate-x-1/2 w-[400px] max-h-[60vh] bg-nous-base/95 /95 backdrop-blur-xl border border-nous-border rounded-none pointer-events-auto overflow-y-auto p-8 flex flex-col z-50"
  >
  <div className="flex-1">
- <div className="flex justify-between items-center mb-8 border-b border-stone-200 dark:border-stone-800 pb-4">
+ <div className="flex justify-between items-center mb-8 border-b border-nous-border pb-4">
  <h2 className="font-serif italic text-2xl text-primary dark:text-white capitalize">{activePanel}</h2>
- <button onClick={() => setActivePanel(null)} className="text-stone-400 hover:text-primary dark:hover:text-white transition-colors"><X size={20} /></button>
+ <button onClick={() => setActivePanel(null)} className="text-nous-subtle hover:text-primary dark:hover:text-white transition-colors"><X size={20} /></button>
  </div>
  
- <div className="text-stone-600 dark:text-stone-400">
+ <div className="text-nous-subtle">
  {activePanel === 'inspo' && (
  <div className="flex flex-col gap-6">
  <ZineInspoCarousel />
@@ -849,7 +849,7 @@ export const InputStudio: React.FC<{
  poeticMeaning="The silent hum of the machine, listening to the space between your words."
  functionalMeaning="A visual indicator of the system's background processing and readiness to interpret your input."
  >
- <span className="text-[10px] uppercase tracking-[0.2em] text-stone-500">Latent Telemetry</span>
+ <span className="text-[10px] uppercase tracking-[0.2em] text-nous-text0">Latent Telemetry</span>
  </GlossaryTooltip>
  <div className="flex gap-[2px] items-end h-3">
  {[...Array(5)].map((_, i) => (
@@ -857,13 +857,13 @@ export const InputStudio: React.FC<{
  key={i}
  animate={{ height: [`${Math.random() * 40 + 20}%`, `${Math.random() * 60 + 40}%`, `${Math.random() * 40 + 20}%`] }}
  transition={{ duration: 1 + Math.random(), repeat: Infinity, ease:"easeInOut"}}
- className="w-[2px] bg-primary dark:bg-white rounded-none"
+ className="w-[2px] bg-primary  rounded-none"
  />
  ))}
  </div>
  </div>
  
- <div className="font-mono text-[9px] uppercase tracking-widest flex flex-col gap-3 text-stone-400">
+ <div className="font-mono text-[9px] uppercase tracking-widest flex flex-col gap-3 text-nous-subtle">
  <div className="flex justify-between items-center">
  <GlossaryTooltip 
  term="Signal Density"
@@ -896,9 +896,9 @@ export const InputStudio: React.FC<{
  </div>
  </div>
 
- <div className="p-5 bg-stone-100 dark:bg-stone-800/50 rounded-none border border-stone-200 dark:border-stone-700/50 relative overflow-hidden group">
+ <div className="p-5 bg-nous-base /50 rounded-none border border-nous-border /50 relative overflow-hidden group">
  <div className="absolute top-0 left-0 w-1 h-full bg-stone-300 dark:bg-stone-600 group-hover:bg-primary dark:group-hover:bg-white transition-colors"/>
- <p className="text-[8px] uppercase tracking-[0.2em] text-stone-400 mb-3">Oblique Directive</p>
+ <p className="text-[8px] uppercase tracking-[0.2em] text-nous-subtle mb-3">Oblique Directive</p>
  <AnimatePresence mode="wait">
  <motion.p 
  key={provocationIndex}
@@ -916,7 +916,7 @@ export const InputStudio: React.FC<{
  )}
  {activePanel === 'signal' && (
  <div className="flex flex-col gap-6">
- <p className="text-xs uppercase tracking-widest text-stone-500">AI Tags</p>
+ <p className="text-xs uppercase tracking-widest text-nous-text0">AI Tags</p>
  <TagGenerator 
  context={input} 
  onAddTags={(tags) => {
@@ -925,10 +925,10 @@ export const InputStudio: React.FC<{
  />
  {activeTags.length > 0 && (
  <div className="mt-4">
- <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-2">Active Tags</p>
+ <p className="text-[10px] uppercase tracking-widest text-nous-text0 mb-2">Active Tags</p>
  <div className="flex flex-wrap gap-2">
  {activeTags.map(tag => (
- <span key={tag} className="px-2 py-1 bg-black/5 dark:bg-white/5 text-[10px] uppercase tracking-widest rounded-none flex items-center gap-1">
+ <span key={tag} className="px-2 py-1 bg-black/5 /5 text-[10px] uppercase tracking-widest rounded-none flex items-center gap-1">
  {tag}
  <button onClick={() => setActiveTags(prev => prev.filter(t => t !== tag))}><X size={10} /></button>
  </span>
@@ -940,7 +940,7 @@ export const InputStudio: React.FC<{
  )}
  {activePanel === 'treatments' && (
  <div className="flex flex-col gap-6">
- <p className="text-xs uppercase tracking-widest text-stone-500 mb-4">Treatment Panel / Directives</p>
+ <p className="text-xs uppercase tracking-widest text-nous-text0 mb-4">Treatment Panel / Directives</p>
  <ZineConfiguration 
  zineOptions={zineOptions} 
  setZineOptions={setZineOptions} 
@@ -954,18 +954,18 @@ export const InputStudio: React.FC<{
 
  {activePanel === 'orchestrator' && (
  <div className="flex flex-col gap-6">
- <p className="text-xs uppercase tracking-widest text-stone-500 mb-4">Prompt Orchestrator</p>
+ <p className="text-xs uppercase tracking-widest text-nous-text0 mb-4">Prompt Orchestrator</p>
  
  {/* Treatment Filters */}
  {profile?.savedTreatments && profile.savedTreatments.length > 0 && (
  <div className="flex flex-col gap-3 mb-6">
- <p className="text-[10px] uppercase tracking-widest text-stone-400">Treatment Filters</p>
+ <p className="text-[10px] uppercase tracking-widest text-nous-subtle">Treatment Filters</p>
  <div className="flex flex-wrap gap-2">
  {profile.savedTreatments.map(t => (
  <button
  key={t.id}
  onClick={() => setActiveTreatmentId(activeTreatmentId === t.id ? null : t.id)}
- className={`px-3 py-1.5 text-[10px] uppercase tracking-widest rounded-none border transition-colors ${activeTreatmentId === t.id ? 'border-stone-900 text-stone-900 bg-stone-100 dark:border-stone-100 dark:text-stone-100 dark:bg-stone-800' : 'border-stone-300 dark:border-stone-700 text-stone-500 hover:border-stone-400 dark:hover:border-stone-800 dark:hover:border-stone-300'}`}
+ className={`px-3 py-1.5 text-[10px] uppercase tracking-widest rounded-none border transition-colors ${activeTreatmentId === t.id ? 'border-nous-border text-nous-text bg-nous-base ' : 'border-nous-border text-nous-text0 hover:border-nous-border '}`}
  >
  [{t.treatmentName}]
  </button>
@@ -994,11 +994,11 @@ export const InputStudio: React.FC<{
  <div className="flex gap-8 pointer-events-auto relative group">
  <button 
  onClick={() => setLegalType('privacy')} 
- className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 dark:border-white/20 hover:border-primary dark:hover:border-white transition-colors text-primary dark:text-white"
+ className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 /20 hover:border-primary dark:hover:border-white transition-colors text-primary dark:text-white"
  >
  Privacy
  </button>
- <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'proscenium' }))} className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 dark:border-white/20 hover:border-primary dark:hover:border-white transition-colors text-primary dark:text-white">Community</button>
+ <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'proscenium' }))} className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 /20 hover:border-primary dark:hover:border-white transition-colors text-primary dark:text-white">Community</button>
  </div>
  </footer>
  

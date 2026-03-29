@@ -143,7 +143,7 @@ export const ZineFolders: React.FC<ZineFoldersProps> = ({ onSelectZine }) => {
  if (loading) {
  return (
  <div className="w-full h-64 flex items-center justify-center">
- <LoadingSkeleton lines={4} className="w-full max-w-sm" />
+ <LoadingSkeleton lines={4} className="w-full max-w-sm"/>
  </div>
  );
  }
@@ -157,10 +157,10 @@ export const ZineFolders: React.FC<ZineFoldersProps> = ({ onSelectZine }) => {
  {/* Sidebar: Folders List */}
  <div className="w-full md:w-64 shrink-0 space-y-4">
  <div className="flex items-center justify-between mb-6">
- <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] text-stone-400 font-black">Directories</h3>
+ <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] text-nous-subtle font-black">Directories</h3>
  <button 
  onClick={() => { setShowCreateModal(true); setNewFolderName(''); }}
- className="p-1.5 bg-stone-100 dark:bg-stone-800 rounded-none hover:bg-stone-500 hover:text-white transition-colors"
+ className="p-1.5 bg-nous-base rounded-none hover:bg-nous-base0 hover:text-white transition-colors"
  >
  <Plus size={14} />
  </button>
@@ -172,9 +172,9 @@ export const ZineFolders: React.FC<ZineFoldersProps> = ({ onSelectZine }) => {
  onClick={() => setActiveFolder(null)}
  onDragOver={handleDragOver}
  onDrop={(e) => handleDrop(e, null)}
- className={`p-3 rounded-none flex items-center gap-3 cursor-pointer transition-all ${activeFolder === null ? 'bg-nous-text dark:bg-white text-white dark:text-black ' : 'bg-stone-50 dark:bg-stone-900/50 text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800'}`}
+ className={`p-3 rounded-none flex items-center gap-3 cursor-pointer transition-all ${activeFolder === null ? 'bg-nous-text text-nous-base ' : 'bg-nous-base /50 text-nous-text0 hover:bg-nous-base '}`}
  >
- <Folder size={16} className={activeFolder === null ? 'text-white dark:text-black' : 'text-stone-400'} />
+ <Folder size={16} className={activeFolder === null ? 'text-nous-base' : 'text-nous-subtle'} />
  <span className="font-sans text-xs font-medium flex-1">Quick Stash</span>
  <span className="text-[10px] opacity-50">{zines.filter(z => !z.folderId).length}</span>
  </div>
@@ -186,9 +186,9 @@ export const ZineFolders: React.FC<ZineFoldersProps> = ({ onSelectZine }) => {
  onClick={() => setActiveFolder(folder.id)}
  onDragOver={handleDragOver}
  onDrop={(e) => handleDrop(e, folder.id)}
- className={`group p-3 rounded-none flex items-center gap-3 cursor-pointer transition-all ${activeFolder === folder.id ? 'bg-nous-text dark:bg-white text-white dark:text-black ' : 'bg-stone-50 dark:bg-stone-900/50 text-stone-500 hover:bg-stone-100 dark:hover:bg-stone-800'}`}
+ className={`group p-3 rounded-none flex items-center gap-3 cursor-pointer transition-all ${activeFolder === folder.id ? 'bg-nous-text text-nous-base ' : 'bg-nous-base /50 text-nous-text0 hover:bg-nous-base '}`}
  >
- <Folder size={16} className={activeFolder === folder.id ? 'text-white dark:text-black' : 'text-stone-400'} />
+ <Folder size={16} className={activeFolder === folder.id ? 'text-nous-base' : 'text-nous-subtle'} />
  <span className="font-sans text-xs font-medium flex-1 truncate">{folder.name}</span>
  <span className="text-[10px] opacity-50 group-hover:hidden">{zines.filter(z => z.folderId === folder.id).length}</span>
  
@@ -196,7 +196,7 @@ export const ZineFolders: React.FC<ZineFoldersProps> = ({ onSelectZine }) => {
  <div className="hidden group-hover:flex items-center gap-1">
  <button 
  onClick={(e) => { e.stopPropagation(); setEditingFolder(folder); setNewFolderName(folder.name); }}
- className="p-1 hover:text-stone-800 dark:hover:text-stone-300 transition-colors"
+ className="p-1 hover:text-nous-text transition-colors"
  >
  <Edit2 size={12} />
  </button>
@@ -214,20 +214,20 @@ export const ZineFolders: React.FC<ZineFoldersProps> = ({ onSelectZine }) => {
 
  {/* Main Content: Zines Grid */}
  <div className="flex-1 min-w-0">
- <div className="mb-8 border-b border-stone-100 dark:border-stone-800 pb-4">
- <h2 className="font-serif italic text-3xl text-nous-text dark:text-white">
+ <div className="mb-8 border-b border-nous-border pb-4">
+ <h2 className="font-serif italic text-3xl text-nous-text ">
  {activeFolder === null ? 'Quick Stash' : folders.find(f => f.id === activeFolder)?.name || 'Folder'}
  </h2>
- <p className="font-sans text-[10px] uppercase tracking-widest text-stone-400 mt-2">
+ <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle mt-2">
  {displayedZines.length} {displayedZines.length === 1 ? 'Manifestation' : 'Manifestations'}
  </p>
  </div>
 
  {displayedZines.length === 0 ? (
- <div className="h-64 flex flex-col items-center justify-center border-2 border-dashed border-stone-100 dark:border-stone-800 rounded-none">
- <Folder size={32} className="text-stone-300 mb-4"/>
- <p className="font-serif italic text-xl text-stone-500">Empty Directory</p>
- <p className="font-sans text-[10px] uppercase tracking-widest text-stone-400 mt-2">Drag and drop zines here</p>
+ <div className="h-64 flex flex-col items-center justify-center border-2 border-dashed border-nous-border rounded-none">
+ <Folder size={32} className="text-nous-subtle mb-4"/>
+ <p className="font-serif italic text-xl text-nous-text0">Empty Directory</p>
+ <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle mt-2">Drag and drop zines here</p>
  </div>
  ) : (
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
@@ -256,16 +256,16 @@ export const ZineFolders: React.FC<ZineFoldersProps> = ({ onSelectZine }) => {
  {(showCreateModal || editingFolder) && (
  <motion.div 
  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
- className="fixed inset-0 z-[10000] bg-stone-950/80 backdrop-blur-sm flex items-center justify-center p-4"
+ className="fixed inset-0 z-[10000] bg-nous-base/80 backdrop-blur-sm flex items-center justify-center p-4"
  >
- <div className="bg-white dark:bg-stone-900 w-full max-w-md p-6 rounded-none border border-stone-200 dark:border-stone-800">
+ <div className="bg-white w-full max-w-md p-6 rounded-none border border-nous-border">
  <div className="flex justify-between items-center mb-6">
  <h3 className="font-serif italic text-2xl text-nous-text dark:text-white">
  {editingFolder ? 'Rename Directory' : 'New Directory'}
  </h3>
  <button 
  onClick={() => { setShowCreateModal(false); setEditingFolder(null); }}
- className="text-stone-400 hover:text-red-500 transition-colors"
+ className="text-nous-subtle hover:text-red-500 transition-colors"
  >
  <X size={20} />
  </button>
@@ -273,13 +273,13 @@ export const ZineFolders: React.FC<ZineFoldersProps> = ({ onSelectZine }) => {
  
  <div className="space-y-4">
  <div>
- <label className="block font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 mb-2">Directory Name</label>
+ <label className="block font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle mb-2">Directory Name</label>
  <input 
  type="text"
  value={newFolderName}
  onChange={(e) => setNewFolderName(e.target.value)}
  placeholder="e.g., Spring Collection, Brutalist References..."
- className="w-full p-3 bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-none font-sans text-sm focus:outline-none focus:border-stone-800 dark:focus:border-stone-300 transition-colors"
+ className="w-full p-3 bg-nous-base border border-nous-border rounded-none font-sans text-sm focus:outline-none focus:border-nous-border dark:focus:border-nous-border transition-colors"
  autoFocus
  onKeyDown={(e) => {
  if (e.key === 'Enter') {
@@ -292,7 +292,7 @@ export const ZineFolders: React.FC<ZineFoldersProps> = ({ onSelectZine }) => {
  <button 
  onClick={editingFolder ? handleUpdateFolder : handleCreateFolder}
  disabled={!newFolderName.trim()}
- className="w-full py-3 bg-nous-text dark:bg-white text-white dark:text-black rounded-none font-sans text-[10px] uppercase tracking-[0.2em] font-black hover:bg-stone-500 hover:text-white transition-all disabled:opacity-50"
+ className="w-full py-3 bg-nous-text text-nous-base rounded-none font-sans text-[10px] uppercase tracking-[0.2em] font-black hover:bg-nous-base0 hover:text-white transition-all disabled:opacity-50"
  >
  {editingFolder ? 'Save Changes' : 'Create Directory'}
  </button>

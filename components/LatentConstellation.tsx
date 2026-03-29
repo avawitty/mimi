@@ -29,7 +29,7 @@ const UserStar = ({ profile, position }: { profile: UserProfile, position: [numb
  initial={{ opacity: 0, y: 10 }}
  animate={{ opacity: 1, y: 0 }}
  exit={{ opacity: 0, y: 10 }}
- className="bg border border-stone-800 p-3 backdrop-blur-xl text-stone-300 min-w-[150px] pointer-events-none"
+ className="bg border border-nous-border p-3 backdrop-blur-xl text-nous-subtle min-w-[150px] pointer-events-none"
  >
  <div className="text-xs font-mono opacity-50 uppercase tracking-widest mb-1">Aesthetic Frequency</div>
  <div className="text-sm font-medium mb-2">@{profile.handle || 'anonymous'}</div>
@@ -38,7 +38,7 @@ const UserStar = ({ profile, position }: { profile: UserProfile, position: [numb
  .sort((a, b) => b[1] - a[1])
  .slice(0, 3)
  .map(([tag]) => (
- <span key={tag} className="text-[9px] font-mono uppercase tracking-widest bg-transparent border border-stone-800 px-1.5 py-0.5 text-stone-400">
+ <span key={tag} className="text-[9px] font-mono uppercase tracking-widest bg-transparent border border-nous-border px-1.5 py-0.5 text-nous-subtle">
  {tag}
  </span>
  ))}
@@ -156,12 +156,12 @@ export const LatentConstellation = () => {
  <div className="text-[10px] text-white/30 uppercase tracking-[0.3em] mb-4">Navigation: Orbit / Zoom</div>
  <div className="flex gap-4">
  <div className="flex items-center gap-2">
- <div className="w-2 h-2 bg-stone-800"/>
- <span className="text-[9px] font-mono text-stone-500 uppercase tracking-widest font-bold">User Node</span>
+ <div className="w-2 h-2 bg-nous-base"/>
+ <span className="text-[9px] font-mono text-nous-text0 uppercase tracking-widest font-bold">User Node</span>
  </div>
  <div className="flex items-center gap-2">
  <div className="w-2 h-2 bg-stone-300"/>
- <span className="text-[9px] font-mono text-stone-300 uppercase tracking-widest font-bold">Active Resonance</span>
+ <span className="text-[9px] font-mono text-nous-subtle uppercase tracking-widest font-bold">Active Resonance</span>
  </div>
  </div>
  </div>

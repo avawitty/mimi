@@ -54,13 +54,13 @@ export const SignatureImageGenerator: React.FC<Props> = ({ signature }) => {
  };
 
  return (
- <div className="bg-white dark:bg border border-stone-200 dark:border-stone-800 p-6 h-full flex flex-col">
+ <div className="bg-nous-base border border-nous-border p-6 h-full flex flex-col">
  <div className="flex justify-between items-center mb-6">
  <h3 className="text-2xl italic font-light">Contact Sheet</h3>
  <button
  onClick={handleGenerate}
  disabled={loading}
- className="px-4 py-2 bg-stone-900 text-stone-100 dark:bg-stone-100 dark:text-stone-900 font-mono text-[9px] uppercase tracking-widest font-bold hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors flex items-center gap-2 disabled:opacity-50"
+ className="px-4 py-2 bg-nous-base text-nous-text font-mono text-[9px] uppercase tracking-widest font-bold hover:bg-nous-base dark:hover:bg-stone-200 transition-colors flex items-center gap-2 disabled:opacity-50"
  >
  {loading ? <Loader2 className="animate-spin"size={14} /> : <Sparkles size={14} />}
  [ EXECUTE RE-SYNC ]
@@ -72,22 +72,22 @@ export const SignatureImageGenerator: React.FC<Props> = ({ signature }) => {
  <div className="grid grid-cols-2 gap-4 h-full">
  {frames.map((frame, idx) => (
  <div key={idx} className="flex flex-col gap-2">
- <div className="aspect-square border border-stone-800 overflow-hidden bg-stone-900">
+ <div className="aspect-square border border-nous-border overflow-hidden bg-nous-base">
  <img src={frame.url} alt={`Reference ${idx + 1}`} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"referrerPolicy="no-referrer"/>
  </div>
- <div className="font-mono text-[8px] text-stone-500 uppercase tracking-widest">
+ <div className="font-mono text-[8px] text-nous-text0 uppercase tracking-widest">
  {frame.metadata}
  </div>
  </div>
  ))}
  </div>
  ) : (
- <div className="w-full h-full min-h-[400px] border border-dashed border-stone-800 bg-stone-100/50 dark:bg-stone-900/50 flex flex-col items-center justify-center text-stone-400 gap-4">
+ <div className="w-full h-full min-h-[400px] border border-dashed border-nous-border bg-nous-base/50 /50 flex flex-col items-center justify-center text-nous-subtle gap-4">
  <div className="grid grid-cols-2 gap-2 opacity-20">
- <div className="w-16 h-16 border border-stone-800"/>
- <div className="w-16 h-16 border border-stone-800"/>
- <div className="w-16 h-16 border border-stone-800"/>
- <div className="w-16 h-16 border border-stone-800"/>
+ <div className="w-16 h-16 border border-nous-border"/>
+ <div className="w-16 h-16 border border-nous-border"/>
+ <div className="w-16 h-16 border border-nous-border"/>
+ <div className="w-16 h-16 border border-nous-border"/>
  </div>
  <span className="font-mono text-[9px] uppercase tracking-widest">Awaiting Synthesis Directive</span>
  </div>

@@ -32,16 +32,16 @@ const ProductCard = ({ product, onInteraction }: { product: Product; onInteracti
 
  return (
  <div ref={ref} className="group relative border border bg-white p-4 transition-all hover:border-black cursor-pointer"onClick={handleAcquire}>
- <div className="aspect-[4/5] bg-stone-100 mb-4 flex items-center justify-center overflow-hidden relative">
- {product.image ? <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"/> : <span className="font-serif italic text-stone-400">{product.name}</span>}
+ <div className="aspect-[4/5] bg-nous-base mb-4 flex items-center justify-center overflow-hidden relative">
+ {product.image ? <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"/> : <span className="font-serif italic text-nous-subtle">{product.name}</span>}
  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500"/>
  </div>
  <div className="flex justify-between items-end">
  <div>
  <h5 className="font-serif text-lg italic">{product.name}</h5>
- <p className="font-mono text-[9px] text-stone-400 uppercase">{product.category || 'Archival Series'}</p>
+ <p className="font-mono text-[9px] text-nous-subtle uppercase">{product.category || 'Archival Series'}</p>
  </div>
- <button onClick={(e) => { e.stopPropagation(); handleAcquire(); }} className="font-mono text-[9px] uppercase underline hover:text-stone-800 dark:hover:text-stone-300 transition-colors">Acquire</button>
+ <button onClick={(e) => { e.stopPropagation(); handleAcquire(); }} className="font-mono text-[9px] uppercase underline hover:text-nous-text transition-colors">Acquire</button>
  </div>
  </div>
  );
@@ -135,15 +135,15 @@ export const TheEdit: React.FC = () => {
  <nav className="w-20 border-r border flex flex-col items-center py-12 fixed h-full z-50 bg">
  <div className="mb-12 font-serif italic text-2xl">M.</div>
  <div className="flex flex-col gap-6 mt-auto mb-12">
- <Search size={16} className="text-stone-400 hover:text-black cursor-pointer"/>
- <Settings size={16} className="text-stone-400 hover:text-black cursor-pointer"/>
+ <Search size={16} className="text-nous-subtle hover:text-black cursor-pointer"/>
+ <Settings size={16} className="text-nous-subtle hover:text-black cursor-pointer"/>
  </div>
  </nav>
 
  <main className="ml-20 flex-1 p-12">
  <header className="mb-16 border-b border pb-8 flex justify-between items-end">
  <div>
- <div className="flex items-center gap-3 mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-stone-400">
+ <div className="flex items-center gap-3 mb-2 font-mono text-[10px] uppercase tracking-[0.3em] text-nous-subtle">
  <span>Institutional Protocol // Rev. 09-26</span>
  <span className="h-px w-12 bg-stone-300"></span>
  <span className="text-green-600">● LIVE_FEED</span>
@@ -155,7 +155,7 @@ export const TheEdit: React.FC = () => {
  <button onClick={() => setViewMode('editorial')} className={`px-4 py-1 rounded-none text-[10px] uppercase tracking-widest flex items-center gap-2 ${viewMode === 'editorial' ? 'bg-white ' : ''}`}><BookOpen size={12} /> Editorial</button>
  <button onClick={() => setViewMode('market')} className={`px-4 py-1 rounded-none text-[10px] uppercase tracking-widest flex items-center gap-2 ${viewMode === 'market' ? 'bg-white ' : ''}`}><LayoutGrid size={12} /> Market</button>
  </div>
- <div className="text-right font-mono text-[10px] uppercase tracking-widest text-stone-500">
+ <div className="text-right font-mono text-[10px] uppercase tracking-widest text-nous-text0">
  ISSUE_NO: 402/DAILY<br/>
  Synchronized: {new Date().toLocaleTimeString()}
  </div>
@@ -165,14 +165,14 @@ export const TheEdit: React.FC = () => {
  {personalizedEdit ? (
  <section className="grid grid-cols-12 gap-8">
  <article className="col-span-12 lg:col-span-4 bg p-8 border border">
- <div className="font-mono text-[10px] uppercase tracking-widest text-stone-400 mb-4">Trajectory ID: {personalizedEdit.trajectoryId}</div>
+ <div className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle mb-4">Trajectory ID: {personalizedEdit.trajectoryId}</div>
  <h2 className="font-serif text-4xl italic mb-6">{personalizedEdit.thesis}</h2>
- <p className="text-sm leading-relaxed text-stone-600 mb-8">{personalizedEdit.codexReading}</p>
+ <p className="text-sm leading-relaxed text-nous-subtle mb-8">{personalizedEdit.codexReading}</p>
  <CodexSignal entropy={codexState.entropy} density={codexState.density} />
  </article>
 
  <div className="col-span-12 lg:col-span-8">
- <div className="border-2 border-dashed border-stone-300 p-8 text-center text-stone-400 font-mono text-xs mb-8">
+ <div className="border-2 border-dashed border-nous-border p-8 text-center text-nous-subtle font-mono text-xs mb-8">
  // SPONSORED AESTHETIC CLUSTER //
  </div>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -182,7 +182,7 @@ export const TheEdit: React.FC = () => {
  return (
  <div key={item.productId} className={`${item.placement === 'hero' ? 'col-span-full' : ''}`}>
  <ProductCard product={product} onInteraction={handleInteraction} />
- <p className="font-mono text-[10px] mt-2 text-stone-500">{item.caption}</p>
+ <p className="font-mono text-[10px] mt-2 text-nous-text0">{item.caption}</p>
  </div>
  );
  })}
@@ -190,7 +190,7 @@ export const TheEdit: React.FC = () => {
  </div>
  </section>
  ) : (
- <div className="p-12 text-center text-stone-500 font-mono text-sm">
+ <div className="p-12 text-center text-nous-text0 font-mono text-sm">
  Synchronizing aesthetic vectors...
  </div>
  )}

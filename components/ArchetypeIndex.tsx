@@ -84,7 +84,7 @@ export const ArchetypeIndex: React.FC<ArchetypeIndexProps> = ({ onSelectZine }) 
 
  return (
  <div className="w-full max-w-5xl mx-auto px-6 md:px-12 animate-fade-in pt-12 pb-24">
- <div className="mb-12 border-b border-stone-200 pb-8">
+ <div className="mb-12 border-b border-nous-border pb-8">
  <div className="flex justify-between items-end mb-8">
  <div>
  <h2 className="font-serif text-3xl italic text-nous-text mb-2">Archetype Index</h2>
@@ -112,7 +112,7 @@ export const ArchetypeIndex: React.FC<ArchetypeIndexProps> = ({ onSelectZine }) 
  <button 
  key={key}
  onClick={() => setSelectedColorFilter(selectedColorFilter === key ? null : key)}
- className={`w-8 h-8 rounded-none border border-stone-200 transition-all duration-300 relative group ${selectedColorFilter === key ? 'ring-2 ring-offset-2 ring-nous-text scale-110' : 'hover:scale-105'}`}
+ className={`w-8 h-8 rounded-none border border-nous-border transition-all duration-300 relative group ${selectedColorFilter === key ? 'ring-2 ring-offset-2 ring-nous-text scale-110' : 'hover:scale-105'}`}
  style={{ backgroundColor: data.color }}
  title={data.key}
  >
@@ -137,7 +137,7 @@ export const ArchetypeIndex: React.FC<ArchetypeIndexProps> = ({ onSelectZine }) 
  placeholder="e.g. 'Velvet', 'Digital', 'Rot'..."
  value={search}
  onChange={(e) => setSearch(e.target.value)}
- className="w-full bg-stone-50 border-b border-stone-200 p-4 font-serif text-lg focus:outline-none focus:border-nous-text transition-colors"
+ className="w-full bg-nous-base border-b border-nous-border p-4 font-serif text-lg focus:outline-none focus:border-nous-text transition-colors"
  />
  </div>
 
@@ -149,7 +149,7 @@ export const ArchetypeIndex: React.FC<ArchetypeIndexProps> = ({ onSelectZine }) 
  type="date"
  value={startDate}
  onChange={(e) => setStartDate(e.target.value)}
- className="bg-transparent border-b border-stone-200 py-2 font-sans text-xs uppercase tracking-widest text-nous-text focus:outline-none focus:border-nous-text"
+ className="bg-transparent border-b border-nous-border py-2 font-sans text-xs uppercase tracking-widest text-nous-text focus:outline-none focus:border-nous-text"
  />
  </div>
  <div className="flex flex-col gap-2">
@@ -158,7 +158,7 @@ export const ArchetypeIndex: React.FC<ArchetypeIndexProps> = ({ onSelectZine }) 
  type="date"
  value={endDate}
  onChange={(e) => setEndDate(e.target.value)}
- className="bg-transparent border-b border-stone-200 py-2 font-sans text-xs uppercase tracking-widest text-nous-text focus:outline-none focus:border-nous-text"
+ className="bg-transparent border-b border-nous-border py-2 font-sans text-xs uppercase tracking-widest text-nous-text focus:outline-none focus:border-nous-text"
  />
  </div>
  
@@ -181,17 +181,17 @@ export const ArchetypeIndex: React.FC<ArchetypeIndexProps> = ({ onSelectZine }) 
  ) : (
  <div className="grid grid-cols-1 gap-4">
  {filtered.length === 0 ? (
- <p className="text-center font-serif italic text-stone-400 py-12">No archetypes found matching these coordinates.</p>
+ <p className="text-center font-serif italic text-nous-subtle py-12">No archetypes found matching these coordinates.</p>
  ) : (
- <div className="border-t border-stone-100">
+ <div className="border-t border-nous-border">
  {filtered.map((zine) => (
  <div 
  key={zine.id}
  onClick={() => onSelectZine(zine)}
- className="group flex flex-col md:flex-row md:items-center justify-between py-6 border-b border-stone-100 hover:bg-stone-50 transition-colors cursor-pointer px-4"
+ className="group flex flex-col md:flex-row md:items-center justify-between py-6 border-b border-nous-border hover:bg-nous-base transition-colors cursor-pointer px-4"
  >
  <div className="flex items-baseline gap-6 flex-1">
- <span className="font-sans text-[9px] uppercase tracking-widest text-stone-300 w-24 shrink-0">
+ <span className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle w-24 shrink-0">
  {new Date(zine.timestamp).toLocaleDateString()}
  </span>
  <div className="flex flex-col gap-1">
@@ -208,7 +208,7 @@ export const ArchetypeIndex: React.FC<ArchetypeIndexProps> = ({ onSelectZine }) 
  <img 
  src={zine.userAvatar || `https://ui-avatars.com/api/?name=${zine.userHandle}`}
  alt={zine.userHandle}
- className="w-5 h-5 rounded-none border border-stone-200"
+ className="w-5 h-5 rounded-none border border-nous-border"
  />
  <span className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle">
  {zine.userHandle}

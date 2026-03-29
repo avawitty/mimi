@@ -73,15 +73,15 @@ export const GlobalSearchOverlay: React.FC<{ isOpen: boolean; onClose: () => voi
  initial={{ opacity: 0 }} 
  animate={{ opacity: 1 }} 
  exit={{ opacity: 0 }}
- className="fixed inset-0 z-[12000] bg-white/95 dark:bg-stone-950/98 backdrop-blur-3xl flex flex-col items-center p-6 md:p-12 overflow-hidden"
+ className="fixed inset-0 z-[12000] bg-white/95 /98 backdrop-blur-3xl flex flex-col items-center p-6 md:p-12 overflow-hidden"
  >
  <div className="w-full max-w-4xl flex flex-col h-full">
  <header className="flex justify-between items-center mb-12 shrink-0">
- <div className="flex items-center gap-4 text-stone-400">
+ <div className="flex items-center gap-4 text-nous-subtle">
  <Search size={18} />
  <span className="font-sans text-[10px] uppercase tracking-[0.5em] font-black italic">Global Registry Audit</span>
  </div>
- <button onClick={onClose} className="p-3 bg-stone-100 dark:bg-stone-800 rounded-none hover:bg-red-500 hover:text-white transition-all"><X size={20}/></button>
+ <button onClick={onClose} className="p-3 bg-nous-base rounded-none hover:bg-red-500 hover:text-white transition-all"><X size={20}/></button>
  </header>
 
  <div className="relative mb-16 shrink-0">
@@ -91,9 +91,9 @@ export const GlobalSearchOverlay: React.FC<{ isOpen: boolean; onClose: () => voi
  value={query}
  onChange={(e) => setQuery(e.target.value)}
  placeholder="Trace an artifact by intent or form..."
- className="w-full bg-transparent border-b-2 border-stone-100 dark:border-stone-800 py-8 font-serif italic text-3xl md:text-6xl text-nous-text dark:text-white focus:outline-none focus:border-stone-800 dark:focus:border-stone-300 transition-all placeholder:text-stone-200"
+ className="w-full bg-transparent border-b-2 border-nous-border py-8 font-serif italic text-3xl md:text-6xl text-nous-text  focus:outline-none focus:border-nous-border dark:focus:border-nous-border transition-all placeholder:text-nous-text"
  />
- {loading && <div className="absolute right-4 top-1/2 -translate-y-1/2"><Loader2 className="animate-spin text-stone-500"/></div>}
+ {loading && <div className="absolute right-4 top-1/2 -translate-y-1/2"><Loader2 className="animate-spin text-nous-text0"/></div>}
  </div>
 
  <div className="flex-1 overflow-y-auto no-scrollbar space-y-16 pb-32">
@@ -101,7 +101,7 @@ export const GlobalSearchOverlay: React.FC<{ isOpen: boolean; onClose: () => voi
  <>
  {filtered.zines.length > 0 && (
  <section className="space-y-8">
- <div className="flex items-center gap-3 text-stone-500">
+ <div className="flex items-center gap-3 text-nous-text0">
  <FileText size={14} />
  <span className="font-sans text-[9px] uppercase tracking-widest font-black">Authored Manifests</span>
  </div>
@@ -110,13 +110,13 @@ export const GlobalSearchOverlay: React.FC<{ isOpen: boolean; onClose: () => voi
  <button 
  key={z.id} 
  onClick={() => { onSelectZine(z); onClose(); }}
- className="w-full text-left p-6 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-none hover:border-stone-800 dark:hover:border-stone-300 transition-all flex justify-between items-center group"
+ className="w-full text-left p-6 bg-white border border-nous-border rounded-none hover:border-nous-border transition-all flex justify-between items-center group"
  >
  <div className="space-y-1">
  <h4 className="font-serif italic text-xl text-nous-text dark:text-white">{z.content?.headlines?.[0] || z.title ||"Untitled"}</h4>
- <span className="font-sans text-[8px] uppercase tracking-widest text-stone-400">{z.tone} // {new Date(z.timestamp).toLocaleDateString()}</span>
+ <span className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle">{z.tone} // {new Date(z.timestamp).toLocaleDateString()}</span>
  </div>
- <ChevronRight size={14} className="text-stone-300 group-hover:translate-x-1 transition-transform"/>
+ <ChevronRight size={14} className="text-nous-subtle group-hover:translate-x-1 transition-transform"/>
  </button>
  ))}
  </div>
@@ -133,15 +133,15 @@ export const GlobalSearchOverlay: React.FC<{ isOpen: boolean; onClose: () => voi
  {filtered.pocket.map(p => (
  <div 
  key={p.id} 
- className="p-5 bg-stone-50 dark:bg-stone-900/50 border border-stone-100 dark:border-stone-800 rounded-none flex gap-4 items-center group cursor-help"
+ className="p-5 bg-nous-base /50 border border-nous-border rounded-none flex gap-4 items-center group cursor-help"
  >
  <div className="w-12 h-12 bg-black overflow-hidden rounded-none flex-shrink-0">
  {p.type === 'image' && <img src={p.content.imageUrl} className="w-full h-full object-cover grayscale group-hover:grayscale-0"/>}
- {p.type !== 'image' && <div className="w-full h-full flex items-center justify-center text-stone-500"><Radio size={16}/></div>}
+ {p.type !== 'image' && <div className="w-full h-full flex items-center justify-center text-nous-text0"><Radio size={16}/></div>}
  </div>
  <div className="flex-1 min-w-0">
- <h5 className="font-serif italic text-sm text-stone-700 dark:text-stone-300 truncate">{p.content.prompt || p.content.name || 'Untitled'}</h5>
- <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400">{p.type}</span>
+ <h5 className="font-serif italic text-sm text-nous-subtle truncate">{p.content.prompt || p.content.name || 'Untitled'}</h5>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">{p.type}</span>
  </div>
  </div>
  ))}
@@ -158,7 +158,7 @@ export const GlobalSearchOverlay: React.FC<{ isOpen: boolean; onClose: () => voi
  </>
  ) : (
  <div className="h-full flex flex-col items-center justify-center opacity-20 space-y-8 py-20">
- <div className="p-10 border border-stone-200 dark:border-stone-800 rounded-none">
+ <div className="p-10 border border-nous-border rounded-none">
  <Archive size={64} strokeWidth={1} />
  </div>
  <div className="space-y-2 text-center">
@@ -169,8 +169,8 @@ export const GlobalSearchOverlay: React.FC<{ isOpen: boolean; onClose: () => voi
  )}
  </div>
  
- <footer className="shrink-0 h-20 border-t border-stone-100 dark:border-stone-800 flex items-center justify-center">
- <p className="font-serif italic text-stone-300 text-sm">"The archive is a mirror of consistent intent."</p>
+ <footer className="shrink-0 h-20 border-t border-nous-border flex items-center justify-center">
+ <p className="font-serif italic text-nous-subtle text-sm">"The archive is a mirror of consistent intent."</p>
  </footer>
  </div>
  </motion.div>

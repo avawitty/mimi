@@ -136,7 +136,7 @@ export const SlideCanvas: React.FC<SlideCanvasProps> = ({ id, elements, isActive
  <div 
  ref={containerRef}
  onClick={() => { setSelectedId(null); onSelect(); if(onElementSelect) onElementSelect(null); }}
- className={`relative w-full aspect-[16/9] transition-all duration-500 overflow-hidden ${isActive ? 'ring-1 ring-stone-500/20 ' : 'border border-stone-200 dark:border-stone-800'}`}
+ className={`relative w-full aspect-[16/9] transition-all duration-500 overflow-hidden ${isActive ? 'ring-1 ring-stone-500/20 ' : 'border border-nous-border '}`}
  style={{ backgroundColor: layoutConfig?.backgroundStyle || '#FFFFFF' }}
  >
  <div className="absolute top-2 right-2 opacity-10 font-mono text-[8px] pointer-events-none">{id.slice(-4)}</div>
@@ -161,7 +161,7 @@ export const SlideCanvas: React.FC<SlideCanvasProps> = ({ id, elements, isActive
  >
  {/* SOURCE LABEL - VISIBLE ON HOVER/SELECT */}
  {el.sourceRef && (
- <div className={`absolute -top-6 left-0 bg-stone-500/10 text-stone-600 px-2 py-0.5 text-[6px] uppercase tracking-widest font-black rounded-none border border-stone-500/20 transition-opacity whitespace-nowrap ${isSelected ? 'opacity-100' : 'opacity-0 group-hover/el:opacity-100'}`}>
+ <div className={`absolute -top-6 left-0 bg-nous-base0/10 text-nous-subtle px-2 py-0.5 text-[6px] uppercase tracking-widest font-black rounded-none border border-nous-border/20 transition-opacity whitespace-nowrap ${isSelected ? 'opacity-100' : 'opacity-0 group-hover/el:opacity-100'}`}>
  Source: {el.sourceRef}
  </div>
  )}
@@ -213,20 +213,20 @@ export const SlideCanvas: React.FC<SlideCanvasProps> = ({ id, elements, isActive
  <>
  {/* ROTATE HANDLE */}
  <div 
- className="absolute -top-6 left-1/2 -translate-x-1/2 w-5 h-5 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-none flex items-center justify-center cursor-grab active:cursor-grabbing z-50 hover:bg-stone-50"
+ className="absolute -top-6 left-1/2 -translate-x-1/2 w-5 h-5 bg-white border border-nous-border rounded-none flex items-center justify-center cursor-grab active:cursor-grabbing z-50 hover:bg-nous-base"
  onMouseDown={startRotate}
  onTouchStart={startRotate}
  >
- <RotateCw size={10} className="text-stone-500"/>
+ <RotateCw size={10} className="text-nous-text0"/>
  </div>
  
  {/* RESIZE HANDLES */}
- <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-stone-500 rounded-none cursor-se-resize flex items-center justify-center pointer-events-auto z-50 border border-white"onMouseDown={startResize} onTouchStart={startResize}>
+ <div className="absolute -bottom-2 -right-2 w-4 h-4 bg-nous-base0 rounded-none cursor-se-resize flex items-center justify-center pointer-events-auto z-50 border border-white"onMouseDown={startResize} onTouchStart={startResize}>
  <Maximize size={8} className="text-white"/>
  </div>
- <div className="absolute -bottom-2 -left-2 w-3 h-3 bg-white border border-stone-500 rounded-none cursor-sw-resize z-50"onMouseDown={startResize} onTouchStart={startResize} />
- <div className="absolute -top-2 -right-2 w-3 h-3 bg-white border border-stone-500 rounded-none cursor-ne-resize z-50"onMouseDown={startResize} onTouchStart={startResize} />
- <div className="absolute -top-2 -left-2 w-3 h-3 bg-white border border-stone-500 rounded-none cursor-nw-resize z-50"onMouseDown={startResize} onTouchStart={startResize} />
+ <div className="absolute -bottom-2 -left-2 w-3 h-3 bg-white border border-nous-border rounded-none cursor-sw-resize z-50"onMouseDown={startResize} onTouchStart={startResize} />
+ <div className="absolute -top-2 -right-2 w-3 h-3 bg-white border border-nous-border rounded-none cursor-ne-resize z-50"onMouseDown={startResize} onTouchStart={startResize} />
+ <div className="absolute -top-2 -left-2 w-3 h-3 bg-white border border-nous-border rounded-none cursor-nw-resize z-50"onMouseDown={startResize} onTouchStart={startResize} />
  </>
  )}
  </motion.div>

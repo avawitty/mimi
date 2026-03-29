@@ -9,15 +9,15 @@ export const CodexSignal = ({ entropy, density }: { entropy: number, density: nu
  :"Balanced";
 
  return (
- <div className="text-[10px] font-mono uppercase tracking-widest text-stone-400 border border p-4 bg-white">
- <div className="mb-2 font-bold text-stone-600">Codex State</div>
+ <div className="text-[10px] font-mono uppercase tracking-widest text-nous-subtle border border p-4 bg-white">
+ <div className="mb-2 font-bold text-nous-subtle">Codex State</div>
  <div className="flex justify-between">
  <span>Entropy:</span> <span>{entropy.toFixed(2)}</span>
  </div>
  <div className="flex justify-between">
  <span>Density:</span> <span>{density.toFixed(2)}</span>
  </div>
- <div className="mt-2 pt-2 border-t border italic text-stone-600">{mode}</div>
+ <div className="mt-2 pt-2 border-t border italic text-nous-subtle">{mode}</div>
  </div>
  );
 };

@@ -51,7 +51,7 @@ export const UseCasesCarousel: React.FC = () => {
  const active = USE_CASES[index];
 
  return (
- <div className="w-full bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-none p-8 md:p-12 relative overflow-hidden">
+ <div className="w-full bg-white border border-nous-border rounded-none p-8 md:p-12 relative overflow-hidden">
  <div className="absolute top-0 right-0 p-8 opacity-5">
  <Box size={120} />
  </div>
@@ -65,24 +65,24 @@ export const UseCasesCarousel: React.FC = () => {
  className="space-y-8"
  >
  <div className="flex items-center gap-4">
- <div className="p-3 bg-stone-50 dark:bg-stone-950 rounded-none text-nous-accent">
+ <div className="p-3 bg-nous-base rounded-none text-nous-accent">
  {active.icon}
  </div>
  <div>
- <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">{active.tag}</span>
- <h4 className="font-serif text-2xl italic tracking-tighter text-nous-text dark:text-white">{active.title}</h4>
+ <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle">{active.tag}</span>
+ <h4 className="font-serif text-2xl italic tracking-tighter text-nous-text ">{active.title}</h4>
  </div>
  </div>
  
- <p className="font-serif italic text-xl text-stone-500 dark:text-stone-400 leading-snug max-w-xl">
+ <p className="font-serif italic text-xl text-nous-text0 leading-snug max-w-xl">
 "{active.description}"
  </p>
  </motion.div>
  </AnimatePresence>
 
  <div className="flex gap-4 mt-12">
- <button onClick={prev} className="p-2 border border-stone-100 dark:border-stone-800 rounded-none text-stone-300 hover:text-nous-text transition-all"><ChevronLeft size={16} /></button>
- <button onClick={next} className="p-2 border border-stone-100 dark:border-stone-800 rounded-none text-stone-300 hover:text-nous-text transition-all"><ChevronRight size={16} /></button>
+ <button onClick={prev} className="p-2 border border-nous-border rounded-none text-nous-subtle hover:text-nous-text transition-all"><ChevronLeft size={16} /></button>
+ <button onClick={next} className="p-2 border border-nous-border rounded-none text-nous-subtle hover:text-nous-text transition-all"><ChevronRight size={16} /></button>
  <div className="flex-1 flex items-center justify-end gap-2">
  {USE_CASES.map((_, i) => (
  <div key={i} className={`w-1.5 h-1.5 rounded-none transition-all ${i === index ? 'bg-nous-accent w-4' : 'bg-stone-200'}`} />

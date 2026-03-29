@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 export const IntrovertaLabel: React.FC<{ onClick?: () => void }> = ({ onClick }) => {
  return (
  <motion.div 
- className="cursor-pointer w-64 rounded-none overflow-hidden border border-stone-200 hover: transition- bg"
+ className="cursor-pointer w-64 rounded-none overflow-hidden border border-nous-border hover: transition- bg"
  initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
  animate={{ opacity: 1, scale: 1, rotate: 0 }}
  transition={{ duration: 0.6, delay: 0.5, type:"spring"}}

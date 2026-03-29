@@ -24,7 +24,7 @@ export const GlossaryTooltip: React.FC<GlossaryTooltipProps> = ({
  onMouseLeave={() => setIsHovered(false)}
  >
  {children}
- <Info size={12} className="text-stone-400 group-hover:text-stone-600 dark:text-stone-500 dark:group-hover:text-stone-300 transition-colors"/>
+ <Info size={12} className="text-nous-subtle group-hover:text-nous-subtle 0 dark:group-hover:text-nous-subtle transition-colors"/>
  
  <AnimatePresence>
  {isHovered && (
@@ -33,12 +33,12 @@ export const GlossaryTooltip: React.FC<GlossaryTooltipProps> = ({
  animate={{ opacity: 1, y: 0, scale: 1 }}
  exit={{ opacity: 0, y: 5, scale: 0.95 }}
  transition={{ duration: 0.15 }}
- className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-stone-900 dark:bg-stone-800 text-stone-100 rounded-none border border-stone-700 dark:border-stone-600 text-left pointer-events-none"
+ className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-nous-base text-nous-text rounded-none border border-nous-border text-left pointer-events-none"
  >
- <div className="text-xs font-sans tracking-widest uppercase text-stone-400 mb-1">{term}</div>
- <div className="text-sm font-serif italic text-stone-300 mb-2">"{poeticMeaning}"</div>
- <div className="text-xs font-sans text-stone-400 border-t border-stone-700 dark:border-stone-600 pt-2">
- <span className="font-semibold text-stone-300">Function:</span> {functionalMeaning}
+ <div className="text-xs font-sans tracking-widest uppercase text-nous-subtle mb-1">{term}</div>
+ <div className="text-sm font-serif italic text-nous-subtle mb-2">"{poeticMeaning}"</div>
+ <div className="text-xs font-sans text-nous-subtle border-t border-nous-border pt-2">
+ <span className="font-semibold text-nous-subtle">Function:</span> {functionalMeaning}
  </div>
  {/* Triangle pointer */}
  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-stone-900 dark:border-t-stone-800"/>

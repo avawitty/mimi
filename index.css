@@ -10,12 +10,23 @@
 @layer base {
   :root {
     /* Editorial Palette */
-    --nous-base: #FDFBF7; /* Paper white */
-    --nous-text: #0C0C0C; 
+    --nous-base: #ffffff; /* Pure white */
+    --nous-text: #000000; /* Pure black */
     --nous-subtle: #404040;
     --nous-accent: #78716c; /* Desaturated stone */
     --nous-olive: #5A5A40;
     --nous-charcoal: #262626;
+    --nous-border: #e5e5e5;
+  }
+
+  .dark {
+    --nous-base: #000000; /* Pure black */
+    --nous-text: #ffffff; /* Pure white */
+    --nous-subtle: #a3a3a3;
+    --nous-accent: #a8a29e;
+    --nous-olive: #a3a380;
+    --nous-charcoal: #d4d4d4;
+    --nous-border: #404040;
   }
 
   html, body {
@@ -25,7 +36,7 @@
     padding: 0;
     overflow: hidden;
     background-color: var(--nous-base);
-    color: #1a1a1a;
+    color: var(--nous-text);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-family: "Public Sans", sans-serif;
@@ -40,8 +51,8 @@
 
   /* Dark mode */
   .dark body {
-    background-color: #191919;
-    color: #ffffff;
+    background-color: var(--nous-base);
+    color: var(--nous-text);
   }
   * {
     @apply border-border outline-ring/50;

@@ -44,19 +44,19 @@ export const MobileStudio: React.FC<MobileStudioProps> = ({ onPublish, onClose, 
  {/* Main Content (Centered) */}
  <div className="flex-1 flex flex-col items-center justify-center px-8">
  {/* Username */}
- <div className="text-stone-800 font-['Cormorant_Garamond',serif] text-2xl font-light tracking-wide mb-6">
+ <div className="text-nous-text font-['Cormorant_Garamond',serif] text-2xl font-light tracking-wide mb-6">
  {profile?.handle || 'Swan'}
  </div>
 
  {activeThread && (
  <div className="mb-6 flex items-center justify-center gap-2">
- <div className="w-2 h-2 rounded-none bg-stone-500 animate-pulse"/>
- <span className="text-[10px] uppercase tracking-widest text-stone-600 dark:text-stone-400 font-bold">
+ <div className="w-2 h-2 rounded-none bg-nous-base0 animate-pulse"/>
+ <span className="text-[10px] uppercase tracking-widest text-nous-subtle font-bold">
  Actively Weaving: {activeThread.title}
  </span>
  <button 
  onClick={() => setActiveThread(null)}
- className="text-stone-400 hover:text-red-500 transition-colors ml-2"
+ className="text-nous-subtle hover:text-red-500 transition-colors ml-2"
  title="Clear Active Thread"
  >
  <X size={12} />
@@ -72,7 +72,7 @@ export const MobileStudio: React.FC<MobileStudioProps> = ({ onPublish, onClose, 
  animate={{ opacity: 1, y: 0 }}
  exit={{ opacity: 0, y: -5 }}
  transition={{ duration: 0.8 }}
- className="text-center italic text-stone-400 text-[15px] mb-16 max-w-[280px] leading-relaxed"
+ className="text-center italic text-nous-subtle text-[15px] mb-16 max-w-[280px] leading-relaxed"
  >
 "{PROVOCATIONS[provocationIndex]}"
  </motion.div>
@@ -83,7 +83,7 @@ export const MobileStudio: React.FC<MobileStudioProps> = ({ onPublish, onClose, 
  value={input}
  onChange={(e) => setInput(e.target.value)}
  placeholder="Deposit your memetic debris..."
- className="w-full bg-transparent text-center text-2xl outline-none resize-none placeholder:text-stone-300 text-stone-600 italic"
+ className="w-full bg-transparent text-center text-2xl outline-none resize-none placeholder:text-nous-subtle text-nous-subtle italic"
  rows={5}
  />
  </div>
@@ -91,13 +91,13 @@ export const MobileStudio: React.FC<MobileStudioProps> = ({ onPublish, onClose, 
  {/* Bottom Section */}
  <div className="pb-28 px-6 flex flex-col items-center w-full">
  {/* Status Text */}
- <div className="text-stone-200 italic text-sm mb-8 transition-opacity duration-500">
+ <div className="text-nous-text italic text-sm mb-8 transition-opacity duration-500">
  {input.trim() ?"Ready to Manifest":"Input Required to Manifest"}
  </div>
 
  {/* Toolbar Icons */}
  <div className="w-full max-w-[320px] overflow-x-auto no-scrollbar mb-8">
- <div className="flex items-center justify-start gap-6 px-6 py-3 bg-white/80 backdrop-blur-xl rounded-none border border-white/60 text-stone-800 min-w-max">
+ <div className="flex items-center justify-start gap-6 px-6 py-3 bg-white/80 backdrop-blur-xl rounded-none border border-white/60 text-nous-text min-w-max">
  <button className="hover:opacity-60 transition-opacity flex-shrink-0"><Paperclip size={20} strokeWidth={1.25} /></button>
  <button className="hover:opacity-60 transition-opacity flex-shrink-0"><Mic size={20} strokeWidth={1.25} /></button>
  <button className="hover:opacity-60 transition-opacity flex-shrink-0"><Zap size={20} strokeWidth={1.25} /></button>
@@ -118,7 +118,7 @@ export const MobileStudio: React.FC<MobileStudioProps> = ({ onPublish, onClose, 
  <button
  key={t.id}
  onClick={() => setActiveTreatmentId(activeTreatmentId === t.id ? null : t.id)}
- className={`whitespace-nowrap px-3 py-1.5 text-[10px] uppercase tracking-widest rounded-none border transition-colors ${activeTreatmentId === t.id ? 'border-stone-500 text-stone-500 bg-stone-500/10' : 'border-stone-300 dark:border-stone-700 text-stone-500 hover:border-stone-400 dark:hover:border-stone-800 dark:hover:border-stone-300'}`}
+ className={`whitespace-nowrap px-3 py-1.5 text-[10px] uppercase tracking-widest rounded-none border transition-colors ${activeTreatmentId === t.id ? 'border-nous-border text-nous-text0 bg-nous-base0/10' : 'border-nous-border text-nous-text0 hover:border-nous-border '}`}
  >
  [{t.treatmentName}]
  </button>
@@ -127,12 +127,12 @@ export const MobileStudio: React.FC<MobileStudioProps> = ({ onPublish, onClose, 
  )}
 
  {/* Tags */}
- <div className="flex items-center justify-center gap-5 mb-12 overflow-x-auto w-full no-scrollbar text-[15px] italic text-stone-300 px-4">
+ <div className="flex items-center justify-center gap-5 mb-12 overflow-x-auto w-full no-scrollbar text-[15px] italic text-nous-subtle px-4">
  {TAGS.map(tag => (
  <button 
  key={tag}
  onClick={() => setActiveTag(tag)}
- className={`whitespace-nowrap pb-1 border-b-[1.5px] transition-colors ${activeTag === tag ? 'text-stone-600 border-stone-500' : 'border-transparent hover:text-stone-400'}`}
+ className={`whitespace-nowrap pb-1 border-b-[1.5px] transition-colors ${activeTag === tag ? 'text-nous-subtle border-nous-border' : 'border-transparent hover:text-nous-subtle'}`}
  >
  {tag}
  </button>
@@ -165,7 +165,7 @@ export const MobileStudio: React.FC<MobileStudioProps> = ({ onPublish, onClose, 
  <svg width="16"height="16"viewBox="0 0 24 24"fill="none"stroke="currentColor"strokeWidth="2"strokeLinecap="round"strokeLinejoin="round"><path d="M8 22h8"/><path d="M12 11v11"/><path d="m19 3-7 8-7-8Z"/></svg>
  Colophon Protocol
  </div>
- <div className="flex items-center gap-2 text-[9px] font-sans uppercase tracking-[0.2em] text-stone-400">
+ <div className="flex items-center gap-2 text-[9px] font-sans uppercase tracking-[0.2em] text-nous-subtle">
  <div className={`w-1.5 h-1.5 rounded-none ${input.trim() ? 'bg-stone-400 ' : 'bg-stone-300'}`}></div>
  System Nominal
  </div>

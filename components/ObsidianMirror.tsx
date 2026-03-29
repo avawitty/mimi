@@ -126,12 +126,12 @@ export const ObsidianMirror: React.FC = () => {
  useEffect(() => { fetchOmen(); }, []);
 
  return (
- <div className="w-full min-h-screen flex flex-col items-center justify-start pt-24 md:pt-32 p-4 md:p-6 bg-stone-50/30 dark:bg transition-colors duration-1000 pb-32">
+ <div className="w-full min-h-screen flex flex-col items-center justify-start pt-24 md:pt-32 p-4 md:p-6 bg-nous-base/30 dark:bg transition-colors duration-1000 pb-32">
  <div className="relative z-10 w-full max-w-4xl flex flex-col items-center text-center">
  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 space-y-2">
- <h2 className="font-serif text-3xl md:text-5xl italic tracking-tighter luminescent-text text-nous-text dark:text-white">The Lens</h2>
+ <h2 className="font-serif text-3xl md:text-5xl italic tracking-tighter luminescent-text text-nous-text ">The Lens</h2>
  <div className="flex items-center justify-center gap-4">
- <span className="font-sans text-[7px] uppercase tracking-[1em] text-stone-400 font-black">Twilight Refraction</span>
+ <span className="font-sans text-[7px] uppercase tracking-[1em] text-nous-subtle font-black">Twilight Refraction</span>
  {profile?.zodiacSign && (
  <div className="flex items-center gap-2 px-3 py-0.5 bg-indigo-500/10 border border-indigo-500/20 rounded-none">
  <Sun size={10} className="text-amber-500"/>
@@ -145,8 +145,8 @@ export const ObsidianMirror: React.FC = () => {
  <AnimatePresence mode="wait">
  {loading ? (
  <motion.div key="loading"initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4 flex flex-col items-center">
- <Loader2 className="animate-spin text-stone-200"size={24} />
- <p className="font-serif text-lg italic text-stone-400">{RITUAL_TEXTS[ritualStep]}</p>
+ <Loader2 className="animate-spin text-nous-text"size={24} />
+ <p className="font-serif text-lg italic text-nous-subtle">{RITUAL_TEXTS[ritualStep]}</p>
  </motion.div>
  ) : error ? (
  <motion.div key="error"initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-8 py-12 px-6">
@@ -155,17 +155,17 @@ export const ObsidianMirror: React.FC = () => {
  </div>
  <div className="space-y-4 max-w-md mx-auto">
  <h3 className="font-sans text-[10px] uppercase tracking-[0.4em] font-black text-red-500">Handshake Failure</h3>
- <p className="font-serif italic text-xl md:text-2xl text-stone-500 dark:text-stone-400 leading-tight">
+ <p className="font-serif italic text-xl md:text-2xl text-nous-text0 leading-tight">
 "{error}"
  </p>
  </div>
- <button onClick={fetchOmen} className="px-8 py-3 bg-nous-text dark:bg-white text-white dark:text-black font-sans text-[10px] uppercase tracking-[0.5em] font-black rounded-none active:scale-95 transition-all flex items-center gap-3">
+ <button onClick={fetchOmen} className="px-8 py-3 bg-nous-text text-nous-base font-sans text-[10px] uppercase tracking-[0.5em] font-black rounded-none active:scale-95 transition-all flex items-center gap-3">
  <RefreshCw size={14} /> Re-Align Threshold
  </button>
  </motion.div>
  ) : (
  <motion.div key="omen"initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 w-full flex flex-col items-center">
- <div className="w-48 h-48 md:w-64 md:h-64 rounded-none overflow-hidden border border-stone-200 dark:border-stone-800 relative bg-black group">
+ <div className="w-48 h-48 md:w-64 md:h-64 rounded-none overflow-hidden border border-nous-border relative bg-black group">
  {manifestationUrl && <img src={manifestationUrl} className="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 group-hover:brightness-100 transition-all duration-1000"/>}
  <div className="absolute inset-0 pointer-events-none opacity-20 flex items-center justify-center">
  <Orbit size={180} className="text-white animate-[spin_20s_linear_infinite]"/>
@@ -180,13 +180,13 @@ export const ObsidianMirror: React.FC = () => {
  initial={{ opacity: 0, height: 0 }}
  animate={{ opacity: 1, height: 'auto' }}
  exit={{ opacity: 0, height: 0 }}
- className="px-6 py-4 bg-stone-100/50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 rounded-none overflow-hidden"
+ className="px-6 py-4 bg-nous-base/50 /50 border border-nous-border rounded-none overflow-hidden"
  >
- <div className="flex items-center gap-2 mb-2 text-stone-400">
+ <div className="flex items-center gap-2 mb-2 text-nous-subtle">
  <Fingerprint size={10} />
  <span className="font-sans text-[7px] uppercase tracking-widest font-black">Lens Provenance</span>
  </div>
- <p className="font-serif italic text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
+ <p className="font-serif italic text-sm text-nous-text0 leading-relaxed">
  {provenance}
  </p>
  </motion.div>
@@ -194,14 +194,14 @@ export const ObsidianMirror: React.FC = () => {
  </AnimatePresence>
 
  <div className="flex gap-4 justify-center">
- <button onClick={fetchOmen} className="p-4 rounded-none border border-stone-100 dark:border-stone-800 text-stone-400 hover:text-nous-text transition-all active:rotate-180"><RefreshCw size={14} /></button>
+ <button onClick={fetchOmen} className="p-4 rounded-none border border-nous-border text-nous-subtle hover:text-nous-text transition-all active:rotate-180"><RefreshCw size={14} /></button>
  <button 
  onClick={() => setShowLogic(!showLogic)} 
- className={`p-4 rounded-none border transition-all ${showLogic ? 'bg-nous-text text-white border-nous-text dark:bg-white dark:text-black' : 'border-stone-100 dark:border-stone-800 text-stone-400 hover:text-nous-text'}`}
+ className={`p-4 rounded-none border transition-all ${showLogic ? 'bg-nous-text text-white border-nous-text  ' : 'border-nous-border text-nous-subtle hover:text-nous-text'}`}
  >
  <Info size={14} />
  </button>
- <button onClick={handleArchiveOmen} disabled={isArchived || isArchiving} className={`px-8 py-2 rounded-none font-sans text-[8px] uppercase tracking-[0.4em] font-black transition-all flex items-center gap-3 ${isArchived ? 'bg-stone-50 text-stone-600 border-stone-100 ' : 'bg-nous-text dark:bg-white text-white dark:text-black active:scale-95'}`}>
+ <button onClick={handleArchiveOmen} disabled={isArchived || isArchiving} className={`px-8 py-2 rounded-none font-sans text-[8px] uppercase tracking-[0.4em] font-black transition-all flex items-center gap-3 ${isArchived ? 'bg-nous-base text-nous-subtle border-nous-border ' : 'bg-nous-text text-nous-base active:scale-95'}`}>
  {isArchiving ? <Loader2 size={10} className="animate-spin"/> : isArchived ? <Check size={10} /> : <Bookmark size={10} />}
  {isArchived ? 'Captured' : 'Commit'}
  </button>
@@ -212,31 +212,31 @@ export const ObsidianMirror: React.FC = () => {
  </AnimatePresence>
  </div>
 
- <div className="mt-12 w-full max-w-2xl grid md:grid-cols-2 gap-10 border-t border-stone-100 dark:border-stone-900 pt-10">
+ <div className="mt-12 w-full max-w-2xl grid md:grid-cols-2 gap-10 border-t border-nous-border pt-10">
  <div className="space-y-4 text-left">
- <div className="flex items-center gap-2 text-stone-400"><Zap size={10} className="text-amber-500"/><span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black">Dissonance</span></div>
+ <div className="flex items-center gap-2 text-nous-subtle"><Zap size={10} className="text-amber-500"/><span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black">Dissonance</span></div>
  <DissonanceCanvas score={dissonance} />
- <p className="font-serif italic text-xs text-stone-400">Current structural friction detected in the collective threshold.</p>
+ <p className="font-serif italic text-xs text-nous-subtle">Current structural friction detected in the collective threshold.</p>
  </div>
  
  <div className="space-y-6">
- <div className="flex items-center gap-2 text-stone-400"><Orbit size={10} /><span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black">The Lens Registry</span></div>
+ <div className="flex items-center gap-2 text-nous-subtle"><Orbit size={10} /><span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black">The Lens Registry</span></div>
  <button 
  onClick={() => alert("The Lens is for threshold reflection. To actively commit artifacts to the registry, descend into the Obsidian Studio.")}
- className="w-full flex items-center justify-between p-4 md:p-5 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-none group hover:border-nous-text dark:hover:border-white transition-all relative overflow-hidden"
+ className="w-full flex items-center justify-between p-4 md:p-5 bg-white border border-nous-border rounded-none group hover:border-nous-text dark:hover:border-white transition-all relative overflow-hidden"
  >
  <div className="flex items-center gap-4">
- <div className="w-10 h-10 bg-black text-white rounded-none flex items-center justify-center">
+ <div className="w-10 h-10 bg-nous-text text-nous-base rounded-none flex items-center justify-center">
  <CornerDownRight size={18} />
  </div>
  <div className="flex flex-col text-left">
  <span className="font-sans text-[9px] md:text-[10px] uppercase tracking-[0.4em] font-black text-nous-text dark:text-white">
  Shadow Studio
  </span>
- <span className="font-serif italic text-[10px] md:text-xs text-stone-400">Commit Omens to form</span>
+ <span className="font-serif italic text-[10px] md:text-xs text-nous-subtle">Commit Omens to form</span>
  </div>
  </div>
- <ExternalLink size={14} className="text-stone-300 group-hover:text-nous-text dark:group-hover:text-white transition-colors"/>
+ <ExternalLink size={14} className="text-nous-subtle group-hover:text-nous-text dark:group-hover:text-white transition-colors"/>
  </button>
  </div>
  </div>

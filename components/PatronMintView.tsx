@@ -53,13 +53,13 @@ export const PatronMintView: React.FC<{ onExit: () => void }> = ({ onExit }) => 
  >
  <div className="relative">
  <div className="absolute inset-0 border-t-2 border-amber-500 rounded-none animate-[spin_2s_linear_infinite]"/>
- <div className="w-24 h-24 border border-stone-200 dark:border-stone-800 rounded-none flex items-center justify-center">
+ <div className="w-24 h-24 border border-nous-border rounded-none flex items-center justify-center">
  <Crown size={32} className="text-amber-500 animate-pulse"/>
  </div>
  </div>
  <div className="space-y-2">
- <h1 className="font-serif text-4xl italic text-nous-text dark:text-white">Forging Key...</h1>
- <p className="font-sans text-[9px] uppercase tracking-[0.4em] text-stone-400 font-black">Verifying Patronage Protocol</p>
+ <h1 className="font-serif text-4xl italic text-nous-text ">Forging Key...</h1>
+ <p className="font-sans text-[9px] uppercase tracking-[0.4em] text-nous-subtle font-black">Verifying Patronage Protocol</p>
  </div>
  </motion.div>
  )}
@@ -74,10 +74,10 @@ export const PatronMintView: React.FC<{ onExit: () => void }> = ({ onExit }) => 
  <Key size={32} />
  </div>
  <h1 className="font-serif text-5xl md:text-6xl italic text-nous-text dark:text-white tracking-tighter">Sovereign Grant.</h1>
- <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-stone-400 font-black">Your Imperial Access Code</p>
+ <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-nous-subtle font-black">Your Imperial Access Code</p>
  </div>
 
- <div className="p-8 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-none relative overflow-hidden group">
+ <div className="p-8 bg-white border border-nous-border rounded-none relative overflow-hidden group">
  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-300 to-amber-600"/>
  <p className="font-mono text-2xl md:text-3xl text-center tracking-widest text-nous-text dark:text-white font-black select-all">
  {key}
@@ -85,7 +85,7 @@ export const PatronMintView: React.FC<{ onExit: () => void }> = ({ onExit }) => 
  <div className="flex justify-center mt-6">
  <button 
  onClick={handleCopy}
- className="flex items-center gap-2 px-4 py-2 bg-stone-100 dark:bg-stone-800 rounded-none font-sans text-[8px] uppercase tracking-widest font-black text-stone-500 hover:text-amber-500 transition-colors"
+ className="flex items-center gap-2 px-4 py-2 bg-nous-base rounded-none font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0 hover:text-amber-500 transition-colors"
  >
  {copied ? <Check size={12} /> : <Copy size={12} />}
  {copied ? 'Copied to Clipboard' : 'Copy Key'}
@@ -94,12 +94,12 @@ export const PatronMintView: React.FC<{ onExit: () => void }> = ({ onExit }) => 
  </div>
 
  <div className="space-y-4">
- <p className="font-serif italic text-stone-500 text-sm">
+ <p className="font-serif italic text-nous-text0 text-sm">
 "This key is your permanent bond to the registry. Enter it in your profile to dissolve the limits."
  </p>
  <button 
  onClick={handleProceed}
- className="w-full py-5 bg-nous-text dark:bg-white text-white dark:text-black rounded-none font-sans text-[10px] uppercase tracking-[0.4em] font-black hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4"
+ className="w-full py-5 bg-nous-text text-nous-base rounded-none font-sans text-[10px] uppercase tracking-[0.4em] font-black hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4"
  >
  Enter Registry <ArrowRight size={14} />
  </button>

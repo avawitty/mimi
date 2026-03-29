@@ -280,7 +280,7 @@ export const TheLens = () => {
  initial={{ top: '0%' }}
  animate={{ top: '100%' }}
  transition={{ duration: 4, repeat: Infinity, ease:"linear"}}
- className="absolute left-0 right-0 h-[1px] bg-stone-500/50 z-10"
+ className="absolute left-0 right-0 h-[1px] bg-nous-base0/50 z-10"
  />
  )}
  </motion.div>
@@ -304,23 +304,23 @@ export const TheLens = () => {
  <div className="flex justify-between items-start pointer-events-auto">
  <div className="space-y-1">
  <h2 className="text-white font-mono text-2xl uppercase tracking-[0.3em] flex items-center gap-3">
- <Camera size={24} className={isActive ?"text-stone-500 animate-pulse":"text-white/20"} />
+ <Camera size={24} className={isActive ?"text-nous-text0 animate-pulse":"text-white/20"} />
  The Lens
  </h2>
  <p className="text-white/40 text-[10px] uppercase tracking-widest">Spatial Aesthetic Capture Engine</p>
  </div>
  
  <div className="flex items-center gap-4">
- <div className="flex bg p-1 border border-stone-800">
+ <div className="flex bg p-1 border border-nous-border">
  <button
  onClick={() => setLensMode('spectral')}
- className={`px-4 py-1.5 text-[9px] font-mono uppercase tracking-widest transition-colors ${lensMode === 'spectral' ? 'bg-stone-800 text-stone-300' : 'text-stone-500 hover:text-stone-300'}`}
+ className={`px-4 py-1.5 text-[9px] font-mono uppercase tracking-widest transition-colors ${lensMode === 'spectral' ? 'bg-nous-base text-nous-subtle' : 'text-nous-text0 hover:text-nous-subtle'}`}
  >
  Spectral
  </button>
  <button
  onClick={() => setLensMode('mesopic')}
- className={`px-4 py-1.5 text-[9px] font-mono uppercase tracking-widest transition-colors ${lensMode === 'mesopic' ? 'bg-stone-800 text-stone-300' : 'text-stone-500 hover:text-stone-300'}`}
+ className={`px-4 py-1.5 text-[9px] font-mono uppercase tracking-widest transition-colors ${lensMode === 'mesopic' ? 'bg-nous-base text-nous-subtle' : 'text-nous-text0 hover:text-nous-subtle'}`}
  >
  Mesopic
  </button>
@@ -332,7 +332,7 @@ export const TheLens = () => {
  className={`px-6 py-3 font-mono text-[9px] uppercase tracking-widest transition-all flex items-center gap-3 ${
  isActive 
  ?"bg-red-900/20 text-red-500 border border-red-900/50 hover:bg-red-900/40"
- :"bg-transparent text-stone-300 border border-stone-800 hover:bg-stone-900"
+ :"bg-transparent text-nous-subtle border border-nous-border hover:bg-nous-base"
  }`}
  >
  {isConnecting ? <Loader2 className="animate-spin"size={14} /> : isActive ? <Square size={14} /> : <Play size={14} />}
@@ -351,7 +351,7 @@ export const TheLens = () => {
  exit={{ opacity: 0, y: -20 }}
  className="max-w-2xl mb-8"
  >
- <div className="text-stone-500 font-mono text-[10px] uppercase tracking-[0.4em] mb-4 flex items-center gap-2">
+ <div className="text-nous-text0 font-mono text-[10px] uppercase tracking-[0.4em] mb-4 flex items-center gap-2">
  <Sparkles size={12} /> Scribe Reading
  </div>
  <p className="text-white font-serif italic text-3xl leading-tight tracking-tight">
@@ -362,30 +362,30 @@ export const TheLens = () => {
  <motion.div
  initial={{ opacity: 0, y: 20 }}
  animate={{ opacity: 1, y: 0 }}
- className="max-w-2xl mb-8 bg p-6 border border-stone-800 backdrop-blur-md max-h-[60vh] overflow-y-auto"
+ className="max-w-2xl mb-8 bg p-6 border border-nous-border backdrop-blur-md max-h-[60vh] overflow-y-auto"
  >
  <div className="flex justify-between items-start mb-4">
- <div className="text-stone-500 font-mono text-[9px] uppercase tracking-widest flex items-center gap-2 font-bold">
+ <div className="text-nous-text0 font-mono text-[9px] uppercase tracking-widest flex items-center gap-2 font-bold">
  <Zap size={12} /> {captureResult.type} Analysis
  </div>
  <div className="flex items-center gap-2">
  {captureResult.data.tasks && captureResult.data.tasks.length > 0 && (
- <button onClick={handlePushToBoard} className="text-stone-500 hover:text-stone-300 flex items-center gap-1 text-[9px] font-mono uppercase tracking-widest border border-stone-800 hover:bg-stone-900 px-2 py-1 transition-colors">
+ <button onClick={handlePushToBoard} className="text-nous-text0 hover:text-nous-subtle flex items-center gap-1 text-[9px] font-mono uppercase tracking-widest border border-nous-border hover:bg-nous-base px-2 py-1 transition-colors">
  <ArrowRight size={12} /> Push to Board
  </button>
  )}
- <button onClick={handleSaveToPocket} disabled={isSaving} className="text-stone-500 hover:text-stone-300 disabled:opacity-50 transition-colors">
+ <button onClick={handleSaveToPocket} disabled={isSaving} className="text-nous-text0 hover:text-nous-subtle disabled:opacity-50 transition-colors">
  {isSaving ? <Loader2 size={16} className="animate-spin"/> : <Save size={16} />}
  </button>
- <button onClick={() => setCaptureResult(null)} className="text-stone-500 hover:text-stone-300 transition-colors">
+ <button onClick={() => setCaptureResult(null)} className="text-nous-text0 hover:text-nous-subtle transition-colors">
  <X size={16} />
  </button>
  </div>
  </div>
- <div className="space-y-4 text-stone-300">
+ <div className="space-y-4 text-nous-subtle">
  {captureResult.data.directives && (
  <div>
- <span className="text-[9px] font-mono uppercase tracking-widest text-stone-500 block mb-2 font-bold">Architectural Directives</span>
+ <span className="text-[9px] font-mono uppercase tracking-widest text-nous-text0 block mb-2 font-bold">Architectural Directives</span>
  <ul className="list-disc pl-4 space-y-1 text-sm font-serif italic">
  {captureResult.data.directives.map((d: string, i: number) => (
  <li key={i}>{d}</li>
@@ -395,12 +395,12 @@ export const TheLens = () => {
  )}
  {captureResult.data.tasks && (
  <div>
- <span className="text-[9px] font-mono uppercase tracking-widest text-stone-500 block mb-2 font-bold">Actionable Tasks</span>
+ <span className="text-[9px] font-mono uppercase tracking-widest text-nous-text0 block mb-2 font-bold">Actionable Tasks</span>
  <div className="space-y-2">
  {captureResult.data.tasks.map((t: any, i: number) => (
- <div key={i} className="bg-transparent p-3 border border-stone-800">
- <h4 className="font-mono text-[9px] uppercase tracking-widest font-bold text-stone-300">{t.title}</h4>
- <p className="font-serif italic text-xs text-stone-500 mt-1">{t.description}</p>
+ <div key={i} className="bg-transparent p-3 border border-nous-border">
+ <h4 className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-subtle">{t.title}</h4>
+ <p className="font-serif italic text-xs text-nous-text0 mt-1">{t.description}</p>
  </div>
  ))}
  </div>
@@ -417,14 +417,14 @@ export const TheLens = () => {
  )}
  {captureResult.data.cultural_parallel && (
  <div>
- <span className="text-[9px] font-mono uppercase tracking-widest text-stone-500 block mb-1 font-bold">Cultural Parallel</span>
+ <span className="text-[9px] font-mono uppercase tracking-widest text-nous-text0 block mb-1 font-bold">Cultural Parallel</span>
  <p className="text-sm font-serif italic">{captureResult.data.cultural_parallel}</p>
  </div>
  )}
  {captureResult.data.semiotic_touchpoints && (
  <div className="flex flex-wrap gap-2">
  {captureResult.data.semiotic_touchpoints.map((t: string, i: number) => (
- <span key={i} className="px-2 py-1 bg-transparent border border-stone-800 text-[9px] font-mono uppercase tracking-widest text-stone-400">{t}</span>
+ <span key={i} className="px-2 py-1 bg-transparent border border-nous-border text-[9px] font-mono uppercase tracking-widest text-nous-subtle">{t}</span>
  ))}
  </div>
  )}
@@ -435,47 +435,47 @@ export const TheLens = () => {
  <motion.div
  initial={{ opacity: 0, y: 20 }}
  animate={{ opacity: 1, y: 0 }}
- className="max-w-2xl mb-8 bg p-6 border border-stone-800 backdrop-blur-md flex items-center gap-4"
+ className="max-w-2xl mb-8 bg p-6 border border-nous-border backdrop-blur-md flex items-center gap-4"
  >
- <Loader2 className="animate-spin text-stone-500"size={24} />
- <span className="text-stone-500 font-mono text-sm uppercase tracking-widest font-bold">Extracting Latent Resonance...</span>
+ <Loader2 className="animate-spin text-nous-text0"size={24} />
+ <span className="text-nous-text0 font-mono text-sm uppercase tracking-widest font-bold">Extracting Latent Resonance...</span>
  </motion.div>
  ) : latentAnalysisResult ? (
  <motion.div
  initial={{ opacity: 0, y: 20 }}
  animate={{ opacity: 1, y: 0 }}
- className="max-w-2xl mb-8 bg p-6 border border-stone-800 backdrop-blur-md max-h-[60vh] overflow-y-auto"
+ className="max-w-2xl mb-8 bg p-6 border border-nous-border backdrop-blur-md max-h-[60vh] overflow-y-auto"
  >
  <div className="flex justify-between items-start mb-4">
- <div className="text-stone-500 font-mono text-[9px] uppercase tracking-widest flex items-center gap-2 font-bold">
+ <div className="text-nous-text0 font-mono text-[9px] uppercase tracking-widest flex items-center gap-2 font-bold">
  <Sparkles size={12} /> Latent Resonance
  </div>
  <div className="flex items-center gap-2">
- <button onClick={handlePushLatentDirective} className="text-stone-500 hover:text-stone-300 flex items-center gap-1 text-[9px] font-mono uppercase tracking-widest border border-stone-800 hover:bg-stone-900 px-2 py-1 transition-colors">
+ <button onClick={handlePushLatentDirective} className="text-nous-text0 hover:text-nous-subtle flex items-center gap-1 text-[9px] font-mono uppercase tracking-widest border border-nous-border hover:bg-nous-base px-2 py-1 transition-colors">
  <ArrowRight size={12} /> Push to Board
  </button>
- <button onClick={() => setLatentAnalysisResult(null)} className="text-stone-500 hover:text-stone-300 transition-colors">
+ <button onClick={() => setLatentAnalysisResult(null)} className="text-nous-text0 hover:text-nous-subtle transition-colors">
  <X size={16} />
  </button>
  </div>
  </div>
- <div className="space-y-4 text-stone-300">
+ <div className="space-y-4 text-nous-subtle">
  {latentAnalysisResult.resonance_insight && (
- <p className="font-serif italic text-xl text-stone-400">"{latentAnalysisResult.resonance_insight}"</p>
+ <p className="font-serif italic text-xl text-nous-subtle">"{latentAnalysisResult.resonance_insight}"</p>
  )}
  {latentAnalysisResult.architectural_directive && (
  <div>
- <span className="text-[9px] font-mono uppercase tracking-widest text-stone-500 block mb-2 font-bold">Architectural Directive</span>
- <div className="bg-transparent p-3 border border-stone-800">
- <h4 className="font-mono text-[9px] uppercase tracking-widest font-bold text-stone-300">{latentAnalysisResult.architectural_directive.title}</h4>
- <p className="font-serif italic text-xs text-stone-500 mt-1">{latentAnalysisResult.architectural_directive.description}</p>
+ <span className="text-[9px] font-mono uppercase tracking-widest text-nous-text0 block mb-2 font-bold">Architectural Directive</span>
+ <div className="bg-transparent p-3 border border-nous-border">
+ <h4 className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-subtle">{latentAnalysisResult.architectural_directive.title}</h4>
+ <p className="font-serif italic text-xs text-nous-text0 mt-1">{latentAnalysisResult.architectural_directive.description}</p>
  </div>
  </div>
  )}
  {latentAnalysisResult.aesthetic_vectors && (
  <div className="flex flex-wrap gap-2">
  {latentAnalysisResult.aesthetic_vectors.map((v: string, i: number) => (
- <span key={i} className="px-2 py-1 bg-transparent border border-stone-800 text-[9px] font-mono uppercase tracking-widest text-stone-400">{v}</span>
+ <span key={i} className="px-2 py-1 bg-transparent border border-nous-border text-[9px] font-mono uppercase tracking-widest text-nous-subtle">{v}</span>
  ))}
  </div>
  )}
@@ -506,7 +506,7 @@ export const TheLens = () => {
  <button 
  onClick={captureImage}
  disabled={isAnalyzing || isRecordingVideo || isRecordingAudio}
- className="w-12 h-12 bg-transparent border border-stone-800 flex items-center justify-center text-stone-500 hover:bg-stone-900 hover:text-stone-300 transition-colors disabled:opacity-50"
+ className="w-12 h-12 bg-transparent border border-nous-border flex items-center justify-center text-nous-text0 hover:bg-nous-base hover:text-nous-subtle transition-colors disabled:opacity-50"
  >
  {isAnalyzing ? <Loader2 className="animate-spin"size={18} /> : <ImageIcon size={18} />}
  </button>
@@ -514,7 +514,7 @@ export const TheLens = () => {
  onClick={toggleVideoRecording}
  disabled={isAnalyzing || isRecordingAudio}
  className={`w-12 h-12 border flex items-center justify-center transition-colors disabled:opacity-50 ${
- isRecordingVideo ?"bg-red-900/20 text-red-500 border-red-900/50 animate-pulse":"bg-transparent border-stone-800 text-stone-500 hover:bg-stone-900 hover:text-stone-300"
+ isRecordingVideo ?"bg-red-900/20 text-red-500 border-red-900/50 animate-pulse":"bg-transparent border-nous-border text-nous-text0 hover:bg-nous-base hover:text-nous-subtle"
  }`}
  >
  <Video size={18} />
@@ -523,7 +523,7 @@ export const TheLens = () => {
  onClick={toggleAudioRecording}
  disabled={isAnalyzing || isRecordingVideo}
  className={`w-12 h-12 border flex items-center justify-center transition-colors disabled:opacity-50 ${
- isRecordingAudio ?"bg-red-900/20 text-red-500 border-red-900/50 animate-pulse":"bg-transparent border-stone-800 text-stone-500 hover:bg-stone-900 hover:text-stone-300"
+ isRecordingAudio ?"bg-red-900/20 text-red-500 border-red-900/50 animate-pulse":"bg-transparent border-nous-border text-nous-text0 hover:bg-nous-base hover:text-nous-subtle"
  }`}
  >
  <Mic size={18} />
@@ -533,19 +533,19 @@ export const TheLens = () => {
  </div>
 
  {/* Real-time Telemetry */}
- <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-stone-800 pt-8 pointer-events-auto">
+ <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-nous-border pt-8 pointer-events-auto">
  <div className="space-y-1">
- <div className="text-[9px] font-mono text-stone-500 uppercase tracking-widest font-bold">Signal Strength</div>
- <div className="h-1 bg border border-stone-800 overflow-hidden">
+ <div className="text-[9px] font-mono text-nous-text0 uppercase tracking-widest font-bold">Signal Strength</div>
+ <div className="h-1 bg border border-nous-border overflow-hidden">
  <motion.div 
  animate={{ width: isActive ? '85%' : '0%' }}
- className="h-full bg-stone-500"
+ className="h-full bg-nous-base0"
  />
  </div>
  </div>
  <div className="space-y-1">
- <div className="text-[9px] font-mono text-stone-500 uppercase tracking-widest font-bold">Aesthetic Entropy</div>
- <div className="h-1 bg border border-stone-800 overflow-hidden">
+ <div className="text-[9px] font-mono text-nous-text0 uppercase tracking-widest font-bold">Aesthetic Entropy</div>
+ <div className="h-1 bg border border-nous-border overflow-hidden">
  <motion.div 
  animate={{ width: isActive ? '42%' : '0%' }}
  className="h-full bg-stone-700"
@@ -553,8 +553,8 @@ export const TheLens = () => {
  </div>
  </div>
  <div className="space-y-1">
- <div className="text-[9px] font-mono text-stone-500 uppercase tracking-widest font-bold">Latent Depth</div>
- <div className="h-1 bg border border-stone-800 overflow-hidden">
+ <div className="text-[9px] font-mono text-nous-text0 uppercase tracking-widest font-bold">Latent Depth</div>
+ <div className="h-1 bg border border-nous-border overflow-hidden">
  <motion.div 
  animate={{ width: isActive ? '68%' : '0%' }}
  className="h-full bg-stone-600"
@@ -562,10 +562,10 @@ export const TheLens = () => {
  </div>
  </div>
  <div className="space-y-1">
- <div className="text-[9px] font-mono text-stone-500 uppercase tracking-widest font-bold">Registry Sync</div>
+ <div className="text-[9px] font-mono text-nous-text0 uppercase tracking-widest font-bold">Registry Sync</div>
  <div className="flex items-center gap-2">
- <div className={`w-1.5 h-1.5 ${isActive ?"bg-stone-500 animate-pulse":"bg-stone-800"}`} />
- <span className="text-[9px] text-stone-500 font-mono uppercase tracking-widest font-bold">
+ <div className={`w-1.5 h-1.5 ${isActive ?"bg-nous-base0 animate-pulse":"bg-nous-base"}`} />
+ <span className="text-[9px] text-nous-text0 font-mono uppercase tracking-widest font-bold">
  {isActive ?"Connected":"Idle"}
  </span>
  </div>

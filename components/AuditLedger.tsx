@@ -14,30 +14,30 @@ export const AuditLedger: React.FC<{ onClose: () => void }> = ({ onClose }) => {
  initial={{ opacity: 0 }} 
  animate={{ opacity: 1 }} 
  exit={{ opacity: 0 }}
- className="fixed inset-0 z-[11000] flex items-center justify-center p-6 bg-stone-950/98 backdrop-blur-3xl"
+ className="fixed inset-0 z-[11000] flex items-center justify-center p-6 bg-nous-base/98 backdrop-blur-3xl"
  >
- <div className="relative w-full max-w-2xl bg-black border border-stone-800 p-8 md:p-12 rounded-none space-y-10">
+ <div className="relative w-full max-w-2xl bg-black border border-nous-border p-8 md:p-12 rounded-none space-y-10">
  <div className="flex justify-between items-start">
  <div className="space-y-2">
  <div className="flex items-center gap-3 text-red-500">
  <ShieldAlert size={18} className="animate-pulse"/>
  <h2 className="font-sans text-[10px] uppercase tracking-[0.6em] font-black italic">Structural Audit Ledger</h2>
  </div>
- <p className="font-serif italic text-sm text-stone-500">Black-box recording of protocol evolution and form-reclamation.</p>
+ <p className="font-serif italic text-sm text-nous-text0">Black-box recording of protocol evolution and form-reclamation.</p>
  </div>
- <button onClick={onClose} className="p-2 text-stone-600 hover:text-white transition-colors"><X size={24} /></button>
+ <button onClick={onClose} className="p-2 text-nous-subtle hover:text-white transition-colors"><X size={24} /></button>
  </div>
 
- <div className="flex gap-4 border-b border-stone-800 pb-6">
+ <div className="flex gap-4 border-b border-nous-border pb-6">
  <button 
  onClick={() => setFilter('manifest')}
- className={`flex-1 py-4 px-6 rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 transition-all ${filter === 'manifest' ? 'bg-white text-black' : 'border border-stone-800 text-stone-500 hover:text-white'}`}
+ className={`flex-1 py-4 px-6 rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 transition-all ${filter === 'manifest' ? 'bg-nous-base text-nous-text' : 'border border-nous-border text-nous-text0 hover:text-white'}`}
  >
  <Sparkles size={12} /> Structural Expansion
  </button>
  <button 
  onClick={() => setFilter('archive')}
- className={`flex-1 py-4 px-6 rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 transition-all ${filter === 'archive' ? 'bg-red-500 text-white' : 'border border-stone-800 text-stone-500 hover:text-red-500'}`}
+ className={`flex-1 py-4 px-6 rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 transition-all ${filter === 'archive' ? 'bg-red-500 text-white' : 'border border-nous-border text-nous-text0 hover:text-red-500'}`}
  >
  <ZapOff size={12} /> Form Reclamation
  </button>
@@ -53,18 +53,18 @@ export const AuditLedger: React.FC<{ onClose: () => void }> = ({ onClose }) => {
  className="space-y-8"
  >
  {ledger.map((entry) => (
- <div key={entry.id} className="group border-l border-stone-800 pl-8 space-y-4 relative">
- <div className={`absolute left-[-4.5px] top-1 w-2 h-2 rounded-none transition-colors ${filter === 'manifest' ? 'bg-stone-500 ' : 'bg-red-500 '}`} />
+ <div key={entry.id} className="group border-l border-nous-border pl-8 space-y-4 relative">
+ <div className={`absolute left-[-4.5px] top-1 w-2 h-2 rounded-none transition-colors ${filter === 'manifest' ? 'bg-nous-base0 ' : 'bg-red-500 '}`} />
  <div className="flex justify-between items-baseline">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-600">{new Date(entry.timestamp).toLocaleDateString()} // {entry.id}</span>
- {filter === 'manifest' ? <Sparkles size={12} className="text-stone-500"/> : <ZapOff size={12} className="text-red-500"/>}
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">{new Date(entry.timestamp).toLocaleDateString()} // {entry.id}</span>
+ {filter === 'manifest' ? <Sparkles size={12} className="text-nous-text0"/> : <ZapOff size={12} className="text-red-500"/>}
  </div>
  <div className="space-y-2">
- <h3 className="font-mono text-base text-stone-300 uppercase tracking-tighter">{entry.featureName}</h3>
- <p className="font-serif italic text-sm text-stone-500">Reason: {entry.reason}</p>
- <div className="p-3 bg-stone-900/50 rounded-none border border-stone-800/50">
- <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-600 block mb-1">Impact Analysis</span>
- <p className="font-serif italic text-xs text-stone-400"dangerouslySetInnerHTML={{ __html: entry.impact }} />
+ <h3 className="font-mono text-base text-nous-subtle uppercase tracking-tighter">{entry.featureName}</h3>
+ <p className="font-serif italic text-sm text-nous-text0">Reason: {entry.reason}</p>
+ <div className="p-3 bg-nous-base/50 rounded-none border border-nous-border/50">
+ <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle block mb-1">Impact Analysis</span>
+ <p className="font-serif italic text-xs text-nous-subtle"dangerouslySetInnerHTML={{ __html: entry.impact }} />
  </div>
  </div>
  </div>
@@ -79,9 +79,9 @@ export const AuditLedger: React.FC<{ onClose: () => void }> = ({ onClose }) => {
  </AnimatePresence>
  </div>
 
- <div className="pt-8 border-t border-stone-900 flex justify-between items-center text-stone-600">
+ <div className="pt-8 border-t border-nous-border flex justify-between items-center text-nous-subtle">
  <div className="flex items-center gap-3">
- <Activity size={12} className="text-stone-500 animate-pulse"/>
+ <Activity size={12} className="text-nous-text0 animate-pulse"/>
  <span className="font-sans text-[7px] uppercase tracking-widest font-black">Audit Sync Active</span>
  </div>
  <span className="font-mono text-[7px]">LOG_LEVEL: CLINICAL_REFINEMENT</span>

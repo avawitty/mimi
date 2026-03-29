@@ -49,16 +49,16 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({ currentViewMode, s
  {MENU_STRUCTURE.map((section, index) => (
  <React.Fragment key={section.section}>
  <div className="relative group">
- <button className="font-sans text-[10px] uppercase tracking-[0.2em] font-medium text-stone-500 hover:text-stone-900 dark:hover:text-white transition-colors">
+ <button className="font-sans text-[10px] uppercase tracking-[0.2em] font-medium text-nous-text0 hover:text-nous-text dark:hover:text-white transition-colors">
  {section.section}
  </button>
  <div className="absolute top-full left-0 pt-2 w-48 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto z-[5000]">
- <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-4 flex flex-col gap-2">
+ <div className="bg-white border border-nous-border p-4 flex flex-col gap-2">
  {section.items.map((item) => (
  <button
  key={item.mode}
  onClick={() => setViewMode(item.mode)}
- className={`text-[10px] uppercase tracking-[0.1em] text-left hover:text-stone-600 dark:hover:text-stone-400 transition-colors ${currentViewMode === item.mode ? 'text-stone-600 dark:text-stone-400 font-bold' : 'text-stone-600 dark:text-stone-400'}`}
+ className={`text-[10px] uppercase tracking-[0.1em] text-left hover:text-nous-subtle transition-colors ${currentViewMode === item.mode ? 'text-nous-subtle font-bold' : 'text-nous-subtle '}`}
  >
  {item.label}
  </button>
@@ -67,13 +67,13 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({ currentViewMode, s
  </div>
  </div>
  {index < MENU_STRUCTURE.length - 1 && (
- <span className="text-stone-300 dark:text-stone-700">/</span>
+ <span className="text-nous-subtle">/</span>
  )}
  </React.Fragment>
  ))}
  <button 
  onClick={onOpenCommandDrawer}
- className="font-sans text-[10px] uppercase tracking-[0.2em] font-medium text-stone-600 dark:hover:text-stone-400 transition-colors"
+ className="font-sans text-[10px] uppercase tracking-[0.2em] font-medium text-nous-subtle transition-colors"
  >
  Command
  </button>

@@ -14,7 +14,7 @@ export const DeltaVerdictCard: React.FC<DeltaVerdictCardProps> = ({ verdict, com
 
  // Determine color based on alignment
  const getAlignmentColor = (score: number) => {
- if (score > 0.8) return 'text-stone-500'; // High alignment
+ if (score > 0.8) return 'text-nous-text0'; // High alignment
  if (score < 0.3) return 'text-red-500'; // Anomaly / Mutant
  return 'text-amber-500'; // Drift
  };
@@ -28,10 +28,10 @@ export const DeltaVerdictCard: React.FC<DeltaVerdictCardProps> = ({ verdict, com
  const Icon = verdict.alignmentScore < 0.3 ? ShieldAlert : verdict.alignmentScore > 0.8 ? CheckCircle2 : Zap;
 
  return (
- <div className="w-full border border-stone-200 dark:border-stone-800 bg-white dark:bg overflow-hidden">
+ <div className="w-full border border-nous-border bg-nous-base overflow-hidden">
  {/* Header / Summary */}
  <div 
- className={`p-4 flex items-start justify-between cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-900/50 transition-colors ${expanded ? 'border-b border-stone-100 dark:border-stone-800/50' : ''}`}
+ className={`p-4 flex items-start justify-between cursor-pointer hover:bg-nous-base /50 transition-colors ${expanded ? 'border-b border-nous-border /50' : ''}`}
  onClick={() => setExpanded(!expanded)}
  >
  <div className="flex gap-4 items-start">
@@ -49,17 +49,17 @@ export const DeltaVerdictCard: React.FC<DeltaVerdictCardProps> = ({ verdict, com
  {getAlignmentLabel(verdict.alignmentScore)}
  </span>
  </GlossaryTooltip>
- <span className="font-mono text-[10px] text-stone-400">
+ <span className="font-mono text-[10px] text-nous-subtle">
  Δ {(verdict.alignmentScore * 100).toFixed(0)}%
  </span>
  </div>
- <p className="font-serif italic text-sm text-stone-800 dark:text-stone-200 leading-snug">
+ <p className="font-serif italic text-sm text-nous-text leading-snug">
 "{verdict.surpriseVerdict}"
  </p>
  </div>
  </div>
  {!compact && (
- <button className="text-stone-400 hover:text-primary dark:hover:text-white transition-colors">
+ <button className="text-nous-subtle hover:text-primary dark:hover:text-white transition-colors">
  {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
  </button>
  )}
@@ -74,15 +74,15 @@ export const DeltaVerdictCard: React.FC<DeltaVerdictCardProps> = ({ verdict, com
  exit={{ height: 0, opacity: 0 }}
  className="overflow-hidden"
  >
- <div className="p-4 flex flex-col gap-6 bg-stone-50/50 dark:bg-stone-900/20">
+ <div className="p-4 flex flex-col gap-6 bg-nous-base/50 /20">
  
  {/* Divergence Points */}
  <div className="flex flex-col gap-2">
- <span className="font-mono text-[10px] uppercase tracking-widest text-stone-500">Divergence Points</span>
+ <span className="font-mono text-[10px] uppercase tracking-widest text-nous-text0">Divergence Points</span>
  <ul className="flex flex-col gap-2">
  {verdict.divergencePoints.map((point, idx) => (
- <li key={idx} className="flex items-start gap-2 text-xs text-stone-600 dark:text-stone-400 font-sans">
- <span className="text-stone-300 dark:text-stone-700 mt-0.5">•</span>
+ <li key={idx} className="flex items-start gap-2 text-xs text-nous-subtle font-sans">
+ <span className="text-nous-subtle mt-0.5">•</span>
  {point}
  </li>
  ))}
@@ -91,8 +91,8 @@ export const DeltaVerdictCard: React.FC<DeltaVerdictCardProps> = ({ verdict, com
 
  {/* Resonance Analysis */}
  <div className="flex flex-col gap-2">
- <span className="font-mono text-[10px] uppercase tracking-widest text-stone-500">Resonance Analysis</span>
- <p className="text-xs text-stone-600 dark:text-stone-400 font-sans leading-relaxed">
+ <span className="font-mono text-[10px] uppercase tracking-widest text-nous-text0">Resonance Analysis</span>
+ <p className="text-xs text-nous-subtle font-sans leading-relaxed">
  {verdict.resonanceAnalysis}
  </p>
  </div>

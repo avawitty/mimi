@@ -20,7 +20,7 @@ export const AestheticReferenceCard = forwardRef<HTMLDivElement, AestheticRefere
  return (
  <div 
  ref={ref}
- className="w-[800px] h-[800px] bg-white text-black p-12 flex flex-col justify-between"
+ className="w-[800px] h-[800px] bg-nous-base text-nous-text p-12 flex flex-col justify-between"
  style={{ fontFamily: sans }}
  >
  {/* Header */}

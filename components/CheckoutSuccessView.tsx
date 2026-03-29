@@ -45,7 +45,7 @@ export const CheckoutSuccessView: React.FC<CheckoutSuccessViewProps> = ({ plan, 
  };
 
  return (
- <div className="min-h-full bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 p-6 md:p-12 flex flex-col items-center justify-center">
+ <div className="min-h-full bg-nous-base text-nous-text p-6 md:p-12 flex flex-col items-center justify-center">
  <motion.div
  initial={{ opacity: 0, scale: 0.95 }}
  animate={{ opacity: 1, scale: 1 }}
@@ -53,31 +53,31 @@ export const CheckoutSuccessView: React.FC<CheckoutSuccessViewProps> = ({ plan, 
  >
  {isUpgrading ? (
  <div className="space-y-6">
- <div className="w-16 h-16 border-2 border-stone-200 dark:border-stone-800 border-t-stone-500 rounded-none animate-spin mx-auto"/>
+ <div className="w-16 h-16 border-2 border-nous-border border-t-stone-500 rounded-none animate-spin mx-auto"/>
  <h2 className="font-serif italic text-3xl">Activating Membership...</h2>
- <p className="font-sans text-xs uppercase tracking-widest text-stone-500">Please do not close this window</p>
+ <p className="font-sans text-xs uppercase tracking-widest text-nous-text0">Please do not close this window</p>
  </div>
  ) : error ? (
  <div className="space-y-6">
  <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-none flex items-center justify-center mx-auto text-2xl">!</div>
  <h2 className="font-serif italic text-3xl">Activation Error</h2>
- <p className="text-stone-500">{error}</p>
+ <p className="text-nous-text0">{error}</p>
  <button 
  onClick={onContinue}
- className="px-6 py-3 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-none font-sans text-xs uppercase tracking-widest font-bold"
+ className="px-6 py-3 bg-nous-text text-nous-base rounded-none font-sans text-xs uppercase tracking-widest font-bold hover:bg-nous-text0 transition-colors"
  >
  Return to Studio
  </button>
  </div>
  ) : (
  <div className="space-y-8">
- <div className="w-20 h-20 bg-stone-100 dark:bg-stone-900/30 text-stone-500 rounded-none flex items-center justify-center mx-auto">
+ <div className="w-20 h-20 bg-nous-base /30 text-nous-text0 rounded-none flex items-center justify-center mx-auto">
  <CheckCircle2 size={40} />
  </div>
  
  <div className="space-y-4">
  <h1 className="font-serif italic text-5xl tracking-tighter">Welcome to {planNames[plan]}.</h1>
- <p className="font-sans text-sm uppercase tracking-[0.2em] text-stone-500 font-bold">
+ <p className="font-sans text-sm uppercase tracking-[0.2em] text-nous-text0 font-bold">
  Your capabilities have been unlocked
  </p>
  </div>
@@ -85,7 +85,7 @@ export const CheckoutSuccessView: React.FC<CheckoutSuccessViewProps> = ({ plan, 
  <div className="pt-8 space-y-4">
  <button 
  onClick={onContinue}
- className="w-full px-6 py-4 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-none font-sans text-xs uppercase tracking-widest font-bold hover:bg-stone-800 dark:hover:bg-white transition-colors flex items-center justify-center gap-2"
+ className="w-full px-6 py-4 bg-nous-text text-nous-base rounded-none font-sans text-xs uppercase tracking-widest font-bold hover:bg-nous-text0 transition-colors flex items-center justify-center gap-2"
  >
  Enter the Studio <ArrowRight size={16} />
  </button>
@@ -94,7 +94,7 @@ export const CheckoutSuccessView: React.FC<CheckoutSuccessViewProps> = ({ plan, 
  href="https://billing.stripe.com/p/login/3cI4gtekA8L36kX3NDaEE00"
  target="_blank"
  rel="noopener noreferrer"
- className="block w-full px-6 py-4 bg-transparent border border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 rounded-none font-sans text-xs uppercase tracking-widest font-bold hover:bg-stone-100 dark:hover:bg-stone-900 transition-colors"
+ className="block w-full px-6 py-4 bg-transparent border border-nous-border text-nous-subtle rounded-none font-sans text-xs uppercase tracking-widest font-bold hover:bg-nous-base transition-colors"
  >
  Manage Subscription
  </a>

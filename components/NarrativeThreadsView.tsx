@@ -164,10 +164,10 @@ export const NarrativeThreadsView: React.FC = () => {
  };
 
  return (
- <div className="flex-1 relative overflow-hidden bg-stone-950 text-stone-100 font-serif"ref={containerRef}>
+ <div className="flex-1 relative overflow-hidden bg-nous-base text-nous-text font-serif"ref={containerRef}>
  {loading && (
- <div className="absolute inset-0 flex items-center justify-center z-50 bg-stone-950/80 backdrop-blur-sm">
- <div className="flex flex-col items-center gap-4 text-stone-400">
+ <div className="absolute inset-0 flex items-center justify-center z-50 bg-nous-base/80 backdrop-blur-sm">
+ <div className="flex flex-col items-center gap-4 text-nous-subtle">
  <Loader2 className="animate-spin"size={32} />
  <p className="font-sans text-[10px] uppercase tracking-[0.3em]">Weaving the Loom...</p>
  </div>
@@ -176,8 +176,8 @@ export const NarrativeThreadsView: React.FC = () => {
 
  {/* Header */}
  <div className="absolute top-12 left-12 z-40 pointer-events-none">
- <h2 className="text-5xl italic font-serif text-white/90 drop-">The Loom</h2>
- <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-stone-400/80 mt-2">Latent Constellation of Motifs</p>
+ <h2 className="text-5xl italic font-serif text-nous-text drop-shadow-md">The Loom</h2>
+ <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-nous-subtle mt-2">Latent Constellation of Motifs</p>
  </div>
 
  {/* Edges */}
@@ -226,7 +226,7 @@ export const NarrativeThreadsView: React.FC = () => {
  whileHover={{ scale: 1.2 }}
  whileTap={{ scale: 0.9 }}
  >
- <span className="opacity-0 group-hover:opacity-100 absolute top-full mt-2 whitespace-nowrap font-mono text-[9px] uppercase tracking-widest bg-stone-950 border border-stone-800 px-2 py-1 text-stone-300 transition-opacity">
+ <span className="opacity-0 group-hover:opacity-100 absolute top-full mt-2 whitespace-nowrap font-mono text-[9px] uppercase tracking-widest bg-nous-base border border-nous-border px-2 py-1 text-nous-subtle transition-opacity">
  {node.id} ({node.frequency})
  </span>
  </motion.div>
@@ -241,18 +241,18 @@ export const NarrativeThreadsView: React.FC = () => {
  animate={{ x: 0 }}
  exit={{ x: '100%' }}
  transition={{ type: 'spring', damping: 25, stiffness: 200 }}
- className="absolute top-0 right-0 bottom-0 w-full md:w-[450px] bg-stone-950 border-l border-white/10 z-50 flex flex-col"
+ className="absolute top-0 right-0 bottom-0 w-full md:w-[450px] bg-nous-base border-l border-nous-border z-50 flex flex-col"
  >
- <div className="p-8 border-b border-white/10 flex justify-between items-center bg-black/50 backdrop-blur-md">
+ <div className="p-8 border-b border-nous-border flex justify-between items-center bg-nous-base/80 backdrop-blur-md">
  <div>
- <h3 className="text-2xl italic text-stone-400">{selectedNode}</h3>
- <p className="font-sans text-[9px] uppercase tracking-widest text-white/50 mt-1">
+ <h3 className="text-2xl italic text-nous-text">{selectedNode}</h3>
+ <p className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle mt-1">
  {filteredZines.length} Manifestations
  </p>
  </div>
  <button 
  onClick={() => setSelectedNode(null)}
- className="p-2 border border-stone-800 hover:bg-stone-900 text-stone-400 hover:text-stone-300 transition-colors"
+ className="p-2 border border-nous-border hover:bg-nous-base text-nous-subtle hover:text-nous-subtle transition-colors"
  >
  <X size={20} />
  </button>

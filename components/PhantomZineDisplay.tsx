@@ -54,7 +54,7 @@ export const PhantomZineDisplay: React.FC<PhantomZineDisplayProps> = ({ page, pr
  <>
  <link href={fontUrl} rel="stylesheet"/>
  <div 
- className="relative w-full h-full bg-stone-900/50 backdrop-blur-xl border border-white/10 overflow-hidden rounded-none flex items-center justify-center p-8"
+ className="relative w-full h-full bg-nous-base/50 backdrop-blur-xl border border-white/10 overflow-hidden rounded-none flex items-center justify-center p-8"
  style={{ 
  fontFamily: `'${fontFamily}', sans-serif`,
  '--zine-base-color': baseHex,
@@ -92,9 +92,9 @@ export const PhantomZineDisplay: React.FC<PhantomZineDisplayProps> = ({ page, pr
  animate={{ opacity: 1, y: 0 }}
  onClick={(e) => { e.stopPropagation(); handleHarmonize(el); }}
  disabled={el.harmonizing}
- className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-stone-900/90 text-white px-3 py-1.5 rounded-none text-[8px] uppercase tracking-widest font-black flex items-center gap-2 backdrop-blur-sm border border-stone-700 hover:bg-stone-800 transition-colors opacity-0 group-hover:opacity-100"
+ className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-nous-base/90 text-white px-3 py-1.5 rounded-none text-[8px] uppercase tracking-widest font-black flex items-center gap-2 backdrop-blur-sm border border-nous-border hover:bg-nous-base transition-colors opacity-0 group-hover:opacity-100"
  >
- {el.harmonizing ? <Loader2 size={10} className="animate-spin"/> : <Sparkles size={10} className="text-stone-400"/>}
+ {el.harmonizing ? <Loader2 size={10} className="animate-spin"/> : <Sparkles size={10} className="text-nous-subtle"/>}
  {el.harmonizing ? 'Refracting...' : 'Refract to Harmonize'}
  </motion.button>
  )}

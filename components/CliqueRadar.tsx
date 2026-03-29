@@ -51,18 +51,18 @@ export const CliqueRadar: React.FC<{ onSelectZine: (zine: ZineMetadata) => void 
  const queue = zines.filter((_, i) => i !== activeIndex).slice(0, 8);
 
  if (loading) return (
- <div className="w-full h-full flex flex-col items-center justify-center gap-12 bg-nous-base dark:bg-stone-950">
- <Loader2 className="animate-spin text-stone-300"size={32} />
- <span className="font-sans text-[8px] uppercase tracking-[0.6em] text-stone-400 font-black">Connecting Continuum...</span>
+ <div className="w-full h-full flex flex-col items-center justify-center gap-12 bg-nous-base">
+ <Loader2 className="animate-spin text-nous-subtle"size={32} />
+ <span className="font-sans text-[8px] uppercase tracking-[0.6em] text-nous-subtle font-black">Connecting Continuum...</span>
  </div>
  );
 
  return (
- <div className="w-full h-full flex flex-col overflow-y-auto no-scrollbar relative bg-nous-base dark:bg-stone-950 transition-colors duration-1000">
+ <div className="w-full h-full flex flex-col overflow-y-auto no-scrollbar relative bg-nous-base transition-colors duration-1000">
  
  {/* CONTINUUM SIGNAL LOOP (BACKGROUND) */}
  <div className="absolute inset-0 pointer-events-none opacity-[0.03] flex items-center justify-center overflow-hidden">
- <motion.div animate={{ rotate: 360 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }} className="border-[0.5px] border-stone-900 dark:border-white w-[1200px] h-[1200px] rounded-none flex items-center justify-center">
+ <motion.div animate={{ rotate: 360 }} transition={{ duration: 60, repeat: Infinity, ease: 'linear' }} className="border-[0.5px] border-nous-border  w-[1200px] h-[1200px] rounded-none flex items-center justify-center">
  <div className="w-px h-full bg-current absolute"/>
  <div className="h-px w-full bg-current absolute"/>
  </motion.div>
@@ -70,14 +70,14 @@ export const CliqueRadar: React.FC<{ onSelectZine: (zine: ZineMetadata) => void 
 
  <div className="flex-1 max-w-7xl mx-auto w-full px-8 pt-12 md:pt-20 pb-64 relative z-10">
  
- <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-32 border-b border-stone-100 dark:border-stone-900 pb-16 gap-12">
+ <header className="flex flex-col md:flex-row justify-between items-start md:items-end mb-32 border-b border-nous-border pb-16 gap-12">
  <div className="space-y-6">
  <div className="flex items-center gap-6">
  <span className="font-sans text-[10px] uppercase tracking-[1em] text-red-500 font-black flex items-center gap-4">
  <Radio size={14} className="animate-pulse"/> CONTINUUM_ACTIVE
  </span>
  </div>
- <h2 className="font-serif text-6xl md:text-[10rem] italic tracking-tighter text-nous-text dark:text-white leading-[0.8] -ml-2">
+ <h2 className="font-serif text-6xl md:text-[10rem] italic tracking-tighter text-nous-text  leading-[0.8] -ml-2">
  The Floor.
  </h2>
  </div>
@@ -95,14 +95,14 @@ export const CliqueRadar: React.FC<{ onSelectZine: (zine: ZineMetadata) => void 
 
  {siblings.length > 0 && (
  <div className="mb-64">
- <h3 className="font-sans text-[10px] uppercase tracking-[0.5em] text-stone-400 font-black mb-12 flex items-center gap-4">
+ <h3 className="font-sans text-[10px] uppercase tracking-[0.5em] text-nous-subtle font-black mb-12 flex items-center gap-4">
  <Users size={14} /> Aesthetic Siblings
  </h3>
  <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
  {siblings.map((sibling, i) => (
- <div key={i} className="border-l border-stone-200 dark:border-stone-800 pl-8">
+ <div key={i} className="border-l border-nous-border pl-8">
  <h4 className="font-serif italic text-3xl text-nous-text dark:text-white mb-4">{sibling.name}</h4>
- <p className="font-sans text-[10px] leading-relaxed text-stone-500">{sibling.explanation}</p>
+ <p className="font-sans text-[10px] leading-relaxed text-nous-text0">{sibling.explanation}</p>
  </div>
  ))}
  </div>
@@ -111,27 +111,27 @@ export const CliqueRadar: React.FC<{ onSelectZine: (zine: ZineMetadata) => void 
 
  <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
  {queue.map((zine, i) => (
- <div key={zine.id} onClick={() => setActiveIndex(zines.indexOf(zine))} className="group cursor-pointer border-l-2 border-stone-50 dark:border-stone-900 pl-8 py-4 hover:border-nous-text transition-all">
- <span className="font-sans text-[8px] uppercase tracking-widest text-stone-500 font-black">@{zine.userHandle}</span>
- <h3 className="font-serif italic text-2xl text-stone-400 group-hover:text-nous-text transition-colors">{zine.content?.headlines?.[0] || zine.title ||"Untitled"}</h3>
+ <div key={zine.id} onClick={() => setActiveIndex(zines.indexOf(zine))} className="group cursor-pointer border-l-2 border-stone-50 pl-8 py-4 hover:border-nous-text transition-all">
+ <span className="font-sans text-[8px] uppercase tracking-widest text-nous-text0 font-black">@{zine.userHandle}</span>
+ <h3 className="font-serif italic text-2xl text-nous-subtle group-hover:text-nous-text transition-colors">{zine.content?.headlines?.[0] || zine.title ||"Untitled"}</h3>
  </div>
  ))}
  </div>
  </div>
 
- <div className="fixed bottom-0 left-0 w-full z-[100] border-t border-stone-100 dark:border-stone-800 bg-white/95 dark:bg-black/95 backdrop-blur-3xl px-12 py-10 flex justify-between items-center">
+ <div className="fixed bottom-0 left-0 w-full z-[100] border-t border-nous-border bg-white/95 /95 backdrop-blur-3xl px-12 py-10 flex justify-between items-center">
  <div className="flex items-center gap-6">
  <Zap size={20} className="text-amber-500 animate-pulse"/>
  <div className="space-y-1">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 block">Collective Sync</span>
- <div className="w-64 h-1 bg-stone-100 dark:bg-stone-900 rounded-none overflow-hidden">
- <motion.div animate={{ width: `${syncLevel}%` }} className="h-full bg-stone-500"/>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle block">Collective Sync</span>
+ <div className="w-64 h-1 bg-nous-base rounded-none overflow-hidden">
+ <motion.div animate={{ width: `${syncLevel}%` }} className="h-full bg-nous-base0"/>
  </div>
  </div>
  </div>
  <div className="flex items-center gap-4">
- <Orbit size={18} className="text-stone-300"/>
- <span className="font-mono text-[10px] text-stone-400 font-black tracking-widest uppercase">Continuum Handshake: {syncLevel.toFixed(1)}%</span>
+ <Orbit size={18} className="text-nous-subtle"/>
+ <span className="font-mono text-[10px] text-nous-subtle font-black tracking-widest uppercase">Continuum Handshake: {syncLevel.toFixed(1)}%</span>
  </div>
  </div>
  </div>

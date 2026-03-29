@@ -50,17 +50,17 @@ const SonicShardPlayer: React.FC<{ url: string }> = ({ url }) => {
  };
 
  return (
- <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-stone-50 dark:bg-stone-900 gap-6 text-center group">
+ <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-nous-base gap-6 text-center group">
  <audio ref={audioRef} src={url} onEnded={() => setIsPlaying(false)} className="hidden"/>
  <div className="relative">
- <div className={`absolute inset-0 bg-stone-500/20 blur-xl rounded-none transition-opacity duration-1000 ${isPlaying ? 'opacity-100' : 'opacity-0'}`} />
- <button onClick={togglePlay} className="relative z-10 p-5 bg-white dark:bg-stone-800 rounded-none hover:scale-110 active:scale-95 transition-all text-stone-500">
+ <div className={`absolute inset-0 bg-nous-base0/20 blur-xl rounded-none transition-opacity duration-1000 ${isPlaying ? 'opacity-100' : 'opacity-0'}`} />
+ <button onClick={togglePlay} className="relative z-10 p-5 bg-white rounded-none hover:scale-110 active:scale-95 transition-all text-nous-text0">
  {isPlaying ? <Pause size={24} /> : <Play size={24} className="ml-1"/>}
  </button>
  </div>
  <div className="space-y-1">
- <Waves size={32} className={`text-stone-500/40 mx-auto ${isPlaying ? 'animate-pulse' : ''}`} />
- <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Sonic Refraction</span>
+ <Waves size={32} className={`text-nous-text0/40 mx-auto ${isPlaying ? 'animate-pulse' : ''}`} />
+ <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle">Sonic Refraction</span>
  </div>
  </div>
  );
@@ -70,10 +70,10 @@ const ColorStory: React.FC<{ colors: ColorShard[] }> = ({ colors = [] }) => (
  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
  {colors?.map((c, i) => (
  <div key={i} className="space-y-3">
- <div className="aspect-square rounded-none border border-black/5 dark:border-white/10"style={{ backgroundColor: c.hex }} />
+ <div className="aspect-square rounded-none border border-black/5 /10"style={{ backgroundColor: c.hex }} />
  <div className="space-y-1">
- <span className="font-mono text-[9px] uppercase font-black text-nous-text dark:text-white">{c.name}</span>
- <p className="font-serif italic text-[10px] text-stone-400 leading-tight">{c.descriptor}</p>
+ <span className="font-mono text-[9px] uppercase font-black text-nous-text ">{c.name}</span>
+ <p className="font-serif italic text-[10px] text-nous-subtle leading-tight">{c.descriptor}</p>
  </div>
  </div>
  ))}
@@ -81,49 +81,49 @@ const ColorStory: React.FC<{ colors: ColorShard[] }> = ({ colors = [] }) => (
 );
 
 const FinancialBriefOverlay: React.FC<{ report: InvestmentReport; onClose: () => void }> = ({ report, onClose }) => (
- <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[6000] bg-stone-950/95 backdrop-blur-xl flex items-center justify-center p-6 md:p-12 overflow-y-auto">
- <div className="w-full max-w-4xl bg border border-stone-800 rounded-none overflow-hidden flex flex-col max-h-[90vh]">
- <header className="flex justify-between items-center p-8 border-b border-stone-800 bg-black/50 shrink-0">
- <div className="flex items-center gap-4 text-stone-500">
+ <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[6000] bg-nous-base/95 backdrop-blur-xl flex items-center justify-center p-6 md:p-12 overflow-y-auto">
+ <div className="w-full max-w-4xl bg border border-nous-border rounded-none overflow-hidden flex flex-col max-h-[90vh]">
+ <header className="flex justify-between items-center p-8 border-b border-nous-border bg-black/50 shrink-0">
+ <div className="flex items-center gap-4 text-nous-text0">
  <Wallet size={20} />
  <span className="font-sans text-[10px] uppercase tracking-[0.6em] font-black italic">The Strategist // Fiscal Audit</span>
  </div>
- <button onClick={onClose} className="p-2 text-stone-500 hover:text-white"><X size={20} /></button>
+ <button onClick={onClose} className="p-2 text-nous-text0 hover:text-white"><X size={20} /></button>
  </header>
  
  <div className="flex-1 overflow-y-auto p-8 md:p-12 space-y-12">
  <section className="space-y-6">
  <div className="flex justify-between items-start">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-500">Executive Thesis</span>
- <div className="flex items-center gap-2 px-3 py-1 bg-stone-500/10 border border-stone-500/20 rounded-none">
- <Activity size={12} className="text-stone-500"/>
- <span className="font-mono text-[9px] text-stone-400 font-bold">IMPACT: {report.capsule_impact_score}/100</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0">Executive Thesis</span>
+ <div className="flex items-center gap-2 px-3 py-1 bg-nous-base0/10 border border-nous-border/20 rounded-none">
+ <Activity size={12} className="text-nous-text0"/>
+ <span className="font-mono text-[9px] text-nous-subtle font-bold">IMPACT: {report.capsule_impact_score}/100</span>
  </div>
  </div>
  <h2 className="font-serif text-3xl md:text-4xl italic text-white leading-tight">{report.thesis}</h2>
  {report.tailor_alignment_note && (
- <p className="font-serif italic text-sm text-stone-400 border-l-2 border-stone-800 pl-4">{report.tailor_alignment_note}</p>
+ <p className="font-serif italic text-sm text-nous-subtle border-l-2 border-nous-border pl-4">{report.tailor_alignment_note}</p>
  )}
  </section>
 
  <section className="space-y-8">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-500 border-b border-stone-800 pb-2 block">Capital Allocation Roadmap</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0 border-b border-nous-border pb-2 block">Capital Allocation Roadmap</span>
  <div className="grid gap-4">
  {report.capital_allocation.map((item, i) => (
- <div key={i} className="p-6 bg-stone-900/50 border border-stone-800 rounded-none flex flex-col md:flex-row gap-6">
+ <div key={i} className="p-6 bg-nous-base/50 border border-nous-border rounded-none flex flex-col md:flex-row gap-6">
  <div className="md:w-1/4 space-y-2 shrink-0">
- <span className={`font-sans text-[8px] uppercase tracking-widest font-black px-2 py-1 rounded-none ${item.category === 'KEYSTONE ASSET' ? 'bg-stone-500 text-black' : item.category === 'VANITY METRIC' ? 'bg-red-500/20 text-red-400' : 'bg-stone-800 text-stone-300'}`}>
+ <span className={`font-sans text-[8px] uppercase tracking-widest font-black px-2 py-1 rounded-none ${item.category === 'KEYSTONE ASSET' ? 'bg-nous-base0 text-black' : item.category === 'VANITY METRIC' ? 'bg-red-500/20 text-red-400' : 'bg-nous-base text-nous-subtle'}`}>
  {item.category}
  </span>
- <p className="font-mono text-[9px] text-stone-500 pt-2">{item.fiscal_route}</p>
+ <p className="font-mono text-[9px] text-nous-text0 pt-2">{item.fiscal_route}</p>
  </div>
  <div className="flex-1 space-y-3">
  <div className="flex flex-wrap gap-2">
  {item.items.map((prod, j) => (
- <span key={j} className="font-serif italic text-lg text-white border-b border-stone-700">{prod}</span>
+ <span key={j} className="font-serif italic text-lg text-white border-b border-nous-border">{prod}</span>
  ))}
  </div>
- <p className="font-serif text-sm text-stone-400 leading-relaxed">{item.reasoning}</p>
+ <p className="font-serif text-sm text-nous-subtle leading-relaxed">{item.reasoning}</p>
  </div>
  </div>
  ))}
@@ -133,7 +133,7 @@ const FinancialBriefOverlay: React.FC<{ report: InvestmentReport; onClose: () =>
  {report.missing_infrastructure && (
  <section className="p-6 bg-amber-500/5 border border-amber-500/10 rounded-none space-y-2">
  <span className="font-sans text-[9px] uppercase tracking-widest font-black text-amber-500 flex items-center gap-2"><AlertTriangle size={12} /> Missing Infrastructure</span>
- <p className="font-serif italic text-stone-300">{report.missing_infrastructure}</p>
+ <p className="font-serif italic text-nous-subtle">{report.missing_infrastructure}</p>
  </section>
  )}
  </div>
@@ -213,13 +213,13 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  };
 
  return (
- <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9000] bg-white dark:bg-stone-950 flex flex-col md:flex-row overflow-hidden">
- <button onClick={onClose} className="absolute top-8 right-8 z-50 p-4 bg-black/10 dark:bg-white/10 rounded-none hover:bg-red-500 hover:text-white transition-all">
+ <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9000] bg-white flex flex-col md:flex-row overflow-hidden">
+ <button onClick={onClose} className="absolute top-8 right-8 z-50 p-4 bg-black/10 /10 rounded-none hover:bg-red-500 hover:text-white transition-all">
  <X size={24} />
  </button>
  
  {/* VISUAL SIDE */}
- <div className="flex-1 bg-stone-100 dark:bg-stone-900 flex items-center justify-center p-6 md:p-12 relative overflow-hidden">
+ <div className="flex-1 bg-nous-base flex items-center justify-center p-6 md:p-12 relative overflow-hidden">
  <div className="absolute inset-0 opacity-20 pointer-events-none">
  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-stone-400/20 via-transparent to-transparent"/>
  </div>
@@ -231,33 +231,33 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  {/* Expanded Metadata */}
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
  {item.agentEnrichment && (
- <div className="p-6 bg-stone-50 dark:bg-stone-900/50 rounded-none border border-stone-100 dark:border-stone-800 space-y-4">
+ <div className="p-6 bg-nous-base /50 rounded-none border border-nous-border space-y-4">
  <div className="flex items-center gap-2">
- <Fingerprint size={14} className="text-stone-500"/>
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">Agent Enrichment</span>
+ <Fingerprint size={14} className="text-nous-text0"/>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">Agent Enrichment</span>
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div>
- <span className="block font-mono text-[7px] text-stone-400 uppercase tracking-widest">Detected Era</span>
- <span className="font-serif italic text-sm text-stone-900 dark:text-white">{item.agentEnrichment.detectedEra || 'Unknown'}</span>
+ <span className="block font-mono text-[7px] text-nous-subtle uppercase tracking-widest">Detected Era</span>
+ <span className="font-serif italic text-sm text-nous-text dark:text-white">{item.agentEnrichment.detectedEra || 'Unknown'}</span>
  </div>
  <div>
- <span className="block font-mono text-[7px] text-stone-400 uppercase tracking-widest">Cultural Ref</span>
- <span className="font-serif italic text-sm text-stone-900 dark:text-white">{item.agentEnrichment.culturalReference || 'N/A'}</span>
+ <span className="block font-mono text-[7px] text-nous-subtle uppercase tracking-widest">Cultural Ref</span>
+ <span className="font-serif italic text-sm text-nous-text dark:text-white">{item.agentEnrichment.culturalReference || 'N/A'}</span>
  </div>
  </div>
  </div>
  )}
 
  {item.content.semiotic_touchpoints && (
- <div className="p-6 bg-stone-50 dark:bg-stone-900/50 rounded-none border border-stone-100 dark:border-stone-800 space-y-4">
+ <div className="p-6 bg-nous-base /50 rounded-none border border-nous-border space-y-4">
  <div className="flex items-center gap-2">
  <Zap size={14} className="text-indigo-500"/>
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">Semiotic Signals</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">Semiotic Signals</span>
  </div>
  <div className="flex flex-wrap gap-2">
  {item.content.semiotic_touchpoints.map((pt: string, i: number) => (
- <span key={i} className="px-2 py-1 bg-white dark:bg-stone-800 text-stone-500 dark:text-stone-400 font-mono text-[8px] rounded-none border border-stone-100 dark:border-stone-800">
+ <span key={i} className="px-2 py-1 bg-white text-nous-text0 font-mono text-[8px] rounded-none border border-nous-border">
  {pt}
  </span>
  ))}
@@ -268,9 +268,9 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  </div>
  )}
  {item.type === 'zine_card' && (
- <div className="w-full max-w-2xl bg-white dark:bg-stone-900 p-6 md:p-12 space-y-8 overflow-y-auto max-h-[80vh] border border-stone-100 dark:border-stone-800">
- <div className="space-y-2 border-b border-stone-100 dark:border-stone-800 pb-6">
- <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-stone-500 font-black">Zine Inspection</span>
+ <div className="w-full max-w-2xl bg-white p-6 md:p-12 space-y-8 overflow-y-auto max-h-[80vh] border border-nous-border">
+ <div className="space-y-2 border-b border-nous-border pb-6">
+ <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-nous-text0 font-black">Zine Inspection</span>
  <h2 className="font-serif text-4xl italic text-nous-text dark:text-white">{item.content.title}</h2>
  </div>
  
@@ -280,7 +280,7 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  ...(item.content.analysis?.pages?.map(p => p.imageUrl) || []),
  ...(item.content.analysis?.visual_shards?.map(s => s.imageUrl) || [])
  ].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).map((url, i) => (
- <div key={i} className="group relative aspect-square bg-stone-50 dark:bg-stone-950 rounded-none overflow-hidden border border-stone-100 dark:border-stone-800">
+ <div key={i} className="group relative aspect-square bg-nous-base rounded-none overflow-hidden border border-nous-border">
  <img src={url} className="w-full h-full object-cover transition-all"/>
  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4">
  <button 
@@ -311,7 +311,7 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message:"Failed to inject shard.", type: 'error' } }));
  }
  }}
- className="w-full py-2 bg-stone-500 text-white font-sans text-[8px] uppercase tracking-widest font-black rounded-none hover:scale-105 active:scale-95 transition-all"
+ className="w-full py-2 bg-nous-base0 text-white font-sans text-[8px] uppercase tracking-widest font-black rounded-none hover:scale-105 active:scale-95 transition-all"
  >
  Inject Shard
  </button>
@@ -323,34 +323,34 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  )}
  {(item.type === 'voicenote' || item.type === 'audio') && <SonicShardPlayer url={item.content.audioUrl} />}
  {item.type === 'analysis_report' && (
- <div className="w-full max-w-2xl bg-stone-900 text-white p-6 md:p-12 space-y-8 overflow-y-auto max-h-[80vh]">
+ <div className="w-full max-w-2xl bg-nous-base text-white p-6 md:p-12 space-y-8 overflow-y-auto max-h-[80vh]">
  <div className="space-y-2 border-b border-white/10 pb-6">
- <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-stone-500 font-black">The Lens Analysis</span>
+ <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-nous-text0 font-black">The Lens Analysis</span>
  <h2 className="font-serif text-4xl italic">{item.content.title}</h2>
  </div>
  
  <div className="space-y-4">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Director's Note</span>
- <p className="font-serif italic text-lg text-stone-300 leading-relaxed border-l-2 border-stone-500/30 pl-4">
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Director's Note</span>
+ <p className="font-serif italic text-lg text-nous-subtle leading-relaxed border-l-2 border-nous-border/30 pl-4">
 "{item.content.content?.directors_note}"
  </p>
  </div>
 
  <div className="grid grid-cols-2 gap-4">
  <div className="p-4 bg-black/40 rounded-none">
- <span className="block font-mono text-[8px] text-stone-400 mb-2">LIGHTING</span>
+ <span className="block font-mono text-[8px] text-nous-subtle mb-2">LIGHTING</span>
  <span className="font-serif italic text-sm text-white">{item.content.content?.lighting_analysis}</span>
  </div>
  <div className="p-4 bg-black/40 rounded-none">
- <span className="block font-mono text-[8px] text-stone-400 mb-2">CULTURE</span>
+ <span className="block font-mono text-[8px] text-nous-subtle mb-2">CULTURE</span>
  <span className="font-serif italic text-sm text-white">{item.content.content?.cultural_parallel}</span>
  </div>
  </div>
 
  {item.content.content?.creative_potential && (
  <div className="space-y-4">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Creative Potential</span>
- <p className="font-serif italic text-sm text-stone-300 leading-relaxed border-l-2 border-indigo-500/30 pl-4">
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Creative Potential</span>
+ <p className="font-serif italic text-sm text-nous-subtle leading-relaxed border-l-2 border-indigo-500/30 pl-4">
  {item.content.content.creative_potential}
  </p>
  </div>
@@ -358,10 +358,10 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
 
  {item.content.content?.semiotic_touchpoints && (
  <div className="space-y-4">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Semiotic Touchpoints</span>
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Semiotic Touchpoints</span>
  <div className="flex flex-wrap gap-2">
  {item.content.content.semiotic_touchpoints.map((pt: string, i: number) => (
- <span key={i} className="px-3 py-1.5 bg-black/40 text-stone-300 font-mono text-[9px] rounded-none border border-white/5">
+ <span key={i} className="px-3 py-1.5 bg-black/40 text-nous-subtle font-mono text-[9px] rounded-none border border-white/5">
  {pt}
  </span>
  ))}
@@ -374,38 +374,38 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  </div>
  
  {/* DATA SIDE */}
- <div className="w-full md:w-[450px] bg-white dark:bg-stone-950 border-l border-stone-100 dark:border-stone-800 p-6 md:p-12 flex flex-col gap-12 overflow-y-auto">
+ <div className="w-full md:w-[450px] bg-white border-l border-nous-border p-6 md:p-12 flex flex-col gap-12 overflow-y-auto">
  <div className="space-y-8">
- <div className="flex justify-between items-center border-b border-stone-100 dark:border-stone-800 pb-2">
- <span className="font-sans text-[10px] uppercase tracking-[0.5em] text-stone-400 font-black italic">Shard Metadata</span>
+ <div className="flex justify-between items-center border-b border-nous-border pb-2">
+ <span className="font-sans text-[10px] uppercase tracking-[0.5em] text-nous-subtle font-black italic">Shard Metadata</span>
  {!isEditing ? (
- <button onClick={() => setIsEditing(true)} className="text-stone-400 hover:text-nous-text dark:hover:text-white"><Pencil size={14} /></button>
+ <button onClick={() => setIsEditing(true)} className="text-nous-subtle hover:text-nous-text dark:hover:text-white"><Pencil size={14} /></button>
  ) : (
- <button onClick={handleSave} className="text-stone-500 hover:text-stone-600"><Check size={14} /></button>
+ <button onClick={handleSave} className="text-nous-text0 hover:text-nous-subtle"><Check size={14} /></button>
  )}
  </div>
  
  {isEditing ? (
  <div className="space-y-6">
  <div className="space-y-2">
- <label className="font-sans text-[8px] uppercase tracking-widest text-stone-400 font-black">Title</label>
- <input value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-stone-50 dark:bg-stone-900 p-3 font-serif italic text-xl focus:outline-none rounded-none border-b border-stone-200 dark:border-stone-800"placeholder="Shard Title..."/>
+ <label className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle font-black">Title</label>
+ <input value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-nous-base p-3 font-serif italic text-xl focus:outline-none rounded-none border-b border-nous-border"placeholder="Shard Title..."/>
  </div>
  <div className="space-y-2">
- <label className="font-sans text-[8px] uppercase tracking-widest text-stone-400 font-black">Description</label>
- <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full h-24 bg-stone-50 dark:bg-stone-900 p-3 font-serif italic text-sm focus:outline-none rounded-none border-b border-stone-200 dark:border-stone-800"placeholder="Aesthetic description..."/>
+ <label className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle font-black">Description</label>
+ <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full h-24 bg-nous-base p-3 font-serif italic text-sm focus:outline-none rounded-none border-b border-nous-border"placeholder="Aesthetic description..."/>
  </div>
  <div className="space-y-2">
- <label className="font-sans text-[8px] uppercase tracking-widest text-stone-400 font-black">Price / Valuation</label>
- <input value={price} onChange={e => setPrice(e.target.value)} className="w-full bg-stone-50 dark:bg-stone-900 p-3 font-mono text-sm focus:outline-none rounded-none border-b border-stone-200 dark:border-stone-800"placeholder="$0.00"/>
+ <label className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle font-black">Price / Valuation</label>
+ <input value={price} onChange={e => setPrice(e.target.value)} className="w-full bg-nous-base p-3 font-mono text-sm focus:outline-none rounded-none border-b border-nous-border"placeholder="$0.00"/>
  </div>
  </div>
  ) : (
  <div className="space-y-4">
  <h2 className="font-serif text-4xl italic text-nous-text dark:text-white leading-tight">{title || 'Untitled Fragment'}</h2>
- {description && <p className="font-serif text-sm text-stone-500 dark:text-stone-400 italic leading-relaxed">{description}</p>}
+ {description && <p className="font-serif text-sm text-nous-text0 italic leading-relaxed">{description}</p>}
  {price && (
- <div className="flex items-center gap-2 text-stone-500 font-mono text-sm bg-stone-500/5 px-3 py-2 rounded-none w-fit border border-stone-500/10">
+ <div className="flex items-center gap-2 text-nous-text0 font-mono text-sm bg-nous-base0/5 px-3 py-2 rounded-none w-fit border border-nous-border/10">
  <DollarSign size={14} />
  <span className="font-black">{price}</span>
  </div>
@@ -415,8 +415,8 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  </div>
 
  <div className="space-y-6">
- <div className="flex justify-between items-center border-b border-stone-100 dark:border-stone-800 pb-2">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">Interior Notes</span>
+ <div className="flex justify-between items-center border-b border-nous-border pb-2">
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">Interior Notes</span>
  </div>
  {item.deltaVerdict && (
  <div className="mb-4">
@@ -427,11 +427,11 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  <textarea 
  value={notes} 
  onChange={e => setNotes(e.target.value)}
- className="w-full h-48 bg-stone-50 dark:bg-stone-900 p-4 font-serif italic text-lg focus:outline-none rounded-none border-b border-stone-200 dark:border-stone-800"
+ className="w-full h-48 bg-nous-base p-4 font-serif italic text-lg focus:outline-none rounded-none border-b border-nous-border"
  placeholder="Record your perception..."
  />
  ) : (
- <p className="font-serif italic text-xl text-stone-600 dark:text-stone-400 leading-relaxed">
+ <p className="font-serif italic text-xl text-nous-subtle leading-relaxed">
  {notes ||"No interior reflections recorded for this shard."}
  </p>
  )}
@@ -448,14 +448,14 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  // But better to just ensure onAcquire is passed.
  }
  }}
- className="w-full py-4 bg-stone-900 dark:bg-white text-white dark:text-black rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform"
+ className="w-full py-4 bg-nous-base  text-nous-base rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform"
  >
  <Target size={14} /> Acquire Data
  </button>
  <div className="grid grid-cols-2 gap-4">
  <button 
  onClick={handleShare}
- className="py-4 border border-stone-200 dark:border-stone-800 rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 hover:bg-stone-50 dark:hover:bg-stone-900 transition-colors"
+ className="py-4 border border-nous-border rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 hover:bg-nous-base transition-colors"
  >
  <Share2 size={14} /> Share Shard
  </button>
@@ -463,13 +463,13 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  <button 
  onClick={handleRefract}
  disabled={isRefracting}
- className="py-4 border border-stone-200 dark:border-stone-800 rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 hover:bg-stone-50 dark:hover:bg-stone-900 transition-colors disabled:opacity-50"
+ className="py-4 border border-nous-border rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 hover:bg-nous-base transition-colors disabled:opacity-50"
  >
  {isRefracting ? <Loader2 size={14} className="animate-spin"/> : <Wand2 size={14} />} Refract Style
  </button>
  )}
  </div>
- <button className="w-full py-4 border border-stone-200 dark:border-stone-800 rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 hover:bg-stone-50 dark:hover:bg-stone-900 transition-colors">
+ <button className="w-full py-4 border border-nous-border rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 hover:bg-nous-base transition-colors">
  <Volume2 size={14} /> Voice Memo
  </button>
  </div>
@@ -775,16 +775,16 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  };
 
  return (
- <div className="w-full h-full flex flex-col bg-nous-base dark:bg-stone-950 transition-colors duration-1000 overflow-hidden relative">
+ <div className="w-full h-full flex flex-col bg-nous-base transition-colors duration-1000 overflow-hidden relative">
  <AnimatePresence>
  {isAnalyzing && (
- <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[7000] bg-white/80 dark:bg-stone-950/80 backdrop-blur-xl flex flex-col items-center justify-center gap-8">
- <Loader2 size={48} className={`animate-spin ${activeAgent === 'strategist' ? 'text-stone-500' : 'text-indigo-500'}`} />
+ <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[7000] bg-white/80 /80 backdrop-blur-xl flex flex-col items-center justify-center gap-8">
+ <Loader2 size={48} className={`animate-spin ${activeAgent === 'strategist' ? 'text-nous-text0' : 'text-indigo-500'}`} />
  <div className="text-center space-y-2">
  <h3 className="font-serif text-3xl italic text-nous-text dark:text-white">
  {activeAgent === 'strategist' ?"Summoning The Strategist...":"Invoking The Curator..."}
  </h3>
- <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-black text-stone-400">
+ <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-black text-nous-subtle">
  {activeAgent === 'strategist' ?"Calculating Fiscal Velocity":"Auditing Aesthetic Patterns"}
  </p>
  </div>
@@ -792,7 +792,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  )}
  </AnimatePresence>
 
- <header className="px-4 md:px-8 lg:px-12 py-4 border-b border-stone-100 dark:border-stone-900 bg-white/50 dark:bg-stone-900/50 backdrop-blur-xl shrink-0">
+ <header className="px-4 md:px-8 lg:px-12 py-4 border-b border-nous-border bg-white/50 /50 backdrop-blur-xl shrink-0">
  <div className="flex flex-col md:flex-row justify-between items-center gap-6">
  
  <div className="flex-1"/>
@@ -804,11 +804,11 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  value={searchQuery}
  onChange={e => setSearchQuery(e.target.value)}
  placeholder="Search fragments..."
- className="w-full bg-stone-100 dark:bg-stone-800 border-none py-2 pl-10 pr-10 font-sans text-sm focus:outline-none focus:ring-1 focus:ring-stone-500 transition-all rounded-none"
+ className="w-full bg-nous-base border-none py-2 pl-10 pr-10 font-sans text-sm focus:outline-none focus:ring-1 focus:ring-stone-500 transition-all rounded-none"
  />
- <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 group-focus-within:text-stone-500 transition-colors"/>
+ <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-nous-subtle group-focus-within:text-nous-text0 transition-colors"/>
  {searchQuery && (
- <button type="button"onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-red-500">
+ <button type="button"onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-nous-subtle hover:text-red-500">
  <X size={14} />
  </button>
  )}
@@ -818,13 +818,13 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  <div className="flex items-center gap-4">
  <button 
  onClick={() => setShowInjectModal(true)}
- className="flex items-center gap-2 px-4 py-2 bg-stone-500 text-white rounded-none font-sans text-[9px] uppercase tracking-widest font-black hover:bg-stone-600 transition-all"
+ className="flex items-center gap-2 px-4 py-2 bg-nous-base0 text-white rounded-none font-sans text-[9px] uppercase tracking-widest font-black hover:bg-stone-600 transition-all"
  >
  <Plus size={12} /> Inject
  </button>
- <div className="flex items-center gap-2 px-3 py-1.5 bg-stone-100 dark:bg-stone-800 rounded-none border border-black/5">
- <Shield size={10} className={systemStatus.auth === 'anchored' ? 'text-stone-500' : 'text-stone-300'} />
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">
+ <div className="flex items-center gap-2 px-3 py-1.5 bg-nous-base rounded-none border border-black/5">
+ <Shield size={10} className={systemStatus.auth === 'anchored' ? 'text-nous-text0' : 'text-nous-subtle'} />
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">
  {systemStatus.auth === 'anchored' ? 'SYNC' : 'LOCAL'}
  </span>
  </div>
@@ -834,21 +834,21 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
 
  <AnimatePresence>
  {showInjectModal && (
- <div className="fixed inset-0 z-[10000] flex items-center justify-center p-8 bg-stone-950/90 backdrop-blur-xl">
- <div className="w-full max-w-md bg-white dark:bg-stone-900 p-8 rounded-none space-y-8 border border-stone-200 dark:border-stone-800">
+ <div className="fixed inset-0 z-[10000] flex items-center justify-center p-8 bg-nous-base/90 backdrop-blur-xl">
+ <div className="w-full max-w-md bg-white p-8 rounded-none space-y-8 border border-nous-border">
  <div className="flex justify-between items-center">
  <div className="space-y-1">
  <h3 className="font-serif text-2xl italic">Inject Shard.</h3>
- <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400 font-black">Material Ingestion Protocol</p>
+ <p className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle font-black">Material Ingestion Protocol</p>
  </div>
- <button onClick={() => setShowInjectModal(false)} className="p-2 text-stone-400 hover:text-red-500 transition-colors"><X size={20}/></button>
+ <button onClick={() => setShowInjectModal(false)} className="p-2 text-nous-subtle hover:text-red-500 transition-colors"><X size={20}/></button>
  </div>
  <div className="grid gap-4">
- <button onClick={() => { fileInputRef.current?.click(); setShowInjectModal(false); }} className="w-full py-4 bg-stone-50 dark:bg-stone-800 hover:bg-stone-500 hover:text-white transition-all rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 group">
- <Upload size={14} className="text-stone-400 group-hover:text-white"/> Upload Local File
+ <button onClick={() => { fileInputRef.current?.click(); setShowInjectModal(false); }} className="w-full py-4 bg-nous-base hover:bg-nous-base0 hover:text-white transition-all rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 group">
+ <Upload size={14} className="text-nous-subtle group-hover:text-white"/> Upload Local File
  </button>
- <button onClick={() => { window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'archival' })); setShowInjectModal(false); }} className="w-full py-4 bg-stone-50 dark:bg-stone-800 hover:bg-stone-500 hover:text-white transition-all rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 group">
- <FileText size={14} className="text-stone-400 group-hover:text-white"/> From Authored Registry
+ <button onClick={() => { window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'archival' })); setShowInjectModal(false); }} className="w-full py-4 bg-nous-base hover:bg-nous-base0 hover:text-white transition-all rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center justify-center gap-3 group">
+ <FileText size={14} className="text-nous-subtle group-hover:text-white"/> From Authored Registry
  </button>
  </div>
  </div>
@@ -864,13 +864,13 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  initial={{ opacity: 0, height: 0 }} 
  animate={{ opacity: 1, height: 'auto' }} 
  exit={{ opacity: 0, height: 0 }}
- className="mb-12 p-6 bg-stone-500/5 border border-stone-500/20 rounded-none overflow-hidden"
+ className="mb-12 p-6 bg-nous-base0/5 border border-nous-border/20 rounded-none overflow-hidden"
  >
  <div className="flex items-center gap-3 mb-4">
- <Sparkles size={16} className="text-stone-500"/>
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-600 dark:text-stone-400">AI Search Insight</span>
+ <Sparkles size={16} className="text-nous-text0"/>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">AI Search Insight</span>
  </div>
- <p className="font-serif italic text-xl text-stone-700 dark:text-stone-300 leading-relaxed">
+ <p className="font-serif italic text-xl text-nous-subtle leading-relaxed">
  {searchSummary}
  </p>
  </motion.div>
@@ -880,23 +880,23 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  {/* REPORT OVERLAYS */}
  <AnimatePresence>
  {activeTrendReport && (
- <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="mb-24 p-10 md:p-20 bg-stone-950 text-white border border-stone-500/30 rounded-none relative overflow-hidden group">
+ <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="mb-24 p-10 md:p-20 bg-nous-base text-white border border-nous-border/30 rounded-none relative overflow-hidden group">
  <div className="flex justify-between items-start mb-16">
- <div className="flex items-center gap-4 text-stone-500">
+ <div className="flex items-center gap-4 text-nous-text0">
  <Radar size={20} className="animate-pulse"/>
  <span className="font-sans text-[11px] uppercase tracking-[0.6em] font-black italic">Anti-WGSN Trend Synthesis</span>
  </div>
- <button onClick={() => setActiveTrendReport(null)} className="p-3 text-stone-600 hover:text-white transition-all"><X size={24} /></button>
+ <button onClick={() => setActiveTrendReport(null)} className="p-3 text-nous-subtle hover:text-white transition-all"><X size={24} /></button>
  </div>
  <div className="grid md:grid-cols-12 gap-16 md:gap-24">
  <div className="md:col-span-7 space-y-12">
  <div className="space-y-4">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-500">Emerging Pattern Signals</span>
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0">Emerging Pattern Signals</span>
  <div className="space-y-4">
  {activeTrendReport.pattern_signals?.map((s, i) => (
  <div key={i} className="flex gap-6 items-start">
- <span className="font-mono text-[9px] text-stone-500 pt-1.5">SIGNAL_{i+1}</span>
- <p className="font-serif italic text-2xl md:text-4xl text-stone-200">{s}</p>
+ <span className="font-mono text-[9px] text-nous-text0 pt-1.5">SIGNAL_{i+1}</span>
+ <p className="font-serif italic text-2xl md:text-4xl text-nous-text">{s}</p>
  </div>
  ))}
  </div>
@@ -907,22 +907,22 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  )}
 
  {activeAudit && (
- <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="mb-24 p-10 md:p-20 bg-white dark:bg-stone-900 border-2 border-stone-500/20 rounded-none relative overflow-hidden group">
+ <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="mb-24 p-10 md:p-20 bg-white border-2 border-nous-border/20 rounded-none relative overflow-hidden group">
  <div className="flex justify-between items-start mb-16">
- <div className="flex items-center gap-4 text-stone-500">
+ <div className="flex items-center gap-4 text-nous-text0">
  <Briefcase size={20} />
  <span className="font-sans text-[11px] uppercase tracking-[0.6em] font-black italic">Editorial Designer Brief</span>
  </div>
- <button onClick={() => setActiveAudit(null)} className="p-3 text-stone-300 hover:text-red-500 transition-all"><X size={24} /></button>
+ <button onClick={() => setActiveAudit(null)} className="p-3 text-nous-subtle hover:text-red-500 transition-all"><X size={24} /></button>
  </div>
  <div className="grid md:grid-cols-12 gap-16 md:gap-24">
  <div className="md:col-span-7 space-y-12">
  <div className="space-y-4">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Conceptual Throughline</span>
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Conceptual Throughline</span>
  <h3 className="font-serif text-3xl md:text-6xl italic tracking-tighter leading-tight text-nous-text dark:text-white">{activeAudit.conceptualThroughline}</h3>
  </div>
- <div className="space-y-6 pt-8 border-t border-stone-50 dark:border-stone-800">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Color Story</span>
+ <div className="space-y-6 pt-8 border-t border-stone-50">
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Color Story</span>
  <ColorStory colors={activeAudit.colorStory} />
  </div>
  </div>
@@ -937,39 +937,39 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
 
  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8 md:gap-10">
  {filteredItems?.map(item => (
- <motion.div key={item.id} layout onClick={() => handleItemClick(item)} className={`group relative bg-white dark:bg-stone-900 border p-1 rounded-none flex flex-col transition-all cursor-pointer ${isSelectionMode && selectedIds.has(item.id) ? 'border-stone-500 ring-2 ring-stone-500/20' : 'border-stone-100 dark:border-stone-800'}`}>
- <div className="relative aspect-[3/4] bg-stone-50 dark:bg-stone-950 overflow-hidden">
+ <motion.div key={item.id} layout onClick={() => handleItemClick(item)} className={`group relative bg-white border p-1 rounded-none flex flex-col transition-all cursor-pointer ${isSelectionMode && selectedIds.has(item.id) ? 'border-nous-border ring-2 ring-stone-500/20' : 'border-nous-border '}`}>
+ <div className="relative aspect-[3/4] bg-nous-base overflow-hidden">
  {item.type === 'image' && <img src={item.content.thumbnailUrl || item.content.imageUrl} className="w-full h-full object-cover transition-all duration-[2s]"loading="lazy"/>}
  {item.type === 'analysis_report' && (
- <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-stone-900 text-white gap-4 text-center border border-stone-500/20">
- <Radar size={32} className="text-stone-500 opacity-50"/>
+ <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-nous-base text-white gap-4 text-center border border-nous-border/20">
+ <Radar size={32} className="text-nous-text0 opacity-50"/>
  <h3 className="font-serif italic text-xl text-white line-clamp-2">{item.content.title}</h3>
- <span className="font-sans text-[6px] uppercase tracking-widest text-stone-500 font-black">The Lens Analysis</span>
+ <span className="font-sans text-[6px] uppercase tracking-widest text-nous-text0 font-black">The Lens Analysis</span>
  </div>
  )}
  {item.type === 'moodboard' && (
- <div className="w-full h-full grid grid-cols-2 grid-rows-2 gap-0.5 bg-stone-900 overflow-hidden group-hover:scale-105 transition-transform duration-700">
+ <div className="w-full h-full grid grid-cols-2 grid-rows-2 gap-0.5 bg-nous-base overflow-hidden group-hover:scale-105 transition-transform duration-700">
  {item.content.itemIds?.slice(0, 4).map((id, idx) => {
  const shard = items.find(i => i.id === id);
  return (
- <div key={idx} className="w-full h-full bg-stone-800 overflow-hidden">
+ <div key={idx} className="w-full h-full bg-nous-base overflow-hidden">
  {shard?.content?.imageUrl ? (
  <img src={shard.content.imageUrl} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity"/>
  ) : (
- <div className="w-full h-full flex items-center justify-center text-stone-700"><Layers size={12}/></div>
+ <div className="w-full h-full flex items-center justify-center text-nous-subtle"><Layers size={12}/></div>
  )}
  </div>
  );
  })}
  {(!item.content.itemIds || item.content.itemIds.length === 0) && (
- <div className="col-span-2 row-span-2 flex flex-col items-center justify-center p-8 bg-stone-900 text-white gap-4 text-center">
- <FolderOpen size={32} className="text-stone-500 opacity-30"/>
- <span className="font-sans text-[6px] uppercase tracking-widest text-stone-500 font-black">Empty Stack</span>
+ <div className="col-span-2 row-span-2 flex flex-col items-center justify-center p-8 bg-nous-base text-white gap-4 text-center">
+ <FolderOpen size={32} className="text-nous-text0 opacity-30"/>
+ <span className="font-sans text-[6px] uppercase tracking-widest text-nous-text0 font-black">Empty Stack</span>
  </div>
  )}
  <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-black/40 backdrop-blur-[2px] opacity-100 group-hover:opacity-0 transition-opacity pointer-events-none">
  <h3 className="font-serif italic text-xl text-white line-clamp-2 text-center drop-">{item.content.name}</h3>
- <span className="font-sans text-[6px] uppercase tracking-widest text-stone-400 font-black mt-2">{item.content.itemIds?.length || 0} Fragments</span>
+ <span className="font-sans text-[6px] uppercase tracking-widest text-nous-subtle font-black mt-2">{item.content.itemIds?.length || 0} Fragments</span>
  </div>
  </div>
  )}
@@ -986,14 +986,14 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  {/* SELECTION CHECKBOX */}
  {isSelectionMode && (
  <div className="absolute inset-0 bg-black/10 flex items-start justify-end p-3">
- <div className={`w-6 h-6 rounded-none border-2 flex items-center justify-center transition-all ${selectedIds.has(item.id) ? 'bg-stone-500 border-stone-400' : 'bg-white/20 border-white/60'}`}>
+ <div className={`w-6 h-6 rounded-none border-2 flex items-center justify-center transition-all ${selectedIds.has(item.id) ? 'bg-nous-base0 border-nous-border' : 'bg-white/20 border-white/60'}`}>
  {selectedIds.has(item.id) && <CheckCircle2 size={12} className="text-white"/>}
  </div>
  </div>
  )}
  </div>
  <div className="p-4 md:p-6">
- <h5 className="font-serif italic text-lg md:text-xl text-stone-900 dark:text-white line-clamp-1">{item.content.prompt || item.content.name || item.content.title || 'Untitled'}</h5>
+ <h5 className="font-serif italic text-lg md:text-xl text-nous-text dark:text-white line-clamp-1">{item.content.prompt || item.content.name || item.content.title || 'Untitled'}</h5>
  </div>
  </motion.div>
  ))}
@@ -1009,13 +1009,13 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  initial={{ y: 20, opacity: 0 }} 
  animate={{ y: 0, opacity: 1 }} 
  exit={{ y: 20, opacity: 0 }}
- className="bg-stone-900/95 backdrop-blur-3xl p-3 rounded-none flex items-center justify-between border border-white/10 gap-2"
+ className="bg-nous-base/95 backdrop-blur-3xl p-3 rounded-none flex items-center justify-between border border-white/10 gap-2"
  >
  <div className="flex items-center gap-1">
  <button 
  onClick={() => setShowFolderModal(true)} 
  disabled={selectedIds.size === 0}
- className="flex flex-col items-center gap-1 px-4 py-2 rounded-none text-stone-400 hover:text-white hover:bg-white/5 transition-all disabled:opacity-30"
+ className="flex flex-col items-center gap-1 px-4 py-2 rounded-none text-nous-subtle hover:text-white hover:bg-white/5 transition-all disabled:opacity-30"
  >
  <FolderPlus size={18} />
  <span className="font-sans text-[7px] uppercase tracking-widest font-black">Stack</span>
@@ -1024,7 +1024,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  <button 
  onClick={handleDesignerAudit}
  disabled={selectedIds.size === 0}
- className="flex flex-col items-center gap-1 px-4 py-2 rounded-none text-stone-400 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all disabled:opacity-30"
+ className="flex flex-col items-center gap-1 px-4 py-2 rounded-none text-nous-subtle hover:text-indigo-400 hover:bg-indigo-500/10 transition-all disabled:opacity-30"
  >
  <Briefcase size={18} />
  <span className="font-sans text-[7px] uppercase tracking-widest font-black">Audit</span>
@@ -1032,7 +1032,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  <button 
  onClick={handleBatchRefract}
  disabled={selectedIds.size === 0}
- className="flex flex-col items-center gap-1 px-4 py-2 rounded-none text-stone-400 hover:text-purple-400 hover:bg-purple-500/10 transition-all disabled:opacity-30"
+ className="flex flex-col items-center gap-1 px-4 py-2 rounded-none text-nous-subtle hover:text-purple-400 hover:bg-purple-500/10 transition-all disabled:opacity-30"
  >
  <Wand2 size={18} />
  <span className="font-sans text-[7px] uppercase tracking-widest font-black">Refract</span>
@@ -1040,7 +1040,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  <button 
  onClick={handleFinancialAnalysis}
  disabled={selectedIds.size === 0}
- className="flex flex-col items-center gap-1 px-4 py-2 rounded-none text-stone-400 hover:text-stone-400 hover:bg-stone-500/10 transition-all disabled:opacity-30"
+ className="flex flex-col items-center gap-1 px-4 py-2 rounded-none text-nous-subtle hover:text-nous-subtle hover:bg-nous-base0/10 transition-all disabled:opacity-30"
  >
  <Wallet size={18} />
  <span className="font-sans text-[7px] uppercase tracking-widest font-black">Acquire</span>
@@ -1078,7 +1078,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  }
  }}
  disabled={selectedIds.size === 0}
- className="flex flex-col items-center gap-1 px-4 py-2 rounded-none text-stone-400 hover:text-stone-400 hover:bg-stone-500/10 transition-all disabled:opacity-30"
+ className="flex flex-col items-center gap-1 px-4 py-2 rounded-none text-nous-subtle hover:text-nous-subtle hover:bg-nous-base0/10 transition-all disabled:opacity-30"
  >
  <Radio size={18} />
  <span className="font-sans text-[7px] uppercase tracking-widest font-black">Broadcast</span>
@@ -1092,10 +1092,10 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  } else {
  setSelectedIds(new Set(filteredItems.map(i => i.id)));
  }
- }} className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 hover:text-white transition-colors">
+ }} className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle hover:text-white transition-colors">
  {selectedIds.size === filteredItems.length ? 'Deselect All' : 'Select All'}
  </button>
- <button onClick={() => { setIsSelectionMode(!isSelectionMode); if(isSelectionMode) setSelectedIds(new Set()); }} className={`p-2 rounded-none transition-colors ${isSelectionMode ? 'bg-red-500 text-white' : 'bg-white/10 text-stone-400 hover:bg-white/20'}`}>
+ <button onClick={() => { setIsSelectionMode(!isSelectionMode); if(isSelectionMode) setSelectedIds(new Set()); }} className={`p-2 rounded-none transition-colors ${isSelectionMode ? 'bg-red-500 text-white' : 'bg-white/10 text-nous-subtle hover:bg-white/20'}`}>
  {isSelectionMode ? <X size={16} /> : <CheckCircle2 size={16} />}
  </button>
  </div>
@@ -1106,15 +1106,15 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  <AnimatePresence>
  {showFolderModal && (
  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[8000] flex items-center justify-center p-6 bg-black/40 backdrop-blur-sm">
- <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white dark:bg-stone-900 p-10 rounded-none border border-stone-200 dark:border-stone-800 max-w-sm w-full space-y-8">
+ <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="bg-white p-10 rounded-none border border-nous-border max-w-sm w-full space-y-8">
  <div className="space-y-2">
  <h3 className="font-serif text-3xl italic tracking-tighter">Stack Shards.</h3>
- <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400 font-black">Group {selectedIds.size} fragments into a collection</p>
+ <p className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle font-black">Group {selectedIds.size} fragments into a collection</p>
  </div>
- <input type="text"value={newFolderName} onChange={e => setNewFolderName(e.target.value)} placeholder="Collection Name..."className="w-full bg-stone-50 dark:bg-stone-900 border-b border-stone-100 dark:border-stone-800 p-4 font-serif italic text-xl focus:outline-none"/>
+ <input type="text"value={newFolderName} onChange={e => setNewFolderName(e.target.value)} placeholder="Collection Name..."className="w-full bg-nous-base border-b border-nous-border p-4 font-serif italic text-xl focus:outline-none"/>
  <div className="flex gap-4">
- <button onClick={() => setShowFolderModal(false)} className="flex-1 py-4 font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 hover:text-nous-text transition-all">Cancel</button>
- <button onClick={handleCreateFolder} className="flex-[2] py-4 bg-nous-text dark:bg-white text-white dark:text-black font-sans text-[8px] uppercase tracking-widest font-black rounded-none hover:scale-105 transition-transform">Create Stack</button>
+ <button onClick={() => setShowFolderModal(false)} className="flex-1 py-4 font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle hover:text-nous-text transition-all">Cancel</button>
+ <button onClick={handleCreateFolder} className="flex-[2] py-4 bg-nous-text text-nous-base font-sans text-[8px] uppercase tracking-widest font-black rounded-none hover:scale-105 transition-transform">Create Stack</button>
  </div>
  </motion.div>
  </motion.div>

@@ -72,7 +72,7 @@ export const EntropyDensityMatrix: React.FC<EntropyDensityMatrixProps> = ({
  <div className="flex flex-col items-center w-full">
  <div 
  ref={containerRef}
- className={`relative w-full aspect-square max-w-[300px] bg-stone-50 dark:bg border border-stone-200 dark:border-stone-800 rounded-none overflow-hidden ${readOnly ? '' : 'cursor-crosshair touch-none'}`}
+ className={`relative w-full aspect-square max-w-[300px] bg-nous-base dark:bg border border-nous-border rounded-none overflow-hidden ${readOnly ? '' : 'cursor-crosshair touch-none'}`}
  onPointerDown={handlePointerDown}
  onPointerMove={handlePointerMove}
  onPointerUp={handlePointerUp}
@@ -80,25 +80,25 @@ export const EntropyDensityMatrix: React.FC<EntropyDensityMatrixProps> = ({
  >
  {/* Grid Lines */}
  <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 pointer-events-none">
- <div className="border-r border-b border-stone-200 dark:border-stone-800"></div>
- <div className="border-b border-stone-200 dark:border-stone-800"></div>
- <div className="border-r border-stone-200 dark:border-stone-800"></div>
+ <div className="border-r border-b border-nous-border"></div>
+ <div className="border-b border-nous-border"></div>
+ <div className="border-r border-nous-border"></div>
  <div></div>
  </div>
 
  {/* Labels */}
- <span className="absolute top-2 left-1/2 -translate-x-1/2 text-[8px] uppercase tracking-widest text-stone-400 font-mono pointer-events-none">Chaos (High Entropy)</span>
- <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[8px] uppercase tracking-widest text-stone-400 font-mono pointer-events-none">Order (Low Entropy)</span>
- <span className="absolute left-2 top-1/2 -translate-y-1/2 -rotate-90 text-[8px] uppercase tracking-widest text-stone-400 font-mono pointer-events-none origin-center whitespace-nowrap">Minimal (Low Density)</span>
- <span className="absolute right-2 top-1/2 -translate-y-1/2 rotate-90 text-[8px] uppercase tracking-widest text-stone-400 font-mono pointer-events-none origin-center whitespace-nowrap">Maximal (High Density)</span>
+ <span className="absolute top-2 left-1/2 -translate-x-1/2 text-[8px] uppercase tracking-widest text-nous-subtle font-mono pointer-events-none">Chaos (High Entropy)</span>
+ <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[8px] uppercase tracking-widest text-nous-subtle font-mono pointer-events-none">Order (Low Entropy)</span>
+ <span className="absolute left-2 top-1/2 -translate-y-1/2 -rotate-90 text-[8px] uppercase tracking-widest text-nous-subtle font-mono pointer-events-none origin-center whitespace-nowrap">Minimal (Low Density)</span>
+ <span className="absolute right-2 top-1/2 -translate-y-1/2 rotate-90 text-[8px] uppercase tracking-widest text-nous-subtle font-mono pointer-events-none origin-center whitespace-nowrap">Maximal (High Density)</span>
 
  {/* User Baseline Zone */}
  {userDensity !== undefined && userEntropy !== undefined && (
  <div 
- className="absolute w-16 h-16 -ml-8 -mb-8 rounded-none bg-stone-500/5 border border-stone-500/20 pointer-events-none flex items-center justify-center"
+ className="absolute w-16 h-16 -ml-8 -mb-8 rounded-none bg-nous-base0/5 border border-nous-border/20 pointer-events-none flex items-center justify-center"
  style={{ left: `${(userDensity / 10) * 100}%`, bottom: `${(userEntropy / 10) * 100}%` }}
  >
- <div className="w-1 h-1 rounded-none bg-stone-500/50"></div>
+ <div className="w-1 h-1 rounded-none bg-nous-base0/50"></div>
  </div>
  )}
 
@@ -112,7 +112,7 @@ export const EntropyDensityMatrix: React.FC<EntropyDensityMatrixProps> = ({
 
  {/* Controls & Readout */}
  <div className="mt-4 flex flex-col items-center w-full max-w-[300px]">
- <div className="flex justify-between w-full text-xs font-mono text-stone-500 mb-2">
+ <div className="flex justify-between w-full text-xs font-mono text-nous-text0 mb-2">
  <span>Density: {density.toFixed(1)}</span>
  <span>Entropy: {entropy.toFixed(1)}</span>
  </div>
@@ -127,7 +127,7 @@ export const EntropyDensityMatrix: React.FC<EntropyDensityMatrixProps> = ({
  )}
  
  {!readOnly && !hasChanged && (
- <p className="text-[9px] text-stone-400 uppercase tracking-widest text-center mt-2">
+ <p className="text-[9px] text-nous-subtle uppercase tracking-widest text-center mt-2">
  Drag node to correct AI perception
  </p>
  )}

@@ -34,7 +34,7 @@ export const ArchetypeMap: React.FC = () => {
  }));
 
  return (
- <div className="p-4 bg-stone-100 rounded-none">
+ <div className="p-4 bg-nous-base rounded-none">
  <h2 className="text-xl font-serif italic mb-4">The Constellation</h2>
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <div className="h-64">

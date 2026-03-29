@@ -113,29 +113,29 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId
  }
  };
 
- if (loading) return <div className="h-16 animate-pulse bg-stone-100 dark:bg-stone-900/50 rounded-none"/>;
+ if (loading) return <div className="h-16 animate-pulse bg-nous-base /50 rounded-none"/>;
  if (!profile) return null;
 
  const getStatusIcon = () => {
- if (type === 'friend' || connectionStatus?.status === 'friends') return <span title="Connected"><Handshake size={12} className="text-stone-500"/></span>;
+ if (type === 'friend' || connectionStatus?.status === 'friends') return <span title="Connected"><Handshake size={12} className="text-nous-text0"/></span>;
  if (type === 'request' || connectionStatus?.status === 'request_sent' || connectionStatus?.status === 'request_received') return <span title="Pending"><Clock size={12} className="text-amber-500 animate-pulse"/></span>;
  if (type === 'following') return <span title="Resonating"><Zap size={12} className="text-indigo-500"/></span>;
- if (type === 'search' && connectionStatus?.status === 'none') return <span title="Disconnected"><Link2Off size={12} className="text-stone-300"/></span>;
+ if (type === 'search' && connectionStatus?.status === 'none') return <span title="Disconnected"><Link2Off size={12} className="text-nous-subtle"/></span>;
  return null;
  };
 
  return (
- <div className="flex items-center justify-between p-4 bg-white dark:bg-stone-900/30 border border-stone-100 dark:border-stone-800 rounded-none group transition-all hover:border-stone-200 dark:hover:border-stone-700">
+ <div className="flex items-center justify-between p-4 bg-white /30 border border-nous-border rounded-none group transition-all hover:border-nous-border">
  <div className="flex items-center gap-4">
- <div className="w-10 h-10 rounded-none overflow-hidden border border-stone-100 dark:border-stone-800 bg-stone-50 dark:bg-stone-950">
+ <div className="w-10 h-10 rounded-none overflow-hidden border border-nous-border bg-nous-base">
  <img src={profile.photoURL || `https://ui-avatars.com/api/?name=${profile.handle || 'U'}&background=1c1917&color=fff`} className="w-full h-full object-cover grayscale"alt=""/>
  </div>
  <div>
  <div className="flex items-center gap-2">
- <h4 className="font-serif italic text-sm text-nous-text dark:text-white">@{profile.handle}</h4>
+ <h4 className="font-serif italic text-sm text-nous-text ">@{profile.handle}</h4>
  {getStatusIcon()}
  </div>
- <p className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">
+ <p className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">
  {type === 'follower' ? 'Resonator' : 'Sovereign'}
  </p>
  </div>
@@ -147,7 +147,7 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId
  <button 
  onClick={handleAccept} 
  disabled={actionLoading}
- className="p-2 text-stone-500 hover:bg-stone-50 dark:hover:bg-stone-500/10 rounded-none transition-colors"
+ className="p-2 text-nous-text0 hover:bg-nous-base 0/10 rounded-none transition-colors"
  title="Accept Request"
  >
  {actionLoading ? <Loader2 size={14} className="animate-spin"/> : <Check size={16} />}
@@ -165,7 +165,7 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId
  <button 
  onClick={handleRemoveFriend} 
  disabled={actionLoading}
- className="p-2 text-stone-300 hover:text-red-500 transition-colors rounded-none hover:bg-red-50 dark:hover:bg-red-500/10"
+ className="p-2 text-nous-subtle hover:text-red-500 transition-colors rounded-none hover:bg-red-50 dark:hover:bg-red-500/10"
  title="Disconnect"
  >
  {actionLoading ? <Loader2 size={14} className="animate-spin"/> : <Link2Off size={16} />}
@@ -174,7 +174,7 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId
  <button 
  onClick={handleUnfollow} 
  disabled={actionLoading}
- className="p-2 text-stone-300 hover:text-red-500 transition-colors rounded-none hover:bg-red-50 dark:hover:bg-red-500/10"
+ className="p-2 text-nous-subtle hover:text-red-500 transition-colors rounded-none hover:bg-red-50 dark:hover:bg-red-500/10"
  title="Stop Resonating"
  >
  {actionLoading ? <Loader2 size={14} className="animate-spin"/> : <UserMinus size={16} />}
@@ -182,7 +182,7 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId
  ) : type === 'search' ? (
  <div className="flex items-center gap-2">
  {connectionStatus?.status === 'friends' ? (
- <div className="p-2 text-stone-500 bg-stone-500/10 rounded-none"title="Connected">
+ <div className="p-2 text-nous-text0 bg-nous-base0/10 rounded-none"title="Connected">
  <Handshake size={16} />
  </div>
  ) : connectionStatus?.status === 'request_sent' ? (
@@ -193,7 +193,7 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId
  <button 
  onClick={() => handleAccept()} 
  disabled={actionLoading}
- className="flex items-center gap-2 px-3 py-1.5 bg-stone-500 text-white rounded-none font-sans text-[7px] uppercase tracking-widest font-black hover:bg-stone-600 transition-all"
+ className="flex items-center gap-2 px-3 py-1.5 bg-nous-base0 text-white rounded-none font-sans text-[7px] uppercase tracking-widest font-black hover:bg-stone-600 transition-all"
  >
  <Check size={10} /> Accept
  </button>
@@ -202,7 +202,7 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId
  <button 
  onClick={handleConnect} 
  disabled={actionLoading}
- className="p-2 bg-nous-text dark:bg-white text-white dark:text-black rounded-none hover:opacity-80 transition-all"
+ className="p-2 bg-nous-text text-nous-base rounded-none hover:opacity-80 transition-all"
  title="Connect"
  >
  {actionLoading ? <Loader2 size={14} className="animate-spin"/> : <UserPlus size={16} />}
@@ -210,7 +210,7 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId
  <button 
  onClick={handleFollow} 
  disabled={actionLoading}
- className="p-2 border border-stone-200 dark:border-stone-700 rounded-none text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all"
+ className="p-2 border border-nous-border rounded-none text-nous-text0 hover:bg-nous-base transition-all"
  title="Resonate"
  >
  {actionLoading ? <Loader2 size={14} className="animate-spin"/> : <Zap size={16} />}
@@ -304,17 +304,17 @@ export const ConnectionsManager: React.FC = () => {
  <button
  key={tab.id}
  onClick={() => setActiveTab(tab.id as any)}
- className={`px-6 py-3 rounded-none border transition-all flex items-center gap-3 relative ${activeTab === tab.id ? 'bg-nous-text dark:bg-white text-white dark:text-black border-nous-text dark:border-white ' : 'bg-white dark:bg-stone-900 text-stone-400 border-stone-100 dark:border-stone-800 hover:border-stone-300 dark:hover:border-stone-600'}`}
+ className={`px-6 py-3 rounded-none border transition-all flex items-center gap-3 relative ${activeTab === tab.id ? 'bg-nous-text text-nous-base border-nous-text  ' : 'bg-white text-nous-subtle border-nous-border hover:border-nous-border '}`}
  >
  {tab.icon}
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">{tab.label}</span>
  {tab.count > 0 && (
- <span className={`ml-1 px-1.5 py-0.5 rounded-none text-[7px] font-black ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-stone-100 dark:bg-stone-800 text-stone-500'}`}>
+ <span className={`ml-1 px-1.5 py-0.5 rounded-none text-[7px] font-black ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-nous-base text-nous-text0'}`}>
  {tab.count}
  </span>
  )}
  {tab.highlight && (
- <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-stone-500 rounded-none border-2 border-nous-base dark:border-stone-950 animate-pulse"/>
+ <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-nous-base0 rounded-none border-2 border-nous-base dark:border-stone-950 animate-pulse"/>
  )}
  </button>
  ))}
@@ -323,7 +323,7 @@ export const ConnectionsManager: React.FC = () => {
  <div className="min-h-[300px] relative">
  {loading ? (
  <div className="absolute inset-0 flex items-center justify-center">
- <Loader2 size={24} className="animate-spin text-stone-300"/>
+ <Loader2 size={24} className="animate-spin text-nous-subtle"/>
  </div>
  ) : (
  <motion.div 
@@ -363,20 +363,20 @@ export const ConnectionsManager: React.FC = () => {
  {activeTab === 'search' && (
  <div className="col-span-full space-y-6">
  <div className="relative max-w-md mx-auto">
- <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400"size={16} />
+ <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-nous-subtle"size={16} />
  <input 
  type="text"
  value={searchTerm}
  onChange={(e) => setSearchTerm(e.target.value)}
  placeholder="Search by handle..."
- className="w-full pl-12 pr-4 py-3 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-none focus:outline-none focus:ring-2 focus:ring-nous-text dark:focus:ring-white transition-all font-serif italic"
+ className="w-full pl-12 pr-4 py-3 bg-white border border-nous-border rounded-none focus:outline-none focus:ring-2 focus:ring-nous-text dark:focus:ring-white transition-all font-serif italic"
  />
  </div>
 
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  {searching ? (
  <div className="col-span-full flex justify-center py-10">
- <Loader2 size={24} className="animate-spin text-stone-300"/>
+ <Loader2 size={24} className="animate-spin text-nous-subtle"/>
  </div>
  ) : searchResults.length > 0 ? (
  searchResults.map(r => <ConnectionItem key={r.uid} userId={r.uid} type="search"onActionComplete={loadData} />)
@@ -384,7 +384,7 @@ export const ConnectionsManager: React.FC = () => {
  <EmptyState message="No users found matching that handle."/>
  ) : (
  <div className="col-span-full py-10 text-center opacity-40">
- <p className="font-serif italic text-stone-500">Enter at least 2 characters to search.</p>
+ <p className="font-serif italic text-nous-text0">Enter at least 2 characters to search.</p>
  </div>
  )}
  </div>
@@ -399,7 +399,7 @@ export const ConnectionsManager: React.FC = () => {
 
 const EmptyState: React.FC<{ message: string }> = ({ message }) => (
  <div className="col-span-full py-20 flex flex-col items-center justify-center text-center space-y-4 opacity-40">
- <Users size={40} className="text-stone-300"/>
- <p className="font-serif italic text-stone-500">{message}</p>
+ <Users size={40} className="text-nous-subtle"/>
+ <p className="font-serif italic text-nous-text0">{message}</p>
  </div>
 );

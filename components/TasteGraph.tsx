@@ -276,7 +276,7 @@ export const TasteGraph: React.FC = () => {
  <div className="absolute top-1/2 -right-32 translate-y-24 rotate-90 origin-left">
  <div className="bg dark:bg border border/30 dark:border/30 p-3 relative">
  {/* Tape effect */}
- <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-12 h-4 bg-white/40 dark:bg-black/40 backdrop-blur-md rotate-2 border border-black/5 dark:border-white/5"/>
+ <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-12 h-4 bg-white/40 /40 backdrop-blur-md rotate-2 border border-black/5 /5"/>
  <p className="font-serif italic text-sm text dark:text">"Define the physics of your world."</p>
  </div>
  </div>

@@ -58,5 +58,5 @@ export const BiaxialMap: React.FC<BiaxialMapProps> = ({ clusters }) => {
 
  }, [clusters]);
 
- return <svg ref={svgRef} width="100%"height="auto"viewBox="0 0 600 600"className="bg-stone-950"/>;
+ return <svg ref={svgRef} width="100%"height="auto"viewBox="0 0 600 600"className="bg-nous-base"/>;
 };

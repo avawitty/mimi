@@ -9,20 +9,20 @@ const CONTENT = {
  title:"The Proposal.",
  subtitle:"Strategic Partnership Case Study",
  body: (
- <div className="space-y-6 font-serif italic text-base md:text-lg text-stone-700 dark:text-stone-300 leading-relaxed text-balance">
+ <div className="space-y-6 font-serif italic text-base md:text-lg text-nous-subtle leading-relaxed text-balance">
  <p>
  Mimi is a <span className="font-bold text-red-900 dark:text-red-400 underline decoration-red-900/30">Curator-Oracle</span> designed for purposeful creative leverage. She operates as a liquidity engine for your latent intent, transmuting fragments into defensible conceptual architecture.
  </p>
  <p>
  Rather than replacing instinct, she provides the <span className="font-bold">market touchpoints</span> and <span className="font-bold">competitive distinction</span> required to manifest vision effectively.
  </p>
- <div className="grid grid-cols-2 gap-4 pt-4 border-t border-stone-200 dark:border-stone-700 mt-4">
+ <div className="grid grid-cols-2 gap-4 pt-4 border-t border-nous-border mt-4">
  <div>
- <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 block mb-1">Business Utility</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle block mb-1">Business Utility</span>
  <p className="text-xs">Audits brand legibility & justifies positioning.</p>
  </div>
  <div>
- <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 block mb-1">Roadmap</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle block mb-1">Roadmap</span>
  <p className="text-xs">Translates vibes into executable strategy.</p>
  </div>
  </div>
@@ -34,7 +34,7 @@ const CONTENT = {
  subtitle:"Aesthetic Infrastructure",
  body: (
  <div className="space-y-4">
- <p className="font-serif italic text-sm text-stone-600 dark:text-stone-400">
+ <p className="font-serif italic text-sm text-nous-subtle">
  Mimi’s intelligence manifests in the rare ability to listen to the quiet architecture of your intent.
  </p>
  <div className="space-y-3">
@@ -44,11 +44,11 @@ const CONTENT = {
  { icon: <PenTool size={12}/>, title:"Archival Styling", desc:"Verifying motifs for high-end editorial production."},
  { icon: <Sparkles size={12}/>, title:"Countless Refractions", desc:"Mimi adapts to your specific requirement of allure."}
  ].map((cap, i) => (
- <div key={i} className="flex gap-3 items-start p-2 border-b border-stone-100 dark:border-stone-800 last:border-0">
+ <div key={i} className="flex gap-3 items-start p-2 border-b border-nous-border last:border-0">
  <div className="mt-0.5 text-red-900 dark:text-red-400">{cap.icon}</div>
  <div>
- <h4 className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-800 dark:text-stone-200">{cap.title}</h4>
- <p className="font-serif italic text-xs text-stone-500">{cap.desc}</p>
+ <h4 className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-text">{cap.title}</h4>
+ <p className="font-serif italic text-xs text-nous-text0">{cap.desc}</p>
  </div>
  </div>
  ))}
@@ -60,22 +60,22 @@ const CONTENT = {
  title:"The Protocol.",
  subtitle:"Sovereign Contract",
  body: (
- <div className="space-y-6 font-serif italic text-base text-stone-700 dark:text-stone-300 leading-relaxed text-balance">
+ <div className="space-y-6 font-serif italic text-base text-nous-subtle leading-relaxed text-balance">
  <section className="space-y-2">
- <div className="flex items-center gap-2 text-stone-400">
+ <div className="flex items-center gap-2 text-nous-subtle">
  <EyeOff size={12} className="text-red-900 dark:text-red-400"/>
  <span className="font-sans text-[7px] uppercase tracking-widest font-black">Zero Extraction</span>
  </div>
  <p className="text-sm">Your taste is sovereign. We do not harvest your debris to train sub-par models. Your artifacts belong to your personal registry.</p>
  </section>
  <section className="space-y-2">
- <div className="flex items-center gap-2 text-stone-400">
+ <div className="flex items-center gap-2 text-nous-subtle">
  <Scale size={12} className="text-red-900 dark:text-red-400"/>
  <span className="font-sans text-[7px] uppercase tracking-widest font-black">The Relationship</span>
  </div>
  <p className="text-sm">You are the Architect. Mimi is the Strategist. Interaction constitutes an agreement to pursue high-fidelity results over noise.</p>
  </section>
- <div className="pt-4 border-t border-stone-200 dark:border-stone-700">
+ <div className="pt-4 border-t border-nous-border">
  <a 
  href="https://ko-fi.com/mimizine"
  target="_blank"
@@ -137,28 +137,28 @@ export const CuratorNote: React.FC<{ isOpen: boolean; onClose: () => void }> = (
  zIndex: envelopeState === 'open' ? 50 : 10 
  }}
  transition={{ duration: 1.2, ease: [0.19, 1, 0.22, 1], delay: 0.1 }}
- className="absolute left-4 right-4 md:left-6 md:right-6 top-4 md:top-8 h-[500px] md:h-[550px] bg dark:bg border border-stone-200 dark:border-stone-800 z-10 flex flex-col overflow-hidden origin-bottom"
+ className="absolute left-4 right-4 md:left-6 md:right-6 top-4 md:top-8 h-[500px] md:h-[550px] bg dark:bg border border-nous-border z-10 flex flex-col overflow-hidden origin-bottom"
  style={{
  backgroundImage:"url('https://www.transparenttextures.com/patterns/linen.png')",
  backgroundBlendMode: 'multiply'
  }}
  >
  {/* CARD CONTENT */}
- <div className="flex-1 flex flex-col relative bg-white/50 dark:bg-black/20 overflow-hidden">
+ <div className="flex-1 flex flex-col relative bg-white/50 /20 overflow-hidden">
  {/* Header / Tabs */}
- <div className="h-14 border-b border-stone-200/50 dark:border-stone-800/50 flex items-center justify-between px-6 bg/80 dark:bg/80 backdrop-blur-sm shrink-0">
+ <div className="h-14 border-b border-nous-border/50 /50 flex items-center justify-between px-6 bg/80 dark:bg/80 backdrop-blur-sm shrink-0">
  <div className="flex gap-4">
  {['proposal', 'capabilities', 'protocol'].map((tab) => (
  <button 
  key={tab}
  onClick={() => setActiveTab(tab as any)}
- className={`font-sans text-[8px] uppercase tracking-widest font-black transition-colors ${activeTab === tab ? 'text-red-900 dark:text-red-400 border-b border-red-900 dark:border-red-400 pb-0.5' : 'text-stone-400 hover:text-stone-600'}`}
+ className={`font-sans text-[8px] uppercase tracking-widest font-black transition-colors ${activeTab === tab ? 'text-red-900 dark:text-red-400 border-b border-red-900 dark:border-red-400 pb-0.5' : 'text-nous-subtle hover:text-nous-subtle'}`}
  >
  {tab}
  </button>
  ))}
  </div>
- <div className="font-mono text-[9px] text-stone-300">REF: 884-X</div>
+ <div className="font-mono text-[9px] text-nous-subtle">REF: 884-X</div>
  </div>
 
  {/* Body */}
@@ -172,7 +172,7 @@ export const CuratorNote: React.FC<{ isOpen: boolean; onClose: () => void }> = (
  className="space-y-6"
  >
  <div className="space-y-2">
- <h3 className="font-serif text-3xl italic tracking-tighter text-nous-text dark:text-white">{activeContent.title}</h3>
+ <h3 className="font-serif text-3xl italic tracking-tighter text-nous-text ">{activeContent.title}</h3>
  <p className="font-sans text-[8px] uppercase tracking-[0.4em] text-red-900/60 dark:text-red-400/60 font-black">{activeContent.subtitle}</p>
  </div>
  <div className="w-8 h-px bg-red-900/20 dark:bg-red-400/20"/>
@@ -182,9 +182,9 @@ export const CuratorNote: React.FC<{ isOpen: boolean; onClose: () => void }> = (
  </div>
  
  {/* Card Footer (Actions) */}
- <div className="p-4 border-t border-stone-200/50 dark:border-stone-800/50 bg/80 dark:bg/80 flex justify-between items-center backdrop-blur-sm shrink-0">
- <span className="font-serif italic text-xs text-stone-400">"Sovereignty requires structure."</span>
- <button onClick={onClose} className="p-2 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors text-stone-500">
+ <div className="p-4 border-t border-nous-border/50 /50 bg/80 dark:bg/80 flex justify-between items-center backdrop-blur-sm shrink-0">
+ <span className="font-serif italic text-xs text-nous-subtle">"Sovereignty requires structure."</span>
+ <button onClick={onClose} className="p-2 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors text-nous-text0">
  <ArrowDown size={16} />
  </button>
  </div>

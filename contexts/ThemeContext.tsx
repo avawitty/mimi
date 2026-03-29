@@ -18,6 +18,34 @@ export interface Palette {
 }
 
 export const PALETTES: Record<string, Palette> = {
+  "Bright Mode": { 
+    name: 'Bright Mode', 
+    genre: 'High Contrast', 
+    base: '#FFFFFF', 
+    text: '#000000', 
+    subtle: '#666666', 
+    accent: '#000000', 
+    border: '#E5E5E5', 
+    isDark: false,
+    fontFamily: 'sans', 
+    headerFont: '"Cormorant Garamond", serif', 
+    logoStyle: 'serif', 
+    logoItalic: true
+  },
+  "Dark Mode": { 
+    name: 'Dark Mode', 
+    genre: 'High Contrast', 
+    base: '#000000', 
+    text: '#FFFFFF', 
+    subtle: '#A3A3A3', 
+    accent: '#FFFFFF', 
+    border: '#262626', 
+    isDark: true,
+    fontFamily: 'sans', 
+    headerFont: '"Cormorant Garamond", serif', 
+    logoStyle: 'serif', 
+    logoItalic: true
+  },
   "The Journal": { 
     name: 'The Journal', 
     genre: 'Archival Grid', 
@@ -112,9 +140,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const toggleMode = () => {
     if (currentPalette?.isDark) {
-      applyPalette("The Journal");
+      applyPalette("Bright Mode");
     } else {
-      applyPalette("Haute Void");
+      applyPalette("Dark Mode");
     }
   };
 

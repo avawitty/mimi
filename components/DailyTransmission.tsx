@@ -142,24 +142,24 @@ export const DailyTransmission: React.FC = () => {
  <motion.button 
  whileTap={{ scale: 0.95 }}
  onClick={() => playTransmission()}
- className={`relative z-10 flex items-center gap-3 px-8 py-3 bg-white/70 dark:bg-stone-900/70 backdrop-blur-3xl border border-black/5 rounded-none group transition-all ${isPlaying ? 'ring-2 ring-stone-500/40' : isTired ? 'ring-2 ring-red-500/20' : ''}`}
+ className={`relative z-10 flex items-center gap-3 px-8 py-3 bg-white/70 /70 backdrop-blur-3xl border border-black/5 rounded-none group transition-all ${isPlaying ? 'ring-2 ring-stone-500/40' : isTired ? 'ring-2 ring-red-500/20' : ''}`}
  >
  {isLoading ? (
- <Loader2 size={12} className="animate-spin text-stone-400"/>
+ <Loader2 size={12} className="animate-spin text-nous-subtle"/>
  ) : isTired ? (
  <Moon size={12} className="text-red-400 animate-pulse"/>
  ) : (
- <div className={`w-2 h-2 rounded-none transition-all duration-500 ${isPlaying ? 'bg-stone-500 animate-pulse scale-150' : activeEdict ? 'bg-stone-400' : 'bg-stone-300'}`} />
+ <div className={`w-2 h-2 rounded-none transition-all duration-500 ${isPlaying ? 'bg-nous-base0 animate-pulse scale-150' : activeEdict ? 'bg-stone-400' : 'bg-stone-300'}`} />
  )}
- <span className="font-sans text-[8px] md:text-[10px] uppercase tracking-[0.4em] font-black text-stone-600 dark:text-stone-300">
+ <span className="font-sans text-[8px] md:text-[10px] uppercase tracking-[0.4em] font-black text-nous-subtle">
  {isLoading ? 'Calibrating' : isPlaying ? 'Transmitting' : isTired ? 'Model Dissonance' : 'Manifestation'}
  </span>
  {isPlaying ? (
- <X size={12} className="text-stone-400 hover:text-red-500 transition-colors"/>
+ <X size={12} className="text-nous-subtle hover:text-red-500 transition-colors"/>
  ) : (
  <div className="flex items-center gap-2">
- <Heart size={10} className="text-stone-200 opacity-20 group-hover:opacity-100 transition-opacity"/>
- <Sparkles size={12} className={`text-stone-300 group-hover:text-stone-400 transition-colors ${activeEdict && !isTired ? 'animate-pulse text-stone-500' : ''}`} />
+ <Heart size={10} className="text-nous-text opacity-20 group-hover:opacity-100 transition-opacity"/>
+ <Sparkles size={12} className={`text-nous-subtle group-hover:text-nous-subtle transition-colors ${activeEdict && !isTired ? 'animate-pulse text-nous-text0' : ''}`} />
  </div>
  )}
  </motion.button>
@@ -174,7 +174,7 @@ export const DailyTransmission: React.FC = () => {
  exit={{ opacity: 0 }}
  className="flex flex-col items-center gap-2"
  >
- <p className="font-serif italic text-xs md:text-sm text-stone-400 text-center max-w-xs md:max-w-md px-6 leading-tight">
+ <p className="font-serif italic text-xs md:text-sm text-nous-subtle text-center max-w-xs md:max-w-md px-6 leading-tight">
  {isTired ?"The scotopic signal suffered a structural internal error. Distill the request and retry.": `“${activeEdict?.message ||"Mimi is co-authoring with you."}”`}
  </p>
  </motion.div>

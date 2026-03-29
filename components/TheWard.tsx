@@ -76,7 +76,7 @@ const DriftMonitor: React.FC<{ zines: ZineMetadata[] }> = ({ zines }) => {
  </button>
  <button 
  onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'scry' }))}
- className="flex items-center gap-2 font-sans text-[10px] uppercase tracking-widest font-bold text-stone-500 hover:text-stone-700 dark:hover:text-stone-300 transition-colors"
+ className="flex items-center gap-2 font-sans text-[10px] uppercase tracking-widest font-bold text-nous-text0 hover:text-nous-subtle transition-colors"
  >
  Explore New Direction <ArrowRight size={12} />
  </button>
@@ -117,13 +117,13 @@ export const TheWard: React.FC<{ onClose: () => void }> = ({ onClose }) => {
  };
 
  return (
- <div className="fixed inset-0 z-50 bg-stone-50 dark:bg-stone-950 p-8 flex flex-col">
+ <div className="fixed inset-0 z-50 bg-nous-base p-8 flex flex-col">
  <div className="flex justify-between items-center mb-8">
  <div className="space-y-1">
- <h2 className="font-serif text-4xl italic tracking-tighter text-stone-900 dark:text-white">The Ward.</h2>
- <p className="font-sans text-[10px] uppercase tracking-widest text-stone-500">Aesthetic Interrogation Room</p>
+ <h2 className="font-serif text-4xl italic tracking-tighter text-nous-text ">The Ward.</h2>
+ <p className="font-sans text-[10px] uppercase tracking-widest text-nous-text0">Aesthetic Interrogation Room</p>
  </div>
- <button onClick={onClose} className="text-stone-500 hover:text-stone-900 dark:hover:text-white transition-colors">
+ <button onClick={onClose} className="text-nous-text0 hover:text-nous-text dark:hover:text-white transition-colors">
  <X size={24} />
  </button>
  </div>
@@ -137,28 +137,28 @@ export const TheWard: React.FC<{ onClose: () => void }> = ({ onClose }) => {
  </div>
 
  {/* Right: Points & Feed */}
- <div className="bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-none p-8 space-y-6 flex flex-col">
+ <div className="bg-nous-base border border-nous-border rounded-none p-8 space-y-6 flex flex-col">
  <div className="flex gap-4">
- <button onClick={() => setActiveTab('graph')} className={`font-sans text-[10px] uppercase tracking-widest font-black ${activeTab === 'graph' ? 'text-stone-600 dark:text-stone-500' : 'text-stone-500'}`}>Graph Points</button>
- <button onClick={() => setActiveTab('notifications')} className={`font-sans text-[10px] uppercase tracking-widest font-black ${activeTab === 'notifications' ? 'text-stone-600 dark:text-stone-500' : 'text-stone-500'}`}>Feed</button>
+ <button onClick={() => setActiveTab('graph')} className={`font-sans text-[10px] uppercase tracking-widest font-black ${activeTab === 'graph' ? 'text-nous-subtle 0' : 'text-nous-text0'}`}>Graph Points</button>
+ <button onClick={() => setActiveTab('notifications')} className={`font-sans text-[10px] uppercase tracking-widest font-black ${activeTab === 'notifications' ? 'text-nous-subtle 0' : 'text-nous-text0'}`}>Feed</button>
  </div>
  
  <div className="flex-1 overflow-y-auto">
  {activeTab === 'graph' ? (
  <div className="space-y-2">
  {nodes.map(node => (
- <button key={node.id} onClick={() => navigateToScry(node.label)} className="w-full p-4 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-none text-left hover:border-stone-800 dark:hover:border-stone-300 transition-colors">
- <p className="font-sans text-xs text-stone-800 dark:text-stone-200">{node.label}</p>
- <p className="font-mono text-[9px] text-stone-500 uppercase">{node.type}</p>
+ <button key={node.id} onClick={() => navigateToScry(node.label)} className="w-full p-4 bg-white border border-nous-border rounded-none text-left hover:border-nous-border transition-colors">
+ <p className="font-sans text-xs text-nous-text">{node.label}</p>
+ <p className="font-mono text-[9px] text-nous-text0 uppercase">{node.type}</p>
  </button>
  ))}
  </div>
  ) : (
  <div className="space-y-2">
  {notifications.map(n => (
- <div key={n.id} className="p-4 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-none">
- <p className="font-sans text-xs text-stone-800 dark:text-stone-200">{n.message}</p>
- <p className="font-mono text-[9px] text-stone-500 uppercase">{new Date(n.timestamp).toLocaleString()}</p>
+ <div key={n.id} className="p-4 bg-white border border-nous-border rounded-none">
+ <p className="font-sans text-xs text-nous-text">{n.message}</p>
+ <p className="font-mono text-[9px] text-nous-text0 uppercase">{new Date(n.timestamp).toLocaleString()}</p>
  </div>
  ))}
  </div>

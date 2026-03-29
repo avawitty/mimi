@@ -260,25 +260,25 @@ export const VibeGraph: React.FC<VibeGraphProps> = ({ onGenerateZine, onNodeSele
  };
 
  return (
- <div className="relative w-full h-full bg-stone-50 dark:bg rounded-none border border-stone-200 dark:border-stone-800 overflow-hidden">
+ <div className="relative w-full h-full bg-nous-base dark:bg rounded-none border border-nous-border overflow-hidden">
  <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
  <button
  onClick={handleGenerateClusters}
  disabled={isGenerating || memories.length < 5}
- className="flex items-center gap-2 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 px-4 py-2 rounded-none hover: transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+ className="flex items-center gap-2 bg-white border border-nous-border px-4 py-2 rounded-none hover: transition-all disabled:opacity-50 disabled:cursor-not-allowed"
  >
  {isGenerating ? <Loader2 size={14} className="animate-spin"/> : <Sparkles size={14} className="text-amber-500"/>}
- <span className="font-sans text-[10px] uppercase tracking-widest font-black text-stone-600 dark:text-stone-300">
+ <span className="font-sans text-[10px] uppercase tracking-widest font-black text-nous-subtle">
  {isGenerating ? 'Synthesizing...' : 'Generate Cluster Anchors'}
  </span>
  </button>
  
- <div className="flex bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-none p-1">
+ <div className="flex bg-white border border-nous-border rounded-none p-1">
  {(['biographical', 'influence', 'emotion', 'time'] as ThreadMode[]).map(mode => (
  <button
  key={mode}
  onClick={() => setThreadMode(mode)}
- className={`px-3 py-1 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all ${threadMode === mode ? 'bg-stone-500 text-white' : 'text-stone-500 hover:text-stone-800 dark:text-stone-400'}`}
+ className={`px-3 py-1 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all ${threadMode === mode ? 'bg-nous-base0 text-white' : 'text-nous-text0 hover:text-nous-text '}`}
  >
  {mode}
  </button>
@@ -287,12 +287,12 @@ export const VibeGraph: React.FC<VibeGraphProps> = ({ onGenerateZine, onNodeSele
  </div>
 
  {selectedNode && !activeThread && (
- <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/90 dark:bg-stone-900/90 backdrop-blur-md p-6 rounded-none border border-stone-200 dark:border-stone-800 max-w-md w-full text-center space-y-4 z-20">
- <p className="font-serif italic text-stone-600 dark:text-stone-300 line-clamp-2">"{selectedNode.content_preview}"</p>
+ <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/90 /90 backdrop-blur-md p-6 rounded-none border border-nous-border max-w-md w-full text-center space-y-4 z-20">
+ <p className="font-serif italic text-nous-subtle line-clamp-2">"{selectedNode.content_preview}"</p>
  <button 
  onClick={handleFindThread}
  disabled={isThreading}
- className="px-6 py-2 bg-stone-500 text-white rounded-none font-sans text-[10px] uppercase tracking-widest font-black hover:bg-stone-600 transition-colors disabled:opacity-50"
+ className="px-6 py-2 bg-nous-base0 text-white rounded-none font-sans text-[10px] uppercase tracking-widest font-black hover:bg-stone-600 transition-colors disabled:opacity-50"
  >
  {isThreading ? 'Tracing Path...' : 'Find the Thread'}
  </button>
@@ -300,9 +300,9 @@ export const VibeGraph: React.FC<VibeGraphProps> = ({ onGenerateZine, onNodeSele
  )}
 
  {activeThread && (
- <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/95 dark:bg-stone-900/95 backdrop-blur-xl p-8 rounded-none border border-stone-500/30 max-w-lg w-full space-y-6 z-20">
+ <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/95 /95 backdrop-blur-xl p-8 rounded-none border border-nous-border/30 max-w-lg w-full space-y-6 z-20">
  <div className="flex items-center justify-between">
- <div className="flex items-center gap-2 text-stone-500">
+ <div className="flex items-center gap-2 text-nous-text0">
  <Sparkles size={16} />
  <span className="font-sans text-[10px] uppercase tracking-widest font-black">Semantic Thread</span>
  </div>
@@ -310,17 +310,17 @@ export const VibeGraph: React.FC<VibeGraphProps> = ({ onGenerateZine, onNodeSele
  {onGenerateZine && (
  <button 
  onClick={() => onGenerateZine(activeThread)}
- className="px-4 py-1.5 bg-stone-900 dark:bg-white text-white dark:text-stone-900 rounded-none font-sans text-[10px] uppercase tracking-widest font-bold hover:bg-stone-800 dark:hover:bg-stone-100 transition-colors"
+ className="px-4 py-1.5 bg-nous-base  text-white rounded-none font-sans text-[10px] uppercase tracking-widest font-bold hover:bg-nous-base transition-colors"
  >
  Weave into Zine
  </button>
  )}
- <button onClick={() => setActiveThread(null)} className="text-stone-500 hover:text-stone-900 dark:hover:text-white transition-colors">
+ <button onClick={() => setActiveThread(null)} className="text-nous-text0 hover:text-nous-text dark:hover:text-white transition-colors">
  <X size={16} />
  </button>
  </div>
  </div>
- <p className="font-serif text-lg text-stone-800 dark:text-stone-200 leading-relaxed">
+ <p className="font-serif text-lg text-nous-text leading-relaxed">
  {activeThread.narrative}
  </p>
  <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
@@ -330,10 +330,10 @@ export const VibeGraph: React.FC<VibeGraphProps> = ({ onGenerateZine, onNodeSele
  : 'Artifact';
  return (
  <div key={i} className="flex items-center gap-2 shrink-0">
- <span className={`px-2 py-1 rounded-none text-[8px] uppercase tracking-widest font-black ${p.type === 'theme' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-500' : 'bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400'}`}>
+ <span className={`px-2 py-1 rounded-none text-[8px] uppercase tracking-widest font-black ${p.type === 'theme' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-500' : 'bg-nous-base text-nous-text0 '}`}>
  {nodeLabel}
  </span>
- {i < activeThread.path.length - 1 && <span className="text-stone-400 dark:text-stone-600">→</span>}
+ {i < activeThread.path.length - 1 && <span className="text-nous-subtle">→</span>}
  </div>
  );
  })}

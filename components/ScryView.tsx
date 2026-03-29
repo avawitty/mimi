@@ -109,15 +109,15 @@ export const ScryView: React.FC = () => {
  };
 
  return (
- <div className="flex w-full h-full bg dark:bg text dark:text font-serif overflow-hidden relative selection:bg-stone-500/20">
+ <div className="flex w-full h-full bg dark:bg text dark:text font-serif overflow-hidden relative selection:bg-nous-base0/20">
  {/* Main Content */}
  <main className="flex-1 flex flex-col items-center relative overflow-y-auto scrollbar-hide">
  <div className="w-full max-w-5xl flex flex-col items-center pt-16 px-8 min-h-screen pb-32">
  
  {/* The Void / Scry Circle */}
  <div className="text-center mb-12">
- <h1 className="font-serif italic text-6xl text-stone-900 mb-4">The Scry</h1>
- <p className="font-sans text-stone-500 uppercase tracking-widest text-xs">Consult the aesthetic oracle.</p>
+ <h1 className="font-serif italic text-6xl text-nous-text mb-4">The Scry</h1>
+ <p className="font-sans text-nous-text0 uppercase tracking-widest text-xs">Consult the aesthetic oracle.</p>
  </div>
  <div className="relative group mt-12">
  <motion.div 
@@ -140,7 +140,7 @@ export const ScryView: React.FC = () => {
  >
  <div className="w-full h-full absolute inset-0 bg animate-spin opacity-20"/>
  <div className="w-[98%] h-[98%] bg-black rounded-none absolute"/>
- <Loader2 className="text-stone-500 animate-spin relative z-10"size={48} />
+ <Loader2 className="text-nous-text0 animate-spin relative z-10"size={48} />
  </motion.div>
  )}
  </AnimatePresence>
@@ -159,18 +159,18 @@ export const ScryView: React.FC = () => {
  </AnimatePresence>
 
  {/* Latent Space Badge */}
- <div className="absolute bottom-12 left-1/2 -translate-x-1/2 bg-stone-800/50 backdrop-blur-md border border-white/10 px-4 py-1.5 rounded-none flex items-center gap-2">
- <div className={`w-1.5 h-1.5 rounded-none ${visualState === 'loading' ? 'bg-stone-400 animate-pulse' : 'bg-stone-500'}`} />
- <span className="text-[9px] uppercase tracking-[0.2em] text-stone-300 font-medium">Latent Space Retrieval</span>
+ <div className="absolute bottom-12 left-1/2 -translate-x-1/2 bg-nous-base/50 backdrop-blur-md border border-white/10 px-4 py-1.5 rounded-none flex items-center gap-2">
+ <div className={`w-1.5 h-1.5 rounded-none ${visualState === 'loading' ? 'bg-stone-400 animate-pulse' : 'bg-nous-base0'}`} />
+ <span className="text-[9px] uppercase tracking-[0.2em] text-nous-subtle font-medium">Latent Space Retrieval</span>
  </div>
  </motion.div>
 
  {/* Glow Effect behind circle */}
- <div className="absolute inset-0 bg-stone-500/5 blur-[100px] rounded-none -z-10 transform scale-110 pointer-events-none"/>
+ <div className="absolute inset-0 bg-nous-base0/5 blur-[100px] rounded-none -z-10 transform scale-110 pointer-events-none"/>
  </div>
 
  {/* Subtext */}
- <p className="font-serif italic text-stone-500 text-xl mt-16 mb-10 text-center max-w-md leading-relaxed">
+ <p className="font-serif italic text-nous-text0 text-xl mt-16 mb-10 text-center max-w-md leading-relaxed">
  Scan the cultural horizon for web signals, generate new artifacts, and consult the Oracle simultaneously.
  </p>
 
@@ -187,7 +187,7 @@ export const ScryView: React.FC = () => {
  {/* Mic Icon */}
  <button 
  onClick={isRecording ? stopRecording : startRecording}
- className={`absolute left-0 top-1/2 -translate-y-1/2 text-stone-400 hover:text transition-colors ${isRecording ? 'text-red-500 animate-pulse' : ''}`}
+ className={`absolute left-0 top-1/2 -translate-y-1/2 text-nous-subtle hover:text transition-colors ${isRecording ? 'text-red-500 animate-pulse' : ''}`}
  >
  <Mic size={20} />
  </button>
@@ -215,7 +215,7 @@ export const ScryView: React.FC = () => {
  className="bg-white p-10 rounded-none border border text-center"
  >
  <div className="flex justify-center mb-6">
- <Sparkles size={24} className="text-stone-500"/>
+ <Sparkles size={24} className="text-nous-text0"/>
  </div>
  <p className="font-serif text-2xl leading-relaxed text italic">
 "{scribeReading}"
@@ -235,7 +235,7 @@ export const ScryView: React.FC = () => {
  className="group border-b border py-6 hover:bg-white/50 transition-colors px-4 rounded-none"
  >
  <div className="flex justify-between items-baseline mb-2">
- <h3 className="font-serif text-xl text group-hover:text-stone-600 transition-colors">
+ <h3 className="font-serif text-xl text group-hover:text-nous-subtle transition-colors">
  <a href={r.url} target="_blank"rel="noopener noreferrer">{r.title}</a>
  </h3>
  <span className="text-[9px] uppercase tracking-widest text">{new URL(r.url).hostname}</span>
@@ -268,10 +268,10 @@ export const ScryView: React.FC = () => {
  </div>
  <div className="flex-1">
  <div className="flex items-center gap-3 mb-2">
- <span className="text-[9px] uppercase tracking-widest text-stone-600 font-bold">{r.type}</span>
+ <span className="text-[9px] uppercase tracking-widest text-nous-subtle font-bold">{r.type}</span>
  <span className="text-[9px] uppercase tracking-widest text">{(r.similarity * 100).toFixed(0)}% Resonance</span>
  </div>
- <p className="font-serif text-lg text italic group-hover:text-stone-600 transition-colors line-clamp-2">
+ <p className="font-serif text-lg text italic group-hover:text-nous-subtle transition-colors line-clamp-2">
  {r.content_preview || r.content?.prompt ||"Unnamed Artifact"}
  </p>
  </div>

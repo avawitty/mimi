@@ -416,7 +416,7 @@ const CustomInput: React.FC<{ placeholder: string, onAdd: (val: string) => void 
  };
  return (
  <div className="flex items-center gap-2 mt-3 opacity-60 hover:opacity-100 transition-opacity">
- <Plus size={12} className="text-stone-400"/>
+ <Plus size={12} className="text-nous-subtle"/>
  <input 
  id={`custom-${placeholder.replace(/\s+/g, '-').toLowerCase()}`}
  name={`custom-${placeholder.replace(/\s+/g, '-').toLowerCase()}`}
@@ -424,7 +424,7 @@ const CustomInput: React.FC<{ placeholder: string, onAdd: (val: string) => void 
  onChange={(e) => setVal(e.target.value)}
  onKeyDown={handleKeyDown}
  placeholder={placeholder}
- className="bg-transparent border-b border-stone-200 dark:border-stone-800 py-1 font-serif italic text-sm focus:outline-none focus:border-stone-900 dark:focus:border-stone-100 w-full placeholder:text-stone-500"
+ className="bg-transparent border-b border-nous-border py-1 font-serif italic text-sm focus:outline-none focus:border-nous-border dark:focus:border-nous-border w-full placeholder:text-nous-text0"
  />
  </div>
  );
@@ -441,7 +441,7 @@ const PresetStrip: React.FC<{ options: string[], current: string | string[], onS
  <button
  key={opt}
  onClick={() => onSelect(opt)}
- className={`px-3 py-1 rounded-none font-sans text-[7px] md:text-[8px] uppercase tracking-widest font-black border transition-all ${active ? 'bg-nous-text dark:bg-white text-white dark:text-stone-900 border-current ' : 'border-stone-100 dark:border-stone-800 text-stone-400 hover:border-stone-300'}`}
+ className={`px-3 py-1 rounded-none font-sans text-[7px] md:text-[8px] uppercase tracking-widest font-black border transition-all ${active ? 'bg-nous-text text-white border-current ' : 'border-nous-border text-nous-subtle hover:border-nous-border'}`}
  >
  {opt}
  </button>
@@ -453,11 +453,11 @@ const PresetStrip: React.FC<{ options: string[], current: string | string[], onS
 );
 
 const FieldGroup: React.FC<{ label: React.ReactNode; description?: string; children: React.ReactNode }> = ({ label, description, children }) => (
- <div className="space-y-4 pb-12 border-b border-black/5 dark:border-white/5 last:border-b-0 relative">
+ <div className="space-y-4 pb-12 border-b border-black/5 /5 last:border-b-0 relative">
  <div className="tape-top"></div>
  <div className="space-y-1">
- <label className="font-sans text-[9px] uppercase tracking-[0.4em] font-black text-stone-400">{label}</label>
- {description && <p className="font-serif italic text-base text-stone-500 dark:text-stone-400 leading-tight">{description}</p>}
+ <label className="font-sans text-[9px] uppercase tracking-[0.4em] font-black text-nous-subtle">{label}</label>
+ {description && <p className="font-serif italic text-base text-nous-text0 leading-tight">{description}</p>}
  </div>
  {children}
  </div>
@@ -469,21 +469,21 @@ const BlueprintCard: React.FC<{ label: string; subLabel?: string; onClick: () =>
  <motion.div 
  whileHover={{ y: -4, boxShadow:"0 20px 40px -10px rgba(0,0,0,0.1)"}}
  onClick={onClick}
- className={`bg-white dark:bg border border-stone-200 dark:border-stone-800 p-6 relative cursor-pointer group transition-all duration-500 overflow-hidden ${className}`}
+ className={`bg-nous-base border border-nous-border p-6 relative cursor-pointer group transition-all duration-500 overflow-hidden ${className}`}
  >
  {/* Tech Markers */}
- <div className="absolute top-2 left-2 w-1.5 h-1.5 border-t border-l border-stone-300 dark:border-stone-700"/>
- <div className="absolute top-2 right-2 w-1.5 h-1.5 border-t border-r border-stone-300 dark:border-stone-700"/>
- <div className="absolute bottom-2 left-2 w-1.5 h-1.5 border-b border-l border-stone-300 dark:border-stone-700"/>
- <div className="absolute bottom-2 right-2 w-1.5 h-1.5 border-b border-r border-stone-300 dark:border-stone-700"/>
+ <div className="absolute top-2 left-2 w-1.5 h-1.5 border-t border-l border-nous-border"/>
+ <div className="absolute top-2 right-2 w-1.5 h-1.5 border-t border-r border-nous-border"/>
+ <div className="absolute bottom-2 left-2 w-1.5 h-1.5 border-b border-l border-nous-border"/>
+ <div className="absolute bottom-2 right-2 w-1.5 h-1.5 border-b border-r border-nous-border"/>
 
- <div className="flex justify-between items-start mb-6 border-b border-dashed border-stone-100 dark:border-stone-800 pb-2">
+ <div className="flex justify-between items-start mb-6 border-b border-dashed border-nous-border pb-2">
  <div className="flex flex-col">
- <span className="font-sans text-[7px] uppercase tracking-[0.3em] font-black text-stone-400 group-hover:text-stone-900 dark:group-hover:text-stone-100 transition-colors">{label}</span>
- {subLabel && <span className="font-mono text-[7px] text-stone-300">{subLabel}</span>}
+ <span className="font-sans text-[7px] uppercase tracking-[0.3em] font-black text-nous-subtle group-hover:text-nous-text dark:group-hover:text-nous-text transition-colors">{label}</span>
+ {subLabel && <span className="font-mono text-[7px] text-nous-subtle">{subLabel}</span>}
  </div>
  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
- <Edit3 size={10} className="text-stone-400"/>
+ <Edit3 size={10} className="text-nous-subtle"/>
  </div>
  </div>
  <div className="relative z-10">
@@ -928,12 +928,12 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  
  const isFree = (profile?.usage?.tailorRuns || 0) === 0;
  if (!isFree && !canGenerate) {
-     if (profile?.planStatus === 'ghost') {
-         window.dispatchEvent(new CustomEvent('mimi:open_gateway'));
-     } else {
-         window.dispatchEvent(new CustomEvent('mimi:open_patron_modal'));
-     }
-     return;
+ if (profile?.planStatus === 'ghost') {
+ window.dispatchEvent(new CustomEvent('mimi:open_gateway'));
+ } else {
+ window.dispatchEvent(new CustomEvent('mimi:open_patron_modal'));
+ }
+ return;
  }
 
  setIsAuditing(true);
@@ -943,14 +943,14 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  setShowAuditOverlay(true); 
  
  if (!isFree) {
-     await incrementGeneration(1); // 1 credit for Tailor analysis
+ await incrementGeneration(1); // 1 credit for Tailor analysis
  }
  
  // Track tailor runs
  if (profile) {
-     const updatedUsage = { ...(profile.usage || { totalGenerations: 0, tailorRuns: 0, reportRuns: 0, imageRuns: 0 }) };
-     updatedUsage.tailorRuns = (updatedUsage.tailorRuns || 0) + 1;
-     updateProfile({ ...profile, usage: updatedUsage });
+ const updatedUsage = { ...(profile.usage || { totalGenerations: 0, tailorRuns: 0, reportRuns: 0, imageRuns: 0 }) };
+ updatedUsage.tailorRuns = (updatedUsage.tailorRuns || 0) + 1;
+ updateProfile({ ...profile, usage: updatedUsage });
  }
  } catch (e) { 
  window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message:"Oracle obstructed.", type: 'error' } }));
@@ -1044,13 +1044,13 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  if (!draft) {
  return (
  <div className="flex items-center justify-center h-full bg-nous-base dark:bg">
- <Loader2 className="animate-spin text-stone-400"/>
+ <Loader2 className="animate-spin text-nous-subtle"/>
  </div>
  );
  }
 
  return (
- <div className="flex-1 w-full h-full overflow-y-auto no-scrollbar pb-[40vh] px-4 md:px-16 pt-12 md:pt-20 bg-nous-base dark:bg text-nous-text dark:text-white transition-all duration-1000 relative paper-texture">
+ <div className="flex-1 w-full h-full overflow-y-auto no-scrollbar pb-[40vh] px-4 md:px-16 pt-12 md:pt-20 bg-nous-base dark:bg text-nous-text  transition-all duration-1000 relative paper-texture">
  
  {/* Auto-save Indicator */}
  <div className="absolute top-4 right-4 z-50">
@@ -1060,7 +1060,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  initial={{ opacity: 0, y: -10 }} 
  animate={{ opacity: 1, y: 0 }} 
  exit={{ opacity: 0, y: -10 }}
- className="px-3 py-1 bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 rounded-none font-sans text-[8px] uppercase tracking-widest font-black"
+ className="px-3 py-1 bg-nous-text text-nous-base rounded-none font-sans text-[8px] uppercase tracking-widest font-black"
  >
  Draft Saved
  </motion.div>
@@ -1077,42 +1077,42 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <div className="max-w-7xl mx-auto space-y-12 relative z-10">
  
  {/* HEADER */}
- <header className="space-y-10 border-b border-black/5 dark:border-white/5 pb-8">
+ <header className="space-y-10 border-b border-black/5 /5 pb-8">
  <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
  <div className="space-y-4">
- <div className="flex items-center gap-3 text-stone-400">
+ <div className="flex items-center gap-3 text-nous-subtle">
  <Scissors size={14} className="text-nous-accent"/>
  <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-medium italic">Aesthetic Logic Engine v2.0</span>
  </div>
  <h2 className="font-serif text-5xl md:text-7xl italic tracking-tighter text-nous-text dark:text-white leading-none">The Tailor.</h2>
- <p className="font-serif italic text-lg text-stone-500 max-w-xl">
+ <p className="font-serif italic text-lg text-nous-text0 max-w-xl">
  Define the physics of your world. This logic informs every generation.
  </p>
  </div>
  
  {/* MASK SELECTOR & ACTIONS */}
  <div className="flex flex-col items-end gap-2">
- <div className="flex items-center gap-4 bg-white/50 dark:bg-stone-900/50 backdrop-blur-xl px-6 py-3 rounded-none border border-stone-200 dark:border-stone-800 group cursor-pointer hover:border-stone-900 dark:hover:border-stone-100 transition-all"onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }))}>
- <div className="w-8 h-8 rounded-none bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 flex items-center justify-center animate-pulse"><User size={14} /></div>
+ <div className="flex items-center gap-4 bg-nous-base/50 backdrop-blur-xl px-6 py-3 rounded-none border border-nous-border group cursor-pointer hover:border-nous-border transition-all"onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }))}>
+ <div className="w-8 h-8 rounded-none bg-nous-text text-nous-base flex items-center justify-center animate-pulse"><User size={14} /></div>
  <div className="flex flex-col">
- <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Active Mask</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Active Mask</span>
  <div className="flex items-center gap-2">
  <span className="font-serif italic text-sm text-nous-text dark:text-white">{activePersona?.name}</span>
  {draft?.aiSignature && (
- <span className="font-mono text-[8px] text-stone-900 bg-stone-100 dark:text-stone-100 dark:bg-stone-800 px-1.5 py-0.5 rounded-none">
+ <span className="font-mono text-[8px] text-nous-text bg-nous-base px-1.5 py-0.5 rounded-none">
  {draft.aiSignature}
  </span>
  )}
  </div>
  </div>
- <ChevronRight size={14} className="text-stone-300 group-hover:text-stone-900 dark:group-hover:text-stone-100 transition-colors ml-2"/>
+ <ChevronRight size={14} className="text-nous-subtle group-hover:text-nous-text dark:group-hover:text-nous-text transition-colors ml-2"/>
  </div>
  
  <div className="flex items-center gap-2">
  
  
  {viewMode === 'edit' && (
- <button onClick={() => setViewMode('blueprint')} className="text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 font-sans text-[8px] uppercase tracking-widest font-black flex items-center gap-2 px-2">
+ <button onClick={() => setViewMode('blueprint')} className="text-nous-subtle hover:text-nous-text font-sans text-[8px] uppercase tracking-widest font-black flex items-center gap-2 px-2">
  <LayoutGrid size={12} /> Return to Blueprint
  </button>
  )}
@@ -1132,7 +1132,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  }
  }}
  disabled={isSaving}
- className="flex items-center gap-2 px-4 py-2 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+ className="flex items-center gap-2 px-4 py-2 bg-nous-base text-nous-subtle rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
  >
  {isSaving ? <Loader2 size={12} className="animate-spin"/> : <Save size={12} />}
  {isSaving ? 'Saving...' : 'Save Logic'}
@@ -1149,11 +1149,11 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  a.click();
  URL.revokeObjectURL(url);
  }}
- className="flex items-center gap-2 px-4 py-2 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+ className="flex items-center gap-2 px-4 py-2 bg-nous-base text-nous-subtle rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
  >
  <Download size={12} /> Export JSON
  </button>
- <label className="flex items-center gap-2 px-4 py-2 bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300 rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors cursor-pointer">
+ <label className="flex items-center gap-2 px-4 py-2 bg-nous-base text-nous-subtle rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors cursor-pointer">
  <Upload size={12} /> Import JSON
  <input 
  type="file"
@@ -1207,35 +1207,35 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <BlueprintCard label="Persona Positioning"subLabel="REF: POS-01"onClick={() => openEditor('positioning')} className="md:col-span-2">
  <div className="space-y-6">
  <div className="space-y-1">
- <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Primary Reference</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">Primary Reference</span>
  <p className="font-serif italic text-2xl md:text-3xl text-nous-text dark:text-white leading-tight">
  {draft.positioningCore.anchors.culturalReferences[0] ||"Undefined Anchor"}
  </p>
  </div>
  <div className="flex flex-wrap gap-2">
  {draft.positioningCore.anchors.culturalReferences.map((ref, i) => (
- <span key={i} className="px-2 py-1 border border-stone-200 dark:border-stone-800 rounded-none font-mono text-[8px] uppercase text-stone-500">{ref}</span>
+ <span key={i} className="px-2 py-1 border border-nous-border rounded-none font-mono text-[8px] uppercase text-nous-text0">{ref}</span>
  ))}
  </div>
  
  {(draft.positioningCore.anchors.culturalSynthesis?.length > 0 || draft.positioningCore.anchors.trendClusters?.length > 0) && (
- <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-stone-200 dark:border-stone-800">
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-nous-border">
  {draft.positioningCore.anchors.culturalSynthesis?.length > 0 && (
  <div className="space-y-2">
- <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Cultural Synthesis</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">Cultural Synthesis</span>
  <div className="flex flex-wrap gap-1">
  {draft.positioningCore.anchors.culturalSynthesis.map((item, i) => (
- <span key={i} className="font-sans text-[9px] text-stone-600 dark:text-stone-400">{item}{i < draft.positioningCore.anchors.culturalSynthesis!.length - 1 ? ', ' : ''}</span>
+ <span key={i} className="font-sans text-[9px] text-nous-subtle">{item}{i < draft.positioningCore.anchors.culturalSynthesis!.length - 1 ? ', ' : ''}</span>
  ))}
  </div>
  </div>
  )}
  {draft.positioningCore.anchors.trendClusters?.length > 0 && (
  <div className="space-y-2">
- <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Trend Clusters</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">Trend Clusters</span>
  <div className="flex flex-wrap gap-1">
  {draft.positioningCore.anchors.trendClusters.map((item, i) => (
- <span key={i} className="font-sans text-[9px] text-stone-600 dark:text-stone-400">{item}{i < draft.positioningCore.anchors.trendClusters!.length - 1 ? ', ' : ''}</span>
+ <span key={i} className="font-sans text-[9px] text-nous-subtle">{item}{i < draft.positioningCore.anchors.trendClusters!.length - 1 ? ', ' : ''}</span>
  ))}
  </div>
  </div>
@@ -1257,7 +1257,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <div key={i} className="w-6 h-6 rounded-none border border-black/5"style={{ backgroundColor: c.hex }} title={c.name} />
  ))}
  </div>
- <p className="font-mono text-[9px] text-stone-400 uppercase tracking-tight">
+ <p className="font-mono text-[9px] text-nous-subtle uppercase tracking-tight">
  Base: {draft.expressionEngine.chromaticRegistry.baseNeutral} // Signal: {draft.expressionEngine.chromaticRegistry.accentSignal}
  </p>
  </div>
@@ -1266,11 +1266,11 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  {/* TYPOGRAPHY CARD */}
  <BlueprintCard label="Typographic DNA"subLabel="REF: TY-88"onClick={() => openEditor('aesthetic')}>
  <div className="space-y-2 py-2">
- <span className="block font-sans text-[7px] uppercase tracking-widest text-stone-400">Primary Typeface</span>
+ <span className="block font-sans text-[7px] uppercase tracking-widest text-nous-subtle">Primary Typeface</span>
  <p className="text-3xl"style={{ fontFamily: draft.expressionEngine.typographyIntent.styleDescription || 'serif' }}>
  {draft.expressionEngine.typographyIntent.styleDescription || 'Default Serif'}
  </p>
- <p className="font-serif italic text-sm text-stone-500">The quick brown fox jumps over the lazy dog.</p>
+ <p className="font-serif italic text-sm text-nous-text0">The quick brown fox jumps over the lazy dog.</p>
  </div>
  </BlueprintCard>
 
@@ -1278,11 +1278,11 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <BlueprintCard label="Visual Physics"subLabel="REF: PHY-09"onClick={() => openEditor('aesthetic')} className="md:col-span-2">
  <div className="grid grid-cols-2 gap-8">
  <div className="space-y-2">
- <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Silhouette</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">Silhouette</span>
  <p className="font-serif italic text-xl">{draft.positioningCore.aestheticCore.silhouettes.join(', ') ||"Undefined"}</p>
  </div>
  <div className="space-y-2">
- <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Era Focus</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">Era Focus</span>
  <p className="font-serif italic text-xl">{draft.positioningCore.aestheticCore.eraBias ||"Undefined"}</p>
  </div>
  <div className="space-y-2">
@@ -1291,7 +1291,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  poeticMeaning="The visual weight and concentration of elements within the frame."
  functionalMeaning="Controls the amount of detail, objects, and visual information packed into the generated output."
  >
- <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Density</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">Density</span>
  </GlossaryTooltip>
  <p className="font-serif italic text-xl">{draft.positioningCore.aestheticCore.density || 5}/10</p>
  </div>
@@ -1301,7 +1301,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  poeticMeaning="The degree of chaos and unpredictability in the visual translation."
  functionalMeaning="Determines how strictly the AI adheres to conventional logic versus introducing random, surreal elements."
  >
- <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Entropy</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">Entropy</span>
  </GlossaryTooltip>
  <p className="font-serif italic text-xl">{draft.positioningCore.aestheticCore.entropy || 5}/10</p>
  </div>
@@ -1311,25 +1311,25 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  {/* BRAND KIT CARD */}
  <BlueprintCard label="Brand Identity"subLabel="REF: BR-01"onClick={() => openEditor('brand')} className="md:col-span-2">
  <div className="flex items-center gap-8">
- <div className="w-24 h-24 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-none flex items-center justify-center overflow-hidden">
+ <div className="w-24 h-24 bg-nous-base border border-nous-border rounded-none flex items-center justify-center overflow-hidden">
  {draft.expressionEngine.brandIdentity?.logo ? (
  <img src={draft.expressionEngine.brandIdentity.logo} className="w-full h-full object-contain"/>
  ) : (
- <span className="font-sans text-[8px] uppercase tracking-widest text-stone-300 font-black">No Logo</span>
+ <span className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle font-black">No Logo</span>
  )}
  </div>
  <div className="space-y-4 flex-1">
  <div className="grid grid-cols-3 gap-4">
  <div>
- <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400 block mb-1">Serif</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle block mb-1">Serif</span>
  <span className="font-serif italic text-lg">{draft.expressionEngine.brandIdentity?.fonts.serif}</span>
  </div>
  <div>
- <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400 block mb-1">Sans</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle block mb-1">Sans</span>
  <span className="font-sans text-lg">{draft.expressionEngine.brandIdentity?.fonts.sans}</span>
  </div>
  <div>
- <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400 block mb-1">Mono</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle block mb-1">Mono</span>
  <span className="font-mono text-sm">{draft.expressionEngine.brandIdentity?.fonts.mono}</span>
  </div>
  </div>
@@ -1346,10 +1346,10 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <BlueprintCard label="Narrative Voice"subLabel="REF: VC-22"onClick={() => openEditor('voice')}>
  <div className="space-y-4">
  <div className="flex flex-wrap gap-2">
- <span className="px-3 py-1 bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-none font-sans text-[7px] uppercase font-black">{draft.expressionEngine.narrativeVoice.emotionalTemperature}</span>
- <span className="px-3 py-1 bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-none font-sans text-[7px] uppercase font-black">{draft.expressionEngine.narrativeVoice.structureBias}</span>
+ <span className="px-3 py-1 bg-nous-base border border-nous-border rounded-none font-sans text-[7px] uppercase font-black">{draft.expressionEngine.narrativeVoice.emotionalTemperature}</span>
+ <span className="px-3 py-1 bg-nous-base border border-nous-border rounded-none font-sans text-[7px] uppercase font-black">{draft.expressionEngine.narrativeVoice.structureBias}</span>
  </div>
- <div className="flex gap-4 font-serif italic text-stone-500 text-xs">
+ <div className="flex gap-4 font-serif italic text-nous-text0 text-xs">
  <GlossaryTooltip 
  term="Lexical Density"
  poeticMeaning="The thickness of the vocabulary, from sparse air to dense earth."
@@ -1366,7 +1366,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </GlossaryTooltip>
  </div>
  {draft.expressionEngine.narrativeVoice.voiceNotes && (
- <p className="font-mono text-[8px] text-stone-400 uppercase tracking-widest border-t border-stone-100 dark:border-stone-800 pt-2 truncate">
+ <p className="font-mono text-[8px] text-nous-subtle uppercase tracking-widest border-t border-nous-border pt-2 truncate">
  Notes: {draft.expressionEngine.narrativeVoice.voiceNotes}
  </p>
  )}
@@ -1375,7 +1375,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
 
  {/* SETTINGS CARD */}
  <BlueprintCard label="Mask Protocol"subLabel="SYS: ADMIN"onClick={() => openEditor('settings')}>
- <div className="flex items-center gap-3 text-stone-400">
+ <div className="flex items-center gap-3 text-nous-subtle">
  <Settings size={16} />
  <span className="font-sans text-[9px] uppercase tracking-widest font-black">Configure Identity</span>
  </div>
@@ -1385,14 +1385,14 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  {/* RIGHT COL: THE AUDIT */}
  <div className="md:col-span-4 flex flex-col gap-6">
  {/* Visual Manifest Preview */}
- <div className="bg-white dark:bg border border-stone-200 dark:border-stone-800 p-6 rounded-none space-y-4">
+ <div className="bg-nous-base border border-nous-border p-6 rounded-none space-y-4">
  {/* Inside the RIGHT COL: THE AUDIT (Replacing the top Aesthetic Preview header) */}
- <div className="flex items-center justify-between border-b border-dashed border-stone-100 dark:border-stone-800 pb-2">
- <span className="font-sans text-[7px] uppercase tracking-[0.3em] font-black text-stone-400">Aesthetic Analysis</span>
+ <div className="flex items-center justify-between border-b border-dashed border-nous-border pb-2">
+ <span className="font-sans text-[7px] uppercase tracking-[0.3em] font-black text-nous-subtle">Aesthetic Analysis</span>
  <button 
  onClick={handleScryDirectives} 
  disabled={isAuditing}
- className="font-sans text-[7px] uppercase tracking-widest text-stone-900 hover:text-stone-600 dark:text-stone-100 dark:hover:text-stone-400 flex items-center gap-1 transition-colors"
+ className="font-sans text-[7px] uppercase tracking-widest text-nous-text hover:text-nous-subtle flex items-center gap-1 transition-colors"
  >
  {isAuditing ? <Loader2 size={10} className="animate-spin"/> : <Radar size={10} />}
  Auto-Scry Directives
@@ -1401,33 +1401,33 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  {draft && activePersonaId && (
  <TailorPreview draft={draft} activePersonaId={activePersonaId} apiKey={activePersona?.apiKey} />
  )}
- <p className="font-serif italic text-[10px] text-stone-400 leading-tight">
+ <p className="font-serif italic text-[10px] text-nous-subtle leading-tight">
  A synthetic representation of your current aesthetic DNA.
  </p>
  </div>
 
- <div className="bg-stone-50 dark:bg border border-stone-200 dark:border-stone-800 p-8 h-full flex flex-col justify-between rounded-none">
+ <div className="bg-nous-base dark:bg border border-nous-border p-8 h-full flex flex-col justify-between rounded-none">
  <div className="space-y-6">
  <div className="space-y-2">
- <div className="flex items-center gap-3 text-stone-900 dark:text-stone-100">
+ <div className="flex items-center gap-3 text-nous-text">
  <ShieldCheck size={24} />
  <span className="font-sans text-[9px] uppercase tracking-[0.4em] font-black">Alignment Protocol</span>
  {draft.draftStatus === 'provisional' && (
  <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-none font-mono text-[8px] uppercase tracking-widest ml-auto">Unaligned</span>
  )}
  </div>
- <p className="font-serif italic text-sm text-stone-500 leading-relaxed">
+ <p className="font-serif italic text-sm text-nous-text0 leading-relaxed">
  Changes are local until aligned. Committing writes this logic to your active mask.
  </p>
  </div>
  <div className="space-y-3">
- <button onClick={handleAlign} disabled={isSaving} className="w-full py-4 bg-nous-text dark:bg-white text-white dark:text-black rounded-none font-sans text-[10px] uppercase tracking-[0.4em] font-black active:scale-95 transition-all flex items-center justify-center gap-3">
+ <button onClick={handleAlign} disabled={isSaving} className="w-full py-4 bg-nous-text text-nous-base rounded-none font-sans text-[10px] uppercase tracking-[0.4em] font-black active:scale-95 transition-all flex items-center justify-center gap-3">
  {isSaving ? <Loader2 size={12} className="animate-spin"/> : <Check size={12} />}
  Align Logic
  </button>
  </div>
  </div>
- <div className="pt-8 border-t border-black/5 dark:border-white/5 opacity-40">
+ <div className="pt-8 border-t border-black/5 /5 opacity-40">
  <p className="font-mono text-[8px] uppercase tracking-widest text-center">Last Aligned: {new Date(draft.lastTailored).toLocaleDateString()}</p>
  </div>
  </div>
@@ -1442,15 +1442,15 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  initial={{ opacity: 0, x: 20 }}
  animate={{ opacity: 1, x: 0 }}
  exit={{ opacity: 0, x: -20 }}
- className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-none flex flex-col md:flex-row overflow-hidden min-h-[70vh]"
+ className="bg-nous-base border border-nous-border rounded-none flex flex-col md:flex-row overflow-hidden min-h-[70vh]"
  >
  {/* SIDEBAR NAV */}
- <nav className="w-full md:w-64 bg-stone-50 dark:bg-black/20 border-b md:border-b-0 md:border-r border-stone-200 dark:border-stone-800 p-6 flex flex-row md:flex-col gap-2 overflow-x-auto no-scrollbar md:overflow-visible shrink-0">
+ <nav className="w-full md:w-64 bg-nous-base /20 border-b md:border-b-0 md:border-r border-nous-border p-6 flex flex-row md:flex-col gap-2 overflow-x-auto no-scrollbar md:overflow-visible shrink-0">
  {['positioning', 'celestial', 'aesthetic', 'chromatic', 'voice', 'vectors', 'shards', 'brand', 'drift', 'settings'].map(step => (
  <button
  key={step}
  onClick={() => setActiveStep(step as any)}
- className={`text-left px-4 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center justify-between whitespace-nowrap ${activeStep === step ? 'bg-white dark:bg-stone-800 text-nous-text dark:text-white border border-black/5 dark:border-white/5' : 'text-stone-400 hover:text-stone-600'}`}
+ className={`text-left px-4 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center justify-between whitespace-nowrap ${activeStep === step ? 'bg-nous-base text-nous-text dark:text-white border border-black/5 /5' : 'text-nous-subtle hover:text-nous-subtle'}`}
  >
  {step} {activeStep === step && <ChevronRight size={12} />}
  </button>
@@ -1468,20 +1468,20 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  className="space-y-12 max-w-2xl mx-auto"
  >
  {/* HEADER */}
- <div className="space-y-2 border-b border-black/5 dark:border-white/5 pb-8">
+ <div className="space-y-2 border-b border-black/5 /5 pb-8">
  <h3 className="font-serif text-4xl italic tracking-tighter text-nous-text dark:text-white capitalize">{activeStep.replace(/([A-Z])/g, ' $1').trim()}.</h3>
- <p className="font-sans text-[9px] uppercase tracking-widest text-stone-400 font-black">Define the parameters of your world.</p>
+ <p className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle font-black">Define the parameters of your world.</p>
  </div>
 
  {/* DYNAMIC FORM FIELDS */}
  {activeStep === 'positioning' && (
  <>
- <p className="font-serif italic text-stone-500 mb-8">Ground your mask's logic in the physical world.</p>
+ <p className="font-serif italic text-nous-text0 mb-8">Ground your mask's logic in the physical world.</p>
  
  <FieldGroup label="Brand Templates"description="Apply a foundational aesthetic archetype.">
  {Object.entries(CATEGORIZED_VISUAL_PRESETS).map(([category, presetNames]) => (
  <div key={category} className="mb-6">
- <h4 className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-500 mb-3">{category}</h4>
+ <h4 className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0 mb-3">{category}</h4>
  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
  {presetNames.map(name => {
  const p = VISUAL_PRESETS.find(pr => pr.name === name);
@@ -1492,10 +1492,10 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <button 
  key={p.name} 
  onClick={() => applyVisualPreset(p)} 
- className={`p-4 border rounded-none transition-all group flex flex-col items-center gap-3 bg-white dark:bg-stone-900 ${isActive ? 'border-stone-900 ring-1 ring-stone-900/20 dark:border-stone-100 dark:ring-stone-100/20' : 'border-stone-200 dark:border-stone-800 hover:border-stone-900 dark:hover:border-stone-100'}`}
+ className={`p-4 border rounded-none transition-all group flex flex-col items-center gap-3 bg-nous-base ${isActive ? 'border-nous-border ring-1 ring-stone-900/20 dark:ring-stone-100/20' : 'border-nous-border hover:border-nous-border '}`}
  >
- <div className={`${isActive ? 'text-stone-900 dark:text-stone-100' : 'text-stone-400 group-hover:text-stone-900 dark:group-hover:text-stone-100'} transition-colors`}>{p.icon}</div>
- <span className={`font-sans text-[8px] uppercase tracking-widest font-black ${isActive ? 'text-stone-900 dark:text-stone-100' : 'text-stone-400 group-hover:text-stone-900 dark:group-hover:text-stone-100'}`}>{p.name}</span>
+ <div className={`${isActive ? 'text-nous-text ' : 'text-nous-subtle group-hover:text-nous-text dark:group-hover:text-nous-text'} transition-colors`}>{p.icon}</div>
+ <span className={`font-sans text-[8px] uppercase tracking-widest font-black ${isActive ? 'text-nous-text ' : 'text-nous-subtle group-hover:text-nous-text dark:group-hover:text-nous-text'}`}>{p.name}</span>
  </button>
  );
  })}
@@ -1513,7 +1513,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <FieldGroup key={field.key} label={field.label} description={field.description}>
  <div className="flex flex-wrap gap-2 mb-2">
  {items.map((item: string, i: number) => (
- <span key={i} className="px-3 py-1 bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center gap-2">
+ <span key={i} className="px-3 py-1 bg-nous-base border border-nous-border rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center gap-2">
  {item}
  <button onClick={() => removeAnchor(field.key, item)} className="hover:text-red-500"><X size={10} /></button>
  </span>
@@ -1528,7 +1528,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
 
  {activeStep === 'celestial' && (
  <>
- <p className="font-serif italic text-stone-500 mb-8">Align your output to cosmic vectors.</p>
+ <p className="font-serif italic text-nous-text0 mb-8">Align your output to cosmic vectors.</p>
  <FieldGroup label="Zodiac Sign">
  <PresetStrip 
  options={ZODIAC_SIGNS} 
@@ -1538,27 +1538,27 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </FieldGroup>
  <FieldGroup label="Birth Data (Optional)"description="For deep chart calculation. Data is not stored externally.">
  <div className="grid grid-cols-2 gap-4">
- <input type="date"value={draft.celestialCalibration.birthDate || ''} onChange={e => updateCelestial('birthDate', e.target.value)} className="bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-mono text-sm"/>
- <input type="time"value={draft.celestialCalibration.birthTime || ''} onChange={e => updateCelestial('birthTime', e.target.value)} className="bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-mono text-sm"/>
+ <input type="date"value={draft.celestialCalibration.birthDate || ''} onChange={e => updateCelestial('birthDate', e.target.value)} className="bg-transparent border-b border-nous-border py-2 font-mono text-sm"/>
+ <input type="time"value={draft.celestialCalibration.birthTime || ''} onChange={e => updateCelestial('birthTime', e.target.value)} className="bg-transparent border-b border-nous-border py-2 font-mono text-sm"/>
  </div>
- <input placeholder="Birth City"value={draft.celestialCalibration.birthLocation || ''} onChange={e => updateCelestial('birthLocation', e.target.value)} className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 mt-4 font-serif italic text-lg"/>
+ <input placeholder="Birth City"value={draft.celestialCalibration.birthLocation || ''} onChange={e => updateCelestial('birthLocation', e.target.value)} className="w-full bg-transparent border-b border-nous-border py-2 mt-4 font-serif italic text-lg"/>
  </FieldGroup>
  <FieldGroup label="Astrological Lineage"description="Describe your chart's dominant placements (e.g. Scorpio Moon, Leo Rising).">
- <textarea value={draft.celestialCalibration.astrologicalLineage || ''} onChange={e => updateCelestial('astrologicalLineage', e.target.value)} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-4 font-serif italic text-lg h-32 resize-none focus:outline-none focus:border-stone-900 dark:focus:border-stone-100"placeholder="Sun in... Moon in... Rising in..."/>
+ <textarea value={draft.celestialCalibration.astrologicalLineage || ''} onChange={e => updateCelestial('astrologicalLineage', e.target.value)} className="w-full bg-nous-base border border-nous-border p-4 font-serif italic text-lg h-32 resize-none focus:outline-none focus:border-nous-border dark:focus:border-nous-border"placeholder="Sun in... Moon in... Rising in..."/>
  </FieldGroup>
  </>
  )}
 
  {activeStep === 'aesthetic' && (
  <>
- <p className="font-serif italic text-stone-500 mb-8">Define the physics of your visual world.</p>
+ <p className="font-serif italic text-nous-text0 mb-8">Define the physics of your visual world.</p>
  
  <FieldGroup label="Visual Presets"description="Apply a combination of stylistic elements. Use filters to discover specific logic.">
  <div className="flex flex-col md:flex-row gap-2 mb-4">
  <select 
  value={presetFilter.eraBias} 
  onChange={e => setPresetFilter(prev => ({ ...prev, eraBias: e.target.value }))}
- className="flex-1 bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-sans text-[10px] uppercase tracking-widest text-stone-500 focus:outline-none focus:border-stone-900 dark:focus:border-stone-100"
+ className="flex-1 bg-transparent border-b border-nous-border py-2 font-sans text-[10px] uppercase tracking-widest text-nous-text0 focus:outline-none focus:border-nous-border dark:focus:border-nous-border"
  >
  <option value="">All Eras</option>
  {Array.from(new Set(VISUAL_PRESETS.map(p => p.config.positioningCore.aestheticCore.eraBias))).map(era => (
@@ -1568,7 +1568,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <select 
  value={presetFilter.tone} 
  onChange={e => setPresetFilter(prev => ({ ...prev, tone: e.target.value }))}
- className="flex-1 bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-sans text-[10px] uppercase tracking-widest text-stone-500 focus:outline-none focus:border-stone-900 dark:focus:border-stone-100"
+ className="flex-1 bg-transparent border-b border-nous-border py-2 font-sans text-[10px] uppercase tracking-widest text-nous-text0 focus:outline-none focus:border-nous-border dark:focus:border-nous-border"
  >
  <option value="">All Tones</option>
  {Array.from(new Set(VISUAL_PRESETS.map(p => p.config.expressionEngine.narrativeVoice.tone).filter(Boolean))).map(tone => (
@@ -1578,7 +1578,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <select 
  value={presetFilter.strictPalette} 
  onChange={e => setPresetFilter(prev => ({ ...prev, strictPalette: e.target.value }))}
- className="flex-1 bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-sans text-[10px] uppercase tracking-widest text-stone-500 focus:outline-none focus:border-stone-900 dark:focus:border-stone-100"
+ className="flex-1 bg-transparent border-b border-nous-border py-2 font-sans text-[10px] uppercase tracking-widest text-nous-text0 focus:outline-none focus:border-nous-border dark:focus:border-nous-border"
  >
  <option value="">All Palettes</option>
  {Array.from(new Set(VISUAL_PRESETS.map(p => p.config.visual_guidance?.strict_palette?.join(', ')).filter(Boolean))).map(palette => (
@@ -1588,7 +1588,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  {(presetFilter.eraBias || presetFilter.tone || presetFilter.strictPalette) && (
  <button 
  onClick={() => setPresetFilter({ eraBias: '', tone: '', strictPalette: '' })}
- className="p-2 text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
+ className="p-2 text-nous-subtle hover:text-nous-text transition-colors"
  title="Clear Filters"
  >
  <X size={14} />
@@ -1605,10 +1605,10 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  const isSelected = draft?.positioningCore.aestheticCore.silhouettes.join(',') === p.config.positioningCore.aestheticCore.silhouettes.join(',') &&
  draft?.positioningCore.aestheticCore.eraBias === p.config.positioningCore.aestheticCore.eraBias;
  return (
- <button key={p.name} onClick={() => applyVisualPreset(p)} className={`p-4 border rounded-none transition-all group flex flex-col items-center gap-3 relative ${isSelected ? 'border-stone-900 bg-stone-100 dark:border-stone-100 dark:bg-stone-800' : 'border-stone-200 dark:border-stone-800 hover:border-stone-900 dark:hover:border-stone-100'}`}>
- <div className={`transition-colors ${isSelected ? 'text-stone-900 dark:text-stone-100' : 'text-stone-400 group-hover:text-stone-900 dark:group-hover:text-stone-100'}`}>{p.icon}</div>
- <span className={`font-sans text-[8px] uppercase tracking-widest font-black transition-colors ${isSelected ? 'text-stone-900 dark:text-stone-100' : 'text-stone-400 group-hover:text-stone-900 dark:group-hover:text-stone-100'}`}>{p.name}</span>
- {isSelected && <CheckCircle size={12} className="text-stone-900 dark:text-stone-100 absolute top-2 right-2"/>}
+ <button key={p.name} onClick={() => applyVisualPreset(p)} className={`p-4 border rounded-none transition-all group flex flex-col items-center gap-3 relative ${isSelected ? 'border-nous-border bg-nous-base ' : 'border-nous-border hover:border-nous-border '}`}>
+ <div className={`transition-colors ${isSelected ? 'text-nous-text ' : 'text-nous-subtle group-hover:text-nous-text dark:group-hover:text-nous-text'}`}>{p.icon}</div>
+ <span className={`font-sans text-[8px] uppercase tracking-widest font-black transition-colors ${isSelected ? 'text-nous-text ' : 'text-nous-subtle group-hover:text-nous-text dark:group-hover:text-nous-text'}`}>{p.name}</span>
+ {isSelected && <CheckCircle size={12} className="text-nous-text absolute top-2 right-2"/>}
  </button>
  );
  })}
@@ -1618,7 +1618,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  if (presetFilter.strictPalette && p.config.visual_guidance?.strict_palette?.join(', ') !== presetFilter.strictPalette) return false;
  return true;
  }).length === 0 && (
- <div className="col-span-full py-8 text-center text-stone-400 font-serif italic">
+ <div className="col-span-full py-8 text-center text-nous-subtle font-serif italic">
  No presets match the selected filters.
  </div>
  )}
@@ -1639,17 +1639,17 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  >
  <div className="grid grid-cols-2 gap-4 mb-4">
  {availableFonts.map(f => (
- <button key={f.name} onClick={() => updateExpression('typographyIntent', { ...draft.expressionEngine.typographyIntent, styleDescription: f.name })} className={`text-left p-4 border rounded-none transition-all ${draft.expressionEngine.typographyIntent.styleDescription === f.name ? 'border-stone-900 bg-stone-100 dark:border-stone-100 dark:bg-stone-800' : 'border-stone-200 dark:border-stone-800'}`}>
- <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400 block mb-1">{f.type}</span>
+ <button key={f.name} onClick={() => updateExpression('typographyIntent', { ...draft.expressionEngine.typographyIntent, styleDescription: f.name })} className={`text-left p-4 border rounded-none transition-all ${draft.expressionEngine.typographyIntent.styleDescription === f.name ? 'border-nous-border bg-nous-base ' : 'border-nous-border '}`}>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle block mb-1">{f.type}</span>
  <span className="text-xl"style={{ fontFamily: f.name }}>{f.name}</span>
  </button>
  ))}
  </div>
  <div className="flex gap-2">
- <input value={customFontInput} onChange={e => setCustomFontInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddFont()} placeholder="e.g. 'Cinzel' or 'Oswald'"className="flex-1 bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-lg"/>
- <button onClick={handleAddFont} disabled={isFontLoading} className="font-sans text-[9px] uppercase tracking-widest font-black flex items-center gap-2 hover:text-stone-900 dark:hover:text-stone-100">{isFontLoading ? <Loader2 size={12} className="animate-spin"/> : <Download size={12} />} Fetch Font</button>
+ <input value={customFontInput} onChange={e => setCustomFontInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddFont()} placeholder="e.g. 'Cinzel' or 'Oswald'"className="flex-1 bg-transparent border-b border-nous-border py-2 font-serif italic text-lg"/>
+ <button onClick={handleAddFont} disabled={isFontLoading} className="font-sans text-[9px] uppercase tracking-widest font-black flex items-center gap-2 hover:text-nous-text">{isFontLoading ? <Loader2 size={12} className="animate-spin"/> : <Download size={12} />} Fetch Font</button>
  </div>
- {draft.expressionEngine.typographyIntent.styleDescription && <p className="mt-4 text-sm text-stone-400 font-serif italic">Mimi will inject the Google Font stylesheet immediately.</p>}
+ {draft.expressionEngine.typographyIntent.styleDescription && <p className="mt-4 text-sm text-nous-subtle font-serif italic">Mimi will inject the Google Font stylesheet immediately.</p>}
  </FieldGroup>
 
  <FieldGroup 
@@ -1709,7 +1709,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <input 
  value={(draft.positioningCore.aestheticCore.tags || []).join(', ')} 
  onChange={e => updatePositioning('aestheticCore', { ...draft.positioningCore.aestheticCore, tags: e.target.value.split(',').map(t => t.trim()) })} 
- className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-lg focus:outline-none focus:border-stone-900 dark:focus:border-stone-100"
+ className="w-full bg-transparent border-b border-nous-border py-2 font-serif italic text-lg focus:outline-none focus:border-nous-border dark:focus:border-nous-border"
  placeholder="e.g. ethereal, glitch, chrome..."
  />
  </FieldGroup>
@@ -1720,7 +1720,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  poeticMeaning="The visual weight and concentration of elements within the frame."
  functionalMeaning="Controls the amount of detail, objects, and visual information packed into the generated output."
  >
- <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Density (1-10)</label>
+ <label className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Density (1-10)</label>
  </GlossaryTooltip>
  } 
  description="The amount of information, layers, and semiotic weight packed into a single artifact."
@@ -1783,13 +1783,13 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  value={(draft.generationTemperature ?? 0.8) * 100} 
  onChange={val => updateDraft({ generationTemperature: val / 100 })} 
  />
- <p className="font-mono text-[8px] text-stone-400 uppercase tracking-widest mt-2">Current Resonance: {((draft.generationTemperature ?? 0.8) * 100).toFixed(0)}%</p>
+ <p className="font-mono text-[8px] text-nous-subtle uppercase tracking-widest mt-2">Current Resonance: {((draft.generationTemperature ?? 0.8) * 100).toFixed(0)}%</p>
  </FieldGroup>
 
  <FieldGroup label="Default Materiality"description="The physical properties of your generated zines.">
  <div className="space-y-6">
  <div className="space-y-2">
- <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Paper Stock</label>
+ <label className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Paper Stock</label>
  <PresetStrip 
  options={['newsprint', 'cold-press', 'vellum', 'raw-cardboard']} 
  current={draft.materialityConfig?.paperStock || 'newsprint'} 
@@ -1797,7 +1797,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  />
  </div>
  <div className="space-y-2">
- <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Typography Lineage</label>
+ <label className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Typography Lineage</label>
  <PresetStrip 
  options={['brutalist', 'editorial-serif', 'technical-mono']} 
  current={draft.materialityConfig?.typographyLineage || 'editorial-serif'} 
@@ -1805,7 +1805,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  />
  </div>
  <div className="space-y-2">
- <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Negative Space Density (1-10)</label>
+ <label className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Negative Space Density (1-10)</label>
  <SemanticSteps 
  steps={[
  { label: 'TIGHT', value: 1 },
@@ -1816,7 +1816,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  value={draft.materialityConfig?.negativeSpaceDensity || 5} 
  onChange={val => updateDraft({ materialityConfig: { ...draft.materialityConfig, negativeSpaceDensity: val } })} 
  />
- <span className="font-mono text-xs text-stone-900 dark:text-stone-100">{draft.materialityConfig?.negativeSpaceDensity || 5} / 10</span>
+ <span className="font-mono text-xs text-nous-text">{draft.materialityConfig?.negativeSpaceDensity || 5} / 10</span>
  </div>
  </div>
  </FieldGroup>
@@ -1825,15 +1825,15 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
 
  {activeStep === 'chromatic' && (
  <>
- <p className="font-serif italic text-stone-500 mb-8">The color logic of your universe.</p>
+ <p className="font-serif italic text-nous-text0 mb-8">The color logic of your universe.</p>
  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
  {CHROMATIC_PRESETS.map(p => (
- <button key={p.name} onClick={() => applyChromaticPreset(p)} className="p-4 border border-stone-200 dark:border-stone-800 rounded-none hover:border-stone-900 dark:hover:border-stone-100 transition-all group flex flex-col items-center gap-3">
+ <button key={p.name} onClick={() => applyChromaticPreset(p)} className="p-4 border border-nous-border rounded-none hover:border-nous-border transition-all group flex flex-col items-center gap-3">
  <div className="flex gap-1">
  <div className="w-4 h-4 rounded-none"style={{ backgroundColor: p.base }} />
  <div className="w-4 h-4 rounded-none"style={{ backgroundColor: p.accent }} />
  </div>
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 group-hover:text-stone-900 dark:group-hover:text-stone-100">{p.name}</span>
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle group-hover:text-nous-text dark:group-hover:text-nous-text">{p.name}</span>
  </button>
  ))}
  </div>
@@ -1855,7 +1855,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <input type="color"value={draft.expressionEngine.chromaticRegistry.baseNeutral} onChange={e => updateExpression('chromaticRegistry', { ...draft.expressionEngine.chromaticRegistry, baseNeutral: e.target.value })} className="w-12 h-12 p-0 border-0 rounded-none cursor-pointer absolute inset-0 opacity-0"/>
  <div className="w-12 h-12 rounded-none border border-black/10"style={{ backgroundColor: draft.expressionEngine.chromaticRegistry.baseNeutral }} />
  </div>
- <input value={draft.expressionEngine.chromaticRegistry.baseNeutral} onChange={e => updateExpression('chromaticRegistry', { ...draft.expressionEngine.chromaticRegistry, baseNeutral: e.target.value })} className="bg-transparent border-b border-stone-200 py-2 font-mono text-lg focus:outline-none focus:border-stone-900 dark:focus:border-stone-100"/>
+ <input value={draft.expressionEngine.chromaticRegistry.baseNeutral} onChange={e => updateExpression('chromaticRegistry', { ...draft.expressionEngine.chromaticRegistry, baseNeutral: e.target.value })} className="bg-transparent border-b border-nous-border py-2 font-mono text-lg focus:outline-none focus:border-nous-border dark:focus:border-nous-border"/>
  </div>
  </FieldGroup>
  <FieldGroup 
@@ -1875,7 +1875,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <input type="color"value={draft.expressionEngine.chromaticRegistry.accentSignal} onChange={e => updateExpression('chromaticRegistry', { ...draft.expressionEngine.chromaticRegistry, accentSignal: e.target.value })} className="w-12 h-12 p-0 border-0 rounded-none cursor-pointer absolute inset-0 opacity-0"/>
  <div className="w-12 h-12 rounded-none border border-black/10"style={{ backgroundColor: draft.expressionEngine.chromaticRegistry.accentSignal }} />
  </div>
- <input value={draft.expressionEngine.chromaticRegistry.accentSignal} onChange={e => updateExpression('chromaticRegistry', { ...draft.expressionEngine.chromaticRegistry, accentSignal: e.target.value })} className="bg-transparent border-b border-stone-200 py-2 font-mono text-lg focus:outline-none focus:border-stone-900 dark:focus:border-stone-100"/>
+ <input value={draft.expressionEngine.chromaticRegistry.accentSignal} onChange={e => updateExpression('chromaticRegistry', { ...draft.expressionEngine.chromaticRegistry, accentSignal: e.target.value })} className="bg-transparent border-b border-nous-border py-2 font-mono text-lg focus:outline-none focus:border-nous-border dark:focus:border-nous-border"/>
  </div>
  </FieldGroup>
  
@@ -1894,9 +1894,9 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <div className="flex flex-wrap gap-4 mb-4">
  {draft.expressionEngine.chromaticRegistry.primaryPalette.map((c, i) => (
  <div key={i} className="group relative flex flex-col items-center">
- <div className="relative w-16 h-16 rounded-none border border-black/10" style={{ backgroundColor: c.hex }}>
+ <div className="relative w-16 h-16 rounded-none border border-black/10"style={{ backgroundColor: c.hex }}>
  <input 
- type="color" 
+ type="color"
  value={c.hex} 
  onChange={(e) => {
  const newPalette = [...draft.expressionEngine.chromaticRegistry.primaryPalette];
@@ -1905,7 +1905,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  }} 
  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
  />
- <button onClick={() => removeColor(c.hex)} className="absolute -top-2 -right-2 bg-white text-red-500 rounded-none p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"><X size={10}/></button>
+ <button onClick={() => removeColor(c.hex)} className="absolute -top-2 -right-2 bg-nous-base text-red-500 rounded-none p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"><X size={10}/></button>
  </div>
  <input 
  value={c.name} 
@@ -1914,7 +1914,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  newPalette[i] = { ...c, name: e.target.value };
  updateExpression('chromaticRegistry', { ...draft.expressionEngine.chromaticRegistry, primaryPalette: newPalette });
  }}
- className="mt-2 text-[8px] font-mono text-center uppercase w-16 bg-transparent border-b border-stone-300 dark:border-stone-700 focus:outline-none"
+ className="mt-2 text-[8px] font-mono text-center uppercase w-16 bg-transparent border-b border-nous-border focus:outline-none"
  placeholder="Name"
  />
  </div>
@@ -1925,7 +1925,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  const current = draft.expressionEngine.chromaticRegistry?.primaryPalette || [];
  updateExpression('chromaticRegistry', { ...draft.expressionEngine.chromaticRegistry, primaryPalette: [...current, { name: 'New Color', hex: '#000000' }] });
  }} 
- className="w-16 h-16 rounded-none border border-dashed border-stone-300 dark:border-stone-700 flex items-center justify-center text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 hover:border-stone-900 dark:hover:border-stone-100 transition-colors"
+ className="w-16 h-16 rounded-none border border-dashed border-nous-border flex items-center justify-center text-nous-subtle hover:text-nous-text hover:border-nous-border transition-colors"
  >
  <Plus size={20} />
  </button>
@@ -1937,7 +1937,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
 
  {activeStep === 'voice' && (
  <>
- <p className="font-serif italic text-stone-500 mb-8">How does this mask speak?</p>
+ <p className="font-serif italic text-nous-text0 mb-8">How does this mask speak?</p>
  <FieldGroup 
  label={
  <GlossaryTooltip 
@@ -1953,7 +1953,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <textarea 
  value={draft.expressionEngine.narrativeVoice.emotionalTemperature} 
  onChange={e => updateExpression('narrativeVoice', { ...draft.expressionEngine.narrativeVoice, emotionalTemperature: e.target.value })} 
- className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-sm h-16 resize-none focus:outline-none focus:border-stone-900 dark:focus:border-stone-100 mt-4"
+ className="w-full bg-transparent border-b border-nous-border py-2 font-serif italic text-sm h-16 resize-none focus:outline-none focus:border-nous-border dark:focus:border-nous-border mt-4"
  placeholder="Write-in emotional temperature..."
  />
  </FieldGroup>
@@ -1972,7 +1972,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <textarea 
  value={draft.expressionEngine.narrativeVoice.structureBias} 
  onChange={e => updateExpression('narrativeVoice', { ...draft.expressionEngine.narrativeVoice, structureBias: e.target.value })} 
- className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-sm h-16 resize-none focus:outline-none focus:border-stone-900 dark:focus:border-stone-100 mt-4"
+ className="w-full bg-transparent border-b border-nous-border py-2 font-serif italic text-sm h-16 resize-none focus:outline-none focus:border-nous-border dark:focus:border-nous-border mt-4"
  placeholder="Write-in structure bias..."
  />
  </FieldGroup>
@@ -1984,7 +1984,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  poeticMeaning="The thickness of the vocabulary, from sparse air to dense earth."
  functionalMeaning="A score from 1-10 indicating the complexity and rarity of the vocabulary used in the generated text."
  >
- <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Lexical Density (1-10)</label>
+ <label className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Lexical Density (1-10)</label>
  </GlossaryTooltip>
  } 
  description="Complexity and richness of vocabulary."
@@ -2029,7 +2029,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <textarea 
  value={draft.expressionEngine.narrativeVoice.voiceNotes || ''} 
  onChange={e => updateExpression('narrativeVoice', { ...draft.expressionEngine.narrativeVoice, voiceNotes: e.target.value })} 
- className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-sm h-24 resize-none focus:outline-none focus:border-stone-900 dark:focus:border-stone-100"
+ className="w-full bg-transparent border-b border-nous-border py-2 font-serif italic text-sm h-24 resize-none focus:outline-none focus:border-nous-border dark:focus:border-nous-border"
  placeholder="e.g. Use high-theory, be slightly haughty but supportive..."
  />
  </FieldGroup>
@@ -2038,19 +2038,19 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <div className="flex items-center gap-3 mb-4">
  <button 
  onClick={() => updateCelestial('enabled', !draft.celestialCalibration.enabled)}
- className={`w-10 h-5 rounded-none transition-colors relative ${draft.celestialCalibration.enabled ? 'bg-stone-900 dark:bg-stone-100' : 'bg-stone-200 dark:bg-stone-800'}`}
+ className={`w-10 h-5 rounded-none transition-colors relative ${draft.celestialCalibration.enabled ? 'bg-nous-base ' : 'bg-stone-200 '}`}
  >
- <div className={`w-3 h-3 bg-white rounded-none absolute top-1 transition-all ${draft.celestialCalibration.enabled ? 'left-6' : 'left-1'}`} />
+ <div className={`w-3 h-3 bg-nous-base rounded-none absolute top-1 transition-all ${draft.celestialCalibration.enabled ? 'left-6' : 'left-1'}`} />
  </button>
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">
  {draft.celestialCalibration.enabled ? 'Enabled' : 'Disabled'}
  </span>
  </div>
 
  {draft.celestialCalibration.enabled && (
- <div className="space-y-6 mt-6 pl-4 border-l border-stone-900/20 dark:border-stone-100/20">
+ <div className="space-y-6 mt-6 pl-4 border-l border-nous-border/20 /20">
  <div className="space-y-2">
- <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Zodiac Sign</label>
+ <label className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Zodiac Sign</label>
  <PresetStrip 
  options={ZODIAC_SIGNS} 
  current={draft.celestialCalibration.zodiac || ''} 
@@ -2059,21 +2059,21 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </div>
  
  <div className="space-y-2">
- <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Astrological Lineage</label>
+ <label className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Astrological Lineage</label>
  <textarea 
  value={draft.celestialCalibration.astrologicalLineage || ''} 
  onChange={e => updateCelestial('astrologicalLineage', e.target.value)} 
- className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-4 font-serif italic text-sm h-24 resize-none focus:outline-none focus:border-stone-900 dark:focus:border-stone-100"
+ className="w-full bg-nous-base border border-nous-border p-4 font-serif italic text-sm h-24 resize-none focus:outline-none focus:border-nous-border dark:focus:border-nous-border"
  placeholder="Sun in... Moon in... Rising in..."
  />
  </div>
 
  <div className="space-y-2">
- <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Seasonal Alignment</label>
+ <label className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Seasonal Alignment</label>
  <input 
  value={draft.celestialCalibration.seasonalAlignment || ''} 
  onChange={e => updateCelestial('seasonalAlignment', e.target.value)} 
- className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-sm focus:outline-none focus:border-stone-900 dark:focus:border-stone-100"
+ className="w-full bg-transparent border-b border-nous-border py-2 font-serif italic text-sm focus:outline-none focus:border-nous-border dark:focus:border-nous-border"
  placeholder="e.g. Late Autumn, Solstice..."
  />
  </div>
@@ -2085,19 +2085,19 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <div className="flex items-center gap-3 mb-4">
  <button 
  onClick={() => updateCelestial('enabled', !draft.celestialCalibration.enabled)}
- className={`w-10 h-5 rounded-none transition-colors relative ${draft.celestialCalibration.enabled ? 'bg-stone-900 dark:bg-stone-100' : 'bg-stone-200 dark:bg-stone-800'}`}
+ className={`w-10 h-5 rounded-none transition-colors relative ${draft.celestialCalibration.enabled ? 'bg-nous-base ' : 'bg-stone-200 '}`}
  >
- <div className={`w-3 h-3 bg-white rounded-none absolute top-1 transition-all ${draft.celestialCalibration.enabled ? 'left-6' : 'left-1'}`} />
+ <div className={`w-3 h-3 bg-nous-base rounded-none absolute top-1 transition-all ${draft.celestialCalibration.enabled ? 'left-6' : 'left-1'}`} />
  </button>
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">
  {draft.celestialCalibration.enabled ? 'Enabled' : 'Disabled'}
  </span>
  </div>
 
  {draft.celestialCalibration.enabled && (
- <div className="space-y-6 mt-6 pl-4 border-l border-stone-900/20 dark:border-stone-100/20">
+ <div className="space-y-6 mt-6 pl-4 border-l border-nous-border/20 /20">
  <div className="space-y-2">
- <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Zodiac Sign</label>
+ <label className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Zodiac Sign</label>
  <PresetStrip 
  options={ZODIAC_SIGNS} 
  current={draft.celestialCalibration.zodiac || ''} 
@@ -2106,21 +2106,21 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </div>
  
  <div className="space-y-2">
- <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Astrological Lineage</label>
+ <label className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Astrological Lineage</label>
  <textarea 
  value={draft.celestialCalibration.astrologicalLineage || ''} 
  onChange={e => updateCelestial('astrologicalLineage', e.target.value)} 
- className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-4 font-serif italic text-sm h-24 resize-none focus:outline-none focus:border-stone-900 dark:focus:border-stone-100"
+ className="w-full bg-nous-base border border-nous-border p-4 font-serif italic text-sm h-24 resize-none focus:outline-none focus:border-nous-border dark:focus:border-nous-border"
  placeholder="Sun in... Moon in... Rising in..."
  />
  </div>
 
  <div className="space-y-2">
- <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Seasonal Alignment</label>
+ <label className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Seasonal Alignment</label>
  <input 
  value={draft.celestialCalibration.seasonalAlignment || ''} 
  onChange={e => updateCelestial('seasonalAlignment', e.target.value)} 
- className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-sm focus:outline-none focus:border-stone-900 dark:focus:border-stone-100"
+ className="w-full bg-transparent border-b border-nous-border py-2 font-serif italic text-sm focus:outline-none focus:border-nous-border dark:focus:border-nous-border"
  placeholder="e.g. Late Autumn, Solstice..."
  />
  </div>
@@ -2132,7 +2132,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
 
  {activeStep === 'vectors' && (
  <>
- <p className="font-serif italic text-stone-500 mb-8">Where is this taste moving towards?</p>
+ <p className="font-serif italic text-nous-text0 mb-8">Where is this taste moving towards?</p>
  <FieldGroup 
  label={
  <GlossaryTooltip 
@@ -2144,7 +2144,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </GlossaryTooltip>
  }
  >
- <textarea value={draft.strategicVectors.desireVectors.moreOf} onChange={e => updateStrategic('desireVectors', { ...draft.strategicVectors.desireVectors, moreOf: e.target.value })} className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-xl h-24 resize-none focus:outline-none focus:border-stone-900 dark:focus:border-stone-100"placeholder="e.g. Silence, negative space..."/>
+ <textarea value={draft.strategicVectors.desireVectors.moreOf} onChange={e => updateStrategic('desireVectors', { ...draft.strategicVectors.desireVectors, moreOf: e.target.value })} className="w-full bg-transparent border-b border-nous-border py-2 font-serif italic text-xl h-24 resize-none focus:outline-none focus:border-nous-border dark:focus:border-nous-border"placeholder="e.g. Silence, negative space..."/>
  </FieldGroup>
  <FieldGroup 
  label={
@@ -2157,7 +2157,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </GlossaryTooltip>
  }
  >
- <textarea value={draft.strategicVectors.desireVectors.lessOf} onChange={e => updateStrategic('desireVectors', { ...draft.strategicVectors.desireVectors, lessOf: e.target.value })} className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-xl h-24 resize-none focus:outline-none focus:border-red-500"placeholder="e.g. Noise, clutter..."/>
+ <textarea value={draft.strategicVectors.desireVectors.lessOf} onChange={e => updateStrategic('desireVectors', { ...draft.strategicVectors.desireVectors, lessOf: e.target.value })} className="w-full bg-transparent border-b border-nous-border py-2 font-serif italic text-xl h-24 resize-none focus:outline-none focus:border-red-500"placeholder="e.g. Noise, clutter..."/>
  </FieldGroup>
  <FieldGroup 
  label={
@@ -2170,7 +2170,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </GlossaryTooltip>
  }
  >
- <textarea value={draft.strategicVectors.desireVectors.experimentingWith} onChange={e => updateStrategic('desireVectors', { ...draft.strategicVectors.desireVectors, experimentingWith: e.target.value })} className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-xl h-24 resize-none focus:outline-none focus:border-indigo-500"placeholder="e.g. 3D renders, video essays..."/>
+ <textarea value={draft.strategicVectors.desireVectors.experimentingWith} onChange={e => updateStrategic('desireVectors', { ...draft.strategicVectors.desireVectors, experimentingWith: e.target.value })} className="w-full bg-transparent border-b border-nous-border py-2 font-serif italic text-xl h-24 resize-none focus:outline-none focus:border-indigo-500"placeholder="e.g. 3D renders, video essays..."/>
  </FieldGroup>
  <FieldGroup 
  label={
@@ -2195,50 +2195,50 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  {activeStep === 'shards' && (
  <>
  <div className="flex flex-col md:flex-row items-start justify-between gap-8 mb-8">
-    <div>
-      <p className="font-serif italic text-stone-500">Upload reference images to train the Oracle.</p>
-    </div>
-    <div className="relative group">
-      <input 
-        type="file"
-        ref={gridInputRef} 
-        onChange={handleGridUpload} 
-        accept="image/*"
-        className="hidden"
-      />
-      <button 
-        onClick={() => gridInputRef.current?.click()} 
-        disabled={isExtractingGrid}
-        className="flex items-center gap-3 px-5 py-2.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 rounded-none font-sans text-[9px] uppercase tracking-widest font-black hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all"
-      >
-        {isExtractingGrid ? <Loader2 size={14} className="animate-spin"/> : <Instagram size={14} className="group-hover:scale-110 transition-transform"/>}
-        <div className="flex flex-col items-start text-left">
-          <span>{isExtractingGrid ? 'Profiling Grid...' : 'Social Profiling'}</span>
-          <span className="text-[7px] font-mono opacity-70 tracking-normal normal-case">Upload 9-photo IG grid</span>
-        </div>
-      </button>
-      <div className="absolute top-full right-0 mt-2 w-64 p-3 bg-stone-900 text-stone-300 text-xs font-sans opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
-        Creates a aseline aesthetic vibe for users who aren't sure how to fill out their profile manually.
-      </div>
-    </div>
-  </div>
+ <div>
+ <p className="font-serif italic text-nous-text0">Upload reference images to train the Oracle.</p>
+ </div>
+ <div className="relative group">
+ <input 
+ type="file"
+ ref={gridInputRef} 
+ onChange={handleGridUpload} 
+ accept="image/*"
+ className="hidden"
+ />
+ <button 
+ onClick={() => gridInputRef.current?.click()} 
+ disabled={isExtractingGrid}
+ className="flex items-center gap-3 px-5 py-2.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 rounded-none font-sans text-[9px] uppercase tracking-widest font-black hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all"
+ >
+ {isExtractingGrid ? <Loader2 size={14} className="animate-spin"/> : <Instagram size={14} className="group-hover:scale-110 transition-transform"/>}
+ <div className="flex flex-col items-start text-left">
+ <span>{isExtractingGrid ? 'Profiling Grid...' : 'Social Profiling'}</span>
+ <span className="text-[7px] font-mono opacity-70 tracking-normal normal-case">Upload 9-photo IG grid</span>
+ </div>
+ </button>
+ <div className="absolute top-full right-0 mt-2 w-64 p-3 bg-nous-base text-nous-subtle text-xs font-sans opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
+ Creates a aseline aesthetic vibe for users who aren't sure how to fill out their profile manually.
+ </div>
+ </div>
+ </div>
  <div 
- className="border-2 border-dashed border-stone-200 dark:border-stone-800 rounded-none p-12 text-center hover:border-stone-900 dark:hover:border-stone-100 transition-colors cursor-pointer group"
+ className="border-2 border-dashed border-nous-border rounded-none p-12 text-center hover:border-nous-border transition-colors cursor-pointer group"
  onClick={() => fileInputRef.current?.click()}
  >
- <div className="w-16 h-16 bg-stone-50 dark:bg-stone-900 rounded-none flex items-center justify-center mx-auto mb-4 text-stone-400 group-hover:text-stone-900 dark:group-hover:text-stone-100 transition-colors">
+ <div className="w-16 h-16 bg-nous-base rounded-none flex items-center justify-center mx-auto mb-4 text-nous-subtle group-hover:text-nous-text dark:group-hover:text-nous-text transition-colors">
  <Upload size={24} />
  </div>
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 group-hover:text-stone-900 dark:group-hover:text-stone-100">Upload Visual Shards</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle group-hover:text-nous-text dark:group-hover:text-nous-text">Upload Visual Shards</span>
  </div>
  <input type="file"ref={fileInputRef} onChange={handleShardUpload} className="hidden"multiple accept="image/*"/>
  
  {draft.positioningCore.aestheticCore.visualShards && draft.positioningCore.aestheticCore.visualShards.length > 0 && (
  <div className="grid grid-cols-3 gap-4 mt-8">
  {draft.positioningCore.aestheticCore.visualShards.map((s, i) => (
- <div key={i} className="aspect-square bg-stone-100 relative group overflow-hidden rounded-none">
+ <div key={i} className="aspect-square bg-nous-base relative group overflow-hidden rounded-none">
  <img src={s} className="w-full h-full object-cover"/>
- <button onClick={() => updatePositioning('aestheticCore', { ...draft.positioningCore.aestheticCore, visualShards: draft.positioningCore.aestheticCore.visualShards.filter((_, idx) => idx !== i) })} className="absolute top-1 right-1 bg-white text-red-500 p-1 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
+ <button onClick={() => updatePositioning('aestheticCore', { ...draft.positioningCore.aestheticCore, visualShards: draft.positioningCore.aestheticCore.visualShards.filter((_, idx) => idx !== i) })} className="absolute top-1 right-1 bg-nous-base text-red-500 p-1 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
  <X size={12} />
  </button>
  </div>
@@ -2252,7 +2252,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
 
  {activeStep === 'brand' && (
  <>
- <p className="font-serif italic text-stone-500 mb-8">Define your visual assets and typographic hierarchy.</p>
+ <p className="font-serif italic text-nous-text0 mb-8">Define your visual assets and typographic hierarchy.</p>
  
  <FieldGroup 
  label={
@@ -2266,17 +2266,17 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  }
  >
  <div 
- className="border-2 border-dashed border-stone-200 dark:border-stone-800 rounded-none p-8 text-center hover:border-stone-900 dark:hover:border-stone-100 transition-colors cursor-pointer group flex flex-col items-center gap-4"
+ className="border-2 border-dashed border-nous-border rounded-none p-8 text-center hover:border-nous-border transition-colors cursor-pointer group flex flex-col items-center gap-4"
  onClick={() => logoInputRef.current?.click()}
  >
  {draft.expressionEngine.brandIdentity?.logo ? (
  <img src={draft.expressionEngine.brandIdentity.logo} className="h-32 object-contain"/>
  ) : (
- <div className="w-16 h-16 bg-stone-50 dark:bg-stone-900 rounded-none flex items-center justify-center text-stone-400 group-hover:text-stone-900 dark:group-hover:text-stone-100 transition-colors">
+ <div className="w-16 h-16 bg-nous-base rounded-none flex items-center justify-center text-nous-subtle group-hover:text-nous-text dark:group-hover:text-nous-text transition-colors">
  <Upload size={24} />
  </div>
  )}
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 group-hover:text-stone-900 dark:group-hover:text-stone-100">
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle group-hover:text-nous-text dark:group-hover:text-nous-text">
  {draft.expressionEngine.brandIdentity?.logo ? 'Replace Logo' : 'Upload Logo'}
  </span>
  </div>
@@ -2296,8 +2296,8 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  >
  <div className="grid grid-cols-1 gap-6">
  <div className="space-y-2">
- <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Primary Serif (Headlines)</label>
- <div className="flex items-center gap-2 border-b border-stone-200 dark:border-stone-800 focus-within:border-stone-900 dark:focus-within:border-stone-100 transition-colors">
+ <label className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">Primary Serif (Headlines)</label>
+ <div className="flex items-center gap-2 border-b border-nous-border focus-within:border-nous-border dark:focus-within:border-nous-border transition-colors">
  <input 
  value={draft.expressionEngine.brandIdentity?.fonts.serif || ''} 
  onChange={e => updateExpression('brandIdentity', { ...draft.expressionEngine.brandIdentity!, fonts: { ...draft.expressionEngine.brandIdentity!.fonts, serif: e.target.value } })}
@@ -2307,7 +2307,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  />
  <button 
  onClick={() => injectGoogleFont(draft.expressionEngine.brandIdentity?.fonts.serif || '')}
- className="p-2 text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
+ className="p-2 text-nous-subtle hover:text-nous-text transition-colors"
  title="Fetch from Google Fonts"
  >
  <Download size={16} />
@@ -2315,8 +2315,8 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </div>
  </div>
  <div className="space-y-2">
- <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Secondary Sans (Body)</label>
- <div className="flex items-center gap-2 border-b border-stone-200 dark:border-stone-800 focus-within:border-stone-900 dark:focus-within:border-stone-100 transition-colors">
+ <label className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">Secondary Sans (Body)</label>
+ <div className="flex items-center gap-2 border-b border-nous-border focus-within:border-nous-border dark:focus-within:border-nous-border transition-colors">
  <input 
  value={draft.expressionEngine.brandIdentity?.fonts.sans || ''} 
  onChange={e => updateExpression('brandIdentity', { ...draft.expressionEngine.brandIdentity!, fonts: { ...draft.expressionEngine.brandIdentity!.fonts, sans: e.target.value } })}
@@ -2326,7 +2326,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  />
  <button 
  onClick={() => injectGoogleFont(draft.expressionEngine.brandIdentity?.fonts.sans || '')}
- className="p-2 text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
+ className="p-2 text-nous-subtle hover:text-nous-text transition-colors"
  title="Fetch from Google Fonts"
  >
  <Download size={16} />
@@ -2334,8 +2334,8 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </div>
  </div>
  <div className="space-y-2">
- <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400">Tertiary Mono (Data)</label>
- <div className="flex items-center gap-2 border-b border-stone-200 dark:border-stone-800 focus-within:border-stone-900 dark:focus-within:border-stone-100 transition-colors">
+ <label className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">Tertiary Mono (Data)</label>
+ <div className="flex items-center gap-2 border-b border-nous-border focus-within:border-nous-border dark:focus-within:border-nous-border transition-colors">
  <input 
  value={draft.expressionEngine.brandIdentity?.fonts.mono || ''} 
  onChange={e => updateExpression('brandIdentity', { ...draft.expressionEngine.brandIdentity!, fonts: { ...draft.expressionEngine.brandIdentity!.fonts, mono: e.target.value } })}
@@ -2345,7 +2345,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  />
  <button 
  onClick={() => injectGoogleFont(draft.expressionEngine.brandIdentity?.fonts.mono || '')}
- className="p-2 text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
+ className="p-2 text-nous-subtle hover:text-nous-text transition-colors"
  title="Fetch from Google Fonts"
  >
  <Download size={16} />
@@ -2372,7 +2372,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <div className="w-12 h-12 rounded-none cursor-pointer border border-black/5"style={{ backgroundColor: hex }} />
  <button 
  onClick={() => updateExpression('brandIdentity', { ...draft.expressionEngine.brandIdentity!, palette: draft.expressionEngine.brandIdentity!.palette.filter((_, idx) => idx !== i) })}
- className="absolute -top-1 -right-1 bg-white text-red-500 rounded-none p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+ className="absolute -top-1 -right-1 bg-nous-base text-red-500 rounded-none p-1 opacity-0 group-hover:opacity-100 transition-opacity"
  >
  <X size={10}/>
  </button>
@@ -2384,7 +2384,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  onChange={e => updateExpression('brandIdentity', { ...draft.expressionEngine.brandIdentity!, palette: [...(draft.expressionEngine.brandIdentity?.palette || []), e.target.value] })}
  className="w-12 h-12 opacity-0 absolute inset-0 cursor-pointer"
  />
- <div className="w-12 h-12 rounded-none border-2 border-dashed border-stone-300 flex items-center justify-center text-stone-300 pointer-events-none">
+ <div className="w-12 h-12 rounded-none border-2 border-dashed border-nous-border flex items-center justify-center text-nous-subtle pointer-events-none">
  <Plus size={16} />
  </div>
  </div>
@@ -2395,7 +2395,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
 
  {activeStep === 'drift' && (
  <>
- <p className="font-serif italic text-stone-500 mb-8">Monitor and control the aesthetic drift of your persona.</p>
+ <p className="font-serif italic text-nous-text0 mb-8">Monitor and control the aesthetic drift of your persona.</p>
  
  <FieldGroup 
  label={
@@ -2423,13 +2423,13 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
 
  <FieldGroup label="Authority Strength Score"description="The overall coherence and distinctiveness of this persona.">
  <div className="flex items-center gap-4">
- <div className="flex-1 h-2 bg-stone-200 dark:bg-stone-800 rounded-none overflow-hidden">
+ <div className="flex-1 h-2 bg-stone-200 rounded-none overflow-hidden">
  <div 
- className={`h-full transition-all duration-500 ${(draft.diagnostics?.authorityStrengthScore || 50) < 40 ? 'bg-red-500' : (draft.diagnostics?.authorityStrengthScore || 50) < 70 ? 'bg-amber-500' : 'bg-stone-900 dark:bg-stone-100'}`} 
+ className={`h-full transition-all duration-500 ${(draft.diagnostics?.authorityStrengthScore || 50) < 40 ? 'bg-red-500' : (draft.diagnostics?.authorityStrengthScore || 50) < 70 ? 'bg-amber-500' : 'bg-nous-base '}`} 
  style={{ width: `${draft.diagnostics?.authorityStrengthScore || 50}%` }}
  />
  </div>
- <span className={`font-mono text-xs font-bold ${(draft.diagnostics?.authorityStrengthScore || 50) < 40 ? 'text-red-500' : (draft.diagnostics?.authorityStrengthScore || 50) < 70 ? 'text-amber-500' : 'text-stone-900 dark:text-stone-100'}`}>{draft.diagnostics?.authorityStrengthScore || 50}/100</span>
+ <span className={`font-mono text-xs font-bold ${(draft.diagnostics?.authorityStrengthScore || 50) < 40 ? 'text-red-500' : (draft.diagnostics?.authorityStrengthScore || 50) < 70 ? 'text-amber-500' : 'text-nous-text '}`}>{draft.diagnostics?.authorityStrengthScore || 50}/100</span>
  </div>
  </FieldGroup>
 
@@ -2440,12 +2440,12 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  {draft.diagnostics.contradictionFlags.map((flag, i) => (
  <li key={i} className="flex items-start gap-2 text-sm">
  <ShieldAlert size={14} className="text-amber-500 mt-0.5 shrink-0"/>
- <span className="font-serif italic text-stone-600 dark:text-stone-400">{flag}</span>
+ <span className="font-serif italic text-nous-subtle">{flag}</span>
  </li>
  ))}
  </ul>
  ) : (
- <p className="font-serif italic text-sm text-stone-400">No contradictions detected. The logic is coherent.</p>
+ <p className="font-serif italic text-sm text-nous-subtle">No contradictions detected. The logic is coherent.</p>
  )}
  </FieldGroup>
 
@@ -2455,12 +2455,12 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  {draft.diagnostics.dilutionRisks.map((risk, i) => (
  <li key={i} className="flex items-start gap-2 text-sm">
  <Info size={14} className="text-blue-500 mt-0.5 shrink-0"/>
- <span className="font-serif italic text-stone-600 dark:text-stone-400">{risk}</span>
+ <span className="font-serif italic text-nous-subtle">{risk}</span>
  </li>
  ))}
  </ul>
  ) : (
- <p className="font-serif italic text-sm text-stone-400">No dilution risks detected. The persona is sharp.</p>
+ <p className="font-serif italic text-sm text-nous-subtle">No dilution risks detected. The persona is sharp.</p>
  )}
  </FieldGroup>
  </div>
@@ -2469,21 +2469,21 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  {profile?.tasteProfile?.audit_history && profile.tasteProfile.audit_history.length > 0 ? (
  <div className="space-y-4">
  {profile.tasteProfile.audit_history.slice(-5).reverse().map((event, i) => (
- <div key={i} className="p-4 border border-stone-200 dark:border-stone-800 rounded-none bg-stone-50 dark:bg-stone-900/50">
+ <div key={i} className="p-4 border border-nous-border rounded-none bg-nous-base /50">
  <div className="flex justify-between items-center mb-2">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-500">{event.type.replace('_', ' ')}</span>
- <span className="font-mono text-[8px] text-stone-400">{new Date(event.timestamp).toLocaleDateString()}</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0">{event.type.replace('_', ' ')}</span>
+ <span className="font-mono text-[8px] text-nous-subtle">{new Date(event.timestamp).toLocaleDateString()}</span>
  </div>
  <div className="flex items-center gap-4">
- <span className="font-serif italic text-sm text-stone-400 line-through">{event.before.archetype || event.before.color}</span>
- <ArrowRight size={12} className="text-stone-900 dark:text-stone-100"/>
+ <span className="font-serif italic text-sm text-nous-subtle line-through">{event.before.archetype || event.before.color}</span>
+ <ArrowRight size={12} className="text-nous-text"/>
  <span className="font-serif italic text-sm text-nous-text dark:text-white">{event.after.archetype || event.after.color}</span>
  </div>
  </div>
  ))}
  </div>
  ) : (
- <p className="font-serif italic text-sm text-stone-400">No significant drift detected yet. Keep generating zines to establish a baseline.</p>
+ <p className="font-serif italic text-sm text-nous-subtle">No significant drift detected yet. Keep generating zines to establish a baseline.</p>
  )}
  </FieldGroup>
  </>
@@ -2491,63 +2491,63 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
 
  {activeStep === 'settings' && (
  <>
- <p className="font-serif italic text-stone-500 mb-8">Configure the identity and security protocols for this mask.</p>
+ <p className="font-serif italic text-nous-text0 mb-8">Configure the identity and security protocols for this mask.</p>
  
  <FieldGroup label="Mask Identity">
  <div className="space-y-6">
  <div className="space-y-2">
- <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Display Name</label>
+ <label className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Display Name</label>
  <input 
  value={personaName}
  onChange={e => setPersonaName(e.target.value)}
  placeholder="e.g. The Architect"
- className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-serif italic text-2xl focus:outline-none focus:border-stone-900 dark:focus:border-stone-100 transition-colors"
+ className="w-full bg-transparent border-b border-nous-border py-2 font-serif italic text-2xl focus:outline-none focus:border-nous-border dark:focus:border-nous-border transition-colors"
  />
  </div>
  <div className="space-y-2">
- <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Dedicated API Key (Optional)</label>
+ <label className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Dedicated API Key (Optional)</label>
  <div className="relative">
  <input 
  type="password"
  value={personaKey}
  onChange={e => setPersonaKey(e.target.value)}
  placeholder="sk-..."
- className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 font-mono text-sm focus:outline-none focus:border-stone-900 dark:focus:border-stone-100 transition-colors pr-10"
+ className="w-full bg-transparent border-b border-nous-border py-2 font-mono text-sm focus:outline-none focus:border-nous-border dark:focus:border-nous-border transition-colors pr-10"
  />
- <Key size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-300"/>
+ <Key size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-nous-subtle"/>
  </div>
- <p className="font-sans text-[8px] text-stone-400 italic">If provided, this mask will use its own billing and rate limits.</p>
+ <p className="font-sans text-[8px] text-nous-subtle italic">If provided, this mask will use its own billing and rate limits.</p>
  </div>
  <div className="space-y-2">
- <label className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">AI Signature</label>
+ <label className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">AI Signature</label>
  <div className="flex gap-2 items-center">
  <input 
  value={aiSignature}
  readOnly
  placeholder="Generate a signature..."
- className="flex-1 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 py-2 px-3 font-mono text-xs text-stone-500 rounded-none focus:outline-none"
+ className="flex-1 bg-nous-base border border-nous-border py-2 px-3 font-mono text-xs text-nous-text0 rounded-none focus:outline-none"
  />
  <button 
  onClick={generateAiSignature}
  disabled={isGeneratingSignature}
- className="px-4 py-2 bg-stone-100 dark:bg-stone-800 text-stone-500 rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors flex items-center gap-2"
+ className="px-4 py-2 bg-nous-base text-nous-text0 rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors flex items-center gap-2"
  >
  {isGeneratingSignature ? <Loader2 size={10} className="animate-spin"/> : <Sparkles size={10} />}
  Generate
  </button>
  </div>
- <p className="font-sans text-[8px] text-stone-400 italic">A cryptographic-style identifier generated from this mask's aesthetic core.</p>
+ <p className="font-sans text-[8px] text-nous-subtle italic">A cryptographic-style identifier generated from this mask's aesthetic core.</p>
  </div>
  <button 
  onClick={handleUpdatePersonaSettings}
  disabled={isSaving || !personaName.trim()}
- className="px-6 py-2 bg-nous-text dark:bg-white text-white dark:text-stone-900 rounded-none font-sans text-[9px] uppercase tracking-widest font-black hover: active:scale-95 transition-all flex items-center gap-2"
+ className="px-6 py-2 bg-nous-text text-white rounded-none font-sans text-[9px] uppercase tracking-widest font-black hover: active:scale-95 transition-all flex items-center gap-2"
  >
  {isSaving ? <Loader2 size={12} className="animate-spin"/> : <Save size={12} />}
  Update Protocols
  </button>
  
- <div className="pt-8 border-t border-stone-200 dark:border-stone-800">
+ <div className="pt-8 border-t border-nous-border">
  <button 
  onClick={async () => {
  try {
@@ -2568,7 +2568,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  }
  }}
  disabled={personas.length <= 1}
- className={`px-6 py-2 bg-transparent border rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 ${personas.length <= 1 ? 'text-stone-400 border-stone-400 cursor-not-allowed opacity-50' : 'text-red-500 border-red-500 hover:bg-red-500 hover:text-white'}`}
+ className={`px-6 py-2 bg-transparent border rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 ${personas.length <= 1 ? 'text-nous-subtle border-nous-border cursor-not-allowed opacity-50' : 'text-red-500 border-red-500 hover:bg-red-500 hover:text-white'}`}
  >
  <Trash2 size={12} />
  Burn Mask
@@ -2599,17 +2599,17 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  ].map(algo => {
  const isEnabled = enabledAlgos.includes(algo.id);
  return (
- <div key={algo.id} className="flex items-center justify-between p-4 border border-stone-100 dark:border-stone-800 rounded-none bg-white/50 dark:bg-stone-900/50 group hover:border-stone-900 dark:hover:border-stone-100 transition-all">
+ <div key={algo.id} className="flex items-center justify-between p-4 border border-nous-border rounded-none bg-nous-base/50 group hover:border-nous-border transition-all">
  <div className="space-y-1">
  <div className="flex items-center gap-2">
- <span className={`font-sans text-[9px] uppercase tracking-widest font-black ${isEnabled ? 'text-stone-900 dark:text-stone-100' : 'text-stone-400'}`}>{algo.name}</span>
- {isEnabled && <ShieldCheck size={10} className="text-stone-900 dark:text-stone-100"/>}
+ <span className={`font-sans text-[9px] uppercase tracking-widest font-black ${isEnabled ? 'text-nous-text ' : 'text-nous-subtle'}`}>{algo.name}</span>
+ {isEnabled && <ShieldCheck size={10} className="text-nous-text"/>}
  </div>
- <p className="font-serif italic text-xs text-stone-500">{algo.desc}</p>
+ <p className="font-serif italic text-xs text-nous-text0">{algo.desc}</p>
  </div>
  <button 
  onClick={() => toggleAlgo(algo.id)}
- className={`p-2 rounded-none transition-all ${isEnabled ? 'bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 -stone-900/20 dark:-stone-100/20' : 'bg-stone-200 dark:bg-stone-800 text-stone-400 hover:text-stone-600'}`}
+ className={`p-2 rounded-none transition-all ${isEnabled ? 'bg-nous-text text-nous-base shadow-stone-900/20 dark:shadow-stone-100/20' : 'bg-stone-200 text-nous-subtle hover:text-nous-subtle'}`}
  >
  {isEnabled ? <Zap size={16} /> : <Wind size={16} />}
  </button>
@@ -2641,9 +2641,9 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  >
  <span className="font-sans text-[10px] uppercase tracking-widest font-bold">Web Scry Intensity</span>
  </GlossaryTooltip>
- <span className="font-mono text-xs text-stone-900 dark:text-stone-100">{draft.algoDials?.webScry || 50}%</span>
+ <span className="font-mono text-xs text-nous-text">{draft.algoDials?.webScry || 50}%</span>
  </div>
- <p className="font-serif italic text-xs text-stone-500 mb-4">0% = Pure internal Tailor logic. 100% = Heavily grounded in current events and search data.</p>
+ <p className="font-serif italic text-xs text-nous-text0 mb-4">0% = Pure internal Tailor logic. 100% = Heavily grounded in current events and search data.</p>
  <SemanticSteps 
  steps={[
  { label: 'INTERNAL', value: 0 },
@@ -2665,9 +2665,9 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  >
  <span className="font-sans text-[10px] uppercase tracking-widest font-bold">Memory Synthesis</span>
  </GlossaryTooltip>
- <span className="font-mono text-xs text-stone-900 dark:text-stone-100">{draft.algoDials?.memorySynthesis || 50}%</span>
+ <span className="font-mono text-xs text-nous-text">{draft.algoDials?.memorySynthesis || 50}%</span>
  </div>
- <p className="font-serif italic text-xs text-stone-500 mb-4">0% = Isolated artifacts. 100% = Deeply contextualized by past zines and thoughts.</p>
+ <p className="font-serif italic text-xs text-nous-text0 mb-4">0% = Isolated artifacts. 100% = Deeply contextualized by past zines and thoughts.</p>
  <SemanticSteps 
  steps={[
  { label: 'ISOLATED', value: 0 },
@@ -2691,7 +2691,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </GlossaryTooltip>
  <span className="font-mono text-xs text-rose-500">{draft.algoDials?.dissonance || 10}%</span>
  </div>
- <p className="font-serif italic text-xs text-stone-500 mb-4">Intended for creative exploration. Injects opposing aesthetic concepts to force breakthroughs and mutate safe choices. High dissonance may cause chaotic, unpredictable results.</p>
+ <p className="font-serif italic text-xs text-nous-text0 mb-4">Intended for creative exploration. Injects opposing aesthetic concepts to force breakthroughs and mutate safe choices. High dissonance may cause chaotic, unpredictable results.</p>
  <SemanticSteps 
  steps={[
  { label: 'HARMONY', value: 0 },
@@ -2715,7 +2715,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </GlossaryTooltip>
  <span className="font-mono text-xs text-indigo-500">{draft.algoDials?.binaryToSpectrum || 50}%</span>
  </div>
- <p className="font-serif italic text-xs text-stone-500 mb-4">0% = Strict adherence to binary categories (e.g., hyper-masculine/feminine). 100% = Fluid, post-binary aesthetic synthesis.</p>
+ <p className="font-serif italic text-xs text-nous-text0 mb-4">0% = Strict adherence to binary categories (e.g., hyper-masculine/feminine). 100% = Fluid, post-binary aesthetic synthesis.</p>
  <SemanticSteps 
  steps={[
  { label: 'BINARY', value: 0 },
@@ -2736,17 +2736,17 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </div>
 
  {/* ALIGN FOOTER */}
- <div className="p-8 border-t md:border-t-0 md:border-l border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-black/20 flex flex-col shrink-0 md:w-80 lg:w-96 overflow-y-auto no-scrollbar">
+ <div className="p-8 border-t md:border-t-0 md:border-l border-nous-border bg-nous-base /20 flex flex-col shrink-0 md:w-80 lg:w-96 overflow-y-auto no-scrollbar">
  <div className="space-y-8">
  {/* Aesthetic Preview */}
  <div className="space-y-3">
  {/* Inside the RIGHT COL: THE AUDIT (Replacing the top Aesthetic Preview header) */}
- <div className="flex items-center justify-between border-b border-dashed border-stone-100 dark:border-stone-800 pb-2">
- <span className="font-sans text-[7px] uppercase tracking-[0.3em] font-black text-stone-400">Aesthetic Analysis</span>
+ <div className="flex items-center justify-between border-b border-dashed border-nous-border pb-2">
+ <span className="font-sans text-[7px] uppercase tracking-[0.3em] font-black text-nous-subtle">Aesthetic Analysis</span>
  <button 
  onClick={handleScryDirectives} 
  disabled={isAuditing}
- className="font-sans text-[7px] uppercase tracking-widest text-stone-900 hover:text-stone-600 dark:text-stone-100 dark:hover:text-stone-400 flex items-center gap-1 transition-colors"
+ className="font-sans text-[7px] uppercase tracking-widest text-nous-text hover:text-nous-subtle flex items-center gap-1 transition-colors"
  >
  {isAuditing ? <Loader2 size={10} className="animate-spin"/> : <Radar size={10} />}
  Auto-Scry Directives
@@ -2755,27 +2755,27 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  {draft && activePersonaId && (
  <TailorPreview draft={draft} activePersonaId={activePersonaId} apiKey={activePersona?.apiKey} />
  )}
- <p className="font-serif italic text-[10px] text-stone-400 leading-tight">
+ <p className="font-serif italic text-[10px] text-nous-subtle leading-tight">
  Real-time synthesis of your current aesthetic DNA.
  </p>
  </div>
 
  <div className="space-y-4">
- <div className="flex items-center gap-3 text-stone-900 dark:text-stone-100">
+ <div className="flex items-center gap-3 text-nous-text">
  <Target size={18} className="animate-pulse"/>
  <span className="font-sans text-[9px] uppercase tracking-[0.4em] font-black italic">Alignment Protocol</span>
  {draft.draftStatus === 'provisional' && (
  <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-none font-mono text-[8px] uppercase tracking-widest ml-auto">Unaligned</span>
  )}
  </div>
- <p className="font-serif italic text-xs text-stone-500 leading-relaxed">
+ <p className="font-serif italic text-xs text-nous-text0 leading-relaxed">
  Changes are local until aligned. Committing writes this logic to your active mask.
  </p>
  </div>
  </div>
 
  <div className="space-y-4 mt-12">
- <button onClick={handleAlign} disabled={isSaving} className="w-full py-4 bg-nous-text dark:bg-white text-white dark:text-black rounded-none font-sans text-[9px] uppercase tracking-[0.4em] font-black active:scale-95 transition-all flex items-center justify-center gap-3">
+ <button onClick={handleAlign} disabled={isSaving} className="w-full py-4 bg-nous-text text-nous-base rounded-none font-sans text-[9px] uppercase tracking-[0.4em] font-black active:scale-95 transition-all flex items-center justify-center gap-3">
  {isSaving ? <Loader2 size={12} className="animate-spin"/> : <Check size={12} />} Align Logic
  </button>
  </div>

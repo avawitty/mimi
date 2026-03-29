@@ -35,13 +35,13 @@ const ProposalShell: React.FC<{
  return (
  <div className="fixed inset-0 z-[6000] bg dark:bg flex flex-col transition-colors duration-1000 overflow-hidden">
  {/* SHELL HEADER */}
- <header className="h-16 border-b border-black/5 dark:border-white/5 bg-white/80 dark:bg-stone-950/80 backdrop-blur-xl flex justify-between items-center px-6 shrink-0 z-50">
+ <header className="h-16 border-b border-black/5 /5 bg-white/80 /80 backdrop-blur-xl flex justify-between items-center px-6 shrink-0 z-50">
  <div className="flex items-center gap-6">
- <button onClick={onClose} className="p-2 -ml-2 text-stone-400 hover:text-red-500 transition-colors">
+ <button onClick={onClose} className="p-2 -ml-2 text-nous-subtle hover:text-red-500 transition-colors">
  <X size={20}/>
  </button>
- <div className="hidden md:flex items-center gap-2 font-mono text-[9px] uppercase tracking-widest text-stone-400">
- <span className={step === 'ENTRY' ? 'text-nous-text dark:text-white font-black' : ''}>01 Entry</span>
+ <div className="hidden md:flex items-center gap-2 font-mono text-[9px] uppercase tracking-widest text-nous-subtle">
+ <span className={step === 'ENTRY' ? 'text-nous-text  font-black' : ''}>01 Entry</span>
  <span className="opacity-30">/</span>
  <span className={step === 'BINDING' ? 'text-nous-text dark:text-white font-black' : ''}>02 Binding</span>
  <span className="opacity-30">/</span>
@@ -50,7 +50,7 @@ const ProposalShell: React.FC<{
  <span className={step === 'EXPORT' ? 'text-nous-text dark:text-white font-black' : ''}>04 Manifest</span>
  </div>
  </div>
- <span className="font-serif italic text-sm text-stone-500">{title}</span>
+ <span className="font-serif italic text-sm text-nous-text0">{title}</span>
  </header>
  
  {/* SHELL BODY */}
@@ -205,15 +205,15 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  <motion.div 
  key="assembly"
  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
- className="absolute inset-0 z-[7000] bg-stone-950 flex flex-col items-center justify-center gap-12"
+ className="absolute inset-0 z-[7000] bg-nous-base flex flex-col items-center justify-center gap-12"
  >
  <div className="relative">
- <div className="absolute inset-0 bg-stone-500/20 blur-xl rounded-none animate-pulse"/>
+ <div className="absolute inset-0 bg-nous-base0/20 blur-xl rounded-none animate-pulse"/>
  <BrainCircuit size={64} className="text-white relative z-10 animate-pulse"/>
  </div>
  <div className="space-y-4 text-center">
  <h3 className="font-serif text-3xl italic text-white tracking-tighter">Assisted Assembly.</h3>
- <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-black text-stone-500 animate-pulse">{loadingText}</p>
+ <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-black text-nous-text0 animate-pulse">{loadingText}</p>
  </div>
  </motion.div>
  )}
@@ -225,13 +225,13 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
  className="flex-1 h-full overflow-y-auto no-scrollbar p-6 md:p-12 flex flex-col items-center justify-center relative"
  >
- <button onClick={() => setViewState('ENTRY')} className="absolute top-8 left-8 p-3 text-stone-400 hover:text-stone-600 dark:hover:text-white hidden md:block">
+ <button onClick={() => setViewState('ENTRY')} className="absolute top-8 left-8 p-3 text-nous-subtle hover:text-nous-subtle dark:hover:text-white hidden md:block">
  <ArrowLeft size={20}/>
  </button>
  
- <div className="w-full max-w-5xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-none p-8 md:p-16 space-y-12">
+ <div className="w-full max-w-5xl bg-white border border-nous-border rounded-none p-8 md:p-16 space-y-12">
  <div className="space-y-4 text-center">
- <div className="flex items-center justify-center gap-3 text-stone-500">
+ <div className="flex items-center justify-center gap-3 text-nous-text0">
  <Layers size={20} />
  <span className="font-sans text-[9px] uppercase tracking-[0.5em] font-black italic">Material Binding</span>
  </div>
@@ -240,10 +240,10 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  
  <div className="grid md:grid-cols-2 gap-12">
  <div className="space-y-6">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 border-b border-stone-100 dark:border-stone-800 pb-2 block">Strategic Logic</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle border-b border-nous-border pb-2 block">Strategic Logic</span>
  <div className="space-y-3">
  {PROPOSAL_PRESETS.map(p => (
- <button key={p.id} onClick={() => setSelectedPreset(p.id)} className={`w-full text-left p-4 rounded-none border transition-all ${selectedPreset === p.id ? 'bg-nous-text dark:bg-white text-white dark:text-black border-transparent ' : 'bg-transparent border-stone-100 dark:border-stone-800 text-stone-500 hover:border-stone-300'}`}>
+ <button key={p.id} onClick={() => setSelectedPreset(p.id)} className={`w-full text-left p-4 rounded-none border transition-all ${selectedPreset === p.id ? 'bg-nous-text text-nous-base border-transparent ' : 'bg-transparent border-nous-border text-nous-text0 hover:border-nous-border'}`}>
  <div className="flex justify-between items-center mb-1"><span className="font-serif italic text-lg leading-none">{p.label}</span>{selectedPreset === p.id && <CheckCircle2 size={14} />}</div>
  <p className="font-sans text-[7px] uppercase tracking-wide opacity-70">{p.desc}</p>
  </button>
@@ -251,19 +251,19 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  </div>
  </div>
  <div className="flex flex-col justify-between space-y-8">
- <div className="p-8 bg-stone-50 dark:bg-black/40 border border-stone-100 dark:border-stone-800 rounded-none space-y-6">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">Target Source</span>
+ <div className="p-8 bg-nous-base /40 border border-nous-border rounded-none space-y-6">
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">Target Source</span>
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 bg-stone-200 dark:bg-stone-800 rounded-none flex items-center justify-center text-stone-400"><FolderOpen size={20} /></div>
+ <div className="w-12 h-12 bg-stone-200 rounded-none flex items-center justify-center text-nous-subtle"><FolderOpen size={20} /></div>
  <div>
  <p className="font-serif italic text-xl text-nous-text dark:text-white line-clamp-2">{folderData?.name || availableFolders.find(f => f.id === selectedFolderId)?.content.name || 'Selected Folder'}</p>
- <p className="font-sans text-[8px] uppercase tracking-widest text-stone-500 font-black">Source Locked</p>
+ <p className="font-sans text-[8px] uppercase tracking-widest text-nous-text0 font-black">Source Locked</p>
  </div>
  </div>
 
  {/* FILE UPLOAD AREA */}
  <div 
- className="mt-4 border-2 border-dashed border-stone-200 dark:border-stone-800 rounded-none p-6 text-center hover:border-stone-800 dark:hover:border-stone-300 transition-all cursor-pointer group bg-white/50 dark:bg-black/20"
+ className="mt-4 border-2 border-dashed border-nous-border rounded-none p-6 text-center hover:border-nous-border transition-all cursor-pointer group bg-white/50 /20"
  onClick={() => fileInputRef.current?.click()}
  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
  onDrop={async (e) => {
@@ -278,16 +278,16 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  >
  <input type="file"ref={fileInputRef} onChange={handleFileUpload} className="hidden"multiple accept="image/*"/>
  {isUploading ? (
- <Loader2 size={20} className="animate-spin text-stone-500 mx-auto"/>
+ <Loader2 size={20} className="animate-spin text-nous-text0 mx-auto"/>
  ) : (
  <div className="space-y-2">
- <Upload size={16} className="mx-auto text-stone-400 group-hover:text-stone-800 dark:hover:text-stone-300 transition-colors"/>
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 group-hover:text-stone-800 dark:hover:text-stone-300">Inject New Materials</span>
+ <Upload size={16} className="mx-auto text-nous-subtle group-hover:text-nous-text transition-colors"/>
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle group-hover:text-nous-text">Inject New Materials</span>
  </div>
  )}
  </div>
  </div>
- <button onClick={handleStartAssembly} className="w-full py-6 bg-nous-text dark:bg-white text-white dark:text-black rounded-none font-sans text-[10px] uppercase tracking-[0.5em] font-black hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4">
+ <button onClick={handleStartAssembly} className="w-full py-6 bg-nous-text text-nous-base rounded-none font-sans text-[10px] uppercase tracking-[0.5em] font-black hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-4">
  <Sparkles size={16} /> Execute Assembly
  </button>
  </div>
@@ -304,12 +304,12 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  className="flex-1 h-full overflow-y-auto no-scrollbar p-6 md:p-12 relative"
  >
  <div className="text-center space-y-6 mb-16 pt-12">
- <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-none border border-stone-500/20 bg-stone-500/5 text-stone-600 dark:text-stone-400">
+ <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-none border border-nous-border/20 bg-nous-base0/5 text-nous-subtle">
  <Briefcase size={12} />
  <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black">Strategic Suite</span>
  </div>
  <h1 className="font-serif text-6xl md:text-8xl italic tracking-tighter text-nous-text dark:text-white leading-none">The Proposal.</h1>
- <p className="font-serif italic text-xl md:text-2xl text-stone-500 dark:text-stone-400 leading-relaxed max-w-xl mx-auto">
+ <p className="font-serif italic text-xl md:text-2xl text-nous-text0 leading-relaxed max-w-xl mx-auto">
  Transmute your archival debris into defensible strategic artifacts.
  </p>
  </div>
@@ -318,18 +318,18 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  {/* FOLDER SELECTION */}
  <section>
  <div className="flex items-center gap-4 mb-8">
- <FolderOpen size={16} className="text-stone-400"/>
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-500">Source Selection</span>
- <div className="h-px flex-1 bg-stone-100 dark:bg-stone-800"/>
+ <FolderOpen size={16} className="text-nous-subtle"/>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0">Source Selection</span>
+ <div className="h-px flex-1 bg-nous-base"/>
  </div>
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
  {availableFolders.map(folder => (
- <button key={folder.id} onClick={() => handleSelectFolder(folder.id)} className="group p-8 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-none hover:border-stone-500 hover: transition-all text-left flex flex-col gap-6">
- <div className="flex justify-between items-start"><FolderOpen size={24} className="text-stone-300 group-hover:text-stone-500 transition-colors"/><ArrowRight size={16} className="text-stone-300 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all"/></div>
- <div><h4 className="font-serif italic text-2xl text-nous-text dark:text-white line-clamp-1">{folder.content.name}</h4><span className="font-sans text-[8px] uppercase tracking-widest text-stone-400 font-black">{folder.content.itemIds?.length || 0} Artifacts</span></div>
+ <button key={folder.id} onClick={() => handleSelectFolder(folder.id)} className="group p-8 bg-white border border-nous-border rounded-none hover:border-nous-border hover: transition-all text-left flex flex-col gap-6">
+ <div className="flex justify-between items-start"><FolderOpen size={24} className="text-nous-subtle group-hover:text-nous-text0 transition-colors"/><ArrowRight size={16} className="text-nous-subtle opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all"/></div>
+ <div><h4 className="font-serif italic text-2xl text-nous-text dark:text-white line-clamp-1">{folder.content.name}</h4><span className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle font-black">{folder.content.itemIds?.length || 0} Artifacts</span></div>
  </button>
  ))}
- {availableFolders.length === 0 && <div className="col-span-full py-12 text-center opacity-30 border-2 border-dashed border-stone-300 dark:border-stone-800 rounded-none"><Archive size={48} className="mx-auto mb-4"/><p className="font-serif italic text-2xl">No Stacks Found.</p></div>}
+ {availableFolders.length === 0 && <div className="col-span-full py-12 text-center opacity-30 border-2 border-dashed border-nous-border rounded-none"><Archive size={48} className="mx-auto mb-4"/><p className="font-serif italic text-2xl">No Stacks Found.</p></div>}
  </div>
  </section>
 
@@ -337,19 +337,19 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  {savedProposals.length > 0 && (
  <section>
  <div className="flex items-center gap-4 mb-8">
- <ScrollText size={16} className="text-stone-400"/>
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-500">Proposal Registry</span>
- <div className="h-px flex-1 bg-stone-100 dark:bg-stone-800"/>
+ <ScrollText size={16} className="text-nous-subtle"/>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0">Proposal Registry</span>
+ <div className="h-px flex-1 bg-nous-base"/>
  </div>
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
  {savedProposals.map(p => (
- <button key={p.id} onClick={() => handleOpenProposal(p)} className="text-left p-6 bg-stone-50 dark:bg-black/40 border border-stone-200 dark:border-stone-800 rounded-none hover:border-stone-500 transition-all group">
+ <button key={p.id} onClick={() => handleOpenProposal(p)} className="text-left p-6 bg-nous-base /40 border border-nous-border rounded-none hover:border-nous-border transition-all group">
  <div className="flex justify-between items-start mb-4">
- <div className="p-2 bg-white dark:bg-stone-800 rounded-none text-stone-400 group-hover:text-stone-500"><FileText size={14} /></div>
- <span className="font-mono text-[8px] text-stone-400">{new Date(p.updatedAt).toLocaleDateString()}</span>
+ <div className="p-2 bg-white rounded-none text-nous-subtle group-hover:text-nous-text0"><FileText size={14} /></div>
+ <span className="font-mono text-[8px] text-nous-subtle">{new Date(p.updatedAt).toLocaleDateString()}</span>
  </div>
  <h4 className="font-serif italic text-lg text-nous-text dark:text-white line-clamp-2 leading-tight">{p.title}</h4>
- <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400 mt-2 block">{p.content.sections.length} Slides</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle mt-2 block">{p.content.sections.length} Slides</span>
  </button>
  ))}
  </div>

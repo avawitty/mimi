@@ -41,26 +41,26 @@ ${auditReport.aestheticDirectives.map(d => `- ${d}`).join('\n')}
  if (!auditReport) return null;
 
  return (
- <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[10000] bg-stone-950/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-12 overflow-y-auto">
- <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} className="w-full max-w-5xl bg-white dark:bg border border-stone-200 dark:border-stone-800 rounded-none overflow-hidden flex flex-col max-h-[90vh]">
+ <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[10000] bg-nous-base/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-12 overflow-y-auto">
+ <motion.div initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} className="w-full max-w-5xl bg-nous-base border border-nous-border rounded-none overflow-hidden flex flex-col max-h-[90vh]">
  
- <header className="flex justify-between items-center p-8 border-b border-stone-100 dark:border-stone-900 shrink-0">
+ <header className="flex justify-between items-center p-8 border-b border-nous-border shrink-0">
  <div className="space-y-2">
- <div className="flex items-center gap-3 text-stone-500">
+ <div className="flex items-center gap-3 text-nous-text0">
  <Target size={18} className="animate-pulse"/>
  <span className="font-sans text-[9px] uppercase tracking-[0.4em] font-black italic">Strategic Audit Protocol</span>
  </div>
- <h2 className="font-serif text-3xl md:text-5xl italic tracking-tighter text-nous-text dark:text-white leading-none">The Manifesto.</h2>
+ <h2 className="font-serif text-3xl md:text-5xl italic tracking-tighter text-nous-text  leading-none">The Manifesto.</h2>
  </div>
  <div className="flex items-center gap-4">
  <button 
  onClick={handleCopyManifesto} 
- className="flex items-center gap-2 px-4 py-2 bg-stone-100 dark:bg-stone-800 rounded-none font-sans text-[8px] uppercase tracking-widest font-black text-stone-500 hover:text-stone-800 dark:hover:text-stone-300 transition-all"
+ className="flex items-center gap-2 px-4 py-2 bg-nous-base rounded-none font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0 hover:text-nous-text transition-all"
  >
  {isCopied ? <CheckCircle2 size={12} /> : <Copy size={12} />}
  {isCopied ? 'Protocol Preserved' : 'Copy Manifesto'}
  </button>
- <button onClick={onClose} className="p-3 text-stone-400 hover:text-red-500 transition-colors bg-stone-50 dark:bg-stone-900 rounded-none"><X size={20} /></button>
+ <button onClick={onClose} className="p-3 text-nous-subtle hover:text-red-500 transition-colors bg-nous-base rounded-none"><X size={20} /></button>
  </div>
  </header>
 
@@ -68,25 +68,25 @@ ${auditReport.aestheticDirectives.map(d => `- ${d}`).join('\n')}
  
  {/* MANIFESTO STATEMENT */}
  <section className="space-y-10">
- <div className="flex items-center gap-4 text-stone-300">
+ <div className="flex items-center gap-4 text-nous-subtle">
  <Quote size={20} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Sovereign Statement</span>
  </div>
- <p className="font-header italic text-3xl md:text-5xl text-nous-text dark:text-stone-200 leading-[1.1] text-balance">
+ <p className="font-header italic text-3xl md:text-5xl text-nous-text leading-[1.1] text-balance">
 "{auditReport.profileManifesto ||"Logic incomplete. The Oracle is refining your frequency."}"
  </p>
  </section>
 
- <div className="grid md:grid-cols-12 gap-16 border-t border-black/5 dark:border-white/5 pt-16">
+ <div className="grid md:grid-cols-12 gap-16 border-t border-black/5 /5 pt-16">
  
  {/* STRATEGIC OPPORTUNITY */}
  <section className="md:col-span-7 space-y-8">
  <div className="space-y-3">
- <div className="flex items-center gap-3 text-stone-500">
+ <div className="flex items-center gap-3 text-nous-text0">
  <Layers size={14} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Strategic Opportunity</span>
  </div>
- <p className="font-serif italic text-xl md:text-2xl text-stone-600 dark:text-stone-400 leading-snug border-l-4 border-stone-500/20 pl-8">
+ <p className="font-serif italic text-xl md:text-2xl text-nous-subtle leading-snug border-l-4 border-nous-border/20 pl-8">
  {auditReport.strategicOpportunity ||"Awaiting structural signal..."}
  </p>
  </div>
@@ -98,8 +98,8 @@ ${auditReport.aestheticDirectives.map(d => `- ${d}`).join('\n')}
  </div>
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
  {(auditReport.suggestedTouchpoints || []).map((t, i) => (
- <div key={i} className="p-4 bg-stone-50 dark:bg-stone-900 border border-black/5 dark:border-white/5 rounded-none">
- <p className="font-serif italic text-lg text-stone-500">{t}</p>
+ <div key={i} className="p-4 bg-nous-base border border-black/5 /5 rounded-none">
+ <p className="font-serif italic text-lg text-nous-text0">{t}</p>
  </div>
  ))}
  </div>
@@ -108,7 +108,7 @@ ${auditReport.aestheticDirectives.map(d => `- ${d}`).join('\n')}
 
  {/* AESTHETIC DIRECTIVES */}
  <section className="md:col-span-5 space-y-8">
- <div className="flex items-center gap-3 text-stone-400">
+ <div className="flex items-center gap-3 text-nous-subtle">
  <Check size={14} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Aesthetic Directives</span>
  </div>
@@ -119,10 +119,10 @@ ${auditReport.aestheticDirectives.map(d => `- ${d}`).join('\n')}
  animate={{ opacity: 1, x: 0 }}
  transition={{ delay: i * 0.1 }}
  key={i} 
- className="flex items-start gap-4 p-5 bg-white dark:bg-stone-900 border border-black/5 dark:border-white/5 rounded-none"
+ className="flex items-start gap-4 p-5 bg-white border border-black/5 /5 rounded-none"
  >
- <Check size={14} className="text-stone-500 mt-1 shrink-0"/>
- <p className="font-serif italic text-base md:text-lg text-stone-700 dark:text-stone-300 leading-tight">{d}</p>
+ <Check size={14} className="text-nous-text0 mt-1 shrink-0"/>
+ <p className="font-serif italic text-base md:text-lg text-nous-subtle leading-tight">{d}</p>
  </motion.div>
  ))}
  </div>
@@ -135,11 +135,11 @@ ${auditReport.aestheticDirectives.map(d => `- ${d}`).join('\n')}
  </div>
  </div>
 
- <footer className="p-8 border-t border-stone-100 dark:border-stone-900 bg-white dark:bg-black shrink-0 flex flex-col sm:flex-row justify-between items-center gap-6">
- <p className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">LOG_ID: {Math.random().toString(36).substr(2, 6).toUpperCase()}</p>
+ <footer className="p-8 border-t border-nous-border bg-nous-base shrink-0 flex flex-col sm:flex-row justify-between items-center gap-6">
+ <p className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">LOG_ID: {Math.random().toString(36).substr(2, 6).toUpperCase()}</p>
  <div className="flex gap-4 w-full sm:w-auto">
- <button onClick={onClose} className="flex-1 sm:flex-none px-10 py-4 font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 hover:text-stone-600 transition-colors">Dismiss</button>
- <button onClick={handleManifest} disabled={!auditReport.profileManifesto} className="flex-1 sm:flex-none px-12 py-5 bg-nous-text dark:bg-white text-white dark:text-black rounded-none font-sans text-[10px] uppercase tracking-[0.4em] font-black active:scale-95 transition-all flex items-center justify-center gap-3 hover:bg-stone-500 disabled:opacity-50">
+ <button onClick={onClose} className="flex-1 sm:flex-none px-10 py-4 font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle hover:text-nous-subtle transition-colors">Dismiss</button>
+ <button onClick={handleManifest} disabled={!auditReport.profileManifesto} className="flex-1 sm:flex-none px-12 py-5 bg-nous-text text-nous-base rounded-none font-sans text-[10px] uppercase tracking-[0.4em] font-black active:scale-95 transition-all flex items-center justify-center gap-3 hover:bg-nous-base0 disabled:opacity-50">
  <Sparkles size={16} /> Manifest Zine
  </button>
  </div>

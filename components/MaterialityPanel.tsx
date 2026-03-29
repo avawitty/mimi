@@ -12,7 +12,7 @@ export const MaterialityPanel: React.FC<MaterialityPanelProps> = ({ config, onCh
  return (
  <div className="space-y-8 animate-fade-in">
  <div className="space-y-3">
- <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 flex items-center gap-2">
+ <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle flex items-center gap-2">
  <Layers size={12} /> Paper Stock
  </span>
  <div className="grid grid-cols-2 gap-2">
@@ -22,8 +22,8 @@ export const MaterialityPanel: React.FC<MaterialityPanelProps> = ({ config, onCh
  onClick={() => onChange({ ...config, paperStock: stock })}
  className={`py-2 border rounded-none text-[8px] font-sans font-black uppercase transition-all ${
  config.paperStock === stock
- ? 'bg-nous-text text-white dark:bg-white dark:text-black border-transparent'
- : 'border-stone-200 dark:border-stone-800 text-stone-400'
+ ? 'bg-nous-text text-white   border-transparent'
+ : 'border-nous-border text-nous-subtle'
  }`}
  >
  {stock.replace('-', ' ')}
@@ -33,7 +33,7 @@ export const MaterialityPanel: React.FC<MaterialityPanelProps> = ({ config, onCh
  </div>
 
  <div className="space-y-3">
- <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 flex items-center gap-2">
+ <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle flex items-center gap-2">
  <FontIcon size={12} /> Typography Lineage
  </span>
  <div className="grid gap-2">
@@ -43,8 +43,8 @@ export const MaterialityPanel: React.FC<MaterialityPanelProps> = ({ config, onCh
  onClick={() => onChange({ ...config, typographyLineage: lineage })}
  className={`py-3 px-4 border rounded-none text-left text-[10px] font-sans font-black uppercase transition-all ${
  config.typographyLineage === lineage
- ? 'bg-nous-text text-white dark:bg-white dark:text-black border-transparent'
- : 'border-stone-200 dark:border-stone-800 text-stone-400'
+ ? 'bg-nous-text text-white   border-transparent'
+ : 'border-nous-border text-nous-subtle'
  }`}
  >
  {lineage.replace('-', ' ')}
@@ -54,7 +54,7 @@ export const MaterialityPanel: React.FC<MaterialityPanelProps> = ({ config, onCh
  </div>
 
  <div className="space-y-3">
- <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 flex items-center gap-2">
+ <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle flex items-center gap-2">
  <Palette size={12} /> Color Scheme
  </span>
  <div className="grid grid-cols-1 gap-2">
@@ -64,8 +64,8 @@ export const MaterialityPanel: React.FC<MaterialityPanelProps> = ({ config, onCh
  onClick={() => onChange({ ...config, colorScheme: scheme })}
  className={`py-2 px-4 border rounded-none text-[8px] font-sans font-black uppercase transition-all ${
  config.colorScheme === scheme
- ? 'bg-nous-text text-white dark:bg-white dark:text-black border-transparent'
- : 'border-stone-200 dark:border-stone-800 text-stone-400'
+ ? 'bg-nous-text text-white   border-transparent'
+ : 'border-nous-border text-nous-subtle'
  }`}
  >
  {scheme.replace('-', ' ')}
@@ -75,7 +75,7 @@ export const MaterialityPanel: React.FC<MaterialityPanelProps> = ({ config, onCh
  </div>
 
  <div className="space-y-3">
- <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 flex items-center gap-2">
+ <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle flex items-center gap-2">
  <SlidersHorizontal size={12} /> Negative Space Density
  </span>
  <SemanticSteps 

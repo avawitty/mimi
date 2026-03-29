@@ -56,42 +56,42 @@ export const CliqueProtocol: React.FC<{ isOpen: boolean; onClose: () => void }> 
  if (!isOpen) return null;
 
  return (
- <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-white/40 dark:bg-black/40 backdrop-blur-3xl">
+ <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-white/40 /40 backdrop-blur-3xl">
  <motion.div 
  initial={{ opacity: 0, scale: 0.9, y: 20 }}
  animate={{ opacity: 1, scale: 1, y: 0 }}
  exit={{ opacity: 0, scale: 0.9, y: 20 }}
- className="relative w-full max-lg bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-none overflow-hidden"
+ className="relative w-full max-lg bg-white border border-nous-border rounded-none overflow-hidden"
  >
  <div className="p-10 md:p-14 space-y-12">
  <div className="flex justify-between items-start">
  <div className="space-y-2">
  <h2 className="font-serif text-4xl italic tracking-tighter">Clique Protocol.</h2>
- <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-stone-400 font-black">Anchoring New Muses</p>
+ <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-nous-subtle font-black">Anchoring New Muses</p>
  </div>
- <button onClick={onClose} className="p-2 text-stone-300 hover:text-stone-900 dark:hover:text-white transition-colors">
+ <button onClick={onClose} className="p-2 text-nous-subtle hover:text-nous-text dark:hover:text-white transition-colors">
  <X size={24} />
  </button>
  </div>
 
  <div className="space-y-8">
- <div className="flex items-center gap-4 p-6 bg-stone-50 dark:bg-stone-950 border border-stone-100 dark:border-stone-800 rounded-none cursor-pointer active:scale-95 transition-all"onClick={() => {
+ <div className="flex items-center gap-4 p-6 bg-nous-base border border-nous-border rounded-none cursor-pointer active:scale-95 transition-all"onClick={() => {
  navigator.clipboard.writeText(myFrequency).catch(e => console.error("MIMI // Clipboard error", e));
  alert("Your frequency has been preserved to the clipboard.");
  }}>
- <div className="p-3 bg-white dark:bg-stone-900 rounded-none">
- <Radio size={20} className="text-stone-500 animate-pulse"/>
+ <div className="p-3 bg-white rounded-none">
+ <Radio size={20} className="text-nous-text0 animate-pulse"/>
  </div>
  <div className="flex flex-col">
- <span className="font-sans text-[8px] uppercase tracking-widest text-stone-400 font-black">Your Frequency Key</span>
- <span className="font-mono text-xs text-nous-text dark:text-white font-black tracking-tighter">
+ <span className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle font-black">Your Frequency Key</span>
+ <span className="font-mono text-xs text-nous-text  font-black tracking-tighter">
  {myFrequency}
  </span>
  </div>
  </div>
 
  <div className="space-y-4">
- <label htmlFor="frequencyKey"className="font-sans text-[9px] uppercase tracking-[0.5em] text-stone-500 font-black block">Enter Muse Frequency</label>
+ <label htmlFor="frequencyKey"className="font-sans text-[9px] uppercase tracking-[0.5em] text-nous-text0 font-black block">Enter Muse Frequency</label>
  <input 
  id="frequencyKey"
  name="frequencyKey"
@@ -101,7 +101,7 @@ export const CliqueProtocol: React.FC<{ isOpen: boolean; onClose: () => void }> 
  placeholder="O2-XXXX-000"
  required
  pattern="O2-[A-Z0-9]{4}-[0-9]{3}"
- className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-4 font-mono text-2xl font-black focus:outline-none focus:border-nous-text dark:focus:border-white transition-colors tracking-tighter"
+ className="w-full bg-transparent border-b border-nous-border py-4 font-mono text-2xl font-black focus:outline-none focus:border-nous-text dark:focus:border-white transition-colors tracking-tighter"
  />
  <AnimatePresence>
  {error && (
@@ -115,20 +115,20 @@ export const CliqueProtocol: React.FC<{ isOpen: boolean; onClose: () => void }> 
  <button 
  onClick={handleAnchorMuse}
  disabled={!frequencyKey.trim() || isBinding || success}
- className={`w-full py-6 flex items-center justify-center gap-4 font-sans text-xs tracking-[0.6em] uppercase font-black transition-all active:scale-95 rounded-none ${success ? 'bg-stone-50 text-white' : 'bg-nous-text dark:bg-white text-white dark:text-black'}`}
+ className={`w-full py-6 flex items-center justify-center gap-4 font-sans text-xs tracking-[0.6em] uppercase font-black transition-all active:scale-95 rounded-none ${success ? 'bg-nous-base text-white' : 'bg-nous-text text-nous-base'}`}
  >
  {isBinding ? <Loader2 size={16} className="animate-spin"/> : success ? <Check size={16} /> : <Anchor size={16} />}
  <span>{isBinding ? 'Calibrating Sync' : success ? 'Frequency Locked' : 'Anchor Muse'}</span>
  </button>
  </div>
 
- <div className="pt-8 border-t border-stone-100 dark:border-stone-800 text-center space-y-4">
+ <div className="pt-8 border-t border-nous-border text-center space-y-4">
  <div className="flex items-center justify-center gap-3 opacity-20">
  <Key size={12} />
  <div className="h-px w-12 bg-stone-400"/>
  <Sparkles size={12} />
  </div>
- <p className="font-serif italic text-stone-400 text-xs px-4">
+ <p className="font-serif italic text-nous-subtle text-xs px-4">
  Exchange frequencies to bind your aesthetic manifests.
  </p>
  </div>

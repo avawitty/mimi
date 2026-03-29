@@ -159,9 +159,9 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  };
 
  const getStatusIcon = () => {
- if (connectionStatus === 'friends') return <span title="Connected"><Handshake size={20} className="text-stone-500"/></span>;
+ if (connectionStatus === 'friends') return <span title="Connected"><Handshake size={20} className="text-nous-text0"/></span>;
  if (connectionStatus === 'request_sent' || connectionStatus === 'request_received') return <span title="Pending"><Clock size={20} className="text-amber-500 animate-pulse"/></span>;
- if (connectionStatus === 'none') return <span title="Disconnected"><Link2Off size={20} className="text-stone-300"/></span>;
+ if (connectionStatus === 'none') return <span title="Disconnected"><Link2Off size={20} className="text-nous-subtle"/></span>;
  if (isFollowing) return <span title="Resonating"><Zap size={20} className="text-indigo-500"/></span>;
  return null;
  };
@@ -169,7 +169,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  const renderConnectButton = () => {
  if (connectLoading) {
  return (
- <button disabled className="px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 border border-stone-200 dark:border-stone-800 text-stone-500">
+ <button disabled className="px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 border border-nous-border text-nous-text0">
  <Loader2 size={14} className="animate-spin"/>
  </button>
  );
@@ -178,23 +178,23 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  switch (connectionStatus) {
  case 'friends':
  return (
- <button onClick={handleConnectAction} className="px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-stone-100 dark:bg-stone-900 text-stone-500 border border-stone-200 dark:border-stone-800 hover:text-red-500 hover:border-red-500/30"title="Disconnect">
+ <button onClick={handleConnectAction} className="px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-nous-base text-nous-text0 border border-nous-border hover:text-red-500 hover:border-red-500/30"title="Disconnect">
  <Link2Off size={14} />
  </button>
  );
  case 'request_sent':
  return (
- <button onClick={handleConnectAction} className="px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-stone-100 dark:bg-stone-900 text-stone-400 border border-stone-200 dark:border-stone-800 hover:text-red-500 hover:border-red-500/30"title="Cancel Request">
+ <button onClick={handleConnectAction} className="px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-nous-base text-nous-subtle border border-nous-border hover:text-red-500 hover:border-red-500/30"title="Cancel Request">
  <Clock size={14} className="animate-pulse"/>
  </button>
  );
  case 'request_received':
  return (
  <div className="flex gap-2">
- <button onClick={handleConnectAction} className="px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-stone-500 text-white -stone-500/20 hover:bg-stone-600">
+ <button onClick={handleConnectAction} className="px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-nous-base0 text-white -stone-500/20 hover:bg-stone-600">
  <Check size={14} /> Accept
  </button>
- <button onClick={handleRejectRequest} className="px-6 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 border border-stone-200 dark:border-stone-800 text-stone-500 hover:text-red-500">
+ <button onClick={handleRejectRequest} className="px-6 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 border border-nous-border text-nous-text0 hover:text-red-500">
  <X size={14} />
  </button>
  </div>
@@ -202,7 +202,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  case 'none':
  default:
  return (
- <button onClick={handleConnectAction} className="px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 border border-nous-text dark:border-white text-nous-text dark:text-white hover:bg-nous-text hover:text-white dark:hover:bg-white dark:hover:text-black"title="Add Friend">
+ <button onClick={handleConnectAction} className="px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 border border-nous-text  text-nous-text  hover:bg-nous-text hover:text-white dark:hover:bg-white dark:hover:text-black"title="Add Friend">
  <UserPlus size={14} /> Add Friend
  </button>
  );
@@ -221,20 +221,20 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  initial={{ scale: 0.95, y: 20 }}
  animate={{ scale: 1, y: 0 }}
  exit={{ scale: 0.95, y: 20 }}
- className="w-full max-w-2xl bg-nous-base dark:bg border border-stone-200 dark:border-stone-800 overflow-hidden max-h-[90vh] flex flex-col"
+ className="w-full max-w-2xl bg-nous-base dark:bg border border-nous-border overflow-hidden max-h-[90vh] flex flex-col"
  onClick={e => e.stopPropagation()}
  >
  {/* Header */}
- <div className="relative p-8 border-b border-stone-200 dark:border-stone-800 flex flex-col items-center text-center">
- <button onClick={onClose} className="absolute top-4 right-4 p-2 text-stone-400 hover:text-nous-text dark:hover:text-white transition-colors">
+ <div className="relative p-8 border-b border-nous-border flex flex-col items-center text-center">
+ <button onClick={onClose} className="absolute top-4 right-4 p-2 text-nous-subtle hover:text-nous-text dark:hover:text-white transition-colors">
  <X size={20} />
  </button>
  
  {loading ? (
- <div className="py-12"><Loader2 size={32} className="animate-spin text-stone-400"/></div>
+ <div className="py-12"><Loader2 size={32} className="animate-spin text-nous-subtle"/></div>
  ) : profile ? (
  <>
- <div className="w-24 h-24 rounded-none overflow-hidden border border-stone-200 dark:border-stone-800 mb-6 bg-stone-100 dark:bg-stone-900">
+ <div className="w-24 h-24 rounded-none overflow-hidden border border-nous-border mb-6 bg-nous-base">
  <img src={profile.photoURL || `https://ui-avatars.com/api/?name=${profile.handle || 'U'}&background=1c1917&color=fff`} className="w-full h-full object-cover grayscale"alt=""/>
  </div>
  <div className="flex items-center gap-3 mb-2">
@@ -243,15 +243,15 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  </div>
  
  {(profile.tailorDraft as any)?.typographyIntent?.archetype && (
- <div className="mt-2 px-3 py-1 bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-none inline-block">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-500">
+ <div className="mt-2 px-3 py-1 bg-nous-base border border-nous-border rounded-none inline-block">
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0">
  Archetype: {(profile.tailorDraft as any).typographyIntent.archetype.replace('-', ' ')}
  </span>
  </div>
  )}
  
  {(profile.tasteProfile as any)?.definition && (
- <p className="mt-4 font-serif italic text-sm text-stone-500 max-w-sm text-center">
+ <p className="mt-4 font-serif italic text-sm text-nous-text0 max-w-sm text-center">
 "{(profile.tasteProfile as any).definition}"
  </p>
  )}
@@ -259,12 +259,12 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  <div className="flex items-center gap-6 mt-6 mb-8">
  <div className="text-center">
  <span className="block font-serif text-2xl italic text-nous-text dark:text-white">{followerCount}</span>
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Resonators</span>
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Resonators</span>
  </div>
- <div className="w-px h-8 bg-stone-200 dark:bg-stone-800"/>
+ <div className="w-px h-8 bg-stone-200"/>
  <div className="text-center">
  <span className="block font-serif text-2xl italic text-nous-text dark:text-white">{followingCount}</span>
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Resonating</span>
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Resonating</span>
  </div>
  </div>
  
@@ -273,7 +273,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  <button 
  onClick={handleFollowToggle}
  disabled={actionLoading}
- className={`px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 ${isFollowing ? 'bg-stone-100 dark:bg-stone-900 text-stone-500 border border-stone-200 dark:border-stone-800' : 'bg-nous-text dark:bg-white text-white dark:text-black '}`}
+ className={`px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 ${isFollowing ? 'bg-nous-base text-nous-text0 border border-nous-border ' : 'bg-nous-text text-nous-base '}`}
  >
  {actionLoading ? <Loader2 size={14} className="animate-spin"/> : isFollowing ? <><UserMinus size={14} /> Stop Resonating</> : <><UserPlus size={14} /> Resonate</>}
  </button>
@@ -282,16 +282,16 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  )}
  </>
  ) : (
- <div className="py-12"><p className="font-serif italic text-stone-500">Profile not found.</p></div>
+ <div className="py-12"><p className="font-serif italic text-nous-text0">Profile not found.</p></div>
  )}
  </div>
  
  {/* Content */}
- <div className="flex-1 overflow-y-auto p-8 bg-stone-50 dark:bg-black/20">
- <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] font-black text-stone-400 mb-6 text-center">The Stand // Published Manifests</h3>
+ <div className="flex-1 overflow-y-auto p-8 bg-nous-base /20">
+ <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] font-black text-nous-subtle mb-6 text-center">The Stand // Published Manifests</h3>
  
  {loading ? (
- <div className="flex justify-center py-12"><Loader2 size={24} className="animate-spin text-stone-400"/></div>
+ <div className="flex justify-center py-12"><Loader2 size={24} className="animate-spin text-nous-subtle"/></div>
  ) : zines.length > 0 ? (
  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
  {zines.map(zine => (
@@ -303,13 +303,13 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  onClose();
  }
  }}
- className="aspect-[3/4] bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 relative group cursor-pointer overflow-hidden"
+ className="aspect-[3/4] bg-white border border-nous-border relative group cursor-pointer overflow-hidden"
  >
  {zine.coverImageUrl ? (
  <img src={zine.coverImageUrl} alt={zine.title} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"/>
  ) : (
  <div className="w-full h-full flex items-center justify-center p-4 text-center">
- <span className="font-serif italic text-sm text-stone-500">{zine.title}</span>
+ <span className="font-serif italic text-sm text-nous-text0">{zine.title}</span>
  </div>
  )}
  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -320,7 +320,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  </div>
  ) : (
  <div className="text-center py-12">
- <p className="font-serif italic text-stone-500">No public manifests available.</p>
+ <p className="font-serif italic text-nous-text0">No public manifests available.</p>
  </div>
  )}
  </div>

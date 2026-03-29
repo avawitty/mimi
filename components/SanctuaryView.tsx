@@ -47,18 +47,18 @@ export const SanctuaryView: React.FC = () => {
  <div className="flex-1 w-full h-full overflow-y-auto no-scrollbar pb-64 px-6 md:px-16 pt-12 md:pt-20 bg text-white transition-all duration-1000 relative selection:bg-white selection:text-black">
  <div className="max-w-5xl mx-auto space-y-16 relative z-10">
  <header className="space-y-8 border-b border-white/10 pb-12">
- <div className="flex items-center gap-4 text-stone-500">
+ <div className="flex items-center gap-4 text-nous-text0">
  <ShieldCheck size={18} className="animate-pulse"/>
  <span className="font-sans text-[10px] uppercase tracking-[0.6em] font-black italic">The Clearing</span>
  </div>
  <div className="space-y-2">
  <h2 className="font-serif text-6xl md:text-8xl italic tracking-tighter text-white leading-[0.8]">Sanctuary.</h2>
- <p className="font-serif italic text-lg text-stone-400 max-w-2xl">A space for re-calibration. No noise. No feed.</p>
+ <p className="font-serif italic text-lg text-nous-subtle max-w-2xl">A space for re-calibration. No noise. No feed.</p>
  </div>
  <div className="flex gap-8 pt-4">
- <button onClick={() => setActiveTab('begin')} className={`font-sans text-[9px] uppercase tracking-widest font-black transition-all ${activeTab === 'begin' ? 'text-white border-b border-white pb-1' : 'text-stone-500 hover:text-stone-300'}`}>Calibration</button>
- <button onClick={() => setActiveTab('modules')} className={`font-sans text-[9px] uppercase tracking-widest font-black transition-all ${activeTab === 'modules' ? 'text-white border-b border-white pb-1' : 'text-stone-500 hover:text-stone-300'}`}>Modules</button>
- <button onClick={() => setActiveTab('celestial')} className={`font-sans text-[9px] uppercase tracking-widest font-black transition-all ${activeTab === 'celestial' ? 'text-white border-b border-white pb-1' : 'text-stone-500 hover:text-stone-300'}`}>Celestial</button>
+ <button onClick={() => setActiveTab('begin')} className={`font-sans text-[9px] uppercase tracking-widest font-black transition-all ${activeTab === 'begin' ? 'text-white border-b border-white pb-1' : 'text-nous-text0 hover:text-nous-subtle'}`}>Calibration</button>
+ <button onClick={() => setActiveTab('modules')} className={`font-sans text-[9px] uppercase tracking-widest font-black transition-all ${activeTab === 'modules' ? 'text-white border-b border-white pb-1' : 'text-nous-text0 hover:text-nous-subtle'}`}>Modules</button>
+ <button onClick={() => setActiveTab('celestial')} className={`font-sans text-[9px] uppercase tracking-widest font-black transition-all ${activeTab === 'celestial' ? 'text-white border-b border-white pb-1' : 'text-nous-text0 hover:text-nous-subtle'}`}>Celestial</button>
  </div>
  </header>
  <AnimatePresence mode="wait">
@@ -66,8 +66,8 @@ export const SanctuaryView: React.FC = () => {
  <motion.div key="begin"initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-16">
  <div className="grid md:grid-cols-2 gap-16">
  <div className="space-y-8">
- <textarea value={sanctuaryInput} onChange={(e) => setSanctuaryInput(e.target.value)} className="w-full bg-stone-900/50 border border-white/10 p-6 font-serif text-xl italic text-white focus:outline-none focus:border-stone-800 dark:focus:border-stone-300/50 transition-all resize-none h-48 rounded-none"placeholder="The frequency feels distorted..."/>
- <button onClick={handleSanctuaryCalibration} disabled={isLoading || !sanctuaryInput.trim()} className="px-10 py-4 bg-white text-black rounded-none font-sans text-[9px] uppercase tracking-[0.4em] font-black hover:bg-stone-400 transition-all flex items-center gap-4 disabled:opacity-50">
+ <textarea value={sanctuaryInput} onChange={(e) => setSanctuaryInput(e.target.value)} className="w-full bg-nous-base/50 border border-white/10 p-6 font-serif text-xl italic text-white focus:outline-none focus:border-nous-border dark:focus:border-nous-border/50 transition-all resize-none h-48 rounded-none"placeholder="The frequency feels distorted..."/>
+ <button onClick={handleSanctuaryCalibration} disabled={isLoading || !sanctuaryInput.trim()} className="px-10 py-4 bg-nous-base text-nous-text rounded-none font-sans text-[9px] uppercase tracking-[0.4em] font-black hover:bg-stone-400 transition-all flex items-center gap-4 disabled:opacity-50">
  {isLoading ? <Loader2 size={14} className="animate-spin"/> : <Sparkles size={14} />} Calibrate Signal
  </button>
  </div>
@@ -75,7 +75,7 @@ export const SanctuaryView: React.FC = () => {
  {sanctuaryReport ? (
  <div className="space-y-12">
  <div className="space-y-2">
- <span className="font-sans text-[8px] uppercase tracking-widest text-stone-500 font-black">Validation</span>
+ <span className="font-sans text-[8px] uppercase tracking-widest text-nous-text0 font-black">Validation</span>
  <p className="font-serif italic text-2xl text-white leading-relaxed">{sanctuaryReport.validation}</p>
  </div>
  </div>

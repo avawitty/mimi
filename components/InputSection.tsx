@@ -47,7 +47,7 @@ export const InputSection: React.FC<InputSectionProps> = ({ onRefine, isThinking
  onKeyDown={handleKeyDown}
  placeholder="It started when..."
  disabled={isThinking}
- className="w-full bg-transparent border-b border-stone-200 text-2xl md:text-3xl font-serif text-nous-text placeholder-stone-300 focus:outline-none focus:border-stone-400 py-4 resize-none text-center transition-colors duration-500 overflow-hidden"
+ className="w-full bg-transparent border-b border-nous-border text-2xl md:text-3xl font-serif text-nous-text placeholder-stone-300 focus:outline-none focus:border-nous-border py-4 resize-none text-center transition-colors duration-500 overflow-hidden"
  rows={1}
  style={{ minHeight: '80px' }}
  />

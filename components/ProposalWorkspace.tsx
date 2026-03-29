@@ -63,48 +63,48 @@ const ProposalExportOverlay: React.FC<{
 
  return (
  <div className="fixed inset-0 z-[7000] bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
- <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white dark:bg-stone-900 p-12 rounded-none max-w-md w-full space-y-8 relative">
- <button onClick={onClose} className="absolute top-6 right-6 text-stone-400 hover:text-red-500"><X size={20} /></button>
+ <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white p-12 rounded-none max-w-md w-full space-y-8 relative">
+ <button onClick={onClose} className="absolute top-6 right-6 text-nous-subtle hover:text-red-500"><X size={20} /></button>
  <div className="space-y-2">
  <h3 className="font-serif text-3xl italic tracking-tighter">Manifest Artifact.</h3>
- <p className="font-sans text-[9px] uppercase tracking-widest text-stone-400 font-black">Export High-Fidelity Output</p>
+ <p className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle font-black">Export High-Fidelity Output</p>
  </div>
  <div className="space-y-4">
- <button onClick={() => triggerExport('pdf')} disabled={isExporting} className="w-full py-4 border border-stone-200 dark:border-stone-800 flex items-center justify-between px-6 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all group">
+ <button onClick={() => triggerExport('pdf')} disabled={isExporting} className="w-full py-4 border border-nous-border flex items-center justify-between px-6 hover:bg-nous-base transition-all group">
  <div className="flex items-center gap-4">
- <FileText size={18} className="text-stone-400 group-hover:text-stone-800 dark:hover:text-stone-300"/>
+ <FileText size={18} className="text-nous-subtle group-hover:text-nous-text"/>
  <span className="font-sans text-[9px] uppercase tracking-widest font-black">Full PDF Deck</span>
  </div>
- <ArrowRight size={14} className="text-stone-300 group-hover:translate-x-1 transition-transform"/>
+ <ArrowRight size={14} className="text-nous-subtle group-hover:translate-x-1 transition-transform"/>
  </button>
  
- <div className="h-px bg-stone-100 dark:bg-stone-800 my-2"/>
+ <div className="h-px bg-nous-base my-2"/>
  
- <button onClick={() => triggerExport('current_png')} disabled={isExporting} className="w-full py-4 border border-stone-200 dark:border-stone-800 flex items-center justify-between px-6 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all group">
+ <button onClick={() => triggerExport('current_png')} disabled={isExporting} className="w-full py-4 border border-nous-border flex items-center justify-between px-6 hover:bg-nous-base transition-all group">
  <div className="flex items-center gap-4">
- <FileImage size={18} className="text-stone-400 group-hover:text-amber-500"/>
+ <FileImage size={18} className="text-nous-subtle group-hover:text-amber-500"/>
  <span className="font-sans text-[9px] uppercase tracking-widest font-black">Current Slide (High-Res PNG)</span>
  </div>
- <ArrowRight size={14} className="text-stone-300 group-hover:translate-x-1 transition-transform"/>
+ <ArrowRight size={14} className="text-nous-subtle group-hover:translate-x-1 transition-transform"/>
  </button>
 
- <button onClick={() => triggerExport('current_jpg')} disabled={isExporting} className="w-full py-4 border border-stone-200 dark:border-stone-800 flex items-center justify-between px-6 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all group">
+ <button onClick={() => triggerExport('current_jpg')} disabled={isExporting} className="w-full py-4 border border-nous-border flex items-center justify-between px-6 hover:bg-nous-base transition-all group">
  <div className="flex items-center gap-4">
- <ImageIcon size={18} className="text-stone-400 group-hover:text-blue-500"/>
+ <ImageIcon size={18} className="text-nous-subtle group-hover:text-blue-500"/>
  <span className="font-sans text-[9px] uppercase tracking-widest font-black">Current Slide (High-Res JPG)</span>
  </div>
- <ArrowRight size={14} className="text-stone-300 group-hover:translate-x-1 transition-transform"/>
+ <ArrowRight size={14} className="text-nous-subtle group-hover:translate-x-1 transition-transform"/>
  </button>
 
- <button onClick={() => triggerExport('png')} disabled={isExporting} className="w-full py-4 border border-stone-200 dark:border-stone-800 flex items-center justify-between px-6 hover:bg-stone-50 dark:hover:bg-stone-800 transition-all group">
+ <button onClick={() => triggerExport('png')} disabled={isExporting} className="w-full py-4 border border-nous-border flex items-center justify-between px-6 hover:bg-nous-base transition-all group">
  <div className="flex items-center gap-4">
- <Feather size={18} className="text-stone-400 group-hover:text-stone-600"/>
+ <Feather size={18} className="text-nous-subtle group-hover:text-nous-subtle"/>
  <span className="font-sans text-[9px] uppercase tracking-widest font-black">Cover Plate Only</span>
  </div>
- <ArrowRight size={14} className="text-stone-300 group-hover:translate-x-1 transition-transform"/>
+ <ArrowRight size={14} className="text-nous-subtle group-hover:translate-x-1 transition-transform"/>
  </button>
  </div>
- {isExporting && <div className="text-center text-stone-500 font-mono text-xs animate-pulse">Rendering High-Fidelity Plate...</div>}
+ {isExporting && <div className="text-center text-nous-text0 font-mono text-xs animate-pulse">Rendering High-Fidelity Plate...</div>}
  </motion.div>
  </div>
  );
@@ -558,25 +558,25 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  </AnimatePresence>
 
  {/* 1. TOP NAVIGATION */}
- <nav className="h-16 border-b border-black/5 dark:border-white/5 bg-white/80 dark:bg-stone-950/80 backdrop-blur-xl flex justify-between items-center px-6 shrink-0 z-50">
+ <nav className="h-16 border-b border-black/5 /5 bg-white/80 /80 backdrop-blur-xl flex justify-between items-center px-6 shrink-0 z-50">
  <div className="flex items-center gap-6">
- <button onClick={onClose} className="p-2 -ml-2 text-stone-400 hover:text-red-500 transition-colors"><X size={20}/></button>
- <div className="hidden md:flex bg-stone-100 dark:bg-stone-900 p-1 rounded-none">
- <button onClick={() => setMode('content')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'content' ? 'bg-white dark:bg-stone-800 text-nous-text dark:text-white ' : 'text-stone-400'}`}>
+ <button onClick={onClose} className="p-2 -ml-2 text-nous-subtle hover:text-red-500 transition-colors"><X size={20}/></button>
+ <div className="hidden md:flex bg-nous-base p-1 rounded-none">
+ <button onClick={() => setMode('content')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'content' ? 'bg-white text-nous-text  ' : 'text-nous-subtle'}`}>
  <Edit3 size={12} /> Content
  </button>
- <button onClick={() => setMode('design')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'design' ? 'bg-white dark:bg-stone-800 text-nous-text dark:text-white ' : 'text-stone-400'}`}>
+ <button onClick={() => setMode('design')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'design' ? 'bg-white text-nous-text dark:text-white ' : 'text-nous-subtle'}`}>
  <Palette size={12} /> Design
  </button>
- <button onClick={() => setMode('assets')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'assets' ? 'bg-white dark:bg-stone-800 text-nous-text dark:text-white ' : 'text-stone-400'}`}
+ <button onClick={() => setMode('assets')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'assets' ? 'bg-white text-nous-text dark:text-white ' : 'text-nous-subtle'}`}
  >
  <FolderOpen size={12} /> Folder
  </button>
- <button onClick={() => setMode('assistant')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'assistant' ? 'bg-white dark:bg-stone-800 text-nous-text dark:text-white ' : 'text-stone-400'}`}
+ <button onClick={() => setMode('assistant')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'assistant' ? 'bg-white text-nous-text dark:text-white ' : 'text-nous-subtle'}`}
  >
  <Sparkles size={12} /> Assistant
  </button>
- <button onClick={() => setMode('collaborators')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'collaborators' ? 'bg-white dark:bg-stone-800 text-nous-text dark:text-white ' : 'text-stone-400'}`}
+ <button onClick={() => setMode('collaborators')} className={`px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${mode === 'collaborators' ? 'bg-white text-nous-text dark:text-white ' : 'text-nous-subtle'}`}
  >
  <Users size={12} /> Team
  </button>
@@ -584,8 +584,8 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  </div>
 
  <div className="flex items-center gap-4">
- <span className="font-serif italic text-sm text-stone-400 hidden md:block">{proposal.title}</span>
- <button onClick={handleSave} disabled={isSaving} className="px-6 py-2 bg-nous-text dark:bg-white text-white dark:text-black rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center gap-2 active:scale-95 transition-all">
+ <span className="font-serif italic text-sm text-nous-subtle hidden md:block">{proposal.title}</span>
+ <button onClick={handleSave} disabled={isSaving} className="px-6 py-2 bg-nous-text text-nous-base rounded-none font-sans text-[9px] uppercase tracking-widest font-black flex items-center gap-2 active:scale-95 transition-all">
  {isSaving ? <Loader2 size={12} className="animate-spin"/> : <Save size={12} />} Save
  </button>
  </div>
@@ -596,45 +596,45 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  {/* 2. SIDEBARS */}
  <AnimatePresence initial={false} mode="wait">
  {mode === 'design' && (
- <motion.aside key="design-sidebar"initial={{ width: 0, opacity: 0 }} animate={{ width: 320, opacity: 1 }} exit={{ width: 0, opacity: 0 }} className="bg-white dark:bg-stone-900 border-r border-stone-100 dark:border-stone-800 overflow-y-auto no-scrollbar shrink-0 z-40 hidden md:block">
+ <motion.aside key="design-sidebar"initial={{ width: 0, opacity: 0 }} animate={{ width: 320, opacity: 1 }} exit={{ width: 0, opacity: 0 }} className="bg-white border-r border-nous-border overflow-y-auto no-scrollbar shrink-0 z-40 hidden md:block">
  <div className="p-8 space-y-10 min-w-[320px]">
- <div className="p-6 bg-stone-50 dark:bg-stone-950/50 rounded-none border border-stone-100 dark:border-stone-800 space-y-4">
+ <div className="p-6 bg-nous-base /50 rounded-none border border-nous-border space-y-4">
  <div className="flex items-center justify-between">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-500">Aesthetic Core</span>
- <Settings2 size={14} className="text-stone-400"/>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0">Aesthetic Core</span>
+ <Settings2 size={14} className="text-nous-subtle"/>
  </div>
- <p className="font-serif italic text-xs text-stone-500 leading-snug">Pull typographic and chromatic DNA from your active Tailor persona.</p>
- <button onClick={handleSyncTailor} className="w-full py-3 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:border-stone-800 dark:hover:border-stone-300 transition-colors flex items-center justify-center gap-2">
+ <p className="font-serif italic text-xs text-nous-text0 leading-snug">Pull typographic and chromatic DNA from your active Tailor persona.</p>
+ <button onClick={handleSyncTailor} className="w-full py-3 bg-white border border-nous-border rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:border-nous-border transition-colors flex items-center justify-center gap-2">
  <RefreshCw size={10} /> Sync Profile
  </button>
  </div>
  <section className="space-y-4">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 flex items-center gap-2"><Type size={12} /> Typography</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle flex items-center gap-2"><Type size={12} /> Typography</span>
  <div className="space-y-2">
  {FONTS.map(font => (
- <button key={font.value} onClick={() => setLayoutConfig(p => ({ ...p, fontSet: [font.value, p.fontSet[1]] }))} className={`w-full text-left p-3 border rounded-none transition-all text-sm ${layoutConfig.fontSet[0] === font.value ? 'border-nous-text dark:border-white bg-stone-50 dark:bg-stone-800' : 'border-stone-100 dark:border-stone-800 text-stone-500'}`} style={{ fontFamily: font.value }}>{font.label}</button>
+ <button key={font.value} onClick={() => setLayoutConfig(p => ({ ...p, fontSet: [font.value, p.fontSet[1]] }))} className={`w-full text-left p-3 border rounded-none transition-all text-sm ${layoutConfig.fontSet[0] === font.value ? 'border-nous-text  bg-nous-base ' : 'border-nous-border text-nous-text0'}`} style={{ fontFamily: font.value }}>{font.label}</button>
  ))}
  </div>
  <div className="flex gap-2">
- <input value={customFontInput} onChange={e => setCustomFontInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && injectGoogleFont(customFontInput)} placeholder="Google Font Name..."className="flex-1 bg-transparent border-b border-stone-200 dark:border-stone-700 py-1 font-sans text-xs focus:outline-none"/>
- <button onClick={() => injectGoogleFont(customFontInput)} className="text-xs font-black uppercase tracking-widest text-stone-400 hover:text-stone-800 dark:hover:text-stone-300">Fetch</button>
+ <input value={customFontInput} onChange={e => setCustomFontInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && injectGoogleFont(customFontInput)} placeholder="Google Font Name..."className="flex-1 bg-transparent border-b border-nous-border py-1 font-sans text-xs focus:outline-none"/>
+ <button onClick={() => injectGoogleFont(customFontInput)} className="text-xs font-black uppercase tracking-widest text-nous-subtle hover:text-nous-text">Fetch</button>
  </div>
  </section>
  <section className="space-y-4">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 flex items-center gap-2"><Palette size={12} /> Palette</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle flex items-center gap-2"><Palette size={12} /> Palette</span>
  <div className="grid grid-cols-5 gap-2">
  {COLORS.map(color => (
- <button key={color.value} onClick={() => setLayoutConfig(p => ({ ...p, backgroundStyle: color.value }))} className={`aspect-square rounded-none border-2 transition-all ${layoutConfig.backgroundStyle === color.value ? 'border-stone-500 scale-110' : 'border-transparent'}`} style={{ backgroundColor: color.value }} title={color.label} />
+ <button key={color.value} onClick={() => setLayoutConfig(p => ({ ...p, backgroundStyle: color.value }))} className={`aspect-square rounded-none border-2 transition-all ${layoutConfig.backgroundStyle === color.value ? 'border-nous-border scale-110' : 'border-transparent'}`} style={{ backgroundColor: color.value }} title={color.label} />
  ))}
  </div>
  <div className="flex items-center gap-2 mt-2">
  <input type="color"value={customColorInput} onChange={e => { setCustomColorInput(e.target.value); setLayoutConfig(p => ({ ...p, backgroundStyle: e.target.value })); }} className="w-8 h-8 rounded-none border-none p-0 cursor-pointer"/>
- <span className="font-mono text-[9px] text-stone-400">{customColorInput}</span>
+ <span className="font-mono text-[9px] text-nous-subtle">{customColorInput}</span>
  </div>
  </section>
  <section className="space-y-4">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 flex items-center gap-2"><Layout size={12} /> Tools</span>
- <button onClick={handleAddText} className="w-full py-3 border border-stone-200 dark:border-stone-700 rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors flex items-center justify-center gap-2">
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle flex items-center gap-2"><Layout size={12} /> Tools</span>
+ <button onClick={handleAddText} className="w-full py-3 border border-nous-border rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-nous-base transition-colors flex items-center justify-center gap-2">
  <Type size={10} /> Add Text Block
  </button>
  </section>
@@ -643,64 +643,64 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  )}
 
  {mode === 'assets' && (
- <motion.aside key="assets-sidebar"initial={{ width: 0, opacity: 0 }} animate={{ width: 320, opacity: 1 }} exit={{ width: 0, opacity: 0 }} className="bg-stone-50 dark:bg-stone-900 border-r border-stone-100 dark:border-stone-800 overflow-y-auto no-scrollbar shrink-0 z-40 hidden md:block">
+ <motion.aside key="assets-sidebar"initial={{ width: 0, opacity: 0 }} animate={{ width: 320, opacity: 1 }} exit={{ width: 0, opacity: 0 }} className="bg-nous-base border-r border-nous-border overflow-y-auto no-scrollbar shrink-0 z-40 hidden md:block">
  <div className="p-6 space-y-6 min-w-[320px]">
- <div className="flex items-center gap-2 text-stone-400 mb-4 border-b border-stone-200 dark:border-stone-800 pb-2"><FolderOpen size={14} /><span className="font-sans text-[9px] uppercase tracking-widest font-black">MATERIALS</span></div>
- {loadingAssets ? <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-stone-300"/></div> : (
+ <div className="flex items-center gap-2 text-nous-subtle mb-4 border-b border-nous-border pb-2"><FolderOpen size={14} /><span className="font-sans text-[9px] uppercase tracking-widest font-black">MATERIALS</span></div>
+ {loadingAssets ? <div className="flex justify-center py-10"><Loader2 size={24} className="animate-spin text-nous-subtle"/></div> : (
  <div className="space-y-4">
  {folderItems.map(item => (
- <button key={item.id} onClick={() => handleAddAssetToSlide(item)} className="w-full flex items-center gap-4 p-3 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-none hover:border-stone-500 transition-all group relative">
- <div className="w-12 h-12 bg-stone-100 dark:bg-stone-900 rounded-none overflow-hidden flex-shrink-0">
- {item.type === 'image' ? <img src={item.content.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform grayscale group-hover:grayscale-0"/> : <div className="w-full h-full flex items-center justify-center text-stone-400"><Type size={16} /></div>}
+ <button key={item.id} onClick={() => handleAddAssetToSlide(item)} className="w-full flex items-center gap-4 p-3 bg-white border border-nous-border rounded-none hover:border-nous-border transition-all group relative">
+ <div className="w-12 h-12 bg-nous-base rounded-none overflow-hidden flex-shrink-0">
+ {item.type === 'image' ? <img src={item.content.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform grayscale group-hover:grayscale-0"/> : <div className="w-full h-full flex items-center justify-center text-nous-subtle"><Type size={16} /></div>}
  </div>
  <div className="flex-1 text-left min-w-0">
- <p className="font-serif italic text-sm text-stone-700 dark:text-stone-300 truncate">{item.content.prompt || item.content.name ||"Artifact"}</p>
- <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400">{item.type}</span>
+ <p className="font-serif italic text-sm text-nous-subtle truncate">{item.content.prompt || item.content.name ||"Artifact"}</p>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">{item.type}</span>
  </div>
- <div className="opacity-0 group-hover:opacity-100 text-stone-500 transition-opacity"><Plus size={16} /></div>
+ <div className="opacity-0 group-hover:opacity-100 text-nous-text0 transition-opacity"><Plus size={16} /></div>
  </button>
  ))}
  </div>
  )}
- {folderItems.length === 0 && !loadingAssets && <div className="text-center py-10 opacity-30"><FolderOpen size={32} className="mx-auto mb-2"/><p className="font-serif italic text-stone-400 text-sm">No artifacts found in source folder.</p></div>}
+ {folderItems.length === 0 && !loadingAssets && <div className="text-center py-10 opacity-30"><FolderOpen size={32} className="mx-auto mb-2"/><p className="font-serif italic text-nous-subtle text-sm">No artifacts found in source folder.</p></div>}
  </div>
  </motion.aside>
  )}
 
  {mode === 'assistant' && (
- <motion.aside key="assistant-sidebar"initial={{ width: 0, opacity: 0 }} animate={{ width: 320, opacity: 1 }} exit={{ width: 0, opacity: 0 }} className="bg-white dark:bg-stone-900 border-r border-stone-100 dark:border-stone-800 overflow-y-auto no-scrollbar shrink-0 z-40 hidden md:block">
+ <motion.aside key="assistant-sidebar"initial={{ width: 0, opacity: 0 }} animate={{ width: 320, opacity: 1 }} exit={{ width: 0, opacity: 0 }} className="bg-white border-r border-nous-border overflow-y-auto no-scrollbar shrink-0 z-40 hidden md:block">
  <div className="p-8 space-y-10 min-w-[320px]">
  <div className="space-y-4">
- <div className="flex items-center gap-3 text-stone-500">
+ <div className="flex items-center gap-3 text-nous-text0">
  <Sparkles size={18} className="animate-pulse"/>
  <span className="font-sans text-[9px] uppercase tracking-[0.5em] font-black italic">Proposal Assistant</span>
  </div>
- <p className="font-serif italic text-sm text-stone-500 leading-relaxed">
+ <p className="font-serif italic text-sm text-nous-text0 leading-relaxed">
  Refine the current slide using natural language. The Assistant reads your proposal context, source folder, and profile.
  </p>
  </div>
 
  <div className="space-y-4">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">Target: Slide {activeSlideIndex + 1}</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">Target: Slide {activeSlideIndex + 1}</span>
  <textarea 
  value={assistantInput}
  onChange={(e) => setAssistantInput(e.target.value)}
  placeholder="e.g. 'Make this more punchy' or 'Expand on the market gap'..."
- className="w-full bg-stone-50 dark:bg-stone-950/50 border border-stone-200 dark:border-stone-800 p-4 font-serif italic text-base text-stone-700 dark:text-stone-300 focus:outline-none focus:border-stone-800 dark:focus:border-stone-300 transition-colors h-40 resize-none rounded-none"
+ className="w-full bg-nous-base /50 border border-nous-border p-4 font-serif italic text-base text-nous-subtle focus:outline-none focus:border-nous-border dark:focus:border-nous-border transition-colors h-40 resize-none rounded-none"
  />
  <button 
  onClick={handleAssistantRefine}
  disabled={isAssistantThinking || !assistantInput.trim()}
- className="w-full py-4 bg-nous-text dark:bg-white text-white dark:text-black rounded-none font-sans text-[9px] uppercase tracking-widest font-black active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 hover:bg-stone-600"
+ className="w-full py-4 bg-nous-text text-nous-base rounded-none font-sans text-[9px] uppercase tracking-widest font-black active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50 hover:bg-stone-600"
  >
  {isAssistantThinking ? <Loader2 size={12} className="animate-spin"/> : <Wand2 size={12} />}
  Refine Section
  </button>
  </div>
 
- <div className="p-6 bg-stone-50 dark:bg-stone-950/50 rounded-none border border-stone-100 dark:border-stone-800 space-y-3 opacity-60">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 flex items-center gap-2"><Terminal size={10} /> Active Context</span>
- <div className="text-[9px] font-mono text-stone-500 space-y-1">
+ <div className="p-6 bg-nous-base /50 rounded-none border border-nous-border space-y-3 opacity-60">
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle flex items-center gap-2"><Terminal size={10} /> Active Context</span>
+ <div className="text-[9px] font-mono text-nous-text0 space-y-1">
  <p>Source: {folderItems.length} Artifacts</p>
  <p>Profile: {activePersona?.name || 'Ghost'}</p>
  <p>Logic: {layoutConfig.template.toUpperCase()}</p>
@@ -711,41 +711,41 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  )}
 
  {mode === 'collaborators' && (
- <motion.aside key="collaborators-sidebar"initial={{ width: 0, opacity: 0 }} animate={{ width: 320, opacity: 1 }} exit={{ width: 0, opacity: 0 }} className="bg-white dark:bg-stone-900 border-r border-stone-100 dark:border-stone-800 overflow-y-auto no-scrollbar shrink-0 z-40 hidden md:block">
+ <motion.aside key="collaborators-sidebar"initial={{ width: 0, opacity: 0 }} animate={{ width: 320, opacity: 1 }} exit={{ width: 0, opacity: 0 }} className="bg-white border-r border-nous-border overflow-y-auto no-scrollbar shrink-0 z-40 hidden md:block">
  <div className="p-8 space-y-10 min-w-[320px]">
  <div className="space-y-4">
- <div className="flex items-center gap-3 text-stone-500">
+ <div className="flex items-center gap-3 text-nous-text0">
  <Users size={18} />
  <span className="font-sans text-[9px] uppercase tracking-widest font-black">Workspace Access</span>
  </div>
- <p className="font-serif italic text-sm text-stone-500">Manage who can view and edit this proposal.</p>
+ <p className="font-serif italic text-sm text-nous-text0">Manage who can view and edit this proposal.</p>
  </div>
  
  <div className="space-y-6">
  <div className="space-y-4">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">Current Members</span>
- <div className="flex items-center justify-between p-3 bg-stone-50 dark:bg-stone-950 border border-stone-100 dark:border-stone-800 rounded-none">
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">Current Members</span>
+ <div className="flex items-center justify-between p-3 bg-nous-base border border-nous-border rounded-none">
  <div className="flex items-center gap-3">
- <div className="w-8 h-8 rounded-none bg-stone-200 dark:bg-stone-800 flex items-center justify-center">
- <Shield size={14} className="text-stone-500"/>
+ <div className="w-8 h-8 rounded-none bg-stone-200 flex items-center justify-center">
+ <Shield size={14} className="text-nous-text0"/>
  </div>
  <div>
- <p className="font-sans text-[10px] uppercase tracking-widest font-bold text-stone-900 dark:text-stone-100">@{profile?.handle || 'You'}</p>
- <p className="font-serif italic text-xs text-stone-500">Owner</p>
+ <p className="font-sans text-[10px] uppercase tracking-widest font-bold text-nous-text">@{profile?.handle || 'You'}</p>
+ <p className="font-serif italic text-xs text-nous-text0">Owner</p>
  </div>
  </div>
  </div>
  </div>
 
- <div className="space-y-4 pt-4 border-t border-stone-100 dark:border-stone-800">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400">Invite Collaborator</span>
+ <div className="space-y-4 pt-4 border-t border-nous-border">
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">Invite Collaborator</span>
  <div className="flex gap-2">
  <input 
  type="text"
  placeholder="@handle or email"
- className="flex-1 bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-none px-3 py-2 font-mono text-xs focus:outline-none focus:border-stone-500"
+ className="flex-1 bg-nous-base border border-nous-border rounded-none px-3 py-2 font-mono text-xs focus:outline-none focus:border-nous-border"
  />
- <button className="p-2 bg-stone-900 dark:bg-white text-white dark:text-black rounded-none hover:bg-stone-500 transition-colors">
+ <button className="p-2 bg-nous-base  text-nous-base rounded-none hover:bg-nous-base0 transition-colors">
  <UserPlus size={14} />
  </button>
  </div>
@@ -761,7 +761,7 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  <div 
  ref={scrollContainerRef}
  onScroll={handleScroll}
- className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-y-hidden md:overflow-x-auto snap-x snap-mandatory md:scroll-pl-12 no-scrollbar items-center bg-stone-200/50 dark:bg-stone-900 pb-20 md:pb-0 pt-8 md:pt-0"
+ className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-y-hidden md:overflow-x-auto snap-x snap-mandatory md:scroll-pl-12 no-scrollbar items-center bg-stone-200/50 pb-20 md:pb-0 pt-8 md:pt-0"
  >
  <div className="h-4 md:w-12 shrink-0"/> {/* Spacer */}
  
@@ -792,19 +792,19 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  exit={{ opacity: 0, x: 20 }}
  className="absolute -right-4 top-4 md:-right-16 md:top-0 z-50 flex flex-col"
  >
- <div className="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-none p-4 w-72 max-h-[80vh] overflow-y-auto no-scrollbar space-y-6">
- <div className="flex justify-between items-center pb-2 border-b border-stone-100 dark:border-stone-700">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-300">Text Inspector</span>
- <button onClick={() => setSelectedElementId(null)} className="text-stone-400 hover:text-stone-600"><X size={12}/></button>
+ <div className="bg-white border border-nous-border rounded-none p-4 w-72 max-h-[80vh] overflow-y-auto no-scrollbar space-y-6">
+ <div className="flex justify-between items-center pb-2 border-b border-nous-border">
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Text Inspector</span>
+ <button onClick={() => setSelectedElementId(null)} className="text-nous-subtle hover:text-nous-subtle"><X size={12}/></button>
  </div>
 
  {/* AI VARIATIONS */}
  <div className="space-y-3">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-500 flex items-center gap-2"><Sparkles size={10} /> AI Refinements</span>
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0 flex items-center gap-2"><Sparkles size={10} /> AI Refinements</span>
  {isGeneratingVariations ? (
  <div className="flex items-center gap-2 py-4 justify-center">
- <Loader2 size={14} className="animate-spin text-stone-500"/>
- <span className="font-mono text-[8px] text-stone-400 dark:text-stone-500 uppercase">Consulting Oracle...</span>
+ <Loader2 size={14} className="animate-spin text-nous-text0"/>
+ <span className="font-mono text-[8px] text-nous-subtle 0 uppercase">Consulting Oracle...</span>
  </div>
  ) : aiVariations ? (
  <div className="space-y-2">
@@ -819,59 +819,59 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  const updatedElements = section.elements.map(e => e.id === selectedTextElement.id ? { ...e, content: v.content } : e);
  handleUpdateSectionElements(section.id, updatedElements);
  }}
- className="w-full text-left p-2 bg-stone-50 dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-none hover:border-stone-500 transition-all group"
+ className="w-full text-left p-2 bg-nous-base border border-nous-border rounded-none hover:border-nous-border transition-all group"
  >
- <span className="block font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-300 group-hover:text-stone-500 mb-1">{v.label}</span>
- <p className="font-serif italic text-[10px] text-stone-600 dark:text-stone-300 line-clamp-2">{v.content}</p>
+ <span className="block font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle group-hover:text-nous-text0 mb-1">{v.label}</span>
+ <p className="font-serif italic text-[10px] text-nous-subtle line-clamp-2">{v.content}</p>
  </button>
  ))}
  </div>
  ) : (
- <p className="font-serif italic text-[10px] text-stone-400 dark:text-stone-500 text-center">Select text to generate variations.</p>
+ <p className="font-serif italic text-[10px] text-nous-subtle 0 text-center">Select text to generate variations.</p>
  )}
  </div>
 
  {/* GEOMETRY */}
- <div className="space-y-4 pt-4 border-t border-stone-100 dark:border-stone-700">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-300">Geometry</span>
+ <div className="space-y-4 pt-4 border-t border-nous-border">
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Geometry</span>
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-1">
- <label className="font-mono text-[7px] text-stone-400">WIDTH (%)</label>
- <input type="number"value={selectedTextElement.style.width} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { width: parseInt(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-none px-2 py-1 text-[10px]"/>
+ <label className="font-mono text-[7px] text-nous-subtle">WIDTH (%)</label>
+ <input type="number"value={selectedTextElement.style.width} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { width: parseInt(e.target.value) })} className="w-full bg-nous-base border border-nous-border rounded-none px-2 py-1 text-[10px]"/>
  </div>
  <div className="space-y-1">
- <label className="font-mono text-[7px] text-stone-400">SIZE (VW)</label>
- <input type="number"step="0.1"value={selectedTextElement.style.fontSize} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { fontSize: parseFloat(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-none px-2 py-1 text-[10px]"/>
+ <label className="font-mono text-[7px] text-nous-subtle">SIZE (VW)</label>
+ <input type="number"step="0.1"value={selectedTextElement.style.fontSize} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { fontSize: parseFloat(e.target.value) })} className="w-full bg-nous-base border border-nous-border rounded-none px-2 py-1 text-[10px]"/>
  </div>
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-1">
- <label className="font-mono text-[7px] text-stone-400">TOP (%)</label>
- <input type="number"value={selectedTextElement.style.top} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { top: parseInt(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-none px-2 py-1 text-[10px]"/>
+ <label className="font-mono text-[7px] text-nous-subtle">TOP (%)</label>
+ <input type="number"value={selectedTextElement.style.top} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { top: parseInt(e.target.value) })} className="w-full bg-nous-base border border-nous-border rounded-none px-2 py-1 text-[10px]"/>
  </div>
  <div className="space-y-1">
- <label className="font-mono text-[7px] text-stone-400">LEFT (%)</label>
- <input type="number"value={selectedTextElement.style.left} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { left: parseInt(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-none px-2 py-1 text-[10px]"/>
+ <label className="font-mono text-[7px] text-nous-subtle">LEFT (%)</label>
+ <input type="number"value={selectedTextElement.style.left} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { left: parseInt(e.target.value) })} className="w-full bg-nous-base border border-nous-border rounded-none px-2 py-1 text-[10px]"/>
  </div>
  </div>
  </div>
 
  {/* APPEARANCE */}
- <div className="space-y-4 pt-4 border-t border-stone-100 dark:border-stone-700">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-300">Appearance</span>
+ <div className="space-y-4 pt-4 border-t border-nous-border">
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Appearance</span>
  <div className="space-y-2">
- <label className="font-mono text-[7px] text-stone-400 block">COLOR</label>
+ <label className="font-mono text-[7px] text-nous-subtle block">COLOR</label>
  <div className="flex items-center gap-2">
  <input type="color"value={selectedTextElement.style.color || '#000000'} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { color: e.target.value })} className="w-8 h-8 rounded-none border-none p-0 cursor-pointer"/>
- <input value={selectedTextElement.style.color || '#000000'} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { color: e.target.value })} className="flex-1 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-none px-2 py-1 text-[10px] font-mono"/>
+ <input value={selectedTextElement.style.color || '#000000'} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { color: e.target.value })} className="flex-1 bg-nous-base border border-nous-border rounded-none px-2 py-1 text-[10px] font-mono"/>
  </div>
  </div>
  <div className="space-y-2">
- <label className="font-mono text-[7px] text-stone-400 block">FONT FAMILY</label>
+ <label className="font-mono text-[7px] text-nous-subtle block">FONT FAMILY</label>
  <select 
  value={selectedTextElement.style.fontFamily} 
  onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { fontFamily: e.target.value })}
- className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-none px-2 py-1 text-[10px]"
+ className="w-full bg-nous-base border border-nous-border rounded-none px-2 py-1 text-[10px]"
  >
  <option value="serif">Editorial Serif</option>
  <option value="sans">Minimal Sans</option>
@@ -882,28 +882,28 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  </div>
 
  {/* BORDER & RADIUS */}
- <div className="space-y-4 pt-4 border-t border-stone-100 dark:border-stone-700">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-300">Border & Radius</span>
+ <div className="space-y-4 pt-4 border-t border-nous-border">
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Border & Radius</span>
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-1">
- <label className="font-mono text-[7px] text-stone-400">WIDTH (PX)</label>
- <input type="number"value={selectedTextElement.style.borderWidth || 0} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { borderWidth: parseInt(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-none px-2 py-1 text-[10px]"/>
+ <label className="font-mono text-[7px] text-nous-subtle">WIDTH (PX)</label>
+ <input type="number"value={selectedTextElement.style.borderWidth || 0} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { borderWidth: parseInt(e.target.value) })} className="w-full bg-nous-base border border-nous-border rounded-none px-2 py-1 text-[10px]"/>
  </div>
  <div className="space-y-1">
- <label className="font-mono text-[7px] text-stone-400">RADIUS (PX)</label>
- <input type="number"value={selectedTextElement.style.borderRadius || 0} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { borderRadius: parseInt(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-none px-2 py-1 text-[10px]"/>
+ <label className="font-mono text-[7px] text-nous-subtle">RADIUS (PX)</label>
+ <input type="number"value={selectedTextElement.style.borderRadius || 0} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { borderRadius: parseInt(e.target.value) })} className="w-full bg-nous-base border border-nous-border rounded-none px-2 py-1 text-[10px]"/>
  </div>
  </div>
  <div className="space-y-2">
- <label className="font-mono text-[7px] text-stone-400 block">BORDER COLOR</label>
+ <label className="font-mono text-[7px] text-nous-subtle block">BORDER COLOR</label>
  <div className="flex items-center gap-2">
  <input type="color"value={selectedTextElement.style.borderColor || '#000000'} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { borderColor: e.target.value })} className="w-8 h-8 rounded-none border-none p-0 cursor-pointer"/>
- <input value={selectedTextElement.style.borderColor || '#000000'} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { borderColor: e.target.value })} className="flex-1 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-none px-2 py-1 text-[10px] font-mono"/>
+ <input value={selectedTextElement.style.borderColor || '#000000'} onChange={e => handleUpdateElementStyle(section.id, selectedTextElement.id, { borderColor: e.target.value })} className="flex-1 bg-nous-base border border-nous-border rounded-none px-2 py-1 text-[10px] font-mono"/>
  </div>
  </div>
  </div>
 
- <div className="pt-4 border-t border-stone-100 dark:border-stone-700">
+ <div className="pt-4 border-t border-nous-border">
  <button 
  onClick={() => {
  const updatedElements = section.elements.filter(e => e.id !== selectedTextElement.id);
@@ -929,42 +929,42 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  exit={{ opacity: 0, x: 20 }}
  className="absolute -right-4 top-4 md:-right-16 md:top-0 z-50 flex flex-col"
  >
- <div className="bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-none p-4 w-72 max-h-[80vh] overflow-y-auto no-scrollbar space-y-6">
- <div className="flex justify-between items-center pb-2 border-b border-stone-100 dark:border-stone-700">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-300">Visual Calibration</span>
- <button onClick={() => setSelectedElementId(null)} className="text-stone-400 hover:text-stone-600"><X size={12}/></button>
+ <div className="bg-white border border-nous-border rounded-none p-4 w-72 max-h-[80vh] overflow-y-auto no-scrollbar space-y-6">
+ <div className="flex justify-between items-center pb-2 border-b border-nous-border">
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Visual Calibration</span>
+ <button onClick={() => setSelectedElementId(null)} className="text-nous-subtle hover:text-nous-subtle"><X size={12}/></button>
  </div>
  
  {/* GEOMETRY */}
  <div className="space-y-4">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 dark:text-stone-300">Geometry</span>
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Geometry</span>
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-1">
- <label className="font-mono text-[7px] text-stone-400">WIDTH (%)</label>
- <input type="number"value={selectedImageElement.style.width} onChange={e => handleUpdateElementStyle(section.id, selectedImageElement.id, { width: parseInt(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-none px-2 py-1 text-[10px]"/>
+ <label className="font-mono text-[7px] text-nous-subtle">WIDTH (%)</label>
+ <input type="number"value={selectedImageElement.style.width} onChange={e => handleUpdateElementStyle(section.id, selectedImageElement.id, { width: parseInt(e.target.value) })} className="w-full bg-nous-base border border-nous-border rounded-none px-2 py-1 text-[10px]"/>
  </div>
  <div className="space-y-1">
- <label className="font-mono text-[7px] text-stone-400">TOP (%)</label>
- <input type="number"value={selectedImageElement.style.top} onChange={e => handleUpdateElementStyle(section.id, selectedImageElement.id, { top: parseInt(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-none px-2 py-1 text-[10px]"/>
+ <label className="font-mono text-[7px] text-nous-subtle">TOP (%)</label>
+ <input type="number"value={selectedImageElement.style.top} onChange={e => handleUpdateElementStyle(section.id, selectedImageElement.id, { top: parseInt(e.target.value) })} className="w-full bg-nous-base border border-nous-border rounded-none px-2 py-1 text-[10px]"/>
  </div>
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-1">
- <label className="font-mono text-[7px] text-stone-400">LEFT (%)</label>
- <input type="number"value={selectedImageElement.style.left} onChange={e => handleUpdateElementStyle(section.id, selectedImageElement.id, { left: parseInt(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-none px-2 py-1 text-[10px]"/>
+ <label className="font-mono text-[7px] text-nous-subtle">LEFT (%)</label>
+ <input type="number"value={selectedImageElement.style.left} onChange={e => handleUpdateElementStyle(section.id, selectedImageElement.id, { left: parseInt(e.target.value) })} className="w-full bg-nous-base border border-nous-border rounded-none px-2 py-1 text-[10px]"/>
  </div>
  <div className="space-y-1">
- <label className="font-mono text-[7px] text-stone-400">ROTATION (°)</label>
- <input type="number"value={selectedImageElement.style.rotation || 0} onChange={e => handleUpdateElementStyle(section.id, selectedImageElement.id, { rotation: parseInt(e.target.value) })} className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded-none px-2 py-1 text-[10px]"/>
+ <label className="font-mono text-[7px] text-nous-subtle">ROTATION (°)</label>
+ <input type="number"value={selectedImageElement.style.rotation || 0} onChange={e => handleUpdateElementStyle(section.id, selectedImageElement.id, { rotation: parseInt(e.target.value) })} className="w-full bg-nous-base border border-nous-border rounded-none px-2 py-1 text-[10px]"/>
  </div>
  </div>
  </div>
 
  {/* OPACITY */}
- <div className="space-y-2 pt-4 border-t border-stone-100 dark:border-stone-700">
+ <div className="space-y-2 pt-4 border-t border-nous-border">
  <div className="flex justify-between">
- <span className="font-mono text-[9px] text-stone-500">OPACITY</span>
- <span className="font-mono text-[9px] text-stone-500">{isNaN(Number(selectedImageElement.style.opacity)) ? 100 : Math.round((selectedImageElement.style.opacity !== undefined ? Number(selectedImageElement.style.opacity) : 1) * 100)}%</span>
+ <span className="font-mono text-[9px] text-nous-text0">OPACITY</span>
+ <span className="font-mono text-[9px] text-nous-text0">{isNaN(Number(selectedImageElement.style.opacity)) ? 100 : Math.round((selectedImageElement.style.opacity !== undefined ? Number(selectedImageElement.style.opacity) : 1) * 100)}%</span>
  </div>
  <SemanticSteps 
  steps={[
@@ -982,8 +982,8 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  {/* CORNER RADIUS */}
  <div className="space-y-2">
  <div className="flex justify-between">
- <span className="font-mono text-[9px] text-stone-500">RADIUS</span>
- <span className="font-mono text-[9px] text-stone-500">{selectedImageElement.style.borderRadius || 0}px</span>
+ <span className="font-mono text-[9px] text-nous-text0">RADIUS</span>
+ <span className="font-mono text-[9px] text-nous-text0">{selectedImageElement.style.borderRadius || 0}px</span>
  </div>
  <SemanticSteps 
  steps={[
@@ -999,7 +999,7 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
 
  {/* FILTERS */}
  <div className="space-y-2">
- <span className="font-mono text-[9px] text-stone-500 block">TREATMENT</span>
+ <span className="font-mono text-[9px] text-nous-text0 block">TREATMENT</span>
  <div className="grid grid-cols-3 gap-2">
  {[
  { label: 'RAW', val: 'none' },
@@ -1012,7 +1012,7 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  <button 
  key={f.label}
  onClick={() => handleUpdateElementStyle(section.id, selectedImageElement.id, { filter: f.val })}
- className={`px-2 py-1.5 border rounded-none font-sans text-[7px] uppercase font-black transition-all ${selectedImageElement.style.filter === f.val ? 'bg-nous-text text-white border-transparent' : 'border-stone-200 dark:border-stone-700 text-stone-400 hover:border-stone-400'}`}
+ className={`px-2 py-1.5 border rounded-none font-sans text-[7px] uppercase font-black transition-all ${selectedImageElement.style.filter === f.val ? 'bg-nous-text text-white border-transparent' : 'border-nous-border text-nous-subtle hover:border-nous-border'}`}
  >
  {f.label}
  </button>
@@ -1031,8 +1031,8 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  </div>
 
  {/* 4. CHAPTER NAVIGATION & PAGE TOOLS */}
- <div className="h-16 bg-white dark:bg-stone-950 border-t border-stone-200 dark:border-stone-800 flex items-center justify-between px-6 shrink-0 gap-4 fixed bottom-0 left-0 right-0 md:relative z-50">
- <button onClick={() => scrollToSlide(Math.max(0, activeSlideIndex - 1))} className="p-2 text-stone-400 hover:text-nous-text dark:hover:text-white disabled:opacity-30"disabled={activeSlideIndex === 0}><ArrowLeft size={16}/></button>
+ <div className="h-16 bg-white border-t border-nous-border flex items-center justify-between px-6 shrink-0 gap-4 fixed bottom-0 left-0 right-0 md:relative z-50">
+ <button onClick={() => scrollToSlide(Math.max(0, activeSlideIndex - 1))} className="p-2 text-nous-subtle hover:text-nous-text dark:hover:text-white disabled:opacity-30"disabled={activeSlideIndex === 0}><ArrowLeft size={16}/></button>
  
  <div className="flex items-center gap-4">
  <div className="flex gap-2 overflow-x-auto no-scrollbar max-w-[40vw]">
@@ -1040,22 +1040,22 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  <button 
  key={s.id} 
  onClick={() => scrollToSlide(i)}
- className={`h-1.5 rounded-none transition-all ${i === activeSlideIndex ? 'w-8 bg-nous-text dark:bg-white' : 'w-2 bg-stone-300 dark:bg-stone-800 hover:bg-stone-400'}`} 
+ className={`h-1.5 rounded-none transition-all ${i === activeSlideIndex ? 'w-8 bg-nous-text' : 'w-2 bg-stone-300 hover:bg-stone-400'}`} 
  />
  ))}
  </div>
- <div className="h-4 w-px bg-stone-200 dark:bg-stone-800 hidden md:block"/>
- <button onClick={handleAddPage} className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-none font-sans text-[8px] uppercase tracking-widest font-black text-stone-500 hover:text-nous-text dark:hover:text-white transition-all">
+ <div className="h-4 w-px bg-stone-200 hidden md:block"/>
+ <button onClick={handleAddPage} className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-nous-base border border-nous-border rounded-none font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0 hover:text-nous-text dark:hover:text-white transition-all">
  <Plus size={10} /> Add Slide
  </button>
  {proposal.content.sections.length > 1 && (
- <button onClick={handleDeletePage} className="hidden md:block p-2 text-stone-300 hover:text-red-500 transition-colors"title="Delete Slide">
+ <button onClick={handleDeletePage} className="hidden md:block p-2 text-nous-subtle hover:text-red-500 transition-colors"title="Delete Slide">
  <X size={12} />
  </button>
  )}
  </div>
 
- <button onClick={() => scrollToSlide(Math.min(proposal.content.sections.length - 1, activeSlideIndex + 1))} className="p-2 text-stone-400 hover:text-nous-text dark:hover:text-white disabled:opacity-30"disabled={activeSlideIndex === proposal.content.sections.length - 1}><ArrowRight size={16}/></button>
+ <button onClick={() => scrollToSlide(Math.min(proposal.content.sections.length - 1, activeSlideIndex + 1))} className="p-2 text-nous-subtle hover:text-nous-text dark:hover:text-white disabled:opacity-30"disabled={activeSlideIndex === proposal.content.sections.length - 1}><ArrowRight size={16}/></button>
  </div>
 
  </div>

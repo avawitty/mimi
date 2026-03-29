@@ -14,21 +14,21 @@ const TONE_STYLES: Record<string, {
  wrapper: string, border: string, text: string, accent: string, aspect: string, grainOpacity: string, overlayColor: string, dark: any
 }> = {
  'Cinematic Witness': { 
- wrapper: 'bg', border: 'border-stone-300', text: 'text-stone-900', accent: 'text-stone-500', aspect: 'aspect-video', grainOpacity: 'opacity-[0.08]', overlayColor: 'bg-white/70', 
- dark: { wrapper: 'bg', border: 'border-white/5', text: 'text', accent: 'text-stone-500', overlayColor: 'bg-stone-950/80' } 
+ wrapper: 'bg', border: 'border-nous-border', text: 'text-nous-text', accent: 'text-nous-text0', aspect: 'aspect-video', grainOpacity: 'opacity-[0.08]', overlayColor: 'bg-white/70', 
+ dark: { wrapper: 'bg', border: 'border-white/5', text: 'text', accent: 'text-nous-text0', overlayColor: 'bg-nous-base/80' } 
  },
  'Editorial Stillness': { 
- wrapper: 'bg', border: 'border-stone-200', text: 'text', accent: 'text', aspect: 'aspect-[3/4]', grainOpacity: 'opacity-[0.05]', overlayColor: 'bg/80', 
- dark: { wrapper: 'bg-black', border: 'border-white/10', text: 'text-stone-100', accent: 'text-stone-600', overlayColor: 'bg-black/90' } 
+ wrapper: 'bg', border: 'border-nous-border', text: 'text', accent: 'text', aspect: 'aspect-[3/4]', grainOpacity: 'opacity-[0.05]', overlayColor: 'bg/80', 
+ dark: { wrapper: 'bg-black', border: 'border-white/10', text: 'text-nous-text', accent: 'text-nous-subtle', overlayColor: 'bg-black/90' } 
  },
  'chic': { 
- wrapper: 'bg', border: 'border-stone-300', text: 'text-stone-900', accent: 'text-stone-500', aspect: 'aspect-[3/4]', grainOpacity: 'opacity-[0.05]', overlayColor: 'bg/80', 
- dark: { wrapper: 'bg', border: 'border-white/10', text: 'text-stone-200', accent: 'text-stone-500', overlayColor: 'bg-black/90' } 
+ wrapper: 'bg', border: 'border-nous-border', text: 'text-nous-text', accent: 'text-nous-text0', aspect: 'aspect-[3/4]', grainOpacity: 'opacity-[0.05]', overlayColor: 'bg/80', 
+ dark: { wrapper: 'bg', border: 'border-white/10', text: 'text-nous-text', accent: 'text-nous-text0', overlayColor: 'bg-black/90' } 
  },
  // ... (Other tones use defaults or mapped logic) ...
  'default': {
- wrapper: 'bg-white', border: 'border-stone-100', text: 'text-black', accent: 'text-stone-400', aspect: 'aspect-[3/4]', grainOpacity: 'opacity-[0.03]', overlayColor: 'bg-white/90',
- dark: { wrapper: 'bg-stone-900', border: 'border-white/10', text: 'text-white', accent: 'text-stone-500', overlayColor: 'bg-black/80' }
+ wrapper: 'bg-white', border: 'border-nous-border', text: 'text-black', accent: 'text-nous-subtle', aspect: 'aspect-[3/4]', grainOpacity: 'opacity-[0.03]', overlayColor: 'bg-white/90',
+ dark: { wrapper: 'bg-nous-base', border: 'border-white/10', text: 'text-white', accent: 'text-nous-text0', overlayColor: 'bg-black/80' }
  }
 };
 
@@ -163,10 +163,10 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  <div className={`absolute inset-0 pointer-events-none ${styles.grainOpacity} bg-[url('https://www.transparenttextures.com/patterns/noise.png')] z-0 mix-blend-overlay`} />
  
  {/* TAPE BINDING (Top) */}
- <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-32 h-6 bg-white/40 dark:bg-white/10 backdrop-blur-sm border border-white/20 transform -rotate-2 z-40"style={{ mixBlendMode: 'overlay' }} />
+ <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-32 h-6 bg-white/40 /10 backdrop-blur-sm border border-white/20 transform -rotate-2 z-40"style={{ mixBlendMode: 'overlay' }} />
  
  {/* TAPE BINDING (Bottom Corner) */}
- <div className="absolute -bottom-4 -right-4 w-24 h-8 bg-white/40 dark:bg-white/10 backdrop-blur-sm border border-white/20 transform -rotate-45 z-40"style={{ mixBlendMode: 'overlay' }} />
+ <div className="absolute -bottom-4 -right-4 w-24 h-8 bg-white/40 /10 backdrop-blur-sm border border-white/20 transform -rotate-45 z-40"style={{ mixBlendMode: 'overlay' }} />
 
  {/* IMAGE LAYER (Masonry: Image is visible by default, not just on hover) */}
  {(zine.coverImageUrl || zine.content?.hero_image_url) && (
@@ -196,12 +196,12 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  <button onClick={(e) => { e.stopPropagation(); /* TODO: Implement Mix */ }} className="p-2 rounded-none backdrop-blur-md bg-white/10 text-white hover:bg-white hover:text-black"title="Mix">
  <Shuffle size={12} />
  </button>
- <button onClick={(e) => { e.stopPropagation(); handleRegenerate(); }} className={`p-2 rounded-none backdrop-blur-md ${isRegenerating ? 'bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900' : 'bg-white/10 text-white hover:bg-white hover:text-black'} `} title="Regenerate">
+ <button onClick={(e) => { e.stopPropagation(); handleRegenerate(); }} className={`p-2 rounded-none backdrop-blur-md ${isRegenerating ? 'bg-nous-base text-white ' : 'bg-white/10 text-white hover:bg-white hover:text-black'} `} title="Regenerate">
  <RotateCcw size={12} className={isRegenerating ? 'animate-spin' : ''} />
  </button>
  <button 
  onClick={handlePublishToggle}
- className={`p-2 rounded-none transition-all backdrop-blur-md ${zine.isPublic ? 'bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900' : 'bg-white/10 text-white hover:bg-white hover:text-black'}`}
+ className={`p-2 rounded-none transition-all backdrop-blur-md ${zine.isPublic ? 'bg-nous-base text-white ' : 'bg-white/10 text-white hover:bg-white hover:text-black'}`}
  title={zine.isPublic ?"Unpublish":"Publish"}
  >
  {zine.isPublic ? <Radio size={12} /> : <EyeOff size={12} />}
@@ -210,7 +210,7 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  )}
  <button 
  onClick={handleArchive}
- className={`p-2 rounded-none transition-all backdrop-blur-md ${isArchived ? 'bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900' : 'bg-white/10 text-white hover:bg-white hover:text-black'}`}
+ className={`p-2 rounded-none transition-all backdrop-blur-md ${isArchived ? 'bg-nous-base text-white ' : 'bg-white/10 text-white hover:bg-white hover:text-black'}`}
  title="Archive to Pocket"
  >
  {isArchived ? <Check size={12} /> : <Bookmark size={12} />}
@@ -220,7 +220,7 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  {/* EDIT MODAL */}
  {showEditModal && (
  <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center p-4"onClick={(e) => e.stopPropagation()}>
- <div className="bg-white dark:bg-stone-900 p-6 rounded-none w-full max-w-sm">
+ <div className="bg-white p-6 rounded-none w-full max-w-sm">
  <div className="flex justify-between items-center mb-4">
  <h3 className="text-sm font-mono uppercase tracking-widest">Edit Image</h3>
  <button onClick={() => setShowEditModal(false)}><X size={16} /></button>
@@ -229,12 +229,12 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  value={editPrompt} 
  onChange={(e) => setEditPrompt(e.target.value)}
  placeholder="e.g., add grain, make dress red..."
- className="w-full p-2 mb-4 bg-stone-100 dark:bg-stone-800 rounded-none text-sm"
+ className="w-full p-2 mb-4 bg-nous-base rounded-none text-sm"
  />
  <button 
  onClick={handleEdit}
  disabled={isEditing}
- className="w-full py-2 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-none text-xs font-bold uppercase tracking-widest"
+ className="w-full py-2 bg-nous-base text-white rounded-none text-xs font-bold uppercase tracking-widest"
  >
  {isEditing ? 'Refracting...' : 'Apply Edit'}
  </button>
@@ -245,11 +245,11 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  {/* META TAG (Masonry) */}
  {isMasonry && (
  <div className="absolute top-3 left-3 z-30 flex flex-wrap gap-1">
- <span className="bg-white/90 dark:bg-black/90 text-[6px] font-mono uppercase tracking-widest px-2 py-1 rounded-none backdrop-blur-md text-black dark:text-white">
+ <span className="bg-white/90 /90 text-[6px] font-mono uppercase tracking-widest px-2 py-1 rounded-none backdrop-blur-md text-nous-text">
  {zine.tone}
  </span>
  {zine.content?.agentEnrichment?.autoTags?.slice(0, 3).map(tag => (
- <span key={tag} className="bg-stone-900/90 dark:bg-stone-100/90 text-[6px] font-mono uppercase tracking-widest px-2 py-1 rounded-none backdrop-blur-md text-white dark:text-stone-900">
+ <span key={tag} className="bg-nous-base/90 /90 text-[6px] font-mono uppercase tracking-widest px-2 py-1 rounded-none backdrop-blur-md text-white">
  #{tag}
  </span>
  ))}
@@ -260,7 +260,7 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  <div className={`relative z-10 flex flex-col justify-between ${isMasonry ? 'absolute inset-0 p-6' : 'h-full p-6'}`}>
  
  {/* TOP: DOSSIER HEADER */}
- <div className="flex justify-between items-start border-b border-stone-300/30 dark:border-stone-700/30 pb-4 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+ <div className="flex justify-between items-start border-b border-nous-border/30 /30 pb-4 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
  <div className="flex flex-col gap-1">
  <span className={`font-mono text-[8px] uppercase tracking-widest opacity-60 ${styles.text}`}>
  ARTIFACT // {zine.id.substring(0, 8)}
@@ -309,7 +309,7 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
 
  {/* BOTTOM: AUTHOR & METRICS */}
  {!isMasonry && (
- <div className="flex justify-between items-end pt-4 border-t border-stone-300/30 dark:border-stone-700/30 opacity-0 group-hover:opacity-100 transition-opacity duration-700 mt-auto">
+ <div className="flex justify-between items-end pt-4 border-t border-nous-border/30 /30 opacity-0 group-hover:opacity-100 transition-opacity duration-700 mt-auto">
  <div className="flex flex-col gap-1">
  <span className={`font-mono text-[6px] uppercase tracking-widest opacity-40 ${styles.text}`}>
  OPERATIVE
@@ -343,7 +343,7 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  </div>
  
  {/* BOTTOM BORDER HOVER */}
- <div className={`h-0.5 w-full bg-stone-900 dark:bg-stone-100 scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left`} />
+ <div className={`h-0.5 w-full bg-nous-base scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left`} />
  </motion.div>
  );
 });

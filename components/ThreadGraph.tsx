@@ -105,7 +105,7 @@ export const ThreadGraph: React.FC<ThreadGraphProps> = ({ metadata, accentColor 
  }, [nodes]);
 
  return (
- <div className="relative w-full h-[400px] md:h-[500px] bg-stone-900 rounded-none overflow-hidden border border-stone-800 p-8">
+ <div className="relative w-full h-[400px] md:h-[500px] bg-nous-base rounded-none overflow-hidden border border-nous-border p-8">
  {/* Background Grid */}
  <div className="absolute inset-0 opacity-20 pointer-events-none"
  style={{ backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', backgroundSize: '20px 20px' }} 
@@ -149,15 +149,15 @@ export const ThreadGraph: React.FC<ThreadGraphProps> = ({ metadata, accentColor 
  transition={{ type:"spring", stiffness: 200, damping: 20, delay: 0.5 + (i * 0.1) }}
  >
  <div className="relative">
- <div className="w-10 h-10 md:w-12 md:h-12 rounded-none bg-black border border-stone-700 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 z-10 relative"style={{ borderColor: node.type === 'motif' ? accentColor : undefined }}>
- <Icon size={16} className={node.type === 'motif' ? 'text-white' : 'text-stone-400'} style={node.type === 'motif' ? { color: accentColor } : {}} />
+ <div className="w-10 h-10 md:w-12 md:h-12 rounded-none bg-black border border-nous-border flex items-center justify-center group-hover:scale-110 transition-transform duration-300 z-10 relative"style={{ borderColor: node.type === 'motif' ? accentColor : undefined }}>
+ <Icon size={16} className={node.type === 'motif' ? 'text-white' : 'text-nous-subtle'} style={node.type === 'motif' ? { color: accentColor } : {}} />
  </div>
  {/* Pulse effect */}
  <div className="absolute inset-0 rounded-none animate-ping opacity-20"style={{ backgroundColor: accentColor }} />
  </div>
  
  <div className="mt-3 text-center w-32">
- <span className="font-mono text-[8px] md:text-[9px] uppercase tracking-widest text-stone-400 group-hover:text-white transition-colors bg-black/50 px-2 py-1 rounded-none backdrop-blur-sm">
+ <span className="font-mono text-[8px] md:text-[9px] uppercase tracking-widest text-nous-subtle group-hover:text-white transition-colors bg-black/50 px-2 py-1 rounded-none backdrop-blur-sm">
  {node.label}
  </span>
  </div>

@@ -74,13 +74,13 @@ export const Diagnostics: React.FC = () => {
  };
 
  return (
- <div className="p-6 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-none space-y-6">
+ <div className="p-6 bg-nous-base border border-nous-border rounded-none space-y-6">
  <div className="flex items-center justify-between">
- <h3 className="font-serif text-2xl italic tracking-tighter text-nous-text dark:text-white">System Diagnostics</h3>
+ <h3 className="font-serif text-2xl italic tracking-tighter text-nous-text ">System Diagnostics</h3>
  <button 
  onClick={runDiagnostics} 
  disabled={isRunning}
- className="px-6 py-2 bg-nous-text dark:bg-white text-white dark:text-black font-sans text-[9px] uppercase tracking-widest font-black rounded-none active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
+ className="px-6 py-2 bg-nous-text text-nous-base font-sans text-[9px] uppercase tracking-widest font-black rounded-none active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2"
  >
  {isRunning && <Loader2 size={12} className="animate-spin"/>}
  {isRunning ? 'Running...' : 'Run Sweep'}
@@ -89,16 +89,16 @@ export const Diagnostics: React.FC = () => {
 
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  {results.map(r => (
- <div key={r.id} className="flex items-center gap-4 p-4 border border-stone-100 dark:border-stone-800 rounded-none bg-white dark:bg-black/20">
+ <div key={r.id} className="flex items-center gap-4 p-4 border border-nous-border rounded-none bg-nous-base/20">
  <div className={`p-2 rounded-none ${
- r.status === 'pending' ? 'bg-stone-100 dark:bg-stone-800 text-stone-400' :
- r.status === 'success' ? 'bg-stone-50 dark:bg-stone-900/20 text-stone-500' :
+ r.status === 'pending' ? 'bg-nous-base text-nous-subtle' :
+ r.status === 'success' ? 'bg-nous-base /20 text-nous-text0' :
  'bg-red-50 dark:bg-red-900/20 text-red-500'
  }`}>
  {r.status === 'pending' ? r.icon : r.status === 'success' ? <CheckCircle size={16} /> : <XCircle size={16} />}
  </div>
  <div>
- <p className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-500">{r.label}</p>
+ <p className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0">{r.label}</p>
  <p className="font-serif italic text-sm text-nous-text dark:text-white">
  {r.status === 'pending' && !isRunning ? 'Ready' : r.message || 'Checking...'}
  </p>

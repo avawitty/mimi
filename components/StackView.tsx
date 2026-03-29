@@ -25,18 +25,18 @@ export const StackView: React.FC<{ stackId: string }> = ({ stackId }) => {
  return (
  <div className="p-8">
  <h1 className="text-4xl font-serif italic">{stack.title}</h1>
- <p className="text-stone-500">{stack.description}</p>
+ <p className="text-nous-text0">{stack.description}</p>
  <div className="flex gap-4 mt-4">
  <button 
  onClick={() => {
  navigator.clipboard.writeText(window.location.href).catch(e => console.error("MIMI // Clipboard error", e));
  alert('Stack URL copied to clipboard!');
  }}
- className="flex items-center gap-2 px-4 py-2 bg-stone-100 rounded-none"
+ className="flex items-center gap-2 px-4 py-2 bg-nous-base rounded-none"
  >
  <Share2 size={16}/> Share
  </button>
- <button className="flex items-center gap-2 px-4 py-2 bg-stone-100 rounded-none"><Edit2 size={16}/> Edit</button>
+ <button className="flex items-center gap-2 px-4 py-2 bg-nous-base rounded-none"><Edit2 size={16}/> Edit</button>
  <button 
  onClick={() => {
  if (confirm('Are you sure you want to delete this stack?')) {

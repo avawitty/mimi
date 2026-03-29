@@ -30,11 +30,11 @@ const EXPORT_MODES = [
 
 const SectionHeader: React.FC<{ label: string; icon: any }> = ({ label, icon: Icon }) => (
  <div className="flex items-center gap-4 mb-8 opacity-50">
- <div className="p-2 bg-stone-100 dark:bg-stone-800 rounded-none text-nous-text dark:text-white">
+ <div className="p-2 bg-nous-base rounded-none text-nous-text ">
  {React.cloneElement(Icon as React.ReactElement, { size: 12 })}
  </div>
- <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black text-stone-400">{label}</span>
- <div className="h-px flex-1 bg-stone-100 dark:bg-stone-800"/>
+ <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black text-nous-subtle">{label}</span>
+ <div className="h-px flex-1 bg-nous-base"/>
  </div>
 );
 
@@ -47,11 +47,11 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  // Fallback to prevent crash if metadata is incomplete
  if (!metadata || !metadata.content) {
  return (
- <div className="fixed inset-0 z-[20000] bg-stone-900 text-white flex items-center justify-center p-8">
+ <div className="fixed inset-0 z-[20000] bg-nous-base text-nous-text flex items-center justify-center p-8">
  <div className="max-w-md text-center space-y-4">
  <p className="font-serif italic text-xl text-red-400">Artifact Structural Failure</p>
- <p className="font-sans text-xs text-stone-500">The metadata for this zine is incomplete or corrupted.</p>
- <button onClick={onClose} className="px-6 py-2 bg-white text-black rounded-none font-sans text-xs font-black">Close</button>
+ <p className="font-sans text-xs text-nous-text0">The metadata for this zine is incomplete or corrupted.</p>
+ <button onClick={onClose} className="px-6 py-2 bg-nous-text text-nous-base rounded-none font-sans text-xs font-black">Close</button>
  </div>
  </div>
  );
@@ -213,13 +213,13 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  }, [exportMode]);
 
  const blockClass = useMemo(() => {
- const base ="export-section bg-white dark:bg-stone-950 flex flex-col justify-center overflow-hidden relative";
+ const base ="export-section bg-white flex flex-col justify-center overflow-hidden relative";
  // PDF/Print/Asset Mode: Forced Page Dimensions for reliable canvas capture
  if (exportMode === 'pdf' || exportMode === 'assets') {
- return `${base} w-full aspect-[210/297] p-16 mb-8 border border-stone-100 dark:border-stone-800 `;
+ return `${base} w-full aspect-[210/297] p-16 mb-8 border border-nous-border `;
  }
  // Scroll Mode: Continuous Flow
- return `${base} py-16 px-10 border-b border-stone-100 dark:border-stone-900 last:border-0`;
+ return `${base} py-16 px-10 border-b border-nous-border last:border-0`;
  }, [exportMode]);
 
  return (
@@ -227,44 +227,44 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  initial={{ opacity: 0 }} 
  animate={{ opacity: 1 }} 
  exit={{ opacity: 0 }} 
- className="fixed inset-0 z-[20000] bg-stone-100 dark:bg-stone-950 flex flex-col md:flex-row overflow-hidden selection:bg-stone-500"
+ className="fixed inset-0 z-[20000] bg-nous-base flex flex-col md:flex-row overflow-hidden selection:bg-nous-base0"
  >
  
  {/* CONTROLS SIDEBAR */}
- <aside className="w-full md:w-[400px] border-r border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 flex flex-col p-8 shrink-0 z-20 overflow-y-auto no-scrollbar">
+ <aside className="w-full md:w-[400px] border-r border-nous-border bg-white flex flex-col p-8 shrink-0 z-20 overflow-y-auto no-scrollbar">
  <div className="flex justify-between items-center mb-12">
  <div className="space-y-1">
- <span className="font-sans text-[8px] uppercase tracking-[0.5em] font-black text-stone-500">Extraction Protocol</span>
+ <span className="font-sans text-[8px] uppercase tracking-[0.5em] font-black text-nous-text0">Extraction Protocol</span>
  <h2 className="font-serif text-3xl italic tracking-tighter text-nous-text dark:text-white">Extract Artifact.</h2>
  </div>
- <button onClick={onClose} className="p-2 text-stone-400 hover:text-red-500 transition-all rounded-none hover:bg-stone-100 dark:hover:bg-stone-800"><X size={20}/></button>
+ <button onClick={onClose} className="p-2 text-nous-subtle hover:text-red-500 transition-all rounded-none hover:bg-nous-base"><X size={20}/></button>
  </div>
  
  <div className="space-y-12">
  <section className="space-y-6">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 block border-b border-stone-100 dark:border-stone-800 pb-2">Format Protocol</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle block border-b border-nous-border pb-2">Format Protocol</span>
  <div className="grid gap-3">
  {EXPORT_MODES.map(m => (
- <button key={m.id} onClick={() => setExportMode(m.id as any)} className={`text-left p-5 rounded-none border transition-all ${exportMode === m.id ? 'bg-stone-50 dark:bg-black/20 border-stone-500 ring-1 ring-stone-500/20' : 'text-stone-400 border-stone-100 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-800'}`}>
+ <button key={m.id} onClick={() => setExportMode(m.id as any)} className={`text-left p-5 rounded-none border transition-all ${exportMode === m.id ? 'bg-nous-base /20 border-nous-border ring-1 ring-stone-500/20' : 'text-nous-subtle border-nous-border hover:bg-nous-base '}`}>
  <div className="flex items-center justify-between mb-2">
  <div className="flex items-center gap-3">
- <div className={exportMode === m.id ? 'text-stone-500' : 'text-stone-300'}>{m.icon}</div>
- <p className={`font-serif italic text-lg ${exportMode === m.id ? 'text-nous-text dark:text-white' : 'text-stone-500'}`}>{m.label}</p>
+ <div className={exportMode === m.id ? 'text-nous-text0' : 'text-nous-subtle'}>{m.icon}</div>
+ <p className={`font-serif italic text-lg ${exportMode === m.id ? 'text-nous-text dark:text-white' : 'text-nous-text0'}`}>{m.label}</p>
  </div>
- {exportMode === m.id && <CheckCircle2 size={14} className="text-stone-500"/>}
+ {exportMode === m.id && <CheckCircle2 size={14} className="text-nous-text0"/>}
  </div>
- <p className="font-sans text-[9px] text-stone-400 leading-relaxed uppercase tracking-wide opacity-80 pl-9">{m.desc}</p>
+ <p className="font-sans text-[9px] text-nous-subtle leading-relaxed uppercase tracking-wide opacity-80 pl-9">{m.desc}</p>
  </button>
  ))}
  </div>
  </section>
 
  <section className="space-y-4">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-400 block border-b border-stone-100 dark:border-stone-800 pb-2">Includes</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle block border-b border-nous-border pb-2">Includes</span>
  <div className="grid grid-cols-2 gap-2">
  {SECTION_DEFS.map(s => (
- <button key={s.id} onClick={() => toggleSection(s.id)} className={`flex items-center gap-3 p-3 rounded-none border transition-all ${selectedSections.has(s.id) ? 'bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 text-nous-text dark:text-white' : 'text-stone-300 dark:text-stone-700 border-transparent hover:bg-stone-50 dark:hover:bg-stone-900'}`}>
- <div className={selectedSections.has(s.id) ? 'text-stone-500' : ''}>{s.icon}</div>
+ <button key={s.id} onClick={() => toggleSection(s.id)} className={`flex items-center gap-3 p-3 rounded-none border transition-all ${selectedSections.has(s.id) ? 'bg-nous-base border-nous-border text-nous-text dark:text-white' : 'text-nous-subtle border-transparent hover:bg-nous-base '}`}>
+ <div className={selectedSections.has(s.id) ? 'text-nous-text0' : ''}>{s.icon}</div>
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">{s.label}</span>
  </button>
  ))}
@@ -274,7 +274,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
 
  <div className="mt-auto pt-12 space-y-4">
  {hasError && <p className="text-red-500 text-xs font-mono text-center">Export Handshake Failed. Try refreshing.</p>}
- <button onClick={handleExport} disabled={isGenerating} className="w-full py-5 bg-nous-text dark:bg-white text-white dark:text-black rounded-none font-sans text-[10px] tracking-[0.4em] uppercase font-black flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50">
+ <button onClick={handleExport} disabled={isGenerating} className="w-full py-5 bg-nous-text text-nous-base rounded-none font-sans text-[10px] tracking-[0.4em] uppercase font-black flex items-center justify-center gap-4 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50">
  {isGenerating ? <Loader2 size={16} className="animate-spin"/> : <Download size={16} />}
  {isGenerating ? 'Rendering...' : 'Extract Artifact'}
  </button>
@@ -283,27 +283,27 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
 
  {/* PREVIEW AREA */}
  <main className="flex-1 bg-stone-200/50 dark:bg overflow-y-auto p-4 md:p-12 flex justify-center no-scrollbar">
- <AnimatePresence>{isGenerating && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-white/80 dark:bg-black/80 backdrop-blur-md z-50 flex items-center justify-center"><div className="bg-white dark:bg-stone-900 p-12 rounded-none text-center space-y-6 border border-stone-100 dark:border-stone-800"><Loader2 size={40} className="animate-spin text-stone-500 mx-auto"/><div className="space-y-2"><p className="font-serif italic text-2xl text-nous-text dark:text-white">“Compressing Reality...”</p><p className="font-sans text-[9px] uppercase tracking-widest text-stone-400">Preparing High-Fidelity Output</p></div></div></motion.div>}</AnimatePresence>
+ <AnimatePresence>{isGenerating && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-white/80 /80 backdrop-blur-md z-50 flex items-center justify-center"><div className="bg-white p-12 rounded-none text-center space-y-6 border border-nous-border"><Loader2 size={40} className="animate-spin text-nous-text0 mx-auto"/><div className="space-y-2"><p className="font-serif italic text-2xl text-nous-text dark:text-white">“Compressing Reality...”</p><p className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle">Preparing High-Fidelity Output</p></div></div></motion.div>}</AnimatePresence>
  
- <div id="export-target"className={`transition-all duration-500 ${exportMode === 'scroll' ? 'bg-white dark:bg-stone-950 ' : ''}`} style={containerStyle}>
+ <div id="export-target"className={`transition-all duration-500 ${exportMode === 'scroll' ? 'bg-white ' : ''}`} style={containerStyle}>
  
  {/* 1. COVER */}
  {selectedSections.has('cover') && (
  <div className={blockClass}>
  <div className="flex-1 flex flex-col justify-center space-y-10">
  <div className="space-y-4">
- <span className="font-sans text-[10px] uppercase tracking-[0.6em] font-black text-stone-400">Issue Manifest</span>
+ <span className="font-sans text-[10px] uppercase tracking-[0.6em] font-black text-nous-subtle">Issue Manifest</span>
  <h1 className="font-serif text-6xl md:text-8xl italic tracking-tighter leading-[0.85] uppercase text-nous-text dark:text-white">
  {metadata.title}
  </h1>
  </div>
- <div className="h-px w-24 bg-stone-200 dark:bg-stone-800"/>
+ <div className="h-px w-24 bg-stone-200"/>
  <div className="space-y-2">
- <p className="font-serif italic text-2xl text-stone-500">@{metadata.userHandle}</p>
- <p className="font-sans text-[9px] uppercase tracking-widest text-stone-400 font-black">{metadata.tone} // {new Date(metadata.timestamp).toLocaleDateString()}</p>
+ <p className="font-serif italic text-2xl text-nous-text0">@{metadata.userHandle}</p>
+ <p className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle font-black">{metadata.tone} // {new Date(metadata.timestamp).toLocaleDateString()}</p>
  </div>
  </div>
- {exportMode !== 'scroll' && <div className="absolute bottom-8 right-8"><Stamp size={64} className="text-stone-100 dark:text-stone-900 -rotate-12"/></div>}
+ {exportMode !== 'scroll' && <div className="absolute bottom-8 right-8"><Stamp size={64} className="text-nous-text -rotate-12"/></div>}
  </div>
  )}
 
@@ -312,7 +312,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  <div className={blockClass}>
  <SectionHeader label="The Reading"icon={<FileText />} />
  <div className="flex-1 flex flex-col justify-center">
- <p className="font-serif italic text-3xl md:text-4xl text-stone-800 dark:text-stone-200 leading-[1.2] text-balance">
+ <p className="font-serif italic text-3xl md:text-4xl text-nous-text leading-[1.2] text-balance">
 "{content.oracular_mirror}"
  </p>
  </div>
@@ -325,13 +325,13 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
 
  {/* 3. SIGNALS (ARCHETYPE) */}
  {selectedSections.has('signals') && metadata.content.semiotic_signals && (
- <div className={`${blockClass} bg-stone-900 text-white dark:bg-black`}>
+ <div className={`${blockClass} bg-nous-base text-nous-text `}>
  <SectionHeader label="Archetype Index"icon={<Layers />} />
  <div className="flex-1 flex flex-col justify-center space-y-8">
  {metadata.content.semiotic_signals.slice(0, 4).map((t, i) => (
- <div key={i} className="border-l-2 border-white/20 pl-6 space-y-1">
- <h4 className="font-serif text-2xl italic text-white">{t.motif}</h4>
- <p className="font-sans text-[8px] uppercase tracking-widest text-stone-400 leading-relaxed">{t.context}</p>
+ <div key={i} className="border-l-2 border-nous-border pl-6 space-y-1">
+ <h4 className="font-serif text-2xl italic text-nous-text">{t.motif}</h4>
+ <p className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle leading-relaxed">{t.context}</p>
  </div>
  ))}
  </div>
@@ -345,7 +345,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  <span className="font-mono text-[9px]">FIG_0{i+1}</span>
  <span className="font-sans text-[7px] uppercase tracking-widest font-black">Visual Plate</span>
  </div>
- <div className="aspect-[3/4] w-full overflow-hidden mb-8 bg-stone-100">
+ <div className="aspect-[3/4] w-full overflow-hidden mb-8 bg-nous-base">
  <img 
  src={page.image_url} 
  className="w-full h-full object-cover grayscale"
@@ -353,7 +353,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  />
  </div>
  <h2 className="font-serif text-3xl italic tracking-tight uppercase mb-4 text-nous-text dark:text-white">{page.headline}</h2>
- <p className="font-serif italic text-base text-stone-500 leading-relaxed">{page.bodyCopy}</p>
+ <p className="font-serif italic text-base text-nous-text0 leading-relaxed">{page.bodyCopy}</p>
  </div>
  ))}
 
@@ -363,20 +363,20 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  <SectionHeader label="The Roadmap"icon={<Terminal />} />
  <div className="flex-1 flex flex-col justify-center gap-8">
  <div className="space-y-2">
- <span className="font-sans text-[7px] uppercase tracking-[0.2em] font-black text-stone-600 dark:text-stone-400 block">Strategic Thesis</span>
- <p className="font-serif italic text-lg text-nous-text dark:text-white leading-snug border-b border-stone-100 dark:border-stone-900 pb-4">
+ <span className="font-sans text-[7px] uppercase tracking-[0.2em] font-black text-nous-subtle block">Strategic Thesis</span>
+ <p className="font-serif italic text-lg text-nous-text dark:text-white leading-snug border-b border-nous-border pb-4">
  {content.roadmap.strategicThesis}
  </p>
  </div>
  <div className="space-y-2">
- <span className="font-sans text-[7px] uppercase tracking-[0.2em] font-black text-stone-600 dark:text-stone-400 block">Positioning Axis</span>
- <p className="font-serif italic text-lg text-nous-text dark:text-white leading-snug border-b border-stone-100 dark:border-stone-900 pb-4">
+ <span className="font-sans text-[7px] uppercase tracking-[0.2em] font-black text-nous-subtle block">Positioning Axis</span>
+ <p className="font-serif italic text-lg text-nous-text dark:text-white leading-snug border-b border-nous-border pb-4">
  {content.roadmap.positioningAxis}
  </p>
  </div>
  <div className="space-y-2">
- <span className="font-sans text-[7px] uppercase tracking-[0.2em] font-black text-stone-600 dark:text-stone-400 block">Authority Anchor</span>
- <p className="font-serif italic text-sm text-stone-500 leading-snug border-b border-stone-100 dark:border-stone-900 pb-4">
+ <span className="font-sans text-[7px] uppercase tracking-[0.2em] font-black text-nous-subtle block">Authority Anchor</span>
+ <p className="font-serif italic text-sm text-nous-text0 leading-snug border-b border-nous-border pb-4">
  <strong>Core Claim:</strong> {content.roadmap.authorityAnchor?.coreClaim}<br/>
  <strong>Repetition Vector:</strong> {content.roadmap.authorityAnchor?.repetitionVector}<br/>
  <strong>Exclusion Principle:</strong> {content.roadmap.authorityAnchor?.exclusionPrinciple}
@@ -388,12 +388,12 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
 
  {/* 6. DEBRIS (NEW) */}
  {selectedSections.has('debris') && (metadata.originalInput || metadata.content.meta?.intent) && (
- <div className={`${blockClass} bg-stone-50 dark:bg-stone-900`}>
+ <div className={`${blockClass} bg-nous-base `}>
  <SectionHeader label="Field Debris"icon={<Info />} />
  <div className="flex-1 flex flex-col justify-center">
- <div className="p-8 border-l-4 border-stone-200 dark:border-stone-700">
- <span className="font-mono text-[9px] text-stone-400 mb-4 block">// RAW_INPUT_LOG</span>
- <p className="font-mono text-xs md:text-sm text-stone-600 dark:text-stone-300 leading-relaxed whitespace-pre-wrap">
+ <div className="p-8 border-l-4 border-nous-border">
+ <span className="font-mono text-[9px] text-nous-subtle mb-4 block">// RAW_INPUT_LOG</span>
+ <p className="font-mono text-xs md:text-sm text-nous-subtle leading-relaxed whitespace-pre-wrap">
  {metadata.originalInput || metadata.content.meta?.intent ||"Debris data obscured."}
  </p>
  </div>

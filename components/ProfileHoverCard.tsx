@@ -97,18 +97,18 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = ({ isOpen, onCl
  animate={{ opacity: 1, y: 0, scale: 1 }}
  exit={{ opacity: 0, y: 10, scale: 0.95 }}
  transition={{ duration: 0.2 }}
- className="absolute top-full right-0 mt-2 w-80 bg dark:bg border border-stone-200 dark:border-stone-800 rounded-none dark: overflow-hidden z-[100] relative"
+ className="absolute top-full right-0 mt-2 w-80 bg dark:bg border border-nous-border rounded-none dark: overflow-hidden z-[100] relative"
  >
  {/* Texture Overlay */}
  <div className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.05] bg-[url('https://www.transparenttextures.com/patterns/noise.png')] z-0 mix-blend-overlay"/>
  
  <div className="p-6 relative z-10">
  <div className="flex items-start gap-4 mb-6">
- <div className="w-16 h-16 rounded-none bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 flex items-center justify-center overflow-hidden shrink-0">
+ <div className="w-16 h-16 rounded-none bg-nous-base border border-nous-border flex items-center justify-center overflow-hidden shrink-0">
  {profile?.photoURL ? (
  <img src={profile.photoURL} alt="Profile"className="w-full h-full object-cover"referrerPolicy="no-referrer"/>
  ) : (
- <User size={24} className="text-stone-400"/>
+ <User size={24} className="text-nous-subtle"/>
  )}
  </div>
  
@@ -120,49 +120,49 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = ({ isOpen, onCl
  type="text"
  value={newUsername}
  onChange={(e) => setNewUsername(e.target.value)}
- className="w-full bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-none px-2 py-1 text-sm focus:outline-none focus:border-stone-800 dark:focus:border-stone-300 text-stone-900 dark:text-white"
+ className="w-full bg-nous-base border border-nous-border rounded-none px-2 py-1 text-sm focus:outline-none focus:border-nous-border dark:focus:border-nous-border text-nous-text "
  autoFocus
  onKeyDown={(e) => e.key === 'Enter' && handleSaveUsername()}
  />
  <button 
  onClick={handleSaveUsername}
  disabled={isSaving || handleAvailable === false}
- className="text-stone-600 hover:text-stone-700 text-xs font-bold uppercase tracking-wider disabled:opacity-50"
+ className="text-nous-subtle hover:text-nous-subtle text-xs font-bold uppercase tracking-wider disabled:opacity-50"
  >
  Save
  </button>
  </div>
- {isCheckingHandle && <div className="text-[10px] text-stone-500 flex items-center gap-1"><Loader2 size={10} className="animate-spin"/> Checking...</div>}
+ {isCheckingHandle && <div className="text-[10px] text-nous-text0 flex items-center gap-1"><Loader2 size={10} className="animate-spin"/> Checking...</div>}
  {!isCheckingHandle && handleAvailable === false && <div className="text-[10px] text-red-500">Handle unavailable</div>}
- {!isCheckingHandle && handleAvailable === true && newUsername !== profile?.handle && newUsername.length >= 2 && <div className="text-[10px] text-stone-500">Handle available</div>}
+ {!isCheckingHandle && handleAvailable === true && newUsername !== profile?.handle && newUsername.length >= 2 && <div className="text-[10px] text-nous-text0">Handle available</div>}
  </div>
  ) : (
  <div className="flex items-center gap-2 mb-1 group cursor-pointer"onClick={() => setIsEditingUsername(true)}>
- <h3 className="font-serif italic text-xl text-stone-900 dark:text-white truncate">
+ <h3 className="font-serif italic text-xl text-nous-text dark:text-white truncate">
  @{profile?.handle || 'Swan'}
  </h3>
- <Edit2 size={12} className="text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity"/>
+ <Edit2 size={12} className="text-nous-subtle opacity-0 group-hover:opacity-100 transition-opacity"/>
  </div>
  )}
  
- <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-stone-500 mb-1 truncate">
+ <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-nous-text0 mb-1 truncate">
  <span>{authProvider} Authorized</span>
- <CheckCircle2 size={10} className="text-stone-500"/>
+ <CheckCircle2 size={10} className="text-nous-text0"/>
  </div>
- <div className="text-[10px] uppercase tracking-widest text-stone-500 truncate">
+ <div className="text-[10px] uppercase tracking-widest text-nous-text0 truncate">
  {user.email}
  </div>
  </div>
  </div>
 
- <div className="space-y-3 pt-4 border-t border-stone-100 dark:border-stone-800">
+ <div className="space-y-3 pt-4 border-t border-nous-border">
  <div className="flex justify-between items-center">
- <span className="font-sans text-[10px] uppercase tracking-widest text-stone-500">Membership Tier</span>
+ <span className="font-sans text-[10px] uppercase tracking-widest text-nous-text0">Membership Tier</span>
  <span className={`font-serif italic text-sm ${
- profile?.plan === 'lab' ? 'text-stone-600 dark:text-stone-400' :
+ profile?.plan === 'lab' ? 'text-nous-subtle ' :
  profile?.plan === 'pro' ? 'text-purple-600 dark:text-purple-400' :
  profile?.plan === 'core' ? 'text-orange-600 dark:text-orange-400' :
- 'text-stone-600 dark:text-stone-400'
+ 'text-nous-subtle '
  }`}>
  Mimi {profile?.plan ? profile.plan.charAt(0).toUpperCase() + profile.plan.slice(1) : 'Free'}
  {profile?.subscriptionInterval === 'year' && ' (Annual)'}
@@ -171,7 +171,7 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = ({ isOpen, onCl
  </div>
  </div>
 
- <div className="bg-stone-50 dark:bg-stone-950/50 p-4 border-t border-stone-100 dark:border-stone-800">
+ <div className="bg-nous-base /50 p-4 border-t border-nous-border">
  <button
  onClick={handleSignOut}
  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-sans uppercase tracking-widest font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-none transition-colors"

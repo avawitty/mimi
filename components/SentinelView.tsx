@@ -10,15 +10,15 @@ import { TheWard } from './TheWard';
 const IntegrityMeter: React.FC<{ score: number }> = ({ score }) => (
  <div className="space-y-2">
  <div className="flex justify-between items-end">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Structural Integrity</span>
- <span className="font-mono text-xl font-black text-stone-500">{score}%</span>
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Structural Integrity</span>
+ <span className="font-mono text-xl font-black text-nous-text0">{score}%</span>
  </div>
- <div className="h-2 w-full bg-stone-100 dark:bg-stone-800 rounded-none overflow-hidden">
+ <div className="h-2 w-full bg-nous-base rounded-none overflow-hidden">
  <motion.div 
  initial={{ width: 0 }}
  animate={{ width: `${score}%` }}
  transition={{ duration: 1.5, ease:"easeOut"}}
- className={`h-full ${score > 80 ? 'bg-stone-500' : score > 50 ? 'bg-amber-500' : 'bg-red-500'}`}
+ className={`h-full ${score > 80 ? 'bg-nous-base0' : score > 50 ? 'bg-amber-500' : 'bg-red-500'}`}
  />
  </div>
  </div>
@@ -29,14 +29,14 @@ const ArchetypeBar: React.FC<{ label: string, count: number, total: number }> = 
  return (
  <div className="space-y-1">
  <div className="flex justify-between items-center">
- <span className="font-serif italic text-sm text-stone-600 dark:text-stone-300">{label.replace(/-/g, ' ')}</span>
- <span className="font-mono text-[9px] text-stone-400">{Math.round(percentage)}%</span>
+ <span className="font-serif italic text-sm text-nous-subtle">{label.replace(/-/g, ' ')}</span>
+ <span className="font-mono text-[9px] text-nous-subtle">{Math.round(percentage)}%</span>
  </div>
- <div className="h-1 w-full bg-stone-50 dark:bg-stone-900 rounded-none overflow-hidden">
+ <div className="h-1 w-full bg-nous-base rounded-none overflow-hidden">
  <motion.div 
  initial={{ width: 0 }}
  animate={{ width: `${percentage}%` }}
- className="h-full bg-nous-text dark:bg-white"
+ className="h-full bg-nous-text"
  />
  </div>
  </div>
@@ -74,18 +74,18 @@ export const SentinelView: React.FC = () => {
  }, [validArchetypes]);
 
  return (
- <div className="flex-1 w-full h-full overflow-y-auto no-scrollbar pb-64 px-6 md:px-16 pt-12 md:pt-20 bg-nous-base dark:bg text-white dark:text-white transition-all duration-1000 relative">
+ <div className="flex-1 w-full h-full overflow-y-auto no-scrollbar pb-64 px-6 md:px-16 pt-12 md:pt-20 bg-nous-base dark:bg text-white  transition-all duration-1000 relative">
  <div className="max-w-6xl mx-auto space-y-16 relative z-10">
  
  {/* HEADER */}
- <header className="space-y-8 border-b border-black/5 dark:border-white/5 pb-12">
- <div className="flex items-center gap-4 text-stone-500">
+ <header className="space-y-8 border-b border-black/5 /5 pb-12">
+ <div className="flex items-center gap-4 text-nous-text0">
  <ShieldCheck size={18} className="animate-pulse"/>
  <span className="font-sans text-[10px] uppercase tracking-[0.6em] font-black italic">System Self-Reflection</span>
  </div>
  <div className="space-y-4">
  <h2 className="font-serif text-5xl md:text-7xl italic tracking-tighter leading-none">The Sentinel.</h2>
- <p className="font-serif italic text-xl text-stone-500 max-w-2xl">
+ <p className="font-serif italic text-xl text-nous-text0 max-w-2xl">
  Visualization of your aesthetic algorithm. The Sentinel tracks consistency, drift, and structural integrity across all manifests.
  </p>
  </div>
@@ -97,10 +97,10 @@ export const SentinelView: React.FC = () => {
  <div className="md:col-span-7 space-y-12">
  
  {/* FINGERPRINT CARD */}
- <section className="bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 p-10 rounded-none space-y-8">
+ <section className="bg-white border border-nous-border p-10 rounded-none space-y-8">
  <div className="flex items-start justify-between">
  <div className="space-y-2">
- <div className="flex items-center gap-3 text-stone-400">
+ <div className="flex items-center gap-3 text-nous-subtle">
  <Fingerprint size={16} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Aesthetic Fingerprint</span>
  </div>
@@ -128,24 +128,24 @@ export const SentinelView: React.FC = () => {
 
  {/* RECENT AGENT LOGS */}
  <section className="space-y-6">
- <div className="flex items-center gap-3 text-stone-400">
+ <div className="flex items-center gap-3 text-nous-subtle">
  <BrainCircuit size={14} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Agent Activity Log</span>
  </div>
- <div className="border-l border-stone-200 dark:border-stone-800 space-y-8 pl-8 relative">
+ <div className="border-l border-nous-border space-y-8 pl-8 relative">
  {agentLogs.length > 0 ? agentLogs.slice(0, 5).map(log => (
  <div key={log.id} className="relative">
  <div className={`absolute -left-[37px] top-1 w-2 h-2 rounded-none ${log.agent === 'sentinel' ? 'bg-red-500' : 'bg-indigo-500'} ring-4 ring-white dark:ring`} />
  <div className="flex flex-col gap-1">
  <div className="flex justify-between items-baseline">
  <span className={`font-sans text-[8px] uppercase tracking-widest font-black ${log.agent === 'sentinel' ? 'text-red-500' : 'text-indigo-500'}`}>{log.agent}</span>
- <span className="font-mono text-[8px] text-stone-400">{new Date(log.timestamp).toLocaleTimeString()}</span>
+ <span className="font-mono text-[8px] text-nous-subtle">{new Date(log.timestamp).toLocaleTimeString()}</span>
  </div>
- <p className="font-serif italic text-sm text-stone-600 dark:text-stone-300">{log.message}</p>
+ <p className="font-serif italic text-sm text-nous-subtle">{log.message}</p>
  </div>
  </div>
  )) : (
- <p className="font-serif italic text-sm text-stone-400">System quiet. No agents active.</p>
+ <p className="font-serif italic text-sm text-nous-subtle">System quiet. No agents active.</p>
  )}
  </div>
  </section>
@@ -155,7 +155,7 @@ export const SentinelView: React.FC = () => {
  <div className="md:col-span-5 space-y-12">
  
  {/* DRIFT ALERT CARD */}
- <div className="p-8 bg-stone-50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 rounded-none space-y-6">
+ <div className="p-8 bg-nous-base /50 border border-nous-border rounded-none space-y-6">
  <div className="flex items-center justify-between">
  <div className="flex items-center gap-3 text-amber-500">
  <AlertTriangle size={16} />
@@ -169,44 +169,44 @@ export const SentinelView: React.FC = () => {
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Enter The Ward</span>
  </button>
  </div>
- <p className="font-serif italic text-lg text-stone-500 leading-relaxed text-balance">
+ <p className="font-serif italic text-lg text-nous-text0 leading-relaxed text-balance">
  The Sentinel monitors deviations from your stated"Tailor"manifesto. High drift indicates an evolving aesthetic or a loss of coherence.
  </p>
  
  <div className="grid grid-cols-2 gap-4 pt-2">
- <div className="p-4 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-none">
+ <div className="p-4 bg-white border border-nous-border rounded-none">
  <div className="flex justify-between items-end mb-2">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Drift Score</span>
- <span className={`font-mono text-lg font-black ${driftScore > 50 ? 'text-red-500' : 'text-stone-500'}`}>{Math.round(driftScore)}</span>
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Drift Score</span>
+ <span className={`font-mono text-lg font-black ${driftScore > 50 ? 'text-red-500' : 'text-nous-text0'}`}>{Math.round(driftScore)}</span>
  </div>
- <div className="h-1 w-full bg-stone-50 dark:bg-stone-950 rounded-none overflow-hidden">
- <motion.div initial={{ width: 0 }} animate={{ width: `${driftScore}%` }} className={`h-full ${driftScore > 50 ? 'bg-red-500' : 'bg-stone-500'}`} />
+ <div className="h-1 w-full bg-nous-base rounded-none overflow-hidden">
+ <motion.div initial={{ width: 0 }} animate={{ width: `${driftScore}%` }} className={`h-full ${driftScore > 50 ? 'bg-red-500' : 'bg-nous-base0'}`} />
  </div>
  </div>
- <div className="p-4 bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-none">
+ <div className="p-4 bg-white border border-nous-border rounded-none">
  <div className="flex justify-between items-end mb-2">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400">Omission Index</span>
- <span className={`font-mono text-lg font-black ${omissionIndex > 50 ? 'text-amber-500' : 'text-stone-500'}`}>{Math.round(omissionIndex)}</span>
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Omission Index</span>
+ <span className={`font-mono text-lg font-black ${omissionIndex > 50 ? 'text-amber-500' : 'text-nous-text0'}`}>{Math.round(omissionIndex)}</span>
  </div>
- <div className="h-1 w-full bg-stone-50 dark:bg-stone-950 rounded-none overflow-hidden">
- <motion.div initial={{ width: 0 }} animate={{ width: `${omissionIndex}%` }} className={`h-full ${omissionIndex > 50 ? 'bg-amber-500' : 'bg-stone-500'}`} />
+ <div className="h-1 w-full bg-nous-base rounded-none overflow-hidden">
+ <motion.div initial={{ width: 0 }} animate={{ width: `${omissionIndex}%` }} className={`h-full ${omissionIndex > 50 ? 'bg-amber-500' : 'bg-nous-base0'}`} />
  </div>
  </div>
  </div>
 
  <div className="space-y-4 pt-4">
  {recentDrifts.length > 0 ? recentDrifts.slice().reverse().slice(0, 3).map((drift, i) => (
- <div key={i} className="flex items-start gap-4 p-4 bg-white dark:bg-stone-900 rounded-none border border-black/5 dark:border-white/5">
+ <div key={i} className="flex items-start gap-4 p-4 bg-white rounded-none border border-black/5 /5">
  <Zap size={14} className="text-amber-500 mt-1 shrink-0"/>
  <div className="space-y-1">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 block">{new Date(drift.timestamp).toLocaleDateString()}</span>
- <p className="font-serif italic text-sm text-stone-700 dark:text-stone-200">
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle block">{new Date(drift.timestamp).toLocaleDateString()}</span>
+ <p className="font-serif italic text-sm text-nous-subtle">
  Shift from <span className="font-bold">{drift.before.archetype || 'Void'}</span> to <span className="font-bold">{drift.after.archetype}</span>
  </p>
  </div>
  </div>
  )) : (
- <div className="flex items-center gap-3 p-4 bg-stone-500/10 border border-stone-500/20 rounded-none text-stone-600 dark:text-stone-400">
+ <div className="flex items-center gap-3 p-4 bg-nous-base0/10 border border-nous-border/20 rounded-none text-nous-subtle">
  <CheckCircle size={14} />
  <span className="font-sans text-[9px] uppercase tracking-widest font-black">Zero Drift Detected</span>
  </div>
@@ -216,18 +216,18 @@ export const SentinelView: React.FC = () => {
 
  {/* CURRENT MANDATE */}
  <div className="space-y-6">
- <div className="flex items-center gap-3 text-stone-400">
+ <div className="flex items-center gap-3 text-nous-subtle">
  <Target size={16} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Active Mandate</span>
  </div>
- <div className="p-8 bg-black text-white rounded-none space-y-6 relative overflow-hidden">
+ <div className="p-8 bg-nous-text text-nous-base rounded-none space-y-6 relative overflow-hidden">
  <div className="absolute top-0 right-0 p-6 opacity-20"><Layers size={64} /></div>
  <div className="relative z-10 space-y-4">
- <span className="font-sans text-[9px] uppercase tracking-widest text-stone-500 font-black">Primary Logic</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest text-nous-text0 font-black">Primary Logic</span>
  <p className="font-header text-3xl italic tracking-tighter leading-none">
 "{profile?.tailorDraft?.aestheticCore?.eraFocus ||"Undefined Era"} / {profile?.tasteProfile?.dominant_archetypes?.[0] ||"Unknown Archetype"}"
  </p>
- <p className="font-serif italic text-stone-400 text-sm border-t border-white/20 pt-4">
+ <p className="font-serif italic text-nous-subtle text-sm border-t border-white/20 pt-4">
  Use the Tailor view to recalibrate this core logic if the Sentinel reports high drift.
  </p>
  </div>

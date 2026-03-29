@@ -204,13 +204,13 @@ export const ThreadsView: React.FC = () => {
  }, [zines]);
 
  return (
- <div className="flex-1 overflow-y-auto bg dark:bg text-stone-900 dark:text-stone-100 font-serif selection:bg-stone-500/20 pb-32 custom-scrollbar">
+ <div className="flex-1 overflow-y-auto bg dark:bg text-nous-text font-serif selection:bg-nous-base0/20 pb-32 custom-scrollbar">
  <div className="max-w-5xl mx-auto p-6 md:p-12 space-y-16">
  
  {/* Header */}
- <div className="border-b border-stone-300 dark:border-stone-800 pb-8">
- <h2 className="text-4xl md:text-5xl font-serif italic text-stone-900 dark:text-stone-100">Narrative Pathing</h2>
- <p className="text-stone-500 font-sans text-[10px] uppercase tracking-[0.2em] mt-4">Semantic Paths Through Creative History</p>
+ <div className="border-b border-nous-border pb-8">
+ <h2 className="text-4xl md:text-5xl font-serif italic text-nous-text">Narrative Pathing</h2>
+ <p className="text-nous-text0 font-sans text-[10px] uppercase tracking-[0.2em] mt-4">Semantic Paths Through Creative History</p>
  </div>
 
  {/* Navigation Tabs */}

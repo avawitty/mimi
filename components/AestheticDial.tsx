@@ -73,7 +73,7 @@ export const AestheticDial: React.FC<AestheticDialProps> = ({
  onPointerDown={handlePointerDown}
  >
  {/* Track Background */}
- <div className="absolute left-0 right-0 h-1 bg-stone-200 dark:bg-stone-800 rounded-none overflow-hidden">
+ <div className="absolute left-0 right-0 h-1 bg-stone-200 rounded-none overflow-hidden">
  {/* Fill */}
  <motion.div 
  className="absolute top-0 bottom-0 left-0 rounded-none"
@@ -103,7 +103,7 @@ export const AestheticDial: React.FC<AestheticDialProps> = ({
  <motion.div 
  initial={{ opacity: 0, y: 10 }}
  animate={{ opacity: 1, y: -24 }}
- className="absolute font-mono text-[10px] bg-black text-white px-2 py-1 rounded-none whitespace-nowrap pointer-events-none"
+ className="absolute font-mono text-[10px] bg-nous-text text-nous-base px-2 py-1 rounded-none whitespace-nowrap pointer-events-none"
  >
  {safeValue}
  </motion.div>
@@ -111,7 +111,7 @@ export const AestheticDial: React.FC<AestheticDialProps> = ({
  </motion.div>
  </div>
  
- <div className="flex justify-between items-center text-stone-400 font-mono text-[9px] uppercase tracking-widest">
+ <div className="flex justify-between items-center text-nous-subtle font-mono text-[9px] uppercase tracking-widest">
  <span>{labelLeft}</span>
  <span>{labelRight}</span>
  </div>

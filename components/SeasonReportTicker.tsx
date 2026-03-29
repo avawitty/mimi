@@ -21,8 +21,8 @@ export const SeasonReportTicker: React.FC<{ report: SeasonReport | null }> = ({ 
  ];
 
  return (
- <div className="w-full h-8 bg-nous-text dark:bg-black text-white overflow-hidden flex items-center border-y border-stone-800 transition-colors duration-500">
- <div className={`flex shrink-0 items-center px-4 h-full gap-2 animate-pulse ${theme === 'dark' ? 'bg-stone-900/40 text-stone-400' : 'bg-stone-600'}`}>
+ <div className="w-full h-8 bg-nous-text dark:bg-nous-text text-nous-base overflow-hidden flex items-center border-y border-nous-border transition-colors duration-500">
+ <div className={`flex shrink-0 items-center px-4 h-full gap-2 animate-pulse ${theme === 'dark' ? 'bg-nous-base/40 text-nous-subtle' : 'bg-stone-600'}`}>
  <ShieldCheck size={10} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-bold">
  System Registry

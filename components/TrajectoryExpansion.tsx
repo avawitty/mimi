@@ -10,13 +10,13 @@ export const TrajectoryExpansion: React.FC<{ article: any, onClose: () => void }
  exit={{ opacity: 0, y: 20 }}
  className="fixed inset-0 z-[6000] bg dark:bg overflow-y-auto flex flex-col md:flex-row"
  >
- <button onClick={onClose} className="fixed top-6 right-6 z-50 p-4 bg-black text-white dark:bg-white dark:text-black rounded-none hover:scale-105 transition-transform">
+ <button onClick={onClose} className="fixed top-6 right-6 z-50 p-4 bg-nous-text text-nous-base   rounded-none hover:scale-105 transition-transform">
  <X size={20} />
  </button>
 
  {/* Left Column: Large Editorial Image */}
- <div className="w-full md:w-1/2 h-[50vh] md:h-screen sticky top-0 border-b md:border-b-0 md:border-r border-stone-300 dark:border-stone-800 p-4 md:p-8">
- <div className="w-full h-full relative overflow-hidden bg-stone-200 dark:bg-stone-900 rounded-none">
+ <div className="w-full md:w-1/2 h-[50vh] md:h-screen sticky top-0 border-b md:border-b-0 md:border-r border-nous-border p-4 md:p-8">
+ <div className="w-full h-full relative overflow-hidden bg-stone-200 rounded-none">
  {article.image ? (
  <img src={article.image} alt={article.headline} className="w-full h-full object-cover mix-blend-luminosity opacity-90"/>
  ) : (
@@ -36,66 +36,66 @@ export const TrajectoryExpansion: React.FC<{ article: any, onClose: () => void }
  <div className="w-full md:w-1/2 min-h-screen p-8 md:p-16 lg:p-24 flex flex-col bg dark:bg">
  <div className="mb-16">
  <div className="flex items-center gap-4 mb-8">
- <span className="font-mono text-[10px] uppercase tracking-widest px-3 py-1 border border-stone-300 dark:border-stone-700 rounded-none text-stone-600 dark:text-stone-400">
+ <span className="font-mono text-[10px] uppercase tracking-widest px-3 py-1 border border-nous-border rounded-none text-nous-subtle">
  {article.tag}
  </span>
- <span className="font-mono text-[10px] uppercase tracking-widest text-stone-600 dark:text-stone-500 flex items-center gap-2">
+ <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle 0 flex items-center gap-2">
  <Activity size={12} /> Signal: {article.signalStrength || '84.2%'}
  </span>
  </div>
- <h1 className="font-serif text-5xl md:text-7xl leading-[0.9] mb-6 text-stone-900 dark:text-stone-100">{article.headline}</h1>
- <p className="font-serif italic text-2xl text-stone-500 dark:text-stone-400 leading-tight">{article.subtitle}</p>
+ <h1 className="font-serif text-5xl md:text-7xl leading-[0.9] mb-6 text-nous-text">{article.headline}</h1>
+ <p className="font-serif italic text-2xl text-nous-text0 leading-tight">{article.subtitle}</p>
  </div>
 
- <div className="w-full h-px bg-stone-200 dark:bg-stone-800 mb-16"/>
+ <div className="w-full h-px bg-stone-200 mb-16"/>
 
  {/* Design Logic & Field Notes */}
  <div className="grid grid-cols-1 xl:grid-cols-3 gap-12">
  <div className="xl:col-span-2 space-y-8">
  <div>
- <h3 className="font-mono text-xs uppercase tracking-widest mb-6 flex items-center gap-2 text-stone-400 dark:text-stone-500">
+ <h3 className="font-mono text-xs uppercase tracking-widest mb-6 flex items-center gap-2 text-nous-subtle 0">
  <Database size={14} /> Design Logic
  </h3>
- <p className="font-sans text-lg leading-relaxed text-stone-800 dark:text-stone-200">
+ <p className="font-sans text-lg leading-relaxed text-nous-text">
  {article.content.intro}
  </p>
  </div>
  {article.content.bodyText && (
  <div>
- <p className="font-sans text-lg leading-relaxed text-stone-800 dark:text-stone-200">
+ <p className="font-sans text-lg leading-relaxed text-nous-text">
  {article.content.bodyText}
  </p>
  </div>
  )}
  {article.content.outro && (
- <div className="p-6 bg-stone-100 dark:bg-stone-900 rounded-none border border-stone-200 dark:border-stone-800">
- <p className="font-serif italic text-lg text-stone-600 dark:text-stone-400">
+ <div className="p-6 bg-nous-base rounded-none border border-nous-border">
+ <p className="font-serif italic text-lg text-nous-subtle">
 "{article.content.outro}"
  </p>
  </div>
  )}
  </div>
 
- <div className="xl:col-span-1 xl:border-l border-t xl:border-t-0 border-stone-200 dark:border-stone-800 pt-8 xl:pt-0 xl:pl-8">
- <h3 className="font-mono text-xs uppercase tracking-widest mb-6 flex items-center gap-2 text-stone-400 dark:text-stone-500">
+ <div className="xl:col-span-1 xl:border-l border-t xl:border-t-0 border-nous-border pt-8 xl:pt-0 xl:pl-8">
+ <h3 className="font-mono text-xs uppercase tracking-widest mb-6 flex items-center gap-2 text-nous-subtle 0">
  <Fingerprint size={14} /> Field Notes
  </h3>
- <div className="space-y-8 font-mono text-[10px] uppercase tracking-wider text-stone-500">
+ <div className="space-y-8 font-mono text-[10px] uppercase tracking-wider text-nous-text0">
  <div>
- <span className="block text-stone-400 dark:text-stone-600 mb-2">Author</span>
- <span className="text-stone-800 dark:text-stone-200">{article.content.author}</span>
+ <span className="block text-nous-subtle mb-2">Author</span>
+ <span className="text-nous-text">{article.content.author}</span>
  </div>
  <div>
- <span className="block text-stone-400 dark:text-stone-600 mb-2">Timestamp</span>
- <span className="text-stone-800 dark:text-stone-200">{article.timestamp}</span>
+ <span className="block text-nous-subtle mb-2">Timestamp</span>
+ <span className="text-nous-text">{article.timestamp}</span>
  </div>
  <div>
- <span className="block text-stone-400 dark:text-stone-600 mb-2">Material Analysis</span>
- <span className="text-stone-800 dark:text-stone-200 leading-relaxed">High-contrast, structural, archival. The aesthetic drift indicates a strong preference for brutalist typography mixed with organic textures.</span>
+ <span className="block text-nous-subtle mb-2">Material Analysis</span>
+ <span className="text-nous-text leading-relaxed">High-contrast, structural, archival. The aesthetic drift indicates a strong preference for brutalist typography mixed with organic textures.</span>
  </div>
  <div>
- <span className="block text-stone-400 dark:text-stone-600 mb-2">Trajectory ID</span>
- <span className="text-stone-800 dark:text-stone-200">{article.ref}</span>
+ <span className="block text-nous-subtle mb-2">Trajectory ID</span>
+ <span className="text-nous-text">{article.ref}</span>
  </div>
  </div>
  </div>

@@ -36,11 +36,11 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ items, zines, 
  return (
  <div className="w-full p-8">
  <div className="flex gap-4 mb-8">
- <button onClick={() => setSortConfig({ key: 'newest', direction: 'desc' })} className="font-sans text-[10px] uppercase tracking-widest font-black text-stone-500">Newest</button>
+ <button onClick={() => setSortConfig({ key: 'newest', direction: 'desc' })} className="font-sans text-[10px] uppercase tracking-widest font-black text-nous-text0">Newest</button>
  </div>
  <table className="w-full text-left font-sans text-[10px] uppercase tracking-widest">
  <thead>
- <tr className="border-b border-stone-200 dark:border-stone-800 text-stone-400">
+ <tr className="border-b border-nous-border text-nous-subtle">
  <th className="p-4">Fragment</th>
  <th className="p-4">Source</th>
  <th className="p-4">Date</th>
@@ -50,13 +50,13 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ items, zines, 
  </thead>
  <tbody>
  {processedItems.map(item => (
- <tr key={item.id} className="border-b border-stone-100 dark:border-stone-800 hover:bg-stone-50 dark:hover:bg-stone-900">
+ <tr key={item.id} className="border-b border-nous-border hover:bg-nous-base">
  <td className="p-4">{(item as any).prompt || item.title || 'Untitled'}</td>
  <td className="p-4">{(item as any).origin || item.source || 'Unknown'}</td>
  <td className="p-4">{item.timestamp ? new Date(item.timestamp).toLocaleDateString() : 'N/A'}</td>
  <td className="p-4">{isUsedInZine(item.id) ? 'Yes' : 'No'}</td>
  <td className="p-4">
- <button onClick={() => handleDelete(item.id, 'pocket')} className="text-stone-400 hover:text-red-500">
+ <button onClick={() => handleDelete(item.id, 'pocket')} className="text-nous-subtle hover:text-red-500">
  <Trash2 size={14} />
  </button>
  </td>

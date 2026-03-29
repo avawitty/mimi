@@ -68,17 +68,17 @@ export const PromptOrchestrator: React.FC<PromptOrchestratorProps> = ({ isOpen, 
  return (
  <div className="flex flex-col gap-6 w-full">
  <div className="space-y-2">
- <label className="font-sans text-[9px] uppercase tracking-widest text-stone-500">Intent / Treatment</label>
+ <label className="font-sans text-[9px] uppercase tracking-widest text-nous-text0">Intent / Treatment</label>
  <textarea
  value={intent}
  onChange={(e) => setIntent(e.target.value)}
  placeholder="e.g., A portrait of a musician, brutalist interior, or 'Cyber-Noir Convergence'..."
- className="w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-none p-3 text-sm font-mono text-stone-900 dark:text-stone-100 placeholder:text-stone-400 outline-none focus:border-primary dark:focus:border-stone-600 resize-none h-24"
+ className="w-full bg-white border border-nous-border rounded-none p-3 text-sm font-mono text-nous-text placeholder:text-nous-subtle outline-none focus:border-primary dark:focus:border-nous-border resize-none h-24"
  />
  <button
  onClick={handleOrchestrate}
  disabled={isOrchestrating || !intent.trim()}
- className="w-full bg-stone-900 dark:bg-white text-white dark:text-stone-900 py-3 text-[10px] uppercase tracking-widest font-bold hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+ className="w-full bg-nous-base  text-white py-3 text-[10px] uppercase tracking-widest font-bold hover:bg-nous-base dark:hover:bg-stone-200 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
  >
  {isOrchestrating ? <Loader2 size={14} className="animate-spin"/> : <Wand2 size={14} />}
  {isOrchestrating ? 'Orchestrating...' : 'Prune & Orchestrate'}
@@ -88,34 +88,34 @@ export const PromptOrchestrator: React.FC<PromptOrchestratorProps> = ({ isOpen, 
  {prompts.length > 0 && (
  <div className="space-y-6 mt-4">
  <div className="flex items-center gap-2">
- <div className="h-[1px] flex-1 bg-stone-200 dark:bg-stone-800"/>
- <span className="font-sans text-[9px] uppercase tracking-widest text-stone-400">Orchestrated Prompts</span>
- <div className="h-[1px] flex-1 bg-stone-200 dark:bg-stone-800"/>
+ <div className="h-[1px] flex-1 bg-stone-200"/>
+ <span className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle">Orchestrated Prompts</span>
+ <div className="h-[1px] flex-1 bg-stone-200"/>
  </div>
 
  {prompts.map((p, i) => (
- <div key={p.id || i} className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-4 rounded-none space-y-3 relative group">
+ <div key={p.id || i} className="bg-white border border-nous-border p-4 rounded-none space-y-3 relative group">
  <div className="flex justify-between items-start gap-4">
- <p className="font-mono text-[11px] leading-relaxed text-stone-800 dark:text-stone-300">
+ <p className="font-mono text-[11px] leading-relaxed text-nous-text">
  {p.text}
  </p>
  <button 
  onClick={() => handleCopy(p.id, p.text)}
- className="text-stone-400 hover:text-stone-900 dark:hover:text-white transition-colors flex-shrink-0"
+ className="text-nous-subtle hover:text-nous-text dark:hover:text-white transition-colors flex-shrink-0"
  >
- {copiedId === p.id ? <Check size={14} className="text-stone-500"/> : <Copy size={14} />}
+ {copiedId === p.id ? <Check size={14} className="text-nous-text0"/> : <Copy size={14} />}
  </button>
  </div>
  
- <div className="bg-stone-50 dark:bg-stone-950 p-2 rounded-none border border-stone-100 dark:border-stone-800">
- <p className="font-sans text-[9px] uppercase tracking-wider text-stone-500 mb-1">Rationale</p>
- <p className="font-sans text-[11px] text-stone-600 dark:text-stone-400 leading-snug">{p.rationale}</p>
+ <div className="bg-nous-base p-2 rounded-none border border-nous-border">
+ <p className="font-sans text-[9px] uppercase tracking-wider text-nous-text0 mb-1">Rationale</p>
+ <p className="font-sans text-[11px] text-nous-subtle leading-snug">{p.rationale}</p>
  </div>
 
  <button
  onClick={() => handleGenerateImage(p)}
  disabled={generatingId === p.id}
- className="w-full border border-stone-200 dark:border-stone-700 py-2 text-[9px] uppercase tracking-widest font-bold text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors flex items-center justify-center gap-2 mt-2"
+ className="w-full border border-nous-border py-2 text-[9px] uppercase tracking-widest font-bold text-nous-subtle hover:bg-nous-base transition-colors flex items-center justify-center gap-2 mt-2"
  >
  {generatingId === p.id ? <Loader2 size={12} className="animate-spin"/> : <Play size={12} />}
  {generatingId === p.id ? 'Generating...' : 'Run Prompt'}

@@ -495,7 +495,7 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
  <div className="flex items-center gap-3 md:gap-4">
  {/* DRAFT CONTROLS */}
  <div className="hidden md:flex items-center gap-1 border-r border-white/20 pr-3 mr-1">
- <button onClick={handleSaveDraft} className="p-2 text-white/70 hover:text-stone-800 dark:hover:text-stone-300 transition-colors"title="Save Draft">
+ <button onClick={handleSaveDraft} className="p-2 text-white/70 hover:text-nous-text transition-colors"title="Save Draft">
  <Save size={16} />
  </button>
  <button onClick={handleLoadDraft} className="p-2 text-white/70 hover:text-indigo-500 transition-colors"title="Load Draft">
@@ -515,7 +515,7 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
  {showExportMenu && (
  <div className="absolute top-full right-0 mt-2 bg-black/80 backdrop-blur-xl border border-white/20 rounded-none flex flex-col w-40 z-50 overflow-hidden">
  <button onClick={() => handleExport('png')} className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 text-left transition-colors text-white">
- <FileImage size={12} className="text-stone-500"/>
+ <FileImage size={12} className="text-nous-text0"/>
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">PNG Asset</span>
  </button>
  <button onClick={() => handleExport('jpg')} className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 text-left transition-colors text-white">
@@ -530,14 +530,14 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
  )}
  </div>
  
- <button onClick={handleCommit} className={`px-4 md:px-8 py-1.5 md:py-3 ${isSaving ? 'bg-stone-500 text-white' : 'bg-white text-black'} font-sans text-[7px] md:text-[10px] uppercase tracking-[0.3em] font-black rounded-none flex items-center gap-1.5 md:gap-3 shrink-0 hover:scale-105 active:scale-95 transition-all`}>
+ <button onClick={handleCommit} className={`px-4 md:px-8 py-1.5 md:py-3 ${isSaving ? 'bg-nous-base0 text-white' : 'bg-nous-base text-nous-text'} font-sans text-[7px] md:text-[10px] uppercase tracking-[0.3em] font-black rounded-none flex items-center gap-1.5 md:gap-3 shrink-0 hover:scale-105 active:scale-95 transition-all`}>
  {isSaving ? <Check size={12} /> : <Sparkles size={8} className="animate-pulse"/>}
  {isSaving ? 'Saved' : 'Commit'}
  </button> 
  </div>
  </div>
  <div className={`flex-1 flex items-center justify-center overflow-hidden relative transition-all ${isMobile && drawerOpen ? 'pb-[45vh]' : ''}`} onClick={() => setSelectedId(null)}>
- <div ref={containerRef} onClick={(e) => e.stopPropagation()} className="relative bg-white dark:bg-stone-900 border border-stone-100 dark:border-stone-800 transition-all duration-700"style={{ aspectRatio: `${ratioW}/${ratioH}`, maxHeight: '100vh', maxWidth: '100vw', width: 'auto', height: '100vh' }}>
+ <div ref={containerRef} onClick={(e) => e.stopPropagation()} className="relative bg-white border border-nous-border transition-all duration-700"style={{ aspectRatio: `${ratioW}/${ratioH}`, maxHeight: '100vh', maxWidth: '100vw', width: 'auto', height: '100vh' }}>
  {elements.sort((a,b) => (a.style.zIndex || 0) - (b.style.zIndex || 0)).map(el => (
  <motion.div key={el.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: el.style.opacity, scale: 1 }} onMouseDown={(e) => { e.stopPropagation(); setSelectedId(el.id); setDragStart({x: e.clientX, y: e.clientY}); setIsDragging(true); setInitialStyle({...el.style}); if(isMobile) setDrawerOpen(true); }} className={`absolute select-none group/el ${selectedId === el.id ? 'ring-2 ring-stone-500 z-50' : ''} cursor-move`} style={{ top: `${el.style.top}%`, left: `${el.style.left}%`, width: `${el.style.width}%`, height: el.style.height ? `${el.style.height}%` : undefined, rotate: `${el.style.rotation}deg`, zIndex: el.style.zIndex }}>
  {el.type === 'image' && (
@@ -556,9 +556,9 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
  animate={{ opacity: 1, y: 0 }}
  onClick={(e) => { e.stopPropagation(); handleHarmonize(el); }}
  disabled={el.harmonizing}
- className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-stone-900/90 text-white px-3 py-1.5 rounded-none text-[8px] uppercase tracking-widest font-black flex items-center gap-2 backdrop-blur-sm border border-stone-700 hover:bg-stone-800 transition-colors"
+ className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-nous-base/90 text-white px-3 py-1.5 rounded-none text-[8px] uppercase tracking-widest font-black flex items-center gap-2 backdrop-blur-sm border border-nous-border hover:bg-nous-base transition-colors"
  >
- {el.harmonizing ? <Loader2 size={10} className="animate-spin"/> : <Sparkles size={10} className="text-stone-400"/>}
+ {el.harmonizing ? <Loader2 size={10} className="animate-spin"/> : <Sparkles size={10} className="text-nous-subtle"/>}
  {el.harmonizing ? 'Refracting...' : 'Refract to Harmonize'}
  </motion.button>
  )}
@@ -615,23 +615,23 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
  {el.content}
  </div>
  {el.link && (
- <a href={el.link} target="_blank"onClick={e => e.stopPropagation()} className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/text:opacity-100 transition-opacity bg-black text-white px-2 py-1 rounded-none flex items-center gap-1.5 whitespace-nowrap z-[100]">
+ <a href={el.link} target="_blank"onClick={e => e.stopPropagation()} className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/text:opacity-100 transition-opacity bg-nous-text text-nous-base px-2 py-1 rounded-none flex items-center gap-1.5 whitespace-nowrap z-[100]">
  <ExternalLink size={8} /> <span className="font-sans text-[6px] uppercase tracking-widest font-black">Verify Resonance</span>
  </a>
  )}
  </div>
  )
  )}
- {selectedId === el.id && <div className="absolute inset-0 pointer-events-none"><div onMouseDown={(e) => { e.stopPropagation(); setDragStart({x: e.clientX, y: e.clientY}); setIsResizing(true); setInitialStyle({...el.style}); }} className="pointer-events-auto absolute -bottom-3 -right-3 w-6 h-6 bg-white dark:bg-stone-800 rounded-none cursor-se-resize flex items-center justify-center border border-black/10 z-[60]"><Maximize size={12} /></div></div>}
+ {selectedId === el.id && <div className="absolute inset-0 pointer-events-none"><div onMouseDown={(e) => { e.stopPropagation(); setDragStart({x: e.clientX, y: e.clientY}); setIsResizing(true); setInitialStyle({...el.style}); }} className="pointer-events-auto absolute -bottom-3 -right-3 w-6 h-6 bg-white rounded-none cursor-se-resize flex items-center justify-center border border-black/10 z-[60]"><Maximize size={12} /></div></div>}
  </motion.div>
  ))}
  </div>
  </div>
- <motion.div initial={false} animate={{ y: isMobile ? (drawerOpen ? 0 : '100%') : 0, x: isMobile ? 0 : (selectedId ? 0 : 480) }} className={`fixed bottom-0 left-0 right-0 lg:absolute lg:right-0 lg:top-0 lg:bottom-0 lg:flex lg:w-[480px] bg-white/90 dark:bg-stone-900/90 backdrop-blur-xl border-t lg:border-t-0 lg:border-l border-stone-200/50 dark:border-white/10 flex-col pt-4 lg:pt-24 z-[2050] transition-all duration-500 ${isMobile ? 'h-[45vh] rounded-none overflow-hidden' : 'h-full'}`}>
- <div className="flex lg:hidden justify-center pb-2"onClick={() => setDrawerOpen(false)}><div className="w-12 h-1 bg-stone-200 dark:bg-stone-800 rounded-none"/></div>
- <div className="flex border-b border-stone-100 dark:border-stone-800 h-14 lg:h-20 shrink-0 px-4"> 
+ <motion.div initial={false} animate={{ y: isMobile ? (drawerOpen ? 0 : '100%') : 0, x: isMobile ? 0 : (selectedId ? 0 : 480) }} className={`fixed bottom-0 left-0 right-0 lg:absolute lg:right-0 lg:top-0 lg:bottom-0 lg:flex lg:w-[480px] bg-white/90 /90 backdrop-blur-xl border-t lg:border-t-0 lg:border-l border-nous-border/50 /10 flex-col pt-4 lg:pt-24 z-[2050] transition-all duration-500 ${isMobile ? 'h-[45vh] rounded-none overflow-hidden' : 'h-full'}`}>
+ <div className="flex lg:hidden justify-center pb-2"onClick={() => setDrawerOpen(false)}><div className="w-12 h-1 bg-stone-200 rounded-none"/></div>
+ <div className="flex border-b border-nous-border h-14 lg:h-20 shrink-0 px-4"> 
  {['fragments', 'style', 'trace', 'materiality'].map((tab) => (
- <button key={tab} onClick={() => setActiveTab(tab as any)} className={`flex-1 flex flex-col items-center justify-center gap-1 font-sans text-[7px] lg:text-[9px] uppercase tracking-widest transition-all ${activeTab === tab ? 'text-nous-text dark:text-white font-black' : 'text-stone-300 dark:text-stone-700 hover:text-stone-800 dark:hover:text-stone-300'}`}> 
+ <button key={tab} onClick={() => setActiveTab(tab as any)} className={`flex-1 flex flex-col items-center justify-center gap-1 font-sans text-[7px] lg:text-[9px] uppercase tracking-widest transition-all ${activeTab === tab ? 'text-nous-text  font-black' : 'text-nous-subtle hover:text-nous-text '}`}> 
  {tab === 'fragments' && <Plus size={16}/>}{tab === 'style' && <SlidersHorizontal size={16}/>}{tab === 'trace' && <History size={16}/>}{tab === 'materiality' && <Layers size={16}/>}<span className="font-black">{tab}</span>
  </button> 
  ))}
@@ -639,25 +639,25 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
  <div className="flex-1 overflow-y-auto p-6 lg:p-10 space-y-6 lg:space-y-8 no-scrollbar pb-safe">
  {activeTab === 'fragments' && (
  <div className="grid grid-cols-4 gap-3 lg:gap-6 animate-fade-in"> 
- <button onClick={() => addElement('text', 'A new thought...')} className="flex flex-col items-center justify-center gap-2 aspect-square border border-stone-50 dark:border-stone-800 rounded-none bg-stone-50/50 dark:bg-stone-950/50 active:scale-95"><FontIcon size={18} className="text-stone-300"/><span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-stone-400">Type</span></button> 
- <button onClick={() => addElement('box', '')} className="flex flex-col items-center justify-center gap-2 aspect-square border border-stone-50 dark:border-stone-800 rounded-none bg-stone-50/50 dark:bg-stone-950/50 active:scale-95"><Box size={18} className="text-stone-300"/><span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-stone-400">Void</span></button> 
- <button onClick={() => imageUploadRef.current?.click()} className="flex flex-col items-center justify-center gap-2 aspect-square border border-stone-50 dark:border-stone-800 rounded-none bg-stone-50/50 dark:bg-stone-950/50 active:scale-95"><ImageIcon size={18} className="text-stone-300"/><span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-stone-400">Image</span></button> 
- <button onClick={() => addElement('text', 'THREAD NOTE\n──────────────\nThis artifact echoes a recurring theme in your archive.')} className="flex flex-col items-center justify-center gap-2 aspect-square border border-stone-50 dark:border-stone-800 rounded-none bg-stone-50/50 dark:bg-stone-950/50 active:scale-95"><Sparkles size={18} className="text-stone-300"/><span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-stone-400">Thread</span></button> 
- <button onClick={handleGenerateSignals} disabled={isGeneratingSignals} className="flex flex-col items-center justify-center gap-2 aspect-square border border-stone-500/20 rounded-none bg-stone-500/5 active:scale-95 group">
- {isGeneratingSignals ? <Loader2 size={18} className="text-stone-500 animate-spin"/> : <Radar size={18} className="text-stone-500 group-hover:scale-110 transition-transform"/>}
- <span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-stone-500">Scry</span>
+ <button onClick={() => addElement('text', 'A new thought...')} className="flex flex-col items-center justify-center gap-2 aspect-square border border-stone-50 rounded-none bg-nous-base/50 /50 active:scale-95"><FontIcon size={18} className="text-nous-subtle"/><span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-nous-subtle">Type</span></button> 
+ <button onClick={() => addElement('box', '')} className="flex flex-col items-center justify-center gap-2 aspect-square border border-stone-50 rounded-none bg-nous-base/50 /50 active:scale-95"><Box size={18} className="text-nous-subtle"/><span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-nous-subtle">Void</span></button> 
+ <button onClick={() => imageUploadRef.current?.click()} className="flex flex-col items-center justify-center gap-2 aspect-square border border-stone-50 rounded-none bg-nous-base/50 /50 active:scale-95"><ImageIcon size={18} className="text-nous-subtle"/><span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-nous-subtle">Image</span></button> 
+ <button onClick={() => addElement('text', 'THREAD NOTE\n──────────────\nThis artifact echoes a recurring theme in your archive.')} className="flex flex-col items-center justify-center gap-2 aspect-square border border-stone-50 rounded-none bg-nous-base/50 /50 active:scale-95"><Sparkles size={18} className="text-nous-subtle"/><span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-nous-subtle">Thread</span></button> 
+ <button onClick={handleGenerateSignals} disabled={isGeneratingSignals} className="flex flex-col items-center justify-center gap-2 aspect-square border border-nous-border/20 rounded-none bg-nous-base0/5 active:scale-95 group">
+ {isGeneratingSignals ? <Loader2 size={18} className="text-nous-text0 animate-spin"/> : <Radar size={18} className="text-nous-text0 group-hover:scale-110 transition-transform"/>}
+ <span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-nous-text0">Scry</span>
  </button>
  </div>
  )}
  {activeTab === 'style' && selectedElement && (
  <div className="space-y-8 lg:space-y-10 animate-fade-in pb-12">
  {suggestedThread && selectedElement.type === 'image' && (
- <div className="bg-stone-500/5 border border-stone-500/20 p-4 rounded-none space-y-3">
- <div className="flex items-center gap-2 text-stone-500">
+ <div className="bg-nous-base0/5 border border-nous-border/20 p-4 rounded-none space-y-3">
+ <div className="flex items-center gap-2 text-nous-text0">
  <Sparkles size={14} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Thread Discovered</span>
  </div>
- <p className="font-serif text-sm text-stone-600 dark:text-stone-300">
+ <p className="font-serif text-sm text-nous-subtle">
  We found a thread connected to this page.
  </p>
  <button 
@@ -665,32 +665,32 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
  addElement('text', `THREAD NOTE\n──────────────\n${suggestedThread.narrative}`);
  setSuggestedThread(null);
  }}
- className="w-full py-2 bg-stone-500 text-white rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-600 transition-colors"
+ className="w-full py-2 bg-nous-base0 text-white rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-600 transition-colors"
  >
  Add to this zine?
  </button>
  </div>
  )}
- <div className="flex justify-between items-center border-b pb-4"><div className="flex flex-col"><span className="font-sans text-[6px] uppercase tracking-[0.3em] text-stone-400 font-black">Calibration</span><span className="font-serif italic text-xl lg:text-2xl uppercase">{selectedElement.type}</span></div><button onClick={() => { setElements(p => p.filter(e => e.id !== selectedId)); setSelectedId(null); if(isMobile) setDrawerOpen(false); }} className="p-2 text-red-500"><Trash2 size={16}/></button></div>
+ <div className="flex justify-between items-center border-b pb-4"><div className="flex flex-col"><span className="font-sans text-[6px] uppercase tracking-[0.3em] text-nous-subtle font-black">Calibration</span><span className="font-serif italic text-xl lg:text-2xl uppercase">{selectedElement.type}</span></div><button onClick={() => { setElements(p => p.filter(e => e.id !== selectedId)); setSelectedId(null); if(isMobile) setDrawerOpen(false); }} className="p-2 text-red-500"><Trash2 size={16}/></button></div>
  {selectedElement.type === 'text' && (
  <section className="space-y-6 lg:space-y-8">
  <div className="space-y-3">
- <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Content</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle">Content</span>
  <textarea 
  value={selectedElement.content} 
  onChange={(e) => {
  setElements(prev => prev.map(el => el.id === selectedId ? { ...el, content: e.target.value } : el));
  }}
- className="w-full bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 p-3 font-serif italic text-sm focus:outline-none focus:border-stone-800 dark:focus:border-stone-300 rounded-none resize-none h-24"
+ className="w-full bg-nous-base border border-nous-border p-3 font-serif italic text-sm focus:outline-none focus:border-nous-border dark:focus:border-nous-border rounded-none resize-none h-24"
  />
  </div>
- <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Font Identity</span><div className="grid gap-1.5">{dynamicFontFamilies.map(f => <button key={f.id} onClick={() => updateStyle({ fontFamily: f.css })} className={`text-left p-3 lg:p-4 border rounded-none transition-all ${selectedElement.style.fontFamily === f.css ? 'bg-nous-text text-white dark:bg-white dark:text-black border-transparent' : 'border-stone-100 dark:border-stone-800 text-stone-400'}`} style={{ fontFamily: f.css }}>{f.label}</button>)}</div></div>
- <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Scale Protocol ({selectedElement.style.fontSize}rem)</span><SemanticSteps steps={[{label: 'XS', value: 0.5}, {label: 'S', value: 1}, {label: 'M', value: 2}, {label: 'L', value: 4}, {label: 'XL', value: 8}]} value={selectedElement.style.fontSize || 1.2} onChange={val => updateStyle({ fontSize: val })} /></div>
- <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Alignment Protocol</span><div className="flex gap-2"><button onClick={() => updateStyle({ textAlign: 'left' })} className={`flex-1 py-2.5 border rounded-none transition-all ${selectedElement.style.textAlign === 'left' ? 'bg-nous-text text-white border-transparent' : 'border-stone-100 text-stone-400'}`}><AlignLeft size={16} className="mx-auto"/></button><button onClick={() => updateStyle({ textAlign: 'center' })} className={`flex-1 py-2.5 border rounded-none transition-all ${selectedElement.style.textAlign === 'center' ? 'bg-nous-text text-white border-transparent' : 'border-stone-100 text-stone-400'}`}><AlignCenter size={16} className="mx-auto"/></button><button onClick={() => updateStyle({ textAlign: 'right' })} className={`flex-1 py-2.5 border rounded-none transition-all ${selectedElement.style.textAlign === 'right' ? 'bg-nous-text text-white border-transparent' : 'border-stone-100 text-stone-400'}`}><AlignRight size={16} className="mx-auto"/></button></div></div>
- <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Chromatic Manifold</span><div className="grid grid-cols-6 gap-3">{COLORS.map(c => <button key={c.id} onClick={() => updateStyle({ color: c.hex })} className={`aspect-square rounded-none border-2 transition-all ${selectedElement.style.color === c.hex ? 'border-stone-500 scale-110 ' : 'border-transparent'}`} style={{ backgroundColor: c.hex }} />)}</div></div>
+ <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle">Font Identity</span><div className="grid gap-1.5">{dynamicFontFamilies.map(f => <button key={f.id} onClick={() => updateStyle({ fontFamily: f.css })} className={`text-left p-3 lg:p-4 border rounded-none transition-all ${selectedElement.style.fontFamily === f.css ? 'bg-nous-text text-white   border-transparent' : 'border-nous-border text-nous-subtle'}`} style={{ fontFamily: f.css }}>{f.label}</button>)}</div></div>
+ <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle">Scale Protocol ({selectedElement.style.fontSize}rem)</span><SemanticSteps steps={[{label: 'XS', value: 0.5}, {label: 'S', value: 1}, {label: 'M', value: 2}, {label: 'L', value: 4}, {label: 'XL', value: 8}]} value={selectedElement.style.fontSize || 1.2} onChange={val => updateStyle({ fontSize: val })} /></div>
+ <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle">Alignment Protocol</span><div className="flex gap-2"><button onClick={() => updateStyle({ textAlign: 'left' })} className={`flex-1 py-2.5 border rounded-none transition-all ${selectedElement.style.textAlign === 'left' ? 'bg-nous-text text-white border-transparent' : 'border-nous-border text-nous-subtle'}`}><AlignLeft size={16} className="mx-auto"/></button><button onClick={() => updateStyle({ textAlign: 'center' })} className={`flex-1 py-2.5 border rounded-none transition-all ${selectedElement.style.textAlign === 'center' ? 'bg-nous-text text-white border-transparent' : 'border-nous-border text-nous-subtle'}`}><AlignCenter size={16} className="mx-auto"/></button><button onClick={() => updateStyle({ textAlign: 'right' })} className={`flex-1 py-2.5 border rounded-none transition-all ${selectedElement.style.textAlign === 'right' ? 'bg-nous-text text-white border-transparent' : 'border-nous-border text-nous-subtle'}`}><AlignRight size={16} className="mx-auto"/></button></div></div>
+ <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle">Chromatic Manifold</span><div className="grid grid-cols-6 gap-3">{COLORS.map(c => <button key={c.id} onClick={() => updateStyle({ color: c.hex })} className={`aspect-square rounded-none border-2 transition-all ${selectedElement.style.color === c.hex ? 'border-nous-border scale-110 ' : 'border-transparent'}`} style={{ backgroundColor: c.hex }} />)}</div></div>
  
- <div className="pt-6 border-t border-stone-100 dark:border-stone-800 space-y-4">
- <div className="flex items-center gap-2 text-stone-400">
+ <div className="pt-6 border-t border-nous-border space-y-4">
+ <div className="flex items-center gap-2 text-nous-subtle">
  <ScanLine size={12} />
  <span className="font-sans text-[7px] uppercase tracking-widest font-black">Boundary Logic</span>
  </div>
@@ -699,7 +699,7 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
  <button 
  key={s} 
  onClick={() => updateStyle({ borderStyle: s as any })}
- className={`flex-1 py-2 border rounded-none font-sans text-[6px] uppercase font-black transition-all ${selectedElement.style.borderStyle === s ? 'bg-nous-text dark:bg-white text-white dark:text-black border-transparent' : 'border-stone-200 dark:border-stone-800 text-stone-400'}`}
+ className={`flex-1 py-2 border rounded-none font-sans text-[6px] uppercase font-black transition-all ${selectedElement.style.borderStyle === s ? 'bg-nous-text text-nous-base border-transparent' : 'border-nous-border text-nous-subtle'}`}
  >
  {s}
  </button>
@@ -707,28 +707,28 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
  </div>
  <div className="grid grid-cols-2 gap-4">
  <div>
- <label className="text-[7px] font-sans uppercase text-stone-400 block mb-1">Weight</label>
+ <label className="text-[7px] font-sans uppercase text-nous-subtle block mb-1">Weight</label>
  <SemanticSteps steps={[{label: '0', value: 0}, {label: '1', value: 1}, {label: '2', value: 2}, {label: '4', value: 4}, {label: '8', value: 8}]} value={selectedElement.style.borderWidth || 0} onChange={val => updateStyle({ borderWidth: val })} />
  </div>
  <div>
- <label className="text-[7px] font-sans uppercase text-stone-400 block mb-1">Padding</label>
+ <label className="text-[7px] font-sans uppercase text-nous-subtle block mb-1">Padding</label>
  <SemanticSteps steps={[{label: '0', value: 0}, {label: 'S', value: 8}, {label: 'M', value: 16}, {label: 'L', value: 32}]} value={selectedElement.style.padding || 8} onChange={val => updateStyle({ padding: val })} />
  </div>
  </div>
  <div className="space-y-2">
- <div className="flex justify-between items-center"><span className="text-[7px] font-sans uppercase text-stone-400">Border Color</span><span className="text-[7px] font-sans uppercase text-stone-400">Fill</span></div>
+ <div className="flex justify-between items-center"><span className="text-[7px] font-sans uppercase text-nous-subtle">Border Color</span><span className="text-[7px] font-sans uppercase text-nous-subtle">Fill</span></div>
  <div className="flex justify-between gap-4">
  <div className="flex gap-1.5 flex-wrap">
- <button onClick={() => updateStyle({ borderColor: 'transparent' })} className="w-5 h-5 rounded-none border border-stone-200 dark:border-stone-700 flex items-center justify-center text-[6px] text-stone-400">Ø</button>
+ <button onClick={() => updateStyle({ borderColor: 'transparent' })} className="w-5 h-5 rounded-none border border-nous-border flex items-center justify-center text-[6px] text-nous-subtle">Ø</button>
  {COLORS.map(c => (
- <button key={`b-${c.id}`} onClick={() => updateStyle({ borderColor: c.hex })} className="w-5 h-5 rounded-none border border-stone-200 dark:border-stone-700"style={{ backgroundColor: c.hex }} />
+ <button key={`b-${c.id}`} onClick={() => updateStyle({ borderColor: c.hex })} className="w-5 h-5 rounded-none border border-nous-border"style={{ backgroundColor: c.hex }} />
  ))}
  </div>
- <div className="w-px bg-stone-200 dark:bg-stone-800"/>
+ <div className="w-px bg-stone-200"/>
  <div className="flex gap-1.5 flex-wrap justify-end">
- <button onClick={() => updateStyle({ backgroundColor: 'transparent' })} className="w-5 h-5 rounded-none border border-stone-200 dark:border-stone-700 flex items-center justify-center text-[6px] text-stone-400">Ø</button>
+ <button onClick={() => updateStyle({ backgroundColor: 'transparent' })} className="w-5 h-5 rounded-none border border-nous-border flex items-center justify-center text-[6px] text-nous-subtle">Ø</button>
  {COLORS.map(c => (
- <button key={`bg-${c.id}`} onClick={() => updateStyle({ backgroundColor: c.hex })} className="w-5 h-5 rounded-none border border-stone-200 dark:border-stone-700"style={{ backgroundColor: c.hex }} />
+ <button key={`bg-${c.id}`} onClick={() => updateStyle({ backgroundColor: c.hex })} className="w-5 h-5 rounded-none border border-nous-border"style={{ backgroundColor: c.hex }} />
  ))}
  </div>
  </div>
@@ -739,13 +739,13 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
  {selectedElement.type === 'image' && (
  <section className="space-y-8 lg:space-y-10">
  <div className="space-y-3">
- <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400 flex items-center gap-2"><Ratio size={12} /> Aspect Ratio</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle flex items-center gap-2"><Ratio size={12} /> Aspect Ratio</span>
  <div className="grid grid-cols-4 gap-2">
  {['1:1', '3:4', '4:3', '16:9'].map(ratio => (
  <button 
  key={ratio} 
  onClick={() => updateImageAspectRatio(ratio)} 
- className="py-2 border border-stone-200 dark:border-stone-800 rounded-none text-[8px] font-sans font-black hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
+ className="py-2 border border-nous-border rounded-none text-[8px] font-sans font-black hover:bg-nous-base transition-colors"
  >
  {ratio}
  </button>
@@ -753,23 +753,23 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
  </div>
  </div>
  <div className="space-y-3">
- <span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-500 flex items-center gap-2">
+ <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-text0 flex items-center gap-2">
  <Sparkles size={12} /> Insight
  </span>
  {!imageAnalysis ? (
  <button 
  onClick={handleAnalyzeImage} 
  disabled={isAnalyzingImage}
- className="w-full py-3 border border-stone-500/30 bg-stone-500/5 text-stone-500 rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-500/10 transition-all flex items-center justify-center gap-2"
+ className="w-full py-3 border border-nous-border/30 bg-nous-base0/5 text-nous-text0 rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-nous-base0/10 transition-all flex items-center justify-center gap-2"
  >
  {isAnalyzingImage ? <Loader2 size={12} className="animate-spin"/> : <Radar size={12} />}
  {isAnalyzingImage ?"Consulting Oracle...":"Analyze Semiotics"}
  </button>
  ) : (
- <div className="p-4 bg-stone-50 dark:bg-stone-800 rounded-none border border-stone-100 dark:border-stone-700 space-y-3">
- <p className="font-serif italic text-sm text-stone-600 dark:text-stone-300 leading-snug">"{imageAnalysis.directors_note}"</p>
+ <div className="p-4 bg-nous-base rounded-none border border-nous-border space-y-3">
+ <p className="font-serif italic text-sm text-nous-subtle leading-snug">"{imageAnalysis.directors_note}"</p>
  {imageAnalysis.cultural_parallel && (
- <div className="flex items-center gap-2 text-[9px] font-mono text-stone-400 uppercase">
+ <div className="flex items-center gap-2 text-[9px] font-mono text-nous-subtle uppercase">
  <Info size={10} />
  <span>Ref: {imageAnalysis.cultural_parallel}</span>
  </div>
@@ -786,8 +786,8 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
  </div>
  )}
  </div>
- <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-400">Optical Filters</span><div className="grid grid-cols-3 gap-2">{IMAGE_FILTERS.map(f => <button key={f.name} onClick={() => updateStyle({ filter: f.value })} className={`p-2.5 lg:p-3 border rounded-none transition-all text-center ${selectedElement.style.filter === f.value ? 'bg-nous-text text-white dark:bg-white dark:text-black border-transparent' : 'border-stone-100 dark:border-stone-800 text-stone-400'}`}><span className="text-[6px] lg:text-[8px] uppercase font-black block">{f.name}</span></button>)}</div></div>
- {sovereignTreatments.length > 0 && <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-stone-500">Darkroom Logic Presets</span><div className="grid gap-2">{sovereignTreatments.map(t => <button key={t.id} onClick={() => updateStyle({ filter: t.instruction })} className="text-left p-3 bg-stone-50 dark:bg-stone-800 border border-stone-100 dark:border-stone-700 rounded-none hover:border-stone-800 dark:hover:border-stone-300 transition-all flex justify-between items-center group"><span className="font-serif italic text-xs text-stone-600 dark:text-stone-300">{t.name}</span><Droplet size={10} className="text-stone-500 opacity-0 group-hover:opacity-100"/></button>)}</div></div>}
+ <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle">Optical Filters</span><div className="grid grid-cols-3 gap-2">{IMAGE_FILTERS.map(f => <button key={f.name} onClick={() => updateStyle({ filter: f.value })} className={`p-2.5 lg:p-3 border rounded-none transition-all text-center ${selectedElement.style.filter === f.value ? 'bg-nous-text text-white   border-transparent' : 'border-nous-border text-nous-subtle'}`}><span className="text-[6px] lg:text-[8px] uppercase font-black block">{f.name}</span></button>)}</div></div>
+ {sovereignTreatments.length > 0 && <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-text0">Darkroom Logic Presets</span><div className="grid gap-2">{sovereignTreatments.map(t => <button key={t.id} onClick={() => updateStyle({ filter: t.instruction })} className="text-left p-3 bg-nous-base border border-nous-border rounded-none hover:border-nous-border transition-all flex justify-between items-center group"><span className="font-serif italic text-xs text-nous-subtle">{t.name}</span><Droplet size={10} className="text-nous-text0 opacity-0 group-hover:opacity-100"/></button>)}</div></div>}
  </section>
  )}
  </div>

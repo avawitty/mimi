@@ -18,7 +18,7 @@ export const SemanticSteps: React.FC<SemanticStepsProps> = ({ steps, value, onCh
  }, 0);
 
  return (
- <div className="flex w-full bg-stone-100 dark:bg-stone-900 rounded-none p-1 border border-stone-200 dark:border-stone-800">
+ <div className="flex w-full bg-nous-base rounded-none p-1 border border-nous-border">
  {steps.map((step, index) => {
  const isActive = index === closestStepIndex;
  return (
@@ -27,8 +27,8 @@ export const SemanticSteps: React.FC<SemanticStepsProps> = ({ steps, value, onCh
  onClick={() => onChange(step.value)}
  className={`flex-1 py-2 px-2 text-[9px] uppercase tracking-widest font-black transition-all rounded-none ${
  isActive 
- ? 'bg-white dark:bg-stone-800 text-primary dark:text-white ' 
- : 'text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-200/50 dark:hover:bg-stone-800/50'
+ ? 'bg-white text-primary  ' 
+ : 'text-nous-subtle hover:text-nous-subtle hover:bg-stone-200/50 /50'
  }`}
  >
  {step.label}

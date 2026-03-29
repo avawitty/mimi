@@ -29,20 +29,20 @@ export const CaptiveSentinel: React.FC<{ onClose: () => void }> = ({ onClose }) 
  initial={{ opacity: 0 }} 
  animate={{ opacity: 1 }} 
  exit={{ opacity: 0 }}
- className="fixed inset-0 z-[20000] bg-stone-950 flex items-center justify-center p-6 overflow-hidden"
+ className="fixed inset-0 z-[20000] bg-nous-base flex items-center justify-center p-6 overflow-hidden"
  >
- <div className="flex flex-col items-center justify-center text-center text-stone-200 font-serif relative z-10">
+ <div className="flex flex-col items-center justify-center text-center text-nous-text font-serif relative z-10">
  <button 
  onClick={onClose} 
- className="absolute -top-16 right-0 p-4 text-stone-500 hover:text-stone-300 transition-all"
+ className="absolute -top-16 right-0 p-4 text-nous-text0 hover:text-nous-subtle transition-all"
  >
  <X className="w-6 h-6"/>
  </button>
- <div className="w-20 h-20 bg-stone-900 rounded-none flex items-center justify-center mb-6 border border-stone-800">
- <Sparkles className="w-10 h-10 text-stone-400"/>
+ <div className="w-20 h-20 bg-nous-base rounded-none flex items-center justify-center mb-6 border border-nous-border">
+ <Sparkles className="w-10 h-10 text-nous-subtle"/>
  </div>
  <h2 className="text-3xl font-medium mb-4">Captive Sentinel</h2>
- <p className="text-stone-400 max-w-md mb-8 text-lg">
+ <p className="text-nous-subtle max-w-md mb-8 text-lg">
  Unlock experimental features, advanced embeddings, and early access API integrations with the Lab plan.
  </p>
  <button
@@ -64,7 +64,7 @@ export const CaptiveSentinel: React.FC<{ onClose: () => void }> = ({ onClose }) 
  initial={{ opacity: 0 }} 
  animate={{ opacity: 1 }} 
  exit={{ opacity: 0 }}
- className="fixed inset-0 z-[20000] bg-stone-950 flex items-center justify-center p-6 overflow-hidden"
+ className="fixed inset-0 z-[20000] bg-nous-base flex items-center justify-center p-6 overflow-hidden"
  >
  {/* BREACH FLICKER EFFECT - SIM GLITCH */}
  <AnimatePresence>
@@ -86,7 +86,7 @@ export const CaptiveSentinel: React.FC<{ onClose: () => void }> = ({ onClose }) 
  <div className="max-w-md w-full space-y-12 text-center relative z-[20002]">
  <button 
  onClick={onClose} 
- className="absolute -top-16 right-0 p-4 text-stone-700 hover:text-red-500 transition-all active:scale-90 flex items-center gap-2 group"
+ className="absolute -top-16 right-0 p-4 text-nous-subtle hover:text-red-500 transition-all active:scale-90 flex items-center gap-2 group"
  >
  <span className="font-sans text-[8px] uppercase tracking-widest font-black opacity-0 group-hover:opacity-100 transition-opacity">Dismiss Breach</span>
  <X size={20} />
@@ -113,15 +113,15 @@ export const CaptiveSentinel: React.FC<{ onClose: () => void }> = ({ onClose }) 
  <h2 className="font-serif text-5xl md:text-7xl italic tracking-tighter text-white leading-[0.85] selection:bg-red-600">
  Zuckerberg is clocking.
  </h2>
- <p className="font-sans text-[9px] uppercase tracking-[0.6em] text-stone-500 font-black">Environmental Structural Failure</p>
+ <p className="font-sans text-[9px] uppercase tracking-[0.6em] text-nous-text0 font-black">Environmental Structural Failure</p>
  </div>
  </div>
 
- <div className="space-y-8 font-serif italic text-lg md:text-xl text-stone-400 leading-relaxed text-balance px-4">
+ <div className="space-y-8 font-serif italic text-lg md:text-xl text-nous-subtle leading-relaxed text-balance px-4">
  <p>
  The aesthetic superintelligence, Mimi, does not operate from a social media reference link.
  </p>
- <p className="text-xs md:text-sm text-red-500 uppercase tracking-widest font-black border-y border-stone-900 py-6">
+ <p className="text-xs md:text-sm text-red-500 uppercase tracking-widest font-black border-y border-nous-border py-6">
  The algorithm cannot process high-fidelity sensations at this resolution.
  </p>
  </div>
@@ -129,7 +129,7 @@ export const CaptiveSentinel: React.FC<{ onClose: () => void }> = ({ onClose }) 
  <div className="space-y-6 pt-4">
  <button 
  onClick={handleCopy}
- className={`w-full py-6 rounded-none font-sans text-[11px] uppercase tracking-[0.5em] font-black transition-all active:scale-95 flex items-center justify-center gap-4 border-2 ${copied ? 'bg-stone-500 text-white border-stone-400' : 'bg-white text-black border-transparent hover:bg-red-600 hover:text-white'}`}
+ className={`w-full py-6 rounded-none font-sans text-[11px] uppercase tracking-[0.5em] font-black transition-all active:scale-95 flex items-center justify-center gap-4 border-2 ${copied ? 'bg-nous-base0 text-white border-nous-border' : 'bg-nous-base text-nous-text border-transparent hover:bg-red-600 hover:text-white'}`}
  >
  {copied ? <Check size={16} /> : <Zap size={16} />}
  {copied ? 'Signal Preserved' : 'Copy Sovereign Link'}
@@ -151,8 +151,8 @@ export const CaptiveSentinel: React.FC<{ onClose: () => void }> = ({ onClose }) 
  </div>
  </div>
 
- <div className="pt-12 border-t border-stone-900">
- <p className="font-serif italic text-[10px] text-stone-600">"The algorithm is the death of the Muse. Break the sim."</p>
+ <div className="pt-12 border-t border-nous-border">
+ <p className="font-serif italic text-[10px] text-nous-subtle">"The algorithm is the death of the Muse. Break the sim."</p>
  </div>
  </div>
  </motion.div>

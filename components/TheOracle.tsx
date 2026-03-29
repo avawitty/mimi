@@ -9,7 +9,7 @@ export const TheOracle: React.FC = () => {
 
  if (!profile?.tasteProfile?.sovereignIdentity) {
  return (
- <div className="flex-1 flex items-center justify-center p-8 text-center text-stone-500 italic font-serif h-full">
+ <div className="flex-1 flex items-center justify-center p-8 text-center text-nous-text0 italic font-serif h-full">
  The Oracle requires a Sovereign Identity Card to read your aesthetic horoscope.
  </div>
  );
@@ -21,7 +21,7 @@ export const TheOracle: React.FC = () => {
  <motion.h1 
  initial={{ opacity: 0, y: 10 }}
  animate={{ opacity: 1, y: 0 }}
- className="text-3xl font-serif italic text-stone-200 mb-2"
+ className="text-3xl font-serif italic text-nous-text mb-2"
  >
  The Oracle
  </motion.h1>
@@ -29,7 +29,7 @@ export const TheOracle: React.FC = () => {
  initial={{ opacity: 0, y: 10 }}
  animate={{ opacity: 1, y: 0 }}
  transition={{ delay: 0.1 }}
- className="text-xs font-sans uppercase tracking-widest text-stone-500 mb-8"
+ className="text-xs font-sans uppercase tracking-widest text-nous-text0 mb-8"
  >
  Your Daily Aesthetic Horoscope
  </motion.p>
@@ -50,10 +50,10 @@ export const TheOracle: React.FC = () => {
  transition={{ delay: 0.4 }}
  className="border-t border-white/10 pt-8"
  >
- <h2 className="text-xl font-serif italic text-stone-300 mb-6 text-center">
+ <h2 className="text-xl font-serif italic text-nous-subtle mb-6 text-center">
  Taste Constellation
  </h2>
- <div className="h-[400px] w-full bg border border-stone-800 overflow-hidden">
+ <div className="h-[400px] w-full bg border border-nous-border overflow-hidden">
  <TasteConstellation />
  </div>
  </motion.div>

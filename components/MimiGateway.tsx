@@ -62,21 +62,21 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
  initial={{ opacity: 0, scale: 0.95, y: 20 }}
  animate={{ opacity: 1, scale: 1, y: 0 }}
  exit={{ opacity: 0, scale: 0.95, y: 20 }}
- className="relative w-full max-w-md bg-white dark:bg-stone-900 rounded-none overflow-hidden border border-stone-200 dark:border-stone-800"
+ className="relative w-full max-w-md bg-white rounded-none overflow-hidden border border-nous-border"
  >
  <button
  onClick={onClose}
- className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-900 dark:hover:text-white transition-colors"
+ className="absolute top-4 right-4 p-2 text-nous-subtle hover:text-nous-text dark:hover:text-white transition-colors"
  >
  <X size={20} />
  </button>
 
  <div className="p-8">
  <div className="text-center mb-8">
- <h2 className="text-h1 text-stone-900 dark:text-white mb-3">
+ <h2 className="text-h1 text-nous-text  mb-3">
  {user?.isAnonymous ? 'Claim your trial' : 'Join the Vanguard'}
  </h2>
- <p className="text-body text-stone-500 max-w-[280px] mx-auto">
+ <p className="text-body text-nous-text0 max-w-[280px] mx-auto">
  {user?.isAnonymous 
  ? 'You have 12 credits waiting. Enter your email to unlock the full Mimi Zine experience.'
  : 'A sovereign editorial machine for the aesthetic superintelligence. Translate latent intent into defensible conceptual architecture.'}
@@ -93,7 +93,7 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
  <div className="space-y-4">
  <button
  onClick={handleGoogleLogin}
- className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-stone-900 dark:bg-white hover:bg-stone-800 dark:hover:bg-stone-100 text-white dark:text-stone-900 rounded-none transition-colors font-sans text-sm font-bold tracking-wide"
+ className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-nous-text hover:bg-nous-text0 text-nous-base rounded-none transition-colors font-sans text-sm font-bold tracking-wide"
  >
  <svg className="w-5 h-5"viewBox="0 0 24 24">
  <path fill="currentColor"d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -106,7 +106,7 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
  
  <button
  onClick={() => setMode('email')}
- className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-900 dark:text-white rounded-none transition-colors font-sans text-sm font-medium"
+ className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-nous-base hover:bg-stone-200 dark:hover:bg-stone-700 text-nous-text dark:text-white rounded-none transition-colors font-sans text-sm font-medium"
  >
  <Mail size={18} />
  {t('auth.continueEmail')}
@@ -121,7 +121,7 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
  value={email}
  onChange={(e) => setEmail(e.target.value)}
  required
- className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-none focus:outline-none focus:border-stone-800 dark:focus:border-stone-300 dark:focus:border-stone-500 transition-colors text-stone-900 dark:text-white"
+ className="w-full px-4 py-3 bg-nous-base border border-nous-border rounded-none focus:outline-none focus:border-nous-border dark:focus:border-nous-border dark:focus:border-nous-border transition-colors text-nous-text dark:text-white"
  placeholder="you@example.com"
  />
  </div>
@@ -132,7 +132,7 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
  value={password}
  onChange={(e) => setPassword(e.target.value)}
  required
- className="w-full px-4 py-3 bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 rounded-none focus:outline-none focus:border-stone-500 dark:focus:border-stone-500 transition-colors text-stone-900 dark:text-white"
+ className="w-full px-4 py-3 bg-nous-base border border-nous-border rounded-none focus:outline-none focus:border-nous-border dark:focus:border-nous-border transition-colors text-nous-text dark:text-white"
  placeholder="••••••••"
  />
  </div>
@@ -140,7 +140,7 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
  <button
  type="submit"
  disabled={isLoading}
- className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-none font-sans text-xs uppercase tracking-widest font-bold hover:bg-stone-800 dark:hover:bg-white transition-colors disabled:opacity-50"
+ className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-nous-text text-nous-base rounded-none font-sans text-xs uppercase tracking-widest font-bold hover:bg-nous-text0 transition-colors disabled:opacity-50"
  >
  {isLoading ? t('app.loading') : (isRegistering ? t('auth.joinWaitlist') : t('auth.signIn'))}
  {!isLoading && <ArrowRight size={16} />}
@@ -150,7 +150,7 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
  <button
  type="button"
  onClick={() => setIsRegistering(!isRegistering)}
- className="text-xs text-stone-500 hover:text-stone-900 dark:hover:text-white transition-colors"
+ className="text-xs text-nous-text0 hover:text-nous-text dark:hover:text-white transition-colors"
  >
  {isRegistering ? 'Already have access? Sign in' :"Don't have an account? Join Waitlist"}
  </button>
@@ -160,7 +160,7 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
  <button
  type="button"
  onClick={() => setMode('options')}
- className="text-[10px] uppercase tracking-widest text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
+ className="text-[10px] uppercase tracking-widest text-nous-subtle hover:text-nous-subtle transition-colors"
  >
  ← Back to options
  </button>
@@ -169,8 +169,8 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
  )}
 
  {/* Privacy Promise */}
- <div className="mt-8 pt-6 border-t border-stone-100 dark:border-stone-800">
- <div className="flex items-center justify-center gap-6 text-[10px] uppercase tracking-widest text-stone-400 font-sans">
+ <div className="mt-8 pt-6 border-t border-nous-border">
+ <div className="flex items-center justify-center gap-6 text-[10px] uppercase tracking-widest text-nous-subtle font-sans">
  <div className="flex items-center gap-1.5">
  <Shield size={12} />
  <span>Private</span>

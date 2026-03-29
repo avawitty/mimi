@@ -43,26 +43,26 @@ export const ProsceniumView: React.FC<{ onSelectZine: (z: ZineMetadata) => void,
  const fontChoice = profile?.tasteProfile?.dominant_archetypes?.[0] || 'minimalist-sans';
 
  if (loading) return (
- <div className="w-full h-full flex flex-col items-center justify-center gap-12 bg-nous-base dark:bg-stone-950">
- <Loader2 className="animate-spin text-stone-300"size={32} />
- <span className="font-sans text-[8px] uppercase tracking-[0.6em] text-stone-400 font-black">Syncing Sovereign Showroom...</span>
+ <div className="w-full h-full flex flex-col items-center justify-center gap-12 bg-nous-base">
+ <Loader2 className="animate-spin text-nous-subtle"size={32} />
+ <span className="font-sans text-[8px] uppercase tracking-[0.6em] text-nous-subtle font-black">Syncing Sovereign Showroom...</span>
  </div>
  );
 
  return (
- <div className="flex-1 w-full h-full flex flex-col overflow-y-auto no-scrollbar pb-64 relative bg-nous-base dark:bg-stone-950 transition-colors duration-1000">
+ <div className="flex-1 w-full h-full flex flex-col overflow-y-auto no-scrollbar pb-64 relative bg-nous-base transition-colors duration-1000">
  <div className="w-full max-w-7xl mx-auto px-6 md:px-16 pt-12 md:pt-20 space-y-16">
  
  {/* HEADER */}
- <div className="flex flex-col border-b border-stone-100 dark:border-stone-900 pb-12 gap-8">
+ <div className="flex flex-col border-b border-nous-border pb-12 gap-8">
  <div className="space-y-6">
- <div className="flex items-center gap-3 text-stone-400">
- <Globe2 size={16} className="text-stone-500 animate-pulse"/>
+ <div className="flex items-center gap-3 text-nous-subtle">
+ <Globe2 size={16} className="text-nous-text0 animate-pulse"/>
  <span className="font-sans text-[10px] uppercase tracking-[0.5em] font-black italic">The Sovereign Showroom</span>
  </div>
  <div className="space-y-2">
- <h2 className="font-serif text-6xl md:text-9xl italic tracking-tighter luminescent-text text-nous-text dark:text-white leading-none">The Floor.</h2>
- <p className="font-serif italic text-base md:text-xl text-stone-400 max-w-xl leading-tight">
+ <h2 className="font-serif text-6xl md:text-9xl italic tracking-tighter luminescent-text text-nous-text  leading-none">The Floor.</h2>
+ <p className="font-serif italic text-base md:text-xl text-nous-subtle max-w-xl leading-tight">
  Where private manifests achieving <span className="text-nous-text dark:text-white">Witness Density</span> are committed to the collective field.
  </p>
  </div>
@@ -70,16 +70,16 @@ export const ProsceniumView: React.FC<{ onSelectZine: (z: ZineMetadata) => void,
  
  <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
  <div className="flex gap-8">
- <button onClick={() => setActiveTab('showroom')} className={`font-serif italic text-xl md:text-2xl pb-2 border-b-2 transition-all ${activeTab === 'showroom' ? 'text-nous-text dark:text-white border-nous-text dark:border-white' : 'text-stone-300 border-transparent hover:text-stone-800 dark:hover:text-stone-300'}`}>Showroom</button>
- <button onClick={() => setActiveTab('portal')} className={`font-serif italic text-xl md:text-2xl pb-2 border-b-2 transition-all ${activeTab === 'portal' ? 'text-nous-text dark:text-white border-nous-text dark:border-white' : 'text-stone-300 border-transparent hover:text-stone-800 dark:hover:text-stone-300'}`}>My Portal</button>
+ <button onClick={() => setActiveTab('showroom')} className={`font-serif italic text-xl md:text-2xl pb-2 border-b-2 transition-all ${activeTab === 'showroom' ? 'text-nous-text dark:text-white border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text '}`}>Showroom</button>
+ <button onClick={() => setActiveTab('portal')} className={`font-serif italic text-xl md:text-2xl pb-2 border-b-2 transition-all ${activeTab === 'portal' ? 'text-nous-text dark:text-white border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text '}`}>My Portal</button>
  </div>
  
- <div className="flex items-center gap-4 bg-white/50 dark:bg-stone-900/50 backdrop-blur-xl px-6 py-3 rounded-none border border-stone-100 dark:border-stone-800">
+ <div className="flex items-center gap-4 bg-white/50 /50 backdrop-blur-xl px-6 py-3 rounded-none border border-nous-border">
  <div className="flex flex-col items-end">
- <span className="font-sans text-[7px] uppercase tracking-widest text-stone-400 font-black">Portal Status</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Portal Status</span>
  <span className="font-serif italic text-sm text-nous-text dark:text-white">{myPublicZines.length} Public Manifests</span>
  </div>
- <Activity size={14} className="text-stone-500 animate-pulse"/>
+ <Activity size={14} className="text-nous-text0 animate-pulse"/>
  </div>
  </div>
  </div>
@@ -92,10 +92,10 @@ export const ProsceniumView: React.FC<{ onSelectZine: (z: ZineMetadata) => void,
  <div key={zine.id} className="space-y-6 group">
  <ZineCard zine={zine} onClick={() => onSelectZine(zine)} />
  <div className="flex justify-between items-center px-4 opacity-0 group-hover:opacity-100 transition-opacity">
- <button onClick={() => onSelectZine(zine)} className="flex items-center gap-2 font-serif italic text-stone-400 hover:text-nous-text dark:hover:text-white">
+ <button onClick={() => onSelectZine(zine)} className="flex items-center gap-2 font-serif italic text-nous-subtle hover:text-nous-text dark:hover:text-white">
  Witness Full Manifest <ArrowRight size={12} />
  </button>
- <button onClick={() => handleShare(zine.id)} className="p-2 text-stone-300 hover:text-stone-500">
+ <button onClick={() => handleShare(zine.id)} className="p-2 text-nous-subtle hover:text-nous-text0">
  {copiedId === zine.id ? <Check size={14} /> : <Share2 size={14} />}
  </button>
  </div>
@@ -114,21 +114,21 @@ export const ProsceniumView: React.FC<{ onSelectZine: (z: ZineMetadata) => void,
  <motion.div key="portal"initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12">
  {user?.isAnonymous ? (
  <div className="flex flex-col items-center justify-center py-32 text-center space-y-10">
- <Lock size={48} className="text-stone-200"/>
+ <Lock size={48} className="text-nous-text"/>
  <div className="space-y-4">
  <h3 className="font-serif text-4xl italic tracking-tighter">Portal Locked.</h3>
- <p className="font-serif italic text-xl text-stone-400 max-w-sm">Ghosts cannot occupy The Floor. Anchor your identity to open your public portal.</p>
+ <p className="font-serif italic text-xl text-nous-subtle max-w-sm">Ghosts cannot occupy The Floor. Anchor your identity to open your public portal.</p>
  </div>
- <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }))} className="px-10 py-5 bg-nous-text dark:bg-white text-white dark:text-black rounded-none font-sans text-[10px] uppercase tracking-widest font-black">Anchor Identity</button>
+ <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'profile' }))} className="px-10 py-5 bg-nous-text text-nous-base rounded-none font-sans text-[10px] uppercase tracking-widest font-black">Anchor Identity</button>
  </div>
  ) : myPublicZines.length === 0 ? (
  <div className="flex flex-col items-center justify-center py-32 text-center space-y-10">
- <User size={48} className="text-stone-200"/>
+ <User size={48} className="text-nous-text"/>
  <div className="space-y-4">
  <h3 className="font-serif text-4xl italic tracking-tighter">Portal Empty.</h3>
- <p className="font-serif italic text-xl text-stone-400 max-w-sm">None of your manifests have been committed to The Floor yet. Transmute a zine to public to begin.</p>
+ <p className="font-serif italic text-xl text-nous-subtle max-w-sm">None of your manifests have been committed to The Floor yet. Transmute a zine to public to begin.</p>
  </div>
- <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'nebula' }))} className="px-10 py-5 bg-nous-text dark:bg-white text-white dark:text-black rounded-none font-sans text-[10px] uppercase tracking-widest font-black">Browse Archives</button>
+ <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'nebula' }))} className="px-10 py-5 bg-nous-text text-nous-base rounded-none font-sans text-[10px] uppercase tracking-widest font-black">Browse Archives</button>
  </div>
  ) : (
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 md:gap-x-12 md:gap-y-24">
@@ -136,11 +136,11 @@ export const ProsceniumView: React.FC<{ onSelectZine: (z: ZineMetadata) => void,
  <div key={zine.id} className="space-y-6 group">
  <ZineCard zine={zine} onClick={() => onSelectZine(zine)} />
  <div className="flex justify-between items-center px-4">
- <button onClick={() => handleShare(zine.id)} className="flex items-center gap-3 px-6 py-2 bg-stone-50 dark:bg-stone-900 border border-stone-100 dark:border-stone-800 rounded-none font-sans text-[8px] uppercase tracking-widest font-black text-stone-400 hover:text-stone-500 transition-all">
+ <button onClick={() => handleShare(zine.id)} className="flex items-center gap-3 px-6 py-2 bg-nous-base border border-nous-border rounded-none font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle hover:text-nous-text0 transition-all">
  {copiedId === zine.id ? <Check size={12} /> : <Share2 size={12} />}
  {copiedId === zine.id ? 'Link Preserved' : 'Get Share Link'}
  </button>
- <span className="font-sans text-[7px] uppercase tracking-widest text-stone-500 font-black">Public</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-text0 font-black">Public</span>
  </div>
  </div>
  ))}

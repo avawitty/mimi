@@ -160,7 +160,7 @@ export const PsychicDollMimi: React.FC<PsychicDollMimiProps> = ({ analyser, clas
  initial={{ opacity: 0 }}
  animate={{ opacity: 1 }}
  exit={{ opacity: 0 }}
- className="font-mono text-[10px] uppercase tracking-widest text-stone-400 animate-pulse"
+ className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle animate-pulse"
  >
  Transmuting thought...
  </motion.div>
@@ -170,7 +170,7 @@ export const PsychicDollMimi: React.FC<PsychicDollMimiProps> = ({ analyser, clas
  initial={{ opacity: 0, y: 10 }}
  animate={{ opacity: 1, y: 0 }}
  exit={{ opacity: 0, y: -10 }}
- className="font-serif text-sm italic text-stone-200 leading-relaxed"
+ className="font-serif text-sm italic text-nous-text leading-relaxed"
  >
 "{insight}"
  </motion.div>
@@ -180,7 +180,7 @@ export const PsychicDollMimi: React.FC<PsychicDollMimiProps> = ({ analyser, clas
  initial={{ opacity: 0 }}
  animate={{ opacity: 1 }}
  exit={{ opacity: 0 }}
- className="font-sans text-xs text-stone-400"
+ className="font-sans text-xs text-nous-subtle"
  >
  {transcript}
  </motion.div>
@@ -190,7 +190,7 @@ export const PsychicDollMimi: React.FC<PsychicDollMimiProps> = ({ analyser, clas
  initial={{ opacity: 0 }}
  animate={{ opacity: 1 }}
  exit={{ opacity: 0 }}
- className="font-mono text-[9px] uppercase tracking-widest text-stone-500"
+ className="font-mono text-[9px] uppercase tracking-widest text-nous-text0"
  >
  Speak your thoughts to Mimi...
  </motion.div>

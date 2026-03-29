@@ -71,9 +71,9 @@ export const MigrationUtility: React.FC = () => {
  };
 
  return (
- <div className="p-6 bg-stone-50 border border-stone-200 rounded-none space-y-4">
+ <div className="p-6 bg-nous-base border border-nous-border rounded-none space-y-4">
  <h2 className="text-xl font-bold">Migration Utility</h2>
- <p className="text-sm text-stone-600">
+ <p className="text-sm text-nous-subtle">
  This will migrate top-level collections from the old database to the new one.
  </p>
  <button 
@@ -85,7 +85,7 @@ export const MigrationUtility: React.FC = () => {
  </button>
  <div className="grid grid-cols-2 gap-2 text-xs">
  {COLLECTIONS.map(c => (
- <div key={c} className="p-2 bg-white border border-stone-100 rounded-none">
+ <div key={c} className="p-2 bg-white border border-nous-border rounded-none">
  <span className="font-bold">{c}:</span> {progress[c] || 'Pending'}
  </div>
  ))}

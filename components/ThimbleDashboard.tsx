@@ -43,9 +43,9 @@ export const ThimbleDashboard = () => {
  const [objective, setObjective] = useState('');
  const [targets, setTargets] = useState<SourcingTarget[]>([]);
  const [expandedTargetIndex, setExpandedTargetIndex] = useState<number | null>(null);
-  const [selectedBoardIdForTarget, setSelectedBoardIdForTarget] = useState<string>('');
-  const [addedBoardName, setAddedBoardName] = useState<string | null>(null);
-  const [isPushSuccess, setIsPushSuccess] = useState(false);
+ const [selectedBoardIdForTarget, setSelectedBoardIdForTarget] = useState<string>('');
+ const [addedBoardName, setAddedBoardName] = useState<string | null>(null);
+ const [isPushSuccess, setIsPushSuccess] = useState(false);
  const [isProcuring, setIsProcuring] = useState(false);
  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
  const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
@@ -199,32 +199,32 @@ export const ThimbleDashboard = () => {
  const files = Array.from(e.target.files);
  try {
  const newMedia = await Promise.all(files.map(async (f) => {
-   if (f.type.startsWith('image/')) {
-     const { compressImage } = await import('../services/imageUtils');
-     const dataUrl = await compressImage(f, 800, 800, 0.7);
-     return {
-       type: 'image' as const,
-       data: dataUrl.split(',')[1],
-       url: dataUrl,
-       mimeType: 'image/jpeg',
-       name: f.name
-     };
-   } else {
-     return new Promise<MediaFile>((resolve, reject) => {
-     const reader = new FileReader();
-     reader.onload = (ev) => {
-     resolve({
-     type: f.type.startsWith('image/') ? 'image' : 'video',
-     data: (ev.target?.result as string).split(',')[1],
-     url: ev.target?.result as string,
-     mimeType: f.type,
-     name: f.name
-     });
-     };
-     reader.onerror = reject;
-     reader.readAsDataURL(f);
-     });
-   }
+ if (f.type.startsWith('image/')) {
+ const { compressImage } = await import('../services/imageUtils');
+ const dataUrl = await compressImage(f, 800, 800, 0.7);
+ return {
+ type: 'image' as const,
+ data: dataUrl.split(',')[1],
+ url: dataUrl,
+ mimeType: 'image/jpeg',
+ name: f.name
+ };
+ } else {
+ return new Promise<MediaFile>((resolve, reject) => {
+ const reader = new FileReader();
+ reader.onload = (ev) => {
+ resolve({
+ type: f.type.startsWith('image/') ? 'image' : 'video',
+ data: (ev.target?.result as string).split(',')[1],
+ url: ev.target?.result as string,
+ mimeType: f.type,
+ name: f.name
+ });
+ };
+ reader.onerror = reject;
+ reader.readAsDataURL(f);
+ });
+ }
  }));
  setMediaFiles(prev => [...prev, ...newMedia]);
  } catch (error) {
@@ -373,15 +373,15 @@ export const ThimbleDashboard = () => {
  };
 
  return (
- <div className="min-h-full flex flex-col md:flex-row bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 font-sans"style={{ backgroundImage: 'radial-gradient(#D1CFCA 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }}>
+ <div className="min-h-full flex flex-col md:flex-row bg-nous-base text-nous-text font-sans"style={{ backgroundImage: 'radial-gradient(#D1CFCA 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }}>
  
  {/* Sidebar Navigation */}
- <aside className="w-full md:w-64 border-r border-stone-200 dark:border-stone-800 flex flex-col h-full sticky top-0 bg-stone-50/80 dark:bg-stone-950/80 backdrop-blur-sm z-10">
- <div className="p-8 border-b border-stone-200 dark:border-stone-800 flex flex-col gap-4">
+ <aside className="w-full md:w-64 border-r border-nous-border flex flex-col h-full sticky top-0 bg-nous-base/80 /80 backdrop-blur-sm z-10">
+ <div className="p-8 border-b border-nous-border flex flex-col gap-4">
  <div className="flex items-center gap-3">
- <div className="w-6 h-8 border border-stone-900 dark:border-stone-100 rounded-none flex items-end justify-center pb-1 relative overflow-hidden">
- <div className="w-full h-px bg-stone-900 dark:bg-stone-100 absolute bottom-1 opacity-30"></div>
- <div className="w-1 h-1 bg-stone-900 dark:bg-stone-100 rounded-none mb-1"></div>
+ <div className="w-6 h-8 border border-nous-border rounded-none flex items-end justify-center pb-1 relative overflow-hidden">
+ <div className="w-full h-px bg-nous-base absolute bottom-1 opacity-30"></div>
+ <div className="w-1 h-1 bg-nous-base rounded-none mb-1"></div>
  </div>
  <h1 className="font-serif italic text-xl">The Thimble</h1>
  </div>
@@ -391,37 +391,37 @@ export const ThimbleDashboard = () => {
  <nav className="flex-grow p-4 space-y-2">
  <button 
  onClick={() => setActiveTab('sourcing')}
- className={`w-full flex items-center gap-3 px-4 py-3 border text-[10px] uppercase tracking-widest font-semibold transition-all ${activeTab === 'sourcing' ? 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 opacity-100' : 'bg-transparent border-transparent hover:border-stone-200 dark:border-stone-800 opacity-60 hover:opacity-100 hover:bg-white/50 dark:hover:bg-stone-900/50'}`}
+ className={`w-full flex items-center gap-3 px-4 py-3 border text-[10px] uppercase tracking-widest font-semibold transition-all ${activeTab === 'sourcing' ? 'bg-white border-nous-border opacity-100' : 'bg-transparent border-transparent hover:border-nous-border opacity-60 hover:opacity-100 hover:bg-white/50 /50'}`}
  >
  <Search size={16} /> Sourcing
  </button>
  <button 
  onClick={() => setActiveTab('boards')}
- className={`w-full flex items-center gap-3 px-4 py-3 border text-[10px] uppercase tracking-widest font-semibold transition-all ${activeTab === 'boards' ? 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 opacity-100' : 'bg-transparent border-transparent hover:border-stone-200 dark:border-stone-800 opacity-60 hover:opacity-100 hover:bg-white/50 dark:hover:bg-stone-900/50'}`}
+ className={`w-full flex items-center gap-3 px-4 py-3 border text-[10px] uppercase tracking-widest font-semibold transition-all ${activeTab === 'boards' ? 'bg-white border-nous-border opacity-100' : 'bg-transparent border-transparent hover:border-nous-border opacity-60 hover:opacity-100 hover:bg-white/50 /50'}`}
  >
  <LayoutGrid size={16} /> Boards
  </button>
  <button 
  onClick={() => setActiveTab('audit')}
- className={`w-full flex items-center gap-3 px-4 py-3 border text-[10px] uppercase tracking-widest font-semibold transition-all ${activeTab === 'audit' ? 'bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800 opacity-100' : 'bg-transparent border-transparent hover:border-stone-200 dark:border-stone-800 opacity-60 hover:opacity-100 hover:bg-white/50 dark:hover:bg-stone-900/50'}`}
+ className={`w-full flex items-center gap-3 px-4 py-3 border text-[10px] uppercase tracking-widest font-semibold transition-all ${activeTab === 'audit' ? 'bg-white border-nous-border opacity-100' : 'bg-transparent border-transparent hover:border-nous-border opacity-60 hover:opacity-100 hover:bg-white/50 /50'}`}
  >
  <Scale size={16} /> Fiscal Audit
  </button>
  </nav>
 
  {activeTab === 'boards' && (
- <div className="p-4 border-t border-stone-200 dark:border-stone-800">
+ <div className="p-4 border-t border-nous-border">
  <div className="text-[9px] uppercase tracking-widest opacity-40 mb-3">Your Boards</div>
  <div className="space-y-1 max-h-48 overflow-y-auto custom-scrollbar">
  {boards.map(b => (
  <div key={b.id} className="flex items-center justify-between group">
  <button 
  onClick={() => setSelectedBoard(b)}
- className={`flex-grow text-left px-3 py-2 text-[10px] uppercase tracking-widest truncate transition-colors ${selectedBoard?.id === b.id ? 'bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 font-bold' : 'hover:bg-white/50 dark:hover:bg-stone-900/50 opacity-70 hover:opacity-100'}`}
+ className={`flex-grow text-left px-3 py-2 text-[10px] uppercase tracking-widest truncate transition-colors ${selectedBoard?.id === b.id ? 'bg-white border border-nous-border font-bold' : 'hover:bg-white/50 /50 opacity-70 hover:opacity-100'}`}
  >
  {b.title}
  </button>
- <button onClick={() => handleDeleteBoard(b.id)} className="p-2 opacity-0 group-hover:opacity-100 text-stone-500 dark:text-stone-400 hover:text-red-800 transition-opacity">
+ <button onClick={() => handleDeleteBoard(b.id)} className="p-2 opacity-0 group-hover:opacity-100 text-nous-text0 hover:text-red-800 transition-opacity">
  <Trash2 size={12} />
  </button>
  </div>
@@ -433,16 +433,16 @@ export const ThimbleDashboard = () => {
  value={newBoardTitle} 
  onChange={e => setNewBoardTitle(e.target.value)}
  placeholder="NEW BOARD..."
- className="flex-grow bg-white/50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 px-3 py-2 text-[10px] uppercase tracking-widest focus:ring-0 focus:border-stone-900 dark:border-stone-100 outline-none"
+ className="flex-grow bg-white/50 /50 border border-nous-border px-3 py-2 text-[10px] uppercase tracking-widest focus:ring-0 focus:border-nous-border outline-none"
  />
- <button onClick={handleCreateBoard} className="bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 px-3 py-2 hover:bg-stone-800 dark:hover:bg-white transition-colors">
+ <button onClick={handleCreateBoard} className="bg-nous-base text-nous-text px-3 py-2 hover:bg-nous-base dark:hover:bg-white transition-colors">
  <Plus size={14} />
  </button>
  </div>
  </div>
  )}
 
- <div className="p-8 border-t border-stone-200 dark:border-stone-800">
+ <div className="p-8 border-t border-nous-border">
  <div className="text-[9px] uppercase tracking-widest opacity-40">
  Procurement & Sourcing Engine <br/>
  v.4.0.1
@@ -452,7 +452,7 @@ export const ThimbleDashboard = () => {
 
  {/* Main Content Area */}
  <main className="flex-grow p-6 md:p-12 overflow-x-hidden relative">
- <header className="mb-12 flex justify-between items-end border-b border-stone-200 dark:border-stone-800 pb-8">
+ <header className="mb-12 flex justify-between items-end border-b border-nous-border pb-8">
  <div>
  <h2 className="font-serif italic text-4xl md:text-5xl leading-tight">
  {activeTab === 'sourcing' && <>Procurement & Sourcing <br/>Executive Control Panel</>}
@@ -483,9 +483,9 @@ export const ThimbleDashboard = () => {
  onDragLeave={() => setIsDragging(false)}
  onDrop={handleDrop}
  onClick={() => fileInputRef.current?.click()}
- className={`border-2 border-dashed border-stone-200 dark:border-stone-800 p-8 text-center transition-colors cursor-pointer group ${isDragging ? 'bg-white/60 dark:bg-stone-900/60 border-stone-900 dark:border-stone-100' : 'bg-white/30 dark:bg-stone-900/30 hover:bg-white/50 dark:hover:bg-stone-900/50'}`}
+ className={`border-2 border-dashed border-nous-border p-8 text-center transition-colors cursor-pointer group ${isDragging ? 'bg-white/60 /60 border-nous-border ' : 'bg-white/30 /30 hover:bg-white/50 /50'}`}
  >
- <Upload className="mx-auto text-stone-500 dark:text-stone-400 mb-2 group-hover:scale-110 transition-transform"size={24} />
+ <Upload className="mx-auto text-nous-text0 mb-2 group-hover:scale-110 transition-transform"size={24} />
  <p className="text-[11px] font-sans opacity-60">Tap to select or drop files here</p>
  <input type="file"ref={fileInputRef} onChange={handleFileChange} multiple accept="image/*"className="hidden"/>
  </div>
@@ -495,32 +495,32 @@ export const ThimbleDashboard = () => {
  <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Paste a link</label>
  <div className="flex gap-2">
  <input 
- className="flex-grow bg-white/50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 px-4 py-2 text-xs focus:ring-0 focus:border-stone-900 dark:border-stone-100 outline-none font-sans"
+ className="flex-grow bg-white/50 /50 border border-nous-border px-4 py-2 text-xs focus:ring-0 focus:border-nous-border outline-none font-sans"
  placeholder="e.g., Grailed, SSENSE"
  value={linkInput}
  onChange={e => setLinkInput(e.target.value)}
  onKeyDown={e => e.key === 'Enter' && handleAddLink()}
  type="text"
  />
- <button onClick={handleAddLink} className="bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 px-6 py-2 text-[10px] uppercase tracking-widest hover:bg-stone-800 dark:hover:bg-white transition-colors">Add</button>
+ <button onClick={handleAddLink} className="bg-nous-base text-nous-text px-6 py-2 text-[10px] uppercase tracking-widest hover:bg-nous-base dark:hover:bg-white transition-colors">Add</button>
  </div>
  </div>
 
  {mediaFiles.length > 0 && (
  <div className="flex flex-wrap gap-2 mt-4">
  {mediaFiles.map((file, idx) => (
- <div key={idx} className="relative group w-16 h-16 border border-stone-200 dark:border-stone-800 overflow-hidden bg-white dark:bg-stone-900">
+ <div key={idx} className="relative group w-16 h-16 border border-nous-border overflow-hidden bg-white">
  {file.type === 'image' ? (
  <img src={`data:${file.mimeType};base64,${file.data}`} alt="upload"className="w-full h-full object-cover grayscale opacity-80"/>
  ) : file.type === 'link' && file.data ? (
- <img src={file.data} alt="link thumbnail" className="w-full h-full object-cover grayscale opacity-80" referrerPolicy="no-referrer" />
+ <img src={file.data} alt="link thumbnail"className="w-full h-full object-cover grayscale opacity-80"referrerPolicy="no-referrer"/>
  ) : (
- <div className="w-full h-full flex items-center justify-center bg-stone-50/50 dark:bg-stone-950/50">
- <LinkIcon size={16} className="text-stone-500 dark:text-stone-400"/>
+ <div className="w-full h-full flex items-center justify-center bg-nous-base/50 /50">
+ <LinkIcon size={16} className="text-nous-text0"/>
  </div>
  )}
- <button onClick={(e) => { e.stopPropagation(); removeMedia(idx); }} className="absolute top-1 right-1 bg-white/90 dark:bg-stone-900/90 p-0.5 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
- <X size={12} className="text-stone-900 dark:text-stone-100"/>
+ <button onClick={(e) => { e.stopPropagation(); removeMedia(idx); }} className="absolute top-1 right-1 bg-white/90 /90 p-0.5 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
+ <X size={12} className="text-nous-text"/>
  </button>
  </div>
  ))}
@@ -528,11 +528,11 @@ export const ThimbleDashboard = () => {
  )}
  </div>
 
- <div className="space-y-6 pt-6 border-t border-stone-200 dark:border-stone-800">
+ <div className="space-y-6 pt-6 border-t border-nous-border">
  <div className="space-y-2">
  <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Sourcing Objective</label>
  <input 
- className="w-full bg-white/50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 px-4 py-2 text-xs focus:ring-0 focus:border-stone-900 dark:border-stone-100 outline-none font-sans italic"
+ className="w-full bg-white/50 /50 border border-nous-border px-4 py-2 text-xs focus:ring-0 focus:border-nous-border outline-none font-sans italic"
  placeholder="e.g., Winter capsule, Wedding guest"
  value={objective}
  onChange={e => setObjective(e.target.value)}
@@ -542,7 +542,7 @@ export const ThimbleDashboard = () => {
  <div className="space-y-2">
  <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Fiscal Constraints</label>
  <input 
- className="w-full bg-white/50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 px-4 py-2 text-xs focus:ring-0 focus:border-stone-900 dark:border-stone-100 outline-none font-sans"
+ className="w-full bg-white/50 /50 border border-nous-border px-4 py-2 text-xs focus:ring-0 focus:border-nous-border outline-none font-sans"
  placeholder="e.g., $50-$150, Uncapped"
  value={budget}
  onChange={e => setBudget(e.target.value)}
@@ -552,7 +552,7 @@ export const ThimbleDashboard = () => {
  <button 
  onClick={handleProcure}
  disabled={isProcuring || (!budget.trim() && mediaFiles.length === 0)}
- className="w-full py-4 bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 text-[11px] uppercase tracking-[0.3em] font-bold hover:bg-stone-800 dark:hover:bg-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+ className="w-full py-4 bg-nous-base text-nous-text text-[11px] uppercase tracking-[0.3em] font-bold hover:bg-nous-base dark:hover:bg-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
  >
  {isProcuring ? <Loader2 className="animate-spin"size={16} /> : <Search size={16} />}
  {isProcuring ? 'ANALYZING...' : 'INITIALIZE SOURCING'}
@@ -564,21 +564,21 @@ export const ThimbleDashboard = () => {
  <div className="flex justify-between items-center">
  <h3 className="font-serif italic text-2xl">Procurement Targets</h3>
  <div className="flex items-center gap-4">
- <span className="text-[9px] uppercase tracking-widest font-sans px-2 py-1 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900">
+ <span className="text-[9px] uppercase tracking-widest font-sans px-2 py-1 border border-nous-border bg-white">
  {targets.length > 0 ? `${targets.length} TARGETS` : 'AWAITING INPUT'}
  </span>
  <div className="flex gap-2">
- <button className="p-1 hover:bg-white dark:hover:bg-stone-900 transition-colors border border-transparent hover:border-stone-200 dark:border-stone-800"><Filter size={16} /></button>
- <button className="p-1 hover:bg-white dark:hover:bg-stone-900 transition-colors border border-transparent hover:border-stone-200 dark:border-stone-800"><SortAsc size={16} /></button>
+ <button className="p-1 hover:bg-white transition-colors border border-transparent hover:border-nous-border"><Filter size={16} /></button>
+ <button className="p-1 hover:bg-white transition-colors border border-transparent hover:border-nous-border"><SortAsc size={16} /></button>
  </div>
  </div>
  </div>
 
  {targets.length > 0 ? (
- <div className="border border-stone-200 dark:border-stone-800 bg-white/40 dark:bg-stone-900/40 overflow-hidden">
+ <div className="border border-nous-border bg-white/40 /40 overflow-hidden">
  <table className="w-full text-left border-collapse">
  <thead>
- <tr className="border-b border-stone-200 dark:border-stone-800 text-[9px] uppercase tracking-widest font-bold bg-white/50 dark:bg-stone-900/50">
+ <tr className="border-b border-nous-border text-[9px] uppercase tracking-widest font-bold bg-white/50 /50">
  <th className="px-4 py-3">Archetype</th>
  <th className="px-4 py-3">Query Boolean</th>
  <th className="px-4 py-3">Designers</th>
@@ -588,7 +588,7 @@ export const ThimbleDashboard = () => {
  <tbody className="divide-y divide-stone-200/50 dark:divide-stone-800/50 text-xs">
  {targets.map((target, idx) => (
  <React.Fragment key={idx}>
- <tr className="hover:bg-white/60 dark:hover:bg-stone-900/60 transition-colors group cursor-pointer" onClick={() => setExpandedTargetIndex(expandedTargetIndex === idx ? null : idx)}>
+ <tr className="hover:bg-white/60 /60 transition-colors group cursor-pointer"onClick={() => setExpandedTargetIndex(expandedTargetIndex === idx ? null : idx)}>
  <td className="px-4 py-4">
  <div className="font-serif italic text-sm">{target.targetArchetype}</div>
  <div className="text-[9px] uppercase opacity-40 font-sans mt-0.5 max-w-xs truncate"title={target.rationale}>{target.rationale}</div>
@@ -596,7 +596,7 @@ export const ThimbleDashboard = () => {
  <td className="px-4 py-4 font-mono text-[10px] opacity-80">
  <div className="flex items-center gap-2">
  <span className="truncate max-w-[150px]">{target.keywordBoolean}</span>
- <button onClick={(e) => { e.stopPropagation(); copyToClipboard(target.keywordBoolean, idx); }} className="text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:text-stone-100">
+ <button onClick={(e) => { e.stopPropagation(); copyToClipboard(target.keywordBoolean, idx); }} className="text-nous-text0 hover:text-nous-text">
  {copiedIndex === idx ? <Check size={12} /> : <Copy size={12} />}
  </button>
  </div>
@@ -606,103 +606,103 @@ export const ThimbleDashboard = () => {
  </td>
  <td className="px-4 py-4 text-right">
  <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
- <button onClick={(e) => { e.stopPropagation(); saveToPocket(target); }} className="p-1.5 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:bg-stone-900 dark:hover:bg-stone-100 hover:text-white dark:hover:text-stone-900 transition-colors"title="Save to Pocket">
+ <button onClick={(e) => { e.stopPropagation(); saveToPocket(target); }} className="p-1.5 border border-nous-border bg-white hover:bg-nous-base hover:text-white transition-colors"title="Save to Pocket">
  <ShoppingBag size={14} />
  </button>
  </div>
  </td>
  </tr>
  {expandedTargetIndex === idx && (
- <tr className="bg-white/30 dark:bg-stone-900/30 border-t border-stone-200/50 dark:border-stone-800/50">
+ <tr className="bg-white/30 /30 border-t border-nous-border/50 /50">
  <td colSpan={4} className="px-4 py-6">
  <div className="space-y-6">
-   
-   {target.referenceImageUrl && (
-     <div className="flex flex-col gap-2">
-       <h4 className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Canonical Reference</h4>
-       <img src={target.referenceImageUrl} alt={target.targetArchetype} className="w-32 h-32 object-cover border border-stone-200 dark:border-stone-800" referrerPolicy="no-referrer" />
-     </div>
-   )}
+ 
+ {target.referenceImageUrl && (
+ <div className="flex flex-col gap-2">
+ <h4 className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Canonical Reference</h4>
+ <img src={target.referenceImageUrl} alt={target.targetArchetype} className="w-32 h-32 object-cover border border-nous-border"referrerPolicy="no-referrer"/>
+ </div>
+ )}
 
-   {target.searchableInterpretations && target.searchableInterpretations.length > 0 && (
-     <div>
-       <h4 className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70 mb-2">Searchable Interpretations</h4>
-       <ul className="list-disc list-inside text-xs font-serif italic space-y-1 opacity-80">
-         {target.searchableInterpretations.map((interpretation, i) => (
-           <li key={i}>{interpretation}</li>
-         ))}
-       </ul>
-     </div>
-   )}
+ {target.searchableInterpretations && target.searchableInterpretations.length > 0 && (
+ <div>
+ <h4 className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70 mb-2">Searchable Interpretations</h4>
+ <ul className="list-disc list-inside text-xs font-serif italic space-y-1 opacity-80">
+ {target.searchableInterpretations.map((interpretation, i) => (
+ <li key={i}>{interpretation}</li>
+ ))}
+ </ul>
+ </div>
+ )}
 
-   <div>
-  <h4 className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70 mb-2">Search Platforms</h4>
-  <div className="flex flex-wrap gap-2 mb-4">
-  {['grailed', 'ssense', 'crossroads', 'therealreal', 'vestiaire', 'depop'].map(platform => (
-  <button 
-  key={platform}
-  onClick={() => openSearch(target.keywordBoolean, platform)}
-  className="px-3 py-1.5 border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:bg-stone-900 dark:hover:bg-stone-100 hover:text-white dark:hover:text-stone-900 transition-colors text-[10px] uppercase tracking-wider flex items-center gap-2"
-  >
-  {platform} <ExternalLink size={10} />
-  </button>
-  ))}
-  </div>
-  <div className="flex items-center gap-2 bg-white/50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 px-3 py-2">
-  <input 
-    type="text" 
-    readOnly 
-    value={target.keywordBoolean} 
-    className="font-mono text-[10px] opacity-80 flex-grow bg-transparent border-none focus:ring-0 outline-none w-full"
-    onClick={(e) => (e.target as HTMLInputElement).select()}
-  />
-  <button onClick={(e) => { e.stopPropagation(); copyToClipboard(target.keywordBoolean, idx); }} className="text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:text-stone-100 p-1 flex-shrink-0">
-  {copiedIndex === idx ? <Check size={12} /> : <Copy size={12} />}
-  </button>
-  </div>
-  </div>
-  <div>
-  <h4 className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70 mb-2">Add to Board</h4>
-  <div className="flex items-center gap-2">
-  <select 
-  className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 px-3 py-2 text-xs focus:ring-0 focus:border-stone-900 dark:border-stone-100 outline-none font-sans"
-  value={selectedBoardIdForTarget}
-  onChange={(e) => setSelectedBoardIdForTarget(e.target.value)}
-  >
-  <option value="" disabled>Select Board...</option>
-  {boards.map(b => <option key={b.id} value={b.id}>{b.title}</option>)}
-  </select>
-  <button 
-  disabled={!selectedBoardIdForTarget || !user?.uid}
-  onClick={() => {
-  if (selectedBoardIdForTarget && user?.uid) {
-  const newItem = {
-  boardId: selectedBoardIdForTarget,
-  userId: user.uid,
-  url: `https://www.grailed.com/shop?query=${encodeURIComponent(target.keywordBoolean || '')}`,
-  title: target.targetArchetype || 'Untitled',
-  price: 'TBD',
-  imageUrl: target.referenceImageUrl || '',
-  createdAt: serverTimestamp()
-  };
-    addDoc(collection(db, 'thimbleItems'), newItem).then(() => {
-  const boardName = boards.find(b => b.id === selectedBoardIdForTarget)?.title || 'Board';
-  setAddedBoardName(boardName);
-  setTimeout(() => {
-    setAddedBoardName(null);
-    setSelectedBoardIdForTarget('');
-  }, 2000);
-  }).catch(err => {
-  console.error("Error adding to board:", err);
-  });
-  }
-  }}
-  className="bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 px-4 py-2 text-[10px] uppercase tracking-widest hover:bg-stone-800 dark:hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-  >
-  {addedBoardName ? `Added to ${addedBoardName}!` : (selectedBoardIdForTarget ? `Add to ${boards.find(b => b.id === selectedBoardIdForTarget)?.title || 'Board'}` : 'Add to Board')}
-  </button>
-  </div>
-  </div>
+ <div>
+ <h4 className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70 mb-2">Search Platforms</h4>
+ <div className="flex flex-wrap gap-2 mb-4">
+ {['grailed', 'ssense', 'crossroads', 'therealreal', 'vestiaire', 'depop'].map(platform => (
+ <button 
+ key={platform}
+ onClick={() => openSearch(target.keywordBoolean, platform)}
+ className="px-3 py-1.5 border border-nous-border bg-white hover:bg-nous-base hover:text-white transition-colors text-[10px] uppercase tracking-wider flex items-center gap-2"
+ >
+ {platform} <ExternalLink size={10} />
+ </button>
+ ))}
+ </div>
+ <div className="flex items-center gap-2 bg-white/50 /50 border border-nous-border px-3 py-2">
+ <input 
+ type="text"
+ readOnly 
+ value={target.keywordBoolean} 
+ className="font-mono text-[10px] opacity-80 flex-grow bg-transparent border-none focus:ring-0 outline-none w-full"
+ onClick={(e) => (e.target as HTMLInputElement).select()}
+ />
+ <button onClick={(e) => { e.stopPropagation(); copyToClipboard(target.keywordBoolean, idx); }} className="text-nous-text0 hover:text-nous-text p-1 flex-shrink-0">
+ {copiedIndex === idx ? <Check size={12} /> : <Copy size={12} />}
+ </button>
+ </div>
+ </div>
+ <div>
+ <h4 className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70 mb-2">Add to Board</h4>
+ <div className="flex items-center gap-2">
+ <select 
+ className="bg-white border border-nous-border px-3 py-2 text-xs focus:ring-0 focus:border-nous-border outline-none font-sans"
+ value={selectedBoardIdForTarget}
+ onChange={(e) => setSelectedBoardIdForTarget(e.target.value)}
+ >
+ <option value=""disabled>Select Board...</option>
+ {boards.map(b => <option key={b.id} value={b.id}>{b.title}</option>)}
+ </select>
+ <button 
+ disabled={!selectedBoardIdForTarget || !user?.uid}
+ onClick={() => {
+ if (selectedBoardIdForTarget && user?.uid) {
+ const newItem = {
+ boardId: selectedBoardIdForTarget,
+ userId: user.uid,
+ url: `https://www.grailed.com/shop?query=${encodeURIComponent(target.keywordBoolean || '')}`,
+ title: target.targetArchetype || 'Untitled',
+ price: 'TBD',
+ imageUrl: target.referenceImageUrl || '',
+ createdAt: serverTimestamp()
+ };
+ addDoc(collection(db, 'thimbleItems'), newItem).then(() => {
+ const boardName = boards.find(b => b.id === selectedBoardIdForTarget)?.title || 'Board';
+ setAddedBoardName(boardName);
+ setTimeout(() => {
+ setAddedBoardName(null);
+ setSelectedBoardIdForTarget('');
+ }, 2000);
+ }).catch(err => {
+ console.error("Error adding to board:", err);
+ });
+ }
+ }}
+ className="bg-nous-base text-nous-text px-4 py-2 text-[10px] uppercase tracking-widest hover:bg-nous-base dark:hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+ >
+ {addedBoardName ? `Added to ${addedBoardName}!` : (selectedBoardIdForTarget ? `Add to ${boards.find(b => b.id === selectedBoardIdForTarget)?.title || 'Board'}` : 'Add to Board')}
+ </button>
+ </div>
+ </div>
  </div>
  </td>
  </tr>
@@ -713,7 +713,7 @@ export const ThimbleDashboard = () => {
  </table>
  </div>
  ) : (
- <div className="p-12 border border-stone-200 dark:border-stone-800 bg-stone-50/40 dark:bg-stone-950/40 flex flex-col items-center justify-center text-center">
+ <div className="p-12 border border-nous-border bg-nous-base/40 /40 flex flex-col items-center justify-center text-center">
  <div className="text-[10px] uppercase tracking-widest font-semibold mb-3 font-sans">System Intelligence Note</div>
  <p className="font-serif italic text-sm leading-relaxed opacity-80 max-w-md">
  Provide visual artifacts, a sourcing objective, and fiscal constraints to generate highly specific procurement targets. The engine will cross-reference archival patterns with current market availability.
@@ -733,21 +733,21 @@ export const ThimbleDashboard = () => {
  <h2 className="font-serif italic text-2xl">Acquisition Intake</h2>
  <span className="text-[10px] uppercase tracking-widest opacity-60">Fig. 01 // Input Terminal</span>
  </div>
- <div className="flex-grow border border-stone-200 dark:border-stone-800 p-6 bg-white/20 dark:bg-stone-900/20 flex flex-col gap-4">
+ <div className="flex-grow border border-nous-border p-6 bg-white/20 /20 flex flex-col gap-4">
  <div className="grid grid-cols-2 gap-4">
  <input 
  type="text"
  value={newItemTitle} 
  onChange={e => setNewItemTitle(e.target.value)}
  placeholder="Artifact Title"
- className="bg-white/50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 px-4 py-2 text-xs focus:ring-0 focus:border-stone-900 dark:border-stone-100 outline-none font-sans"
+ className="bg-white/50 /50 border border-nous-border px-4 py-2 text-xs focus:ring-0 focus:border-nous-border outline-none font-sans"
  />
  <input 
  type="text"
  value={newItemPrice} 
  onChange={e => setNewItemPrice(e.target.value)}
  placeholder="Price / Value"
- className="bg-white/50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 px-4 py-2 text-xs focus:ring-0 focus:border-stone-900 dark:border-stone-100 outline-none font-sans"
+ className="bg-white/50 /50 border border-nous-border px-4 py-2 text-xs focus:ring-0 focus:border-nous-border outline-none font-sans"
  />
  </div>
  <div className="flex gap-2">
@@ -756,9 +756,9 @@ export const ThimbleDashboard = () => {
  value={newItemUrl} 
  onChange={e => setNewItemUrl(e.target.value)}
  placeholder="URL Link"
- className="flex-grow bg-white/50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 px-4 py-2 text-xs focus:ring-0 focus:border-stone-900 dark:border-stone-100 outline-none font-sans"
+ className="flex-grow bg-white/50 /50 border border-nous-border px-4 py-2 text-xs focus:ring-0 focus:border-nous-border outline-none font-sans"
  />
- <button onClick={handleAddItem} className="bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 px-6 py-2 text-[10px] uppercase tracking-widest hover:bg-stone-800 dark:hover:bg-white transition-colors">Add</button>
+ <button onClick={handleAddItem} className="bg-nous-base text-nous-text px-6 py-2 text-[10px] uppercase tracking-widest hover:bg-nous-base dark:hover:bg-white transition-colors">Add</button>
  </div>
  </div>
  </div>
@@ -767,22 +767,22 @@ export const ThimbleDashboard = () => {
  <div className="flex justify-between items-baseline mb-4">
  <h2 className="font-serif italic text-2xl">Curator Stats</h2>
  </div>
- <div className="border border-stone-200 dark:border-stone-800 p-6 flex-grow space-y-6 bg-white/20 dark:bg-stone-900/20">
+ <div className="border border-nous-border p-6 flex-grow space-y-6 bg-white/20 /20">
  <div className="space-y-1">
  <div className="flex justify-between text-[9px] uppercase tracking-widest">
  <span>Artifact Count</span>
  <span>{boardItems.length}</span>
  </div>
- <div className="h-px bg-stone-200 dark:bg-stone-800 w-full">
- <div className="h-full bg-stone-900 dark:bg-stone-100"style={{ width: `${Math.min(boardItems.length * 10, 100)}%` }}></div>
+ <div className="h-px bg-stone-200 w-full">
+ <div className="h-full bg-nous-base"style={{ width: `${Math.min(boardItems.length * 10, 100)}%` }}></div>
  </div>
  </div>
  
- <div className="pt-6 border-t border-stone-200 dark:border-stone-800 space-y-3">
+ <div className="pt-6 border-t border-nous-border space-y-3">
  <button 
  onClick={handleAuditBoard}
  disabled={isAuditingBoard || boardItems.length === 0}
- className="w-full py-3 border border-stone-900 dark:border-stone-100 text-stone-900 dark:text-stone-100 text-[10px] uppercase tracking-widest hover:bg-stone-900 dark:hover:bg-stone-100 hover:text-white dark:hover:text-stone-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+ className="w-full py-3 border border-nous-border text-nous-text text-[10px] uppercase tracking-widest hover:bg-nous-base hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
  >
  {isAuditingBoard ? <Loader2 className="animate-spin"size={14} /> : <Scale size={14} />}
  {isAuditingBoard ? 'Auditing...' : 'Run Board Audit'}
@@ -801,21 +801,21 @@ export const ThimbleDashboard = () => {
  type: 'thimble',
  id: selectedBoard.id
  }
-   });
-  setIsPushSuccess(true);
-  setTimeout(() => setIsPushSuccess(false), 2000);
-  } catch (e) {
-  console.error('Error pushing task:', e);
-  }
-  }}
-  className="w-full py-3 border border-stone-200 dark:border-stone-800 text-stone-900 dark:text-stone-100 text-[10px] uppercase tracking-widest hover:bg-white dark:hover:bg-stone-900 transition-colors flex items-center justify-center gap-2"
-  >
-  {isPushSuccess ? <><Check size={14} /> Pushed!</> : <><Plus size={14} /> Push to Action Board</>}
-  </button>
+ });
+ setIsPushSuccess(true);
+ setTimeout(() => setIsPushSuccess(false), 2000);
+ } catch (e) {
+ console.error('Error pushing task:', e);
+ }
+ }}
+ className="w-full py-3 border border-nous-border text-nous-text text-[10px] uppercase tracking-widest hover:bg-white transition-colors flex items-center justify-center gap-2"
+ >
+ {isPushSuccess ? <><Check size={14} /> Pushed!</> : <><Plus size={14} /> Push to Action Board</>}
+ </button>
  </div>
 
  {boardAuditResult && (
- <div className="bg-white dark:bg-stone-900 p-4 border border-stone-200 dark:border-stone-800 rotate-1 mt-4">
+ <div className="bg-white p-4 border border-nous-border rotate-1 mt-4">
  <span className="text-[8px] uppercase tracking-widest opacity-60 block mb-2">Audit_Note</span>
  <p className="font-serif italic text-sm leading-snug">"{boardAuditResult.verdict}"</p>
  </div>
@@ -825,13 +825,13 @@ export const ThimbleDashboard = () => {
  </section>
 
  <section>
- <div className="flex justify-between items-end border-b border-stone-200 dark:border-stone-800 pb-4 mb-8">
+ <div className="flex justify-between items-end border-b border-nous-border pb-4 mb-8">
  <h2 className="font-serif italic text-3xl">Pending Acquisitions</h2>
  <div className="flex gap-4 items-center">
  <span className="text-[10px] uppercase tracking-widest opacity-60">Log_Ref_Archive</span>
  <div className="flex gap-1">
- <div className="w-3 h-3 border border-stone-900 dark:border-stone-100"></div>
- <div className="w-3 h-3 border border-stone-900 dark:border-stone-100 bg-stone-900 dark:bg-stone-100"></div>
+ <div className="w-3 h-3 border border-nous-border"></div>
+ <div className="w-3 h-3 border border-nous-border bg-nous-base"></div>
  </div>
  </div>
  </div>
@@ -839,18 +839,18 @@ export const ThimbleDashboard = () => {
  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
  {boardItems.map((item, idx) => (
  <article key={item.id} className="space-y-4 group">
- <div className="aspect-[3/4] border border-stone-200 dark:border-stone-800 overflow-hidden bg-white dark:bg-stone-900 relative flex flex-col">
- <div className="absolute top-4 left-4 bg-white/90 dark:bg-stone-900/90 px-2 py-1 text-[10px] uppercase tracking-widest border border-stone-200 dark:border-stone-800 z-10">
+ <div className="aspect-[3/4] border border-nous-border overflow-hidden bg-white relative flex flex-col">
+ <div className="absolute top-4 left-4 bg-white/90 /90 px-2 py-1 text-[10px] uppercase tracking-widest border border-nous-border z-10">
  REF: 00{idx + 1}
  </div>
- <button onClick={() => handleDeleteItem(item.id)} className="absolute top-4 right-4 bg-white/90 dark:bg-stone-900/90 p-1.5 border border-stone-200 dark:border-stone-800 z-10 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-800">
+ <button onClick={() => handleDeleteItem(item.id)} className="absolute top-4 right-4 bg-white/90 /90 p-1.5 border border-nous-border z-10 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-800">
  <Trash2 size={12} />
  </button>
  
- <div className="flex-grow flex flex-col items-center justify-center p-8 bg-stone-50/30 dark:bg-stone-950/30 relative">
+ <div className="flex-grow flex flex-col items-center justify-center p-8 bg-nous-base/30 /30 relative">
  {item.imageUrl && (
- <div className="w-full h-48 mb-4 overflow-hidden border border-stone-200 dark:border-stone-800 relative z-10">
- <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+ <div className="w-full h-48 mb-4 overflow-hidden border border-nous-border relative z-10">
+ <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover"referrerPolicy="no-referrer"/>
  </div>
  )}
  <div className="text-center space-y-4 relative z-10">
@@ -859,7 +859,7 @@ export const ThimbleDashboard = () => {
  </div>
  </div>
  
- <div className="p-4 border-t border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 flex justify-between items-center">
+ <div className="p-4 border-t border-nous-border bg-white flex justify-between items-center">
  <a href={item.url} target="_blank"rel="noopener noreferrer"className="text-[10px] uppercase tracking-widest hover:underline flex items-center gap-1">
  <ExternalLink size={12} /> View Source
  </a>
@@ -868,7 +868,7 @@ export const ThimbleDashboard = () => {
  </article>
  ))}
  {boardItems.length === 0 && (
- <div className="col-span-3 py-24 text-center border border-dashed border-stone-200 dark:border-stone-800 bg-white/20 dark:bg-stone-900/20">
+ <div className="col-span-3 py-24 text-center border border-dashed border-nous-border bg-white/20 /20">
  <p className="font-serif italic text-xl opacity-60">No artifacts acquired yet.</p>
  </div>
  )}
@@ -876,8 +876,8 @@ export const ThimbleDashboard = () => {
  </section>
  </div>
  ) : (
- <div className="h-full flex flex-col items-center justify-center text-stone-900 dark:text-stone-100 space-y-6 max-w-md mx-auto text-center py-24">
- <div className="w-24 h-24 rounded-none border border-stone-200 dark:border-stone-800 flex items-center justify-center bg-white/30 dark:bg-stone-900/30">
+ <div className="h-full flex flex-col items-center justify-center text-nous-text space-y-6 max-w-md mx-auto text-center py-24">
+ <div className="w-24 h-24 rounded-none border border-nous-border flex items-center justify-center bg-white/30 /30">
  <FolderPlus className="w-10 h-10 opacity-50"/>
  </div>
  <div className="space-y-2">
@@ -891,7 +891,7 @@ export const ThimbleDashboard = () => {
  {activeTab === 'audit' && (
  <div className="max-w-3xl mx-auto space-y-12">
  <div className="space-y-6">
- <div className="flex justify-between items-center border-b border-stone-200 dark:border-stone-800 pb-4">
+ <div className="flex justify-between items-center border-b border-nous-border pb-4">
  <h3 className="font-serif italic text-2xl">Fiscal Audit Input</h3>
  <span className="text-[9px] uppercase tracking-tighter opacity-50 font-sans">Comparative Analysis</span>
  </div>
@@ -900,55 +900,55 @@ export const ThimbleDashboard = () => {
  <div className="space-y-2">
  <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Artifact 01</label>
  <textarea 
- className="w-full h-32 bg-white/50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 p-4 text-xs focus:ring-0 focus:border-stone-900 dark:border-stone-100 outline-none font-sans resize-none"
+ className="w-full h-32 bg-white/50 /50 border border-nous-border p-4 text-xs focus:ring-0 focus:border-nous-border outline-none font-sans resize-none"
  placeholder="Describe the first item..."
  value={item1}
  onChange={e => setItem1(e.target.value)}
  />
  <input 
- type="file" 
- accept="image/*" 
+ type="file"
+ accept="image/*"
  onChange={async (e) => {
  const file = e.target.files?.[0];
  if (file) {
-   const { compressImage } = await import('../services/imageUtils');
-   const dataUrl = await compressImage(file, 800, 800, 0.7);
-   setItem1Image(dataUrl);
+ const { compressImage } = await import('../services/imageUtils');
+ const dataUrl = await compressImage(file, 800, 800, 0.7);
+ setItem1Image(dataUrl);
  }
  }}
  className="text-[10px] font-sans w-full"
  />
- {item1Image && <img src={item1Image} alt="Item 1" className="w-full h-32 object-cover border border-stone-200 dark:border-stone-800" />}
+ {item1Image && <img src={item1Image} alt="Item 1"className="w-full h-32 object-cover border border-nous-border"/>}
  </div>
  <div className="space-y-2">
  <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Artifact 02</label>
  <textarea 
- className="w-full h-32 bg-white/50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 p-4 text-xs focus:ring-0 focus:border-stone-900 dark:border-stone-100 outline-none font-sans resize-none"
+ className="w-full h-32 bg-white/50 /50 border border-nous-border p-4 text-xs focus:ring-0 focus:border-nous-border outline-none font-sans resize-none"
  placeholder="Describe the second item..."
  value={item2}
  onChange={e => setItem2(e.target.value)}
  />
  <input 
- type="file" 
- accept="image/*" 
+ type="file"
+ accept="image/*"
  onChange={async (e) => {
  const file = e.target.files?.[0];
  if (file) {
-   const { compressImage } = await import('../services/imageUtils');
-   const dataUrl = await compressImage(file, 800, 800, 0.7);
-   setItem2Image(dataUrl);
+ const { compressImage } = await import('../services/imageUtils');
+ const dataUrl = await compressImage(file, 800, 800, 0.7);
+ setItem2Image(dataUrl);
  }
  }}
  className="text-[10px] font-sans w-full"
  />
- {item2Image && <img src={item2Image} alt="Item 2" className="w-full h-32 object-cover border border-stone-200 dark:border-stone-800" />}
+ {item2Image && <img src={item2Image} alt="Item 2"className="w-full h-32 object-cover border border-nous-border"/>}
  </div>
  </div>
 
  <div className="space-y-2">
  <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Fiscal Constraint</label>
  <input 
- className="w-full bg-white/50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 px-4 py-3 text-xs focus:ring-0 focus:border-stone-900 dark:border-stone-100 outline-none font-sans"
+ className="w-full bg-white/50 /50 border border-nous-border px-4 py-3 text-xs focus:ring-0 focus:border-nous-border outline-none font-sans"
  placeholder="e.g., $500 total budget"
  value={auditBudget}
  onChange={e => setAuditBudget(e.target.value)}
@@ -959,7 +959,7 @@ export const ThimbleDashboard = () => {
  <button 
  onClick={handleAudit}
  disabled={isAuditing || !item1.trim() || !item2.trim()}
- className="w-full py-4 bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900 text-[11px] uppercase tracking-[0.3em] font-bold hover:bg-stone-800 dark:hover:bg-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+ className="w-full py-4 bg-nous-base text-nous-text text-[11px] uppercase tracking-[0.3em] font-bold hover:bg-nous-base dark:hover:bg-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
  >
  {isAuditing ? <Loader2 className="animate-spin"size={16} /> : <Scale size={16} />}
  {isAuditing ? 'AUDITING...' : 'EXECUTE FISCAL AUDIT'}
@@ -970,31 +970,31 @@ export const ThimbleDashboard = () => {
  <motion.div 
  initial={{ opacity: 0, y: 20 }}
  animate={{ opacity: 1, y: 0 }}
- className="border border-stone-200 dark:border-stone-800 bg-white/40 dark:bg-stone-900/40 p-8 space-y-8"
+ className="border border-nous-border bg-white/40 /40 p-8 space-y-8"
  >
- <div className="text-center space-y-2 pb-6 border-b border-stone-200 dark:border-stone-800">
+ <div className="text-center space-y-2 pb-6 border-b border-nous-border">
  <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono">Definitive Recommendation</div>
  <h3 className="font-serif italic text-3xl">{auditResult.verdict}</h3>
  </div>
 
  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
  <div className="space-y-3">
- <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono border-b border-stone-200 dark:border-stone-800 pb-2">Item 1 Analysis</div>
+ <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono border-b border-nous-border pb-2">Item 1 Analysis</div>
  <p className="text-sm leading-relaxed opacity-90">{auditResult.item1Analysis}</p>
  </div>
  <div className="space-y-3">
- <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono border-b border-stone-200 dark:border-stone-800 pb-2">Item 2 Analysis</div>
+ <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono border-b border-nous-border pb-2">Item 2 Analysis</div>
  <p className="text-sm leading-relaxed opacity-90">{auditResult.item2Analysis}</p>
  </div>
  </div>
 
- <div className="space-y-3 bg-white/60 dark:bg-stone-900/60 p-6 border border-stone-200 dark:border-stone-800">
+ <div className="space-y-3 bg-white/60 /60 p-6 border border-nous-border">
  <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono">Rationale</div>
  <p className="text-sm leading-relaxed opacity-90">{auditResult.rationale}</p>
  </div>
 
  {auditResult.searchDirectives && auditResult.searchDirectives.length > 0 && (
- <div className="space-y-3 bg-white/60 dark:bg-stone-900/60 p-6 border border-stone-200 dark:border-stone-800">
+ <div className="space-y-3 bg-white/60 /60 p-6 border border-nous-border">
  <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono">Search Directives</div>
  <ul className="list-disc pl-4 space-y-2">
  {auditResult.searchDirectives.map((directive, i) => (
@@ -1005,17 +1005,17 @@ export const ThimbleDashboard = () => {
  )}
 
  {auditResult.searchBooleans && auditResult.searchBooleans.length > 0 && (
- <div className="space-y-3 bg-white/60 dark:bg-stone-900/60 p-6 border border-stone-200 dark:border-stone-800">
+ <div className="space-y-3 bg-white/60 /60 p-6 border border-nous-border">
  <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono">Search Booleans</div>
  <div className="flex flex-wrap gap-2">
  {auditResult.searchBooleans.map((boolean, i) => (
- <div key={i} className="flex items-center gap-2 bg-stone-200/20 dark:bg-stone-800/20 px-3 py-1.5 border border-stone-200 dark:border-stone-800">
+ <div key={i} className="flex items-center gap-2 bg-stone-200/20 /20 px-3 py-1.5 border border-nous-border">
  <span className="font-mono text-[11px] font-medium">{boolean}</span>
  <button 
  onClick={() => copyToClipboard(boolean, i + 1000)}
  className="opacity-50 hover:opacity-100 transition-opacity"
  >
- {copiedIndex === i + 1000 ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
+ {copiedIndex === i + 1000 ? <Check size={12} className="text-green-600"/> : <Copy size={12} />}
  </button>
  </div>
  ))}
@@ -1023,7 +1023,7 @@ export const ThimbleDashboard = () => {
  </div>
  )}
 
- <div className="pt-4 border-t border-stone-200 dark:border-stone-800 flex justify-end">
+ <div className="pt-4 border-t border-nous-border flex justify-end">
  <button 
  onClick={saveAuditToPocket}
  className="text-[10px] uppercase tracking-widest font-mono opacity-60 hover:opacity-100 transition-colors flex items-center gap-2"

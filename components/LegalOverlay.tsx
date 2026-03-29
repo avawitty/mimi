@@ -57,15 +57,15 @@ export const LegalOverlay: React.FC<LegalOverlayProps> = ({ type, onClose }) => 
  initial={{ opacity: 0 }} 
  animate={{ opacity: 1 }} 
  exit={{ opacity: 0 }}
- className="fixed inset-0 z-[10000] flex items-center justify-center bg-nous-base/95 dark:bg-black/95 backdrop-blur-3xl p-6"
+ className="fixed inset-0 z-[10000] flex items-center justify-center bg-nous-base/95 /95 backdrop-blur-3xl p-6"
  >
  <div className="max-w-xl w-full">
  <div className="flex justify-between items-start mb-16">
  <div className="space-y-2">
  <h2 className="font-serif text-5xl italic tracking-tighter">{content.title}.</h2>
- <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-stone-400 font-black">{content.subtitle}</p>
+ <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-nous-subtle font-black">{content.subtitle}</p>
  </div>
- <button onClick={onClose} className="p-3 text-stone-300 hover:text-nous-text dark:hover:text-white transition-all">
+ <button onClick={onClose} className="p-3 text-nous-subtle hover:text-nous-text dark:hover:text-white transition-all">
  <X size={24} />
  </button>
  </div>
@@ -81,17 +81,17 @@ export const LegalOverlay: React.FC<LegalOverlayProps> = ({ type, onClose }) => 
  >
  <div className="flex items-center gap-4">
  <div className="w-8 h-px bg-stone-200"/>
- <h3 className="font-sans text-[9px] uppercase tracking-widest font-black text-stone-500">{s.head}</h3>
+ <h3 className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0">{s.head}</h3>
  </div>
- <p className="font-serif italic text-lg text-stone-600 dark:text-stone-400 leading-relaxed pl-12">
+ <p className="font-serif italic text-lg text-nous-subtle leading-relaxed pl-12">
  {s.body}
  </p>
  </motion.section>
  ))}
  </div>
 
- <div className="mt-20 pt-8 border-t border-stone-100 dark:border-stone-900 text-center">
- <button onClick={onClose} className="font-sans text-[10px] uppercase tracking-[0.5em] font-black text-nous-text dark:text-white border-b border-current pb-1">I Decree Approval</button>
+ <div className="mt-20 pt-8 border-t border-nous-border text-center">
+ <button onClick={onClose} className="font-sans text-[10px] uppercase tracking-[0.5em] font-black text-nous-text  border-b border-current pb-1">I Decree Approval</button>
  </div>
  </div>
  </motion.div>

@@ -58,7 +58,7 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({ currentViewMode,
  onMouseEnter={() => setHoveredItem(category)}
  onMouseLeave={() => setHoveredItem(null)}
  >
- <button className="font-sans text-[10px] uppercase tracking-[0.2em] font-medium text-stone-500 hover:text-white transition-colors">
+ <button className="font-sans text-[10px] uppercase tracking-[0.2em] font-medium text-nous-text0 hover:text-white transition-colors">
  {category}
  </button>
 
@@ -70,12 +70,12 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({ currentViewMode,
  exit={{ opacity: 0, y: -10 }}
  className="absolute top-full left-0 pt-4 w-48 z-[5000]"
  >
- <div className="bg-stone-900 border border-stone-800 p-4 flex flex-col gap-2">
+ <div className="bg-nous-base border border-nous-border p-4 flex flex-col gap-2">
  {items.map((item) => (
  <button
  key={item.viewMode}
  onClick={() => setViewMode(item.viewMode)}
- className={`text-[10px] uppercase tracking-[0.1em] text-left hover:text-stone-400 transition-colors ${currentViewMode === item.viewMode ? 'text-white font-bold' : 'text-stone-400'}`}
+ className={`text-[10px] uppercase tracking-[0.1em] text-left hover:text-nous-subtle transition-colors ${currentViewMode === item.viewMode ? 'text-white font-bold' : 'text-nous-subtle'}`}
  >
  {item.label}
  </button>

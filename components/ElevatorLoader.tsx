@@ -93,7 +93,7 @@ export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBy
  {isVisible && (
  <motion.div 
  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
- className="fixed inset-0 z-[20000] flex flex-col items-center justify-center bg-stone-50 dark:bg-stone-950 text-nous-text dark:text-white overflow-hidden cursor-wait"
+ className="fixed inset-0 z-[20000] flex flex-col items-center justify-center bg-nous-base text-nous-text  overflow-hidden cursor-wait"
  >
  {/* BACKGROUND GRID - SCHEMATIC TEXTURE */}
  <div className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.1]"
@@ -104,7 +104,7 @@ export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBy
  <div className="relative w-full max-w-4xl h-[80vh] flex flex-col md:flex-row items-center justify-center gap-16 p-8">
  
  {/* LEFT: THE ELEVATOR SHAFT (VISUALIZER) */}
- <div className="relative h-[500px] w-24 md:w-32 border-x border-dashed border-stone-300 dark:border-stone-800 flex flex-col justify-end overflow-hidden">
+ <div className="relative h-[500px] w-24 md:w-32 border-x border-dashed border-nous-border flex flex-col justify-end overflow-hidden">
  {/* Shaft Cables */}
  <div className="absolute inset-x-0 top-0 bottom-0 flex justify-center gap-2 opacity-20">
  <div className="w-px h-full bg-current"/>
@@ -112,7 +112,7 @@ export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBy
  </div>
 
  {/* Floor Markers */}
- <div className="absolute right-full mr-4 h-full flex flex-col justify-between py-4 text-[7px] font-mono text-stone-400 text-right">
+ <div className="absolute right-full mr-4 h-full flex flex-col justify-between py-4 text-[7px] font-mono text-nous-subtle text-right">
  <span>LVL_04</span>
  <span>LVL_03</span>
  <span>LVL_02</span>
@@ -121,7 +121,7 @@ export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBy
 
  {/* The Cab (Moving Element) */}
  <motion.div 
- className={`relative z-10 w-full aspect-[2/3] border border-nous-text dark:border-white bg-white dark:bg-black flex items-center justify-center ${isDeep ? 'overflow-hidden' : ''}`}
+ className={`relative z-10 w-full aspect-[2/3] border border-nous-text  bg-nous-base flex items-center justify-center ${isDeep ? 'overflow-hidden' : ''}`}
  initial={{ y:"350%"}}
  animate={{ y: `${350 - (progress * 3.5)}%` }}
  transition={{ type:"tween", ease:"linear", duration: 0.1 }} // Smooth linear tracking of progress
@@ -143,7 +143,7 @@ export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBy
  <div className="w-2 h-2 bg-amber-500 rounded-none animate-ping z-10"/>
  </>
  ) : (
- <div className="w-1.5 h-1.5 bg-stone-500 rounded-none animate-pulse"/>
+ <div className="w-1.5 h-1.5 bg-nous-base0 rounded-none animate-pulse"/>
  )}
  <div className="absolute top-0 inset-x-0 h-px bg-current opacity-20"/>
  <div className="absolute bottom-0 inset-x-0 h-px bg-current opacity-20"/>
@@ -157,17 +157,17 @@ export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBy
  <div className="w-full md:w-96 space-y-12">
  
  {/* Header */}
- <div className="space-y-2 border-b border-stone-200 dark:border-stone-800 pb-6">
+ <div className="space-y-2 border-b border-nous-border pb-6">
  <div className="flex justify-between items-center">
- <span className={`font-sans text-[9px] uppercase tracking-[0.4em] font-black ${isDeep ? 'text-amber-500' : 'text-stone-500'}`}>
+ <span className={`font-sans text-[9px] uppercase tracking-[0.4em] font-black ${isDeep ? 'text-amber-500' : 'text-nous-text0'}`}>
  {isDeep ? 'DEEP_REFRACTION_PROTOCOL' : 'STANDARD_RENDER'}
  </span>
- <Activity size={12} className={isDeep ? 'text-amber-500 animate-pulse' : 'text-stone-500'} />
+ <Activity size={12} className={isDeep ? 'text-amber-500 animate-pulse' : 'text-nous-text0'} />
  </div>
  <h1 className="font-serif text-4xl md:text-5xl italic tracking-tighter leading-none">
  Manifesting.
  </h1>
- {loadingMessage && <p className="font-mono text-[10px] uppercase tracking-widest text-stone-500">{loadingMessage}</p>}
+ {loadingMessage && <p className="font-mono text-[10px] uppercase tracking-widest text-nous-text0">{loadingMessage}</p>}
  </div>
 
  {/* Phase Indicator */}
@@ -180,14 +180,14 @@ export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBy
  exit={{ opacity: 0, x: 10 }}
  className="space-y-3"
  >
- <div className="flex items-center gap-3 text-stone-400">
+ <div className="flex items-center gap-3 text-nous-subtle">
  {phaseIndex === 0 && <Target size={16} />}
  {phaseIndex === 1 && <BrainCircuit size={16} />}
  {phaseIndex === 2 && <Layers size={16} />}
  {phaseIndex === 3 && <Sparkles size={16} />}
  <span className="font-mono text-[9px] uppercase tracking-widest">{activePhase.label}</span>
  </div>
- <p className="font-serif italic text-lg text-stone-600 dark:text-stone-300 leading-snug">
+ <p className="font-serif italic text-lg text-nous-subtle leading-snug">
 "{activePhase.desc}"
  </p>
  </motion.div>
@@ -195,7 +195,7 @@ export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBy
  </div>
 
  {/* Diagnostics Ticker */}
- <div className="p-4 bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-none font-mono text-[9px] text-stone-500 uppercase tracking-wide flex justify-between items-center">
+ <div className="p-4 bg-nous-base border border-nous-border rounded-none font-mono text-[9px] text-nous-text0 uppercase tracking-wide flex justify-between items-center">
  <span>SYS_DIAG:</span>
  <span className="text-nous-text dark:text-white animate-pulse">{NOUS_DIAGNOSTICS[diagIndex]}</span>
  </div>
@@ -206,7 +206,7 @@ export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBy
  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-4 flex justify-center">
  <button 
  onClick={() => onBypass && onBypass()}
- className="text-stone-400 hover:text-red-500 font-sans text-[8px] uppercase tracking-widest font-black flex items-center gap-2 border-b border-transparent hover:border-red-500 transition-all pb-0.5"
+ className="text-nous-subtle hover:text-red-500 font-sans text-[8px] uppercase tracking-widest font-black flex items-center gap-2 border-b border-transparent hover:border-red-500 transition-all pb-0.5"
  >
  <Wind size={10} /> Abort Refraction
  </button>
@@ -218,10 +218,10 @@ export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBy
  </div>
 
  {/* FOOTER METADATA */}
- <div className="absolute bottom-8 left-8 font-mono text-[8px] text-stone-300 uppercase tracking-widest hidden md:block">
+ <div className="absolute bottom-8 left-8 font-mono text-[8px] text-nous-subtle uppercase tracking-widest hidden md:block">
  Coordinates: {Math.random().toFixed(4)}N, {Math.random().toFixed(4)}W
  </div>
- <div className="absolute bottom-8 right-8 font-mono text-[8px] text-stone-300 uppercase tracking-widest hidden md:block">
+ <div className="absolute bottom-8 right-8 font-mono text-[8px] text-nous-subtle uppercase tracking-widest hidden md:block">
  Load: {Math.floor(progress)}%
  </div>
 
