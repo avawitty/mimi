@@ -27,7 +27,7 @@ import { MobileNavigation } from './components/MobileNavigation';
 import { MobileStudio } from './components/MobileStudio';
 import { MobileProfileModal } from './components/MobileProfileModal';
 import { TheStand } from './components/TheStand';
-const ArchiveCloudNebula = lazy(() => import('./components/ArchiveCloudNebula').then(m => ({ default: m.ArchiveCloudNebula })));
+const ArchiveCloudNebula = lazy(() => import('./components/ArchiveCloudNebula'));
 const ArchivalView = lazy(() => import('./components/ArchivalView').then(m => ({ default: m.ArchivalView })));
 const UserProfileView = lazy(() => import('./components/UserProfileView').then(m => ({ default: m.UserProfileView })));
 const SignatureView = lazy(() => import('./components/SignatureView').then(m => ({ default: m.SignatureView })));

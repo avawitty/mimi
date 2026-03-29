@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Radar, X, Loader2, Image as ImageIcon, Search } from 'lucide-react';
+import { Sparkles, Radar, X, Loader2, Image as ImageIcon, Search, Check } from 'lucide-react';
 import { GoogleGenAI } from"@google/genai";
 import { SignatureUI } from './SignatureUI';
 import { searchGrounding } from '../services/searchService';
@@ -17,6 +17,7 @@ export const CommandDrawer: React.FC<CommandDrawerProps> = ({ isOpen, onClose, c
  const [prompt, setPrompt] = useState(context || '');
  const [generating, setGenerating] = useState(false);
  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+ const [isSaved, setIsSaved] = useState(false);
  const [searchQuery, setSearchQuery] = useState(context || '');
  const [searchResults, setSearchResults] = useState<any[]>([]);
  const [searchSummary, setSearchSummary] = useState('');
@@ -118,14 +119,15 @@ export const CommandDrawer: React.FC<CommandDrawerProps> = ({ isOpen, onClose, c
  data: generatedImage,
  timestamp: Date.now()
  });
- alert('Saved to archive');
+ setIsSaved(true);
+ setTimeout(() => setIsSaved(false), 2000);
  } catch (error) {
  console.error("MIMI // Failed to save artifact locally:", error);
  }
  }}
- className="w-full bg-nous-base text-nous-subtle py-2 text-xs uppercase tracking-widest hover:bg-nous-base hover:text-nous-text transition-colors"
+ className={`w-full py-2 text-xs uppercase tracking-widest transition-colors ${isSaved ? 'bg-green-900 text-green-100' : 'bg-nous-base text-nous-subtle hover:bg-nous-base hover:text-nous-text'}`}
  >
- Save to Archive
+ {isSaved ? <span className="flex items-center justify-center gap-2"><Check size={14}/> Saved</span> : 'Save to Archive'}
  </button>
  </div>
  )}

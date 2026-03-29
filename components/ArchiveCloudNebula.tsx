@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 import React, { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,7 +26,7 @@ const TONE_MAP: Record<ToneTag, { bg: string, text: string, accent: string }> = 
  'editorial': { bg: 'bg-white', text: 'text-black', accent: 'border-nous-border' }
 };
 
-export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) => void, onGenerateThreadZine?: (thread: any) => void }> = ({ onSelectZine, onGenerateThreadZine }) => {
+const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) => void, onGenerateThreadZine?: (thread: any) => void }> = ({ onSelectZine, onGenerateThreadZine }) => {
  const { user, profile, toggleZineStar } = useUser();
  const [localZines, setLocalZines] = useState<ZineMetadata[]>([]);
  const [cloudZines, setCloudZines] = useState<ZineMetadata[]>([]);
@@ -556,3 +555,5 @@ const InitSequenceCard: React.FC<{ mode: string }> = ({ mode }) => {
  );
  }
 };
+
+export default ArchiveCloudNebula;

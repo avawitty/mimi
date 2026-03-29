@@ -1,4 +1,5 @@
 import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
+import { reportSystemAnomaly } from "../utils/errorReporter";
 
 export interface AestheticAnalysis {
   scribeReading: string;
@@ -51,11 +52,11 @@ export class LiveAestheticService {
                   });
                 }
               } catch (e) {
-                console.error("Failed to parse live analysis", e);
+                reportSystemAnomaly(e, true);
               }
             }
           } catch (e) {
-            console.error("MIMI // Unhandled error in liveAestheticService onmessage", e);
+            reportSystemAnomaly(e, true);
           }
         },
         onerror: (error: any) => {
@@ -88,10 +89,10 @@ export class LiveAestheticService {
           video: { data: base64Data, mimeType: 'image/jpeg' }
         });
         if (result && result.catch) {
-          result.catch((e: any) => console.error("MIMI // Error sending video frame promise:", e));
+          result.catch((e: any) => reportSystemAnomaly(e, true));
         }
       } catch (e) {
-        console.error("MIMI // Error sending video frame:", e);
+        reportSystemAnomaly(e, true);
       }
     }
   }
@@ -103,10 +104,10 @@ export class LiveAestheticService {
           audio: { data: base64Data, mimeType: 'audio/pcm;rate=16000' }
         });
         if (result && result.catch) {
-          result.catch((e: any) => console.error("MIMI // Error sending audio chunk promise:", e));
+          result.catch((e: any) => reportSystemAnomaly(e, true));
         }
       } catch (e) {
-        console.error("MIMI // Error sending audio chunk:", e);
+        reportSystemAnomaly(e, true);
       }
     }
   }

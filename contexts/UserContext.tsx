@@ -595,15 +595,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const emailForSignIn = window.localStorage.getItem('emailForSignIn');
         if (emailForSignIn) {
             try {
-                const { checkAndSignInWithEmailLink } = await import('../services/firebaseUtils');
-                const result = await checkAndSignInWithEmailLink(emailForSignIn, window.location.href);
-                if (result) {
-                    console.info("MIMI // Email Link Sign-In Successful");
-                    window.localStorage.removeItem('emailForSignIn');
+                const { completeEmailSignIn } = await import('../services/firebaseUtils');
+                await completeEmailSignIn(window.location.href);
+                console.info("MIMI // Email Link Sign-In Successful");
+                window.localStorage.removeItem('emailForSignIn');
                     window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
                         detail: { message: "Identity Anchored via Email Link.", type: 'success' } 
                     }));
-                }
             } catch (e) {
                 console.warn("MIMI // Email Link Sign-In Error:", e);
             }

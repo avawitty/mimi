@@ -302,6 +302,15 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
                         roadmap: { 
                             type: Type.OBJECT,
                             properties: {
+                                authorityAnchor: {
+                                    type: Type.OBJECT,
+                                    properties: {
+                                        coreClaim: { type: Type.STRING },
+                                        repetitionVector: { type: Type.STRING },
+                                        exclusionPrinciple: { type: Type.STRING }
+                                    },
+                                    required: ["coreClaim", "repetitionVector", "exclusionPrinciple"]
+                                },
                                 strategicThesis: { type: Type.STRING },
                                 positioningAxis: { type: Type.STRING },
                                 phases: {
@@ -317,7 +326,7 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
                                     }
                                 }
                             },
-                            required: ["strategicThesis", "positioningAxis", "phases"]
+                            required: ["authorityAnchor", "strategicThesis", "positioningAxis", "phases"]
                         },
                         originalThought: { type: Type.STRING },
                         poetic_provocation: { type: Type.STRING },

@@ -1,8 +1,9 @@
 import React from 'react';
-import { Waves, Smile, Shirt, Circle, Square, Triangle, Hexagon, Diamond, Star, Image as ImageIcon, Zap, Bell, Moon, Sun } from 'lucide-react';
+import { Waves, Smile, Shirt, Circle, Square, Triangle, Hexagon, Diamond, Star, Image as ImageIcon, Zap, Bell, Moon, Sun, X, LayoutGrid } from 'lucide-react';
 
 export const MimiZineLayout: React.FC = () => {
  const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
+ const [isToolbarOpen, setIsToolbarOpen] = React.useState(true);
 
  return (
  <div className="flex h-screen w-full bg-nous-base text-nous-text overflow-hidden">
@@ -114,7 +115,7 @@ export const MimiZineLayout: React.FC = () => {
  </main>
 
  {/* Far-Right Vertical Toolbar */}
- <div className="fixed right-8 top-1/2 -translate-y-1/2 flex flex-col gap-8 text-nous-subtle">
+ <div className={`fixed right-8 top-1/2 -translate-y-1/2 flex flex-col gap-8 text-nous-subtle transition-all duration-300 ${isToolbarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
  <Circle size={14} strokeWidth={1.5} />
  <Square size={14} strokeWidth={1.5} />
  <Triangle size={14} strokeWidth={1.5} />
@@ -122,6 +123,12 @@ export const MimiZineLayout: React.FC = () => {
  <Diamond size={14} strokeWidth={1.5} />
  <Star size={14} strokeWidth={1.5} />
  </div>
+ <button 
+  onClick={() => setIsToolbarOpen(!isToolbarOpen)}
+  className="fixed right-8 top-16 z-50 text-nous-subtle hover:text-nous-text transition-colors"
+ >
+  {isToolbarOpen ? <X size={16} /> : <LayoutGrid size={16} />}
+ </button>
  </div>
  );
 };

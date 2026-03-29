@@ -403,9 +403,14 @@ export const anchorIdentity = async (forceRedirect: boolean = false): Promise<vo
   const provider = new GoogleAuthProvider();
   provider.addScope('email');
   provider.addScope('profile');
-
+  // Detect iOS Safari or In-App Browsers automatically
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+  const isCaptive = isCaptiveInWebview();
+  
+  // If forced, or if it's a risky browser, use redirect instead of popup
+  const shouldRedirect = forceRedirect || isCaptive || isIOS;
   try {
-    if (forceRedirect) {
+    if (shouldRedirect) {
       await signInWithRedirect(auth, provider);
     } else {
       await signInWithPopup(auth, provider);
