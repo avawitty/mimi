@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Activity, Search, Settings, LayoutGrid, BookOpen } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { getPersonalizedEdit, MOCK_PRODUCTS } from '../services/commerceService';
-import { Product, EditIssue, ProductTasteEvent, TasteProfile } from '../types';
+import { Product, EditIssue, ProductTasteEvent, TasteProfile, ThimbleItem } from '../types';
 import { handleFirestoreError, OperationType } from '../services/firebaseUtils';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../services/firebaseInit';

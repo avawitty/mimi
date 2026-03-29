@@ -88,6 +88,7 @@ export const getPersonalizedEdit = async (
     - Entropy: ${codexState.entropy.toFixed(2)} (${codexState.entropy > 0.6 ? 'exploratory' : 'focused'})
     - Density: ${codexState.density.toFixed(2)} (${codexState.density > 0.6 ? 'concentrated' : 'diffuse'})
     - Velocity: ${codexState.velocity.toFixed(2)} (${codexState.velocity > 0.5 ? 'rapid shift' : 'stable'})
+    - Thimble: ${codexState.thimbleSummary || 'No Thimble data.'}
 
     Interpretation:
     - High entropy → juxtaposition, surprise

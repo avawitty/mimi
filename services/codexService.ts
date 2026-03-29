@@ -1,18 +1,23 @@
 import { ensureDb } from "./firebase";
 import { doc, setDoc } from "firebase/firestore";
-import { TasteProfile, TasteEvent } from "../types";
+import { TasteProfile, TasteEvent, ThimbleItem } from "../types";
 
 export interface CodexState {
   entropy: number;   // exploration / chaos (0–1)
   density: number;   // focus / cohesion (0–1)
   velocity: number;  // drift speed (0–1)
+  thimbleSummary?: string; // Breakdown of Thimble activity
   timestamp: number;
 }
 
 /**
  * derive entropy + density from interaction patterns
  */
-export const deriveCodexState = (profile: TasteProfile, recentEvents: TasteEvent[]): CodexState => {
+export const deriveCodexState = (
+  profile: TasteProfile, 
+  recentEvents: TasteEvent[], 
+  thimbleItems: ThimbleItem[] = []
+): CodexState => {
   // ENTROPY: diversity of archetypes touched recently
   const recentArchetypes = new Set(
     recentEvents
@@ -35,10 +40,15 @@ export const deriveCodexState = (profile: TasteProfile, recentEvents: TasteEvent
     .filter(d => d.timestamp > oneWeekAgo);
   const velocity = Math.min(1, recentDrifts.length / 5);
 
+  const thimbleSummary = thimbleItems.length > 0 
+    ? `You have ${thimbleItems.length} items in your Thimble boards, including ${thimbleItems[0].title || 'an item'}.`
+    : "Your Thimble is empty.";
+
   return {
     entropy,
     density,
     velocity,
+    thimbleSummary,
     timestamp: Date.now()
   };
 };

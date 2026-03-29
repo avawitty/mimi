@@ -1,5 +1,5 @@
 import React from 'react';
-import { Waves, Smile, Shirt, Circle, Square, Triangle, Hexagon, Diamond, Star, Image as ImageIcon, Zap, Bell, Moon, Sun, X, LayoutGrid } from 'lucide-react';
+import { Waves, Smile, Shirt, Circle, Square, Triangle, Hexagon, Diamond, Star, Image as ImageIcon, Zap, Bell, Moon, Sun, X, LayoutGrid, StickyNote } from 'lucide-react';
 
 export const MimiZineLayout: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false);
@@ -102,7 +102,7 @@ export const MimiZineLayout: React.FC = () => {
           onClick={() => setIsActionToolbarOpen(!isActionToolbarOpen)}
           className="p-3 bg-nous-base border border-nous-border text-nous-subtle hover:text-nous-text transition-colors"
         >
-          {isActionToolbarOpen ? <X size={20} /> : <Zap size={20} />}
+          {isActionToolbarOpen ? <X size={20} /> : <StickyNote size={20} />}
         </button>
         {isActionToolbarOpen && (
           <div className="flex flex-col gap-4 bg-nous-base border border-nous-border p-4">

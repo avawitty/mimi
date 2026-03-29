@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Loader2, Copy, Check, ShoppingBag, ExternalLink, Upload, X, Link as LinkIcon, Scale, FolderPlus, Plus, Trash2, LayoutGrid, MoreVertical, Filter, SortAsc } from 'lucide-react';
-import { procureWithArtifacts, compareItemsFiscalAudit, auditThimbleBoard } from '../services/geminiService';
+import { procureWithArtifacts, compareItemsFiscalAudit, auditThimbleBoard, generateZineImage } from '../services/geminiService';
 import { TryOnTool } from './TryOnTool';
 import { useUser } from '../contexts/UserContext';
 import { MediaFile, ThimbleBoard, ThimbleItem } from '../types';

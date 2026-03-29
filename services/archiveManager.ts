@@ -134,5 +134,25 @@ export const archiveManager = {
       }));
       throw error;
     }
+  },
+
+  async saveToDarkroom(userId: string, item: any): Promise<void> {
+    try {
+      const darkroomRef = doc(db, 'users', userId, 'darkroom', `item_${Date.now()}`);
+      await setDoc(darkroomRef, {
+        ...item,
+        createdAt: Date.now()
+      });
+
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+        detail: { message: "Artifact saved to Darkroom.", type: 'success' } 
+      }));
+    } catch (error) {
+      console.error("Failed to save to Darkroom:", error);
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+        detail: { message: "Failed to save to Darkroom.", type: 'error' } 
+      }));
+      throw error;
+    }
   }
 };
