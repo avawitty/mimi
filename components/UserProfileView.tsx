@@ -25,7 +25,7 @@ const detectIframeContext = (): boolean => {
 };
 
 export const UserProfileView: React.FC = () => {
- const { user, profile, updateProfile, logout, personas, activePersonaId, switchPersona, createPersona, updatePersona, deletePersona, linkAccount, featureFlags, keyRing, loginWithEmail } = useUser();
+ const { user, profile, updateProfile, logout, personas, activePersonaId, switchPersona, createPersona, updatePersona, deletePersona, linkAccount, featureFlags, keyRing, addKeyToRing, removeKeyFromRing, loginWithEmail } = useUser();
  
  const [isIframe, setIsIframe] = useState(false);
  const [handle, setHandle] = useState('');
