@@ -183,7 +183,37 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      // Ignore Vite WebSocket errors
+      if (event.reason && event.reason instanceof Error && event.reason.message.includes('WebSocket closed without opened')) {
+        event.preventDefault();
+        return;
+      }
+
+      // Ignore empty errors
+      if (event.reason instanceof Error && !event.reason.message) {
+        event.preventDefault();
+        return;
+      }
+
+      // Ignore Firestore errors that are already logged by handleFirestoreError
+      if (event.reason instanceof Error && event.reason.message.includes('{"error":') && event.reason.message.includes('"operationType":')) {
+        event.preventDefault();
+        return;
+      }
+
+      // Ignore Firestore errors that are already logged by handleFirestoreError
+      if (event.reason instanceof Error && event.reason.message.includes('{"error":') && event.reason.message.includes('"operationType":')) {
+        event.preventDefault();
+        return;
+      }
+
       console.error("MIMI // Unhandled Rejection:", event.reason);
+      if (event.reason instanceof Error) {
+        console.error("MIMI // Error Message:", event.reason.message);
+        console.error("MIMI // Stack:", event.reason.stack);
+      } else {
+        console.error("MIMI // Reason:", JSON.stringify(event.reason));
+      }
     };
     window.addEventListener('unhandledrejection', handleUnhandledRejection);
     return () => window.removeEventListener('unhandledrejection', handleUnhandledRejection);
@@ -354,19 +384,27 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // 2. Setup Real-time Listeners
       unsubscribeProfile.current = subscribeToUserProfile(uid, async (pData) => {
-         const subscription = await fetchUserSubscription(uid);
-         setProfile(prev => {
-             const merged = { ...(prev || {}), ...pData, uid: uid, subscription } as UserProfile;
-             return ensurePersonas(merged);
-         });
+         try {
+             const subscription = await fetchUserSubscription(uid);
+             setProfile(prev => {
+                 const merged = { ...(prev || {}), ...pData, uid: uid, subscription } as UserProfile;
+                 return ensurePersonas(merged);
+             });
+         } catch (e) {
+             console.error("MIMI // Error in profile subscription callback:", e);
+         }
       });
 
       unsubscribePrefs.current = subscribeToUserPreferences(uid, async (prefsData) => {
-         const subscription = await fetchUserSubscription(uid);
-         setProfile(prev => {
-             const merged = { ...(prev || {}), ...prefsData, subscription } as UserProfile;
-             return ensurePersonas(merged);
-         });
+         try {
+             const subscription = await fetchUserSubscription(uid);
+             setProfile(prev => {
+                 const merged = { ...(prev || {}), ...prefsData, subscription } as UserProfile;
+                 return ensurePersonas(merged);
+             });
+         } catch (e) {
+             console.error("MIMI // Error in prefs subscription callback:", e);
+         }
       });
       
       // Construct initial state from one-time fetch to unblock UI immediately
@@ -591,7 +629,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    performRitual();
+    performRitual().catch(err => console.error("MIMI // Perform Ritual Unhandled Error:", err));
   }, [reconcileProfile, speedGhostEntrance]);
 
   const updateProfile = async (newProfile: UserProfile) => {
@@ -722,6 +760,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e: any) {
       console.error("MIMI // Sign Up Error:", e);
       setAuthError(e.code || e.message);
+      throw e;
     }
   };
 
@@ -734,6 +773,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e: any) {
       console.error("MIMI // Sign In Error:", e);
       setAuthError(e.code || e.message);
+      throw e;
     }
   };
 
@@ -746,6 +786,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e: any) {
       console.error("MIMI // Upgrade Ghost Error:", e);
       setAuthError(e.code || e.message);
+      throw e;
     }
   };
 

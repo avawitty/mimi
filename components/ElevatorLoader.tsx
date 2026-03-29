@@ -93,7 +93,7 @@ export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBy
  {isVisible && (
  <motion.div 
  initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
- className="fixed inset-0 z-[20000] flex flex-col items-center justify-center bg dark:bg text-nous-text dark:text-white overflow-hidden cursor-wait"
+ className="fixed inset-0 z-[20000] flex flex-col items-center justify-center bg-stone-50 dark:bg-stone-950 text-nous-text dark:text-white overflow-hidden cursor-wait"
  >
  {/* BACKGROUND GRID - SCHEMATIC TEXTURE */}
  <div className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.1]"

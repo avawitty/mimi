@@ -6,6 +6,7 @@ import { hasAccess } from '../constants';
 import { fetchDossierFolders, fetchDossierArtifacts, createDossierFolder, createDossierArtifactFromImage, createDossierArtifactFromText, updateDossierFolder, fetchPocketItems, deleteDossierArtifact } from '../services/firebase';
 import { DossierFolder, DossierArtifact, FruitionTrajectory, Task, UserProfile } from '../types';
 import { Briefcase, Folder, Plus, ChevronRight, FileText, Share2, Layout, ArrowRight, Loader2, X, Archive, Eye, Trash2, Globe, ExternalLink, Upload, ImageIcon, HeartHandshake, FolderOpen, LayoutGrid, FolderPlus, PenTool, Save, Quote, Info, StickyNote, Compass, Map, Terminal, Check, Calendar, AlertTriangle, ListChecks, Sparkles, Clock, Target, CalendarDays, GripVertical, Users, UserPlus, Search, Cpu, Activity, Lock } from 'lucide-react';
+import { LoadingSkeleton } from './LoadingSkeleton';
 import { DossierArtifactView } from './DossierArtifactView';
 import { MoodboardComposer } from './MoodboardComposer';
 import { CollabModal } from './CollabModal';
@@ -698,7 +699,7 @@ export default function DossierView() {
  
  <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-1">
  {loadingFolders ? (
- <div className="p-8 text-center"><Loader2 size={16} className="animate-spin mx-auto text-stone-600"/></div>
+ <div className="p-8"><LoadingSkeleton lines={3} /></div>
  ) : (
  filteredFolders.map(folder => (
  <button
@@ -988,7 +989,7 @@ export default function DossierView() {
  
  <div className="flex-1 overflow-y-auto no-scrollbar min-h-[300px]">
  {isImporting ? (
- <div className="h-full flex items-center justify-center"><Loader2 size={24} className="animate-spin text-stone-600"/></div>
+ <div className="h-full flex items-center justify-center p-8"><LoadingSkeleton lines={8} className="w-full max-w-lg" /></div>
  ) : (
  <div className="grid grid-cols-2 gap-4">
  {pocketItems.map(item => (

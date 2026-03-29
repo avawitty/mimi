@@ -6,6 +6,7 @@ import { ThimbleIndex } from './components/ThimbleIndex';
 import { PublicSharePage } from './components/PublicSharePage';
 import { StackView } from './components/StackView';
 import { AppState, ToneTag, ZineMetadata, DriftEvent, MediaFile, ZineContent } from './types';
+import { t } from './lib/i18n';
 import { generateThreadZineSpine, generateZineTitlesFromThreads } from './services/geminiService';
 import { createZine } from './services/zineGenerator';
 import { saveZineToProfile, fetchZineById, auth, isCaptiveInWebview, updateZineMetadata } from './services/firebase';
@@ -37,6 +38,7 @@ const ScryView = lazy(() => import('./components/ScryView').then(m => ({ default
 const DarkroomView = lazy(() => import('./components/DarkroomView').then(m => ({ default: m.DarkroomView })));
 const ApiKeyShield = lazy(() => import('./components/ApiKeyShield').then(m => ({ default: m.ApiKeyShield })));
 const ProsceniumView = lazy(() => import('./components/ProsceniumView').then(m => ({ default: m.ProsceniumView })));
+import { TheScribe } from './components/TheScribe';
 import { AmbientSoundscape } from './components/AmbientSoundscape';
 import MimiIntroSequence from './components/MimiIntroSequence';
 const CaptiveSentinel = lazy(() => import('./components/CaptiveSentinel').then(m => ({ default: m.CaptiveSentinel })));
@@ -44,6 +46,7 @@ const TheWard = lazy(() => import('./components/TheWard').then(m => ({ default: 
 const PatronMintView = lazy(() => import('./components/PatronMintView').then(m => ({ default: m.PatronMintView })));
 import { MimiGateway } from './components/MimiGateway';
 import { ProfileHoverCard } from './components/ProfileHoverCard';
+import { AuthAction } from './components/AuthAction';
 
 const DossierView = lazy(() => import('./components/DossierView'));
 const StrategyStudio = lazy(() => import('./components/StrategyStudio').then(m => ({ default: m.StrategyStudio })));
@@ -194,6 +197,41 @@ const DatabaseVoid: React.FC = () => (
   </div>
 );
 
+const OfflineBanner: React.FC = () => {
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  return (
+    <AnimatePresence>
+      {isOffline && (
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -50 }}
+          className="fixed top-0 left-0 right-0 z-[60000] bg-red-600 text-white text-center py-2 font-mono text-[10px] uppercase tracking-widest font-bold shadow-md"
+        >
+          <div className="flex items-center justify-center gap-2">
+            <ShieldAlert size={14} />
+            {t('app.offline')}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
 export const App: React.FC = () => {
   const { user, profile, keyRing, updateProfile, loading: authLoading, isElevatorLoading, setElevatorLoading, logout, setOracleStatus, systemStatus, activePersona, isDatabaseMissing, isOnboardingComplete, canGenerate, incrementGeneration, recordSession, generationsRemaining, login, completeEmailLogin } = useUser();
   const { currentPalette, toggleMode } = useTheme();
@@ -226,8 +264,12 @@ export const App: React.FC = () => {
   const [showPatronModal, setShowPatronModal] = useState(false);
   const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
   const [showGateway, setShowGateway] = useState(false);
+  const [hasSeenGateway, setHasSeenGateway] = useState(() => {
+    return localStorage.getItem('mimi_has_seen_gateway') === 'true';
+  });
   const [showProfileHover, setShowProfileHover] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
+  const [showScribe, setShowScribe] = useState(false);
   const profileButtonRef = useRef<HTMLDivElement>(null);
   const [proposalContext, setProposalContext] = useState<any>(null);
   const [soundEnabled, setSoundEnabled] = useState(() => {
@@ -243,7 +285,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     import('./services/firebaseInit').then(({ auth }) => {
       if (user && !user.isAnonymous && auth.currentUser && !hasRecordedSession.current) {
-          recordSession();
+          recordSession().catch(err => console.error("MIMI // Record Session Unhandled Error:", err));
           hasRecordedSession.current = true;
       }
     }).catch(err => console.error("MIMI // FirebaseInit Import Error:", err));
@@ -256,6 +298,14 @@ export const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('mimi_volume', volume.toString());
   }, [volume]);
+
+  useEffect(() => {
+    if (!showIntro && user?.isAnonymous && !hasSeenGateway) {
+      setShowGateway(true);
+      setHasSeenGateway(true);
+      localStorage.setItem('mimi_has_seen_gateway', 'true');
+    }
+  }, [showIntro, user, hasSeenGateway]);
 
   const [checkoutPlan, setCheckoutPlan] = useState<'core' | 'pro' | 'lab' | null>(null);
   const [checkoutInterval, setCheckoutInterval] = useState<'month' | 'year'>('month');
@@ -288,7 +338,7 @@ export const App: React.FC = () => {
     import('./services/firebaseInit').then(({ auth }) => {
       import('firebase/auth').then(({ isSignInWithEmailLink }) => {
         if (isSignInWithEmailLink(auth, window.location.href)) {
-          completeEmailLogin(window.location.href);
+          completeEmailLogin(window.location.href).catch(err => console.error("MIMI // Complete Email Login Unhandled Error:", err));
         }
       }).catch(err => console.error("MIMI // Auth Import Error:", err));
     }).catch(err => console.error("MIMI // FirebaseInit Import Error:", err));
@@ -500,6 +550,10 @@ export const App: React.FC = () => {
     );
   }
 
+  if (window.location.pathname.startsWith('/auth/action')) {
+      return <AuthAction />;
+  }
+
   if (window.location.pathname.startsWith('/@')) {
       return <PublicSharePage />;
   }
@@ -560,11 +614,16 @@ export const App: React.FC = () => {
 
   return (
     <div className="h-full w-full bg-white dark:bg-background-dark text-primary dark:text-white transition-colors duration-500 flex flex-col relative overflow-hidden">
+      <OfflineBanner />
       {showIntro && <MimiIntroSequence onComplete={() => setShowIntro(false)} />}
       {/* Subtle Texture Overlay Removed for clarity */}
       
       <AmbientSoundscape enabled={soundEnabled} volume={volume} />
       
+      <AnimatePresence>{showScribe && <TheScribe onClose={() => setShowScribe(false)} onGenerateZine={(text) => {
+        setShowScribe(false);
+        handleRefine(text, [], 'oracle', { deepThinking: false, isPublic: false, isLite: false, isHighFidelity: false, tags: [], zineOptions: zineOptions });
+      }} />}</AnimatePresence>
       <AnimatePresence>{showCaptiveSentinel && <CaptiveSentinel onClose={() => setShowCaptiveSentinel(false)} />}</AnimatePresence>
       
       <MimiGateway isOpen={showGateway} onClose={() => setShowGateway(false)} />
@@ -604,10 +663,16 @@ export const App: React.FC = () => {
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             className="font-serif text-4xl text-primary dark:text-white"
           >
-            Mimi
+            Mimi Zine
           </motion.h1>
-          <p className="font-sans text-[9px] uppercase tracking-[0.2em] text-stone-500 mt-1">A CREATIVE SANCTUARY FOR YOUR DIGITAL THREADS.</p>
-          <p className="font-sans text-[8px] uppercase tracking-[0.2em] text-stone-400 mt-1">Home / {currentTitle}</p>
+          <p className="font-sans text-[9px] uppercase tracking-[0.2em] text-stone-500 mt-1">An AI-powered aesthetic archivist and moodboard generator.</p>
+          <div className="flex items-center gap-3 mt-1">
+            <p className="font-sans text-[8px] uppercase tracking-[0.2em] text-stone-400">Home / {currentTitle}</p>
+            <span className="text-stone-700 text-[8px]">•</span>
+            <a href="/privacy" className="font-sans text-[8px] uppercase tracking-[0.2em] text-stone-400 hover:text-stone-600 transition-colors">Privacy Policy</a>
+            <span className="text-stone-700 text-[8px]">•</span>
+            <a href="/terms" className="font-sans text-[8px] uppercase tracking-[0.2em] text-stone-400 hover:text-stone-600 transition-colors">Terms of Service</a>
+          </div>
         </div>
         
         <div className="flex gap-2 relative z-10 items-center">
@@ -618,6 +683,9 @@ export const App: React.FC = () => {
             'text-stone-500 hover:text-stone-800'
           }`}>
             <ShieldCheck size={16} />
+          </button>
+          <button onClick={() => setShowScribe(true)} className="p-2 text-stone-500 hover:text-stone-800 dark:hover:text-stone-300 transition-colors">
+            <Radio size={16} />
           </button>
           <button onClick={() => setCommandDrawerOpen(true)} className="p-2 text-stone-500 hover:text-stone-800 dark:hover:text-stone-300 transition-colors">
             <Zap size={16} />
@@ -662,36 +730,46 @@ export const App: React.FC = () => {
 
       {/* Mobile Header */}
       {appState !== AppState.REVEALED && (
-      <header className="md:hidden flex items-center justify-between p-6 mt-4 relative z-[20] bg-transparent">
-        <div className="font-['Cormorant_Garamond',serif] text-3xl font-light text-stone-800 dark:text-stone-200 tracking-wide">Mimi</div>
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => setViewMode('membership')} 
-            className={`p-2 transition-opacity hover:opacity-70 ${
-              profile?.plan === 'lab' ? 'text-stone-500' :
-              profile?.plan === 'pro' ? 'text-purple-500' :
-              profile?.plan === 'core' ? 'text-orange-500' :
-              'text-stone-800 dark:text-stone-200'
-            }`}
-          >
-            <ShieldCheck size={24} strokeWidth={1.25} />
-          </button>
-          <button 
-            onClick={() => {
-              if (!user || user.isAnonymous) {
-                setShowGateway(true);
-              } else {
-                setIsMobileProfileOpen(true);
-              }
-            }} 
-            className="p-2 text-stone-800 dark:text-stone-200 hover:opacity-70 transition-opacity"
-          >
-            {profile?.photoURL ? (
-              <img src={profile.photoURL} alt="Profile" className="w-6 h-6 object-cover grayscale" referrerPolicy="no-referrer" />
-            ) : (
-              <User size={24} strokeWidth={1.25} />
-            )}
-          </button>
+      <header className="md:hidden flex flex-col p-6 mt-4 relative z-[20] bg-transparent">
+        <div className="flex items-center justify-between w-full">
+          <div className="font-['Cormorant_Garamond',serif] text-3xl font-light text-stone-800 dark:text-stone-200 tracking-wide">Mimi Zine</div>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setViewMode('membership')} 
+              className={`p-2 transition-opacity hover:opacity-70 ${
+                profile?.plan === 'lab' ? 'text-stone-500' :
+                profile?.plan === 'pro' ? 'text-purple-500' :
+                profile?.plan === 'core' ? 'text-orange-500' :
+                'text-stone-800 dark:text-stone-200'
+              }`}
+            >
+              <ShieldCheck size={24} strokeWidth={1.25} />
+            </button>
+            <button 
+              onClick={() => {
+                if (!user || user.isAnonymous) {
+                  setShowGateway(true);
+                } else {
+                  setIsMobileProfileOpen(true);
+                }
+              }} 
+              className="p-2 text-stone-800 dark:text-stone-200 hover:opacity-70 transition-opacity"
+            >
+              {profile?.photoURL ? (
+                <img src={profile.photoURL} alt="Profile" className="w-6 h-6 object-cover grayscale" referrerPolicy="no-referrer" />
+              ) : (
+                <User size={24} strokeWidth={1.25} />
+              )}
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-col mt-2">
+          <p className="font-sans text-[8px] uppercase tracking-[0.1em] text-stone-500 leading-tight">An AI-powered aesthetic archivist and moodboard generator.</p>
+          <div className="flex items-center gap-2 mt-1">
+            <a href="/privacy" className="font-sans text-[8px] uppercase tracking-[0.2em] text-stone-400 hover:text-stone-600 transition-colors">Privacy</a>
+            <span className="text-stone-700 text-[8px]">•</span>
+            <a href="/terms" className="font-sans text-[8px] uppercase tracking-[0.2em] text-stone-400 hover:text-stone-600 transition-colors">Terms</a>
+          </div>
         </div>
       </header>
       )}

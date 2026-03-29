@@ -66,7 +66,7 @@ export interface ZineGenerationOptions {
 export type ZodiacSign = 'aries' | 'taurus' | 'gemini' | 'cancer' | 'leo' | 'virgo' | 'libra' | 'scorpio' | 'sagittarius' | 'capricorn' | 'aquarius' | 'pisces';
 
 export interface MediaFile {
-  type: 'image' | 'audio' | 'video';
+  type: 'image' | 'audio' | 'video' | 'link';
   url: string;
   data: string; // base64
   mimeType: string;
@@ -577,6 +577,7 @@ export interface ThimbleItem {
   title?: string;
   price?: string;
   notes?: string;
+  imageUrl?: string;
   createdAt: number;
 }
 

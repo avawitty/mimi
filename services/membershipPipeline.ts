@@ -1,6 +1,6 @@
 import { db } from './firebaseInit';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { handleFirestoreError, OperationType } from './firebaseUtils';
+import { logFirestoreError, OperationType } from './firebaseUtils';
 import { SubscriptionData, MembershipPlan } from '../types';
 
 export const fetchUserSubscription = async (uid: string): Promise<SubscriptionData | null> => {
@@ -10,7 +10,7 @@ export const fetchUserSubscription = async (uid: string): Promise<SubscriptionDa
     if (snap.exists()) return snap.data() as SubscriptionData;
     return null; // Fallback to free tier
   } catch (e) {
-    handleFirestoreError(e, OperationType.GET, `users/${uid}/billing/subscription`);
+    logFirestoreError(e, OperationType.GET, `users/${uid}/billing/subscription`);
     return null;
   }
 };
@@ -23,7 +23,7 @@ export const syncMembershipStatus = async (uid: string, plan: MembershipPlan, su
     const profileRef = doc(db, 'profiles_public', uid);
     await setDoc(profileRef, { membershipPlan: plan, plan: plan }, { merge: true });
   } catch (e) {
-    handleFirestoreError(e, OperationType.WRITE, `users/${uid}/billing/subscription`);
+    logFirestoreError(e, OperationType.WRITE, `users/${uid}/billing/subscription`);
   }
 };
 

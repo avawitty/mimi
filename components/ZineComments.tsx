@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Send, User, Clock, Loader2, X } from 'lucide-react';
+import { MessageSquare, Send, User, Clock, Loader2, X, Flag, Trash2 } from 'lucide-react';
+import { t } from '../lib/i18n';
+import { LoadingSkeleton } from './LoadingSkeleton';
 import { useUser } from '../contexts/UserContext';
 import { db } from '../services/firebaseInit';
 import { collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
@@ -21,6 +23,8 @@ export const ZineComments: React.FC<{ zineId: string; onClose?: () => void }> = 
  const [newComment, setNewComment] = useState('');
  const [isSubmitting, setIsSubmitting] = useState(false);
  const [isLoading, setIsLoading] = useState(true);
+ const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+ const [confirmReportId, setConfirmReportId] = useState<string | null>(null);
 
  useEffect(() => {
  if (!zineId) return;
@@ -69,6 +73,31 @@ export const ZineComments: React.FC<{ zineId: string; onClose?: () => void }> = 
  }
  };
 
+ const handleDelete = async (commentId: string) => {
+ try {
+ const { deleteDoc, doc } = await import('firebase/firestore');
+ await deleteDoc(doc(db, 'zine_comments', commentId));
+ setConfirmDeleteId(null);
+ } catch (error) {
+ console.error("Failed to delete comment", error);
+ }
+ };
+
+ const handleReport = async (commentId: string) => {
+ try {
+ await addDoc(collection(db, 'reports'), {
+ type: 'comment',
+ targetId: commentId,
+ reportedBy: user?.uid || 'anonymous',
+ timestamp: Date.now()
+ });
+ window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Refraction reported to moderation.", icon: <Flag size={14} /> } }));
+ setConfirmReportId(null);
+ } catch (error) {
+ console.error("Failed to report comment", error);
+ }
+ };
+
  return (
  <div className="w-full max-w-2xl mx-auto bg-white dark:bg border border-stone-200 dark:border-stone-800 rounded-none overflow-hidden flex flex-col h-[600px] max-h-[80vh]">
  {/* Header */}
@@ -88,12 +117,12 @@ export const ZineComments: React.FC<{ zineId: string; onClose?: () => void }> = 
  <div className="flex-1 overflow-y-auto p-6 space-y-6 bg dark:bg">
  {isLoading ? (
  <div className="flex justify-center items-center h-full opacity-50">
- <Loader2 size={24} className="animate-spin text-stone-400"/>
+ <LoadingSkeleton lines={4} className="w-full max-w-md" />
  </div>
  ) : comments.length === 0 ? (
  <div className="flex flex-col items-center justify-center h-full opacity-40 text-center space-y-4">
  <MessageSquare size={32} className="text-stone-300 dark:text-stone-700"/>
- <p className="font-serif italic text-lg text-stone-500">The discourse is silent. Be the first to refract.</p>
+ <p className="font-serif italic text-lg text-stone-500">{t('empty.comments')}</p>
  </div>
  ) : (
  <AnimatePresence initial={false}>
@@ -120,6 +149,33 @@ export const ZineComments: React.FC<{ zineId: string; onClose?: () => void }> = 
  <p className="font-serif text-sm md:text-base text-stone-700 dark:text-stone-300 leading-relaxed">
  {comment.text}
  </p>
+ <div className="flex items-center gap-4 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+ {user && user.uid === comment.userId ? (
+ confirmDeleteId === comment.id ? (
+ <div className="flex items-center gap-2">
+ <span className="text-[9px] font-mono uppercase tracking-widest text-stone-500">Confirm delete?</span>
+ <button onClick={() => handleDelete(comment.id)} className="text-[9px] font-mono uppercase tracking-widest text-red-500 hover:text-red-600 transition-colors">Yes</button>
+ <button onClick={() => setConfirmDeleteId(null)} className="text-[9px] font-mono uppercase tracking-widest text-stone-400 hover:text-stone-600 transition-colors">No</button>
+ </div>
+ ) : (
+ <button onClick={() => setConfirmDeleteId(comment.id)} className="flex items-center gap-1 text-[9px] font-mono uppercase tracking-widest text-red-500 hover:text-red-600 transition-colors">
+ <Trash2 size={10} /> Delete
+ </button>
+ )
+ ) : (
+ confirmReportId === comment.id ? (
+ <div className="flex items-center gap-2">
+ <span className="text-[9px] font-mono uppercase tracking-widest text-stone-500">Confirm report?</span>
+ <button onClick={() => handleReport(comment.id)} className="text-[9px] font-mono uppercase tracking-widest text-red-500 hover:text-red-600 transition-colors">Yes</button>
+ <button onClick={() => setConfirmReportId(null)} className="text-[9px] font-mono uppercase tracking-widest text-stone-400 hover:text-stone-600 transition-colors">No</button>
+ </div>
+ ) : (
+ <button onClick={() => setConfirmReportId(comment.id)} className="flex items-center gap-1 text-[9px] font-mono uppercase tracking-widest text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors">
+ <Flag size={10} /> Report
+ </button>
+ )
+ )}
+ </div>
  </div>
  </motion.div>
  ))}

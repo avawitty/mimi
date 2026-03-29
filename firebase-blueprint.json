@@ -297,6 +297,57 @@
         "type": { "type": "string", "enum": ["relates_to", "evolves_from", "contrasts_with"] }
       },
       "required": ["source", "target", "strength", "type"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile, role, preferences, and metrics.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "profile": { "type": "object" },
+        "role": { "type": "string" },
+        "preferences": { "type": "object" },
+        "metrics": { "type": "object" }
+      },
+      "required": ["uid", "role"]
+    },
+    "Issue": {
+      "title": "Issue",
+      "description": "A publication issue.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "published"] },
+        "publishAt": { "type": "number" },
+        "editorNotes": { "type": "string" }
+      },
+      "required": ["title", "status"]
+    },
+    "Submission": {
+      "title": "Submission",
+      "description": "A user submission for an issue.",
+      "type": "object",
+      "properties": {
+        "authorId": { "type": "string" },
+        "issueId": { "type": "string" },
+        "status": { "type": "string" },
+        "moderationReason": { "type": "string" }
+      },
+      "required": ["authorId", "status"]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "A comment on a submission.",
+      "type": "object",
+      "properties": {
+        "parentId": { "type": "string" },
+        "submissionId": { "type": "string" },
+        "threadDepth": { "type": "number" },
+        "content": { "type": "string" },
+        "authorId": { "type": "string" },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["submissionId", "threadDepth", "content", "authorId", "timestamp"]
     }
   },
   "firestore": {
@@ -395,6 +446,22 @@
     "users/{userId}/tasteGraphEdges/{edgeId}": {
       "schema": { "$ref": "#/entities/TasteGraphEdge" },
       "description": "User taste graph edges."
+    },
+    "users/{uid}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles and settings."
+    },
+    "issues/{issueId}": {
+      "schema": { "$ref": "#/entities/Issue" },
+      "description": "Publication issues."
+    },
+    "submissions/{submissionId}": {
+      "schema": { "$ref": "#/entities/Submission" },
+      "description": "User submissions."
+    },
+    "comments/{commentId}": {
+      "schema": { "$ref": "#/entities/Comment" },
+      "description": "Comments on submissions."
     }
   }
 }

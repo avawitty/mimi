@@ -4,6 +4,7 @@ import { useUser } from '../contexts/UserContext';
 import { fetchTasks, updateTask, deleteTask, saveTask } from '../services/firebaseUtils';
 import { Task } from '../types';
 import { Check, Clock, Plus, Trash2, X, CalendarDays, ListChecks, Target, AlertCircle, Loader2, LayoutGrid, Link2 } from 'lucide-react';
+import { LoadingSkeleton } from './LoadingSkeleton';
 
 export const ActionBoard = () => {
  const { user } = useUser();
@@ -172,19 +173,19 @@ export const ActionBoard = () => {
  }, [filteredTasks]);
 
  return (
- <div className="w-full h-full flex flex-col bg text-stone-200 font-mono transition-colors duration-1000 overflow-hidden relative">
- <div className="absolute inset-0 bg bg-[size:40px_40px] opacity-20 pointer-events-none"/>
+ <div className="w-full h-full flex flex-col bg-stone-950 text-stone-200 font-mono transition-colors duration-1000 overflow-hidden relative">
+ <div className="absolute inset-0 bg-stone-950 bg-[size:40px_40px] opacity-20 pointer-events-none"/>
 
  <AnimatePresence>
  {taskToDelete && (
  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[8000] flex items-center justify-center bg-black/80 backdrop-blur-sm">
- <div className="bg p-8 rounded-none max-w-sm w-full space-y-6 border border-stone-800">
+ <div className="bg-stone-950 p-8 rounded-none max-w-sm w-full space-y-6 border border-stone-800">
  <div className="space-y-2">
  <h3 className="font-serif italic text-xl text-stone-200">Purge Imperative?</h3>
- <p className="font-mono text-[10px] text-stone-500 uppercase tracking-widest">This action cannot be undone.</p>
+ <p className="font-mono text-[10px] text-stone-400 uppercase tracking-widest">This action cannot be undone.</p>
  </div>
  <div className="flex gap-4">
- <button onClick={() => setTaskToDelete(null)} className="flex-1 py-3 text-stone-500 hover:text-stone-300 font-mono text-[9px] uppercase tracking-widest font-bold border border-stone-800 hover:border-stone-600 transition-all">Cancel</button>
+ <button onClick={() => setTaskToDelete(null)} className="flex-1 py-3 text-stone-400 hover:text-stone-300 font-mono text-[9px] uppercase tracking-widest font-bold border border-stone-800 hover:border-stone-600 transition-all">Cancel</button>
  <button onClick={confirmDeleteTask} className="flex-1 py-3 bg-red-900/20 text-red-500 border border-red-900/50 hover:bg-red-900/40 rounded-none font-mono text-[9px] uppercase tracking-widest font-bold transition-all">Confirm</button>
  </div>
  </div>
@@ -192,22 +193,22 @@ export const ActionBoard = () => {
  )}
  </AnimatePresence>
 
- <header className="p-6 md:p-12 pb-8 flex flex-col md:flex-row justify-between items-start gap-6 border-b border-stone-800 relative z-20 bg/80 backdrop-blur-md">
+ <header className="p-6 md:p-12 pb-8 flex flex-col md:flex-row justify-between items-start gap-6 border-b border-stone-800 relative z-20 bg-stone-950/80 backdrop-blur-md">
  <div className="space-y-4">
- <div className="flex items-center gap-3 text-stone-500">
+ <div className="flex items-center gap-3 text-stone-400">
  <Target size={14} />
  <span className="font-mono text-[9px] uppercase tracking-[0.4em] font-bold">Action Board</span>
  </div>
  <h2 className="font-serif text-4xl md:text-6xl italic tracking-tighter text-stone-100 leading-none">Strategic Imperatives.</h2>
  </div>
  <div className="flex flex-wrap gap-2 md:gap-4">
- <button onClick={() => setViewMode('list')} className={`p-3 border rounded-none transition-all ${viewMode === 'list' ? 'border-stone-500 text-stone-500 bg-stone-500/10' : 'border-stone-800 text-stone-500 hover:border-stone-600 hover:text-stone-300'}`} title="List View">
+ <button onClick={() => setViewMode('list')} className={`p-3 border rounded-none transition-all ${viewMode === 'list' ? 'border-stone-500 text-stone-400 bg-stone-500/10' : 'border-stone-800 text-stone-400 hover:border-stone-600 hover:text-stone-300'}`} title="List View">
  <ListChecks size={16} />
  </button>
- <button onClick={() => setViewMode('calendar')} className={`p-3 border rounded-none transition-all ${viewMode === 'calendar' ? 'border-stone-500 text-stone-500 bg-stone-500/10' : 'border-stone-800 text-stone-500 hover:border-stone-600 hover:text-stone-300'}`} title="Timeline View">
+ <button onClick={() => setViewMode('calendar')} className={`p-3 border rounded-none transition-all ${viewMode === 'calendar' ? 'border-stone-500 text-stone-400 bg-stone-500/10' : 'border-stone-800 text-stone-400 hover:border-stone-600 hover:text-stone-300'}`} title="Timeline View">
  <CalendarDays size={16} />
  </button>
- <button onClick={() => setViewMode('canvas')} className={`p-3 border rounded-none transition-all ${viewMode === 'canvas' ? 'border-stone-500 text-stone-500 bg-stone-500/10' : 'border-stone-800 text-stone-500 hover:border-stone-600 hover:text-stone-300'}`} title="Canvas View">
+ <button onClick={() => setViewMode('canvas')} className={`p-3 border rounded-none transition-all ${viewMode === 'canvas' ? 'border-stone-500 text-stone-400 bg-stone-500/10' : 'border-stone-800 text-stone-400 hover:border-stone-600 hover:text-stone-300'}`} title="Canvas View">
  <LayoutGrid size={16} />
  </button>
  </div>
@@ -215,7 +216,7 @@ export const ActionBoard = () => {
 
  <div className="flex-1 relative z-10 overflow-hidden">
  {viewMode === 'canvas' ? (
- <div className="absolute inset-0 overflow-hidden bg"onWheel={handleWheel}>
+ <div className="absolute inset-0 overflow-hidden bg-stone-950"onWheel={handleWheel}>
  <motion.div
  ref={canvasRef}
  drag
@@ -239,7 +240,7 @@ export const ActionBoard = () => {
  y: task.position?.y ?? 5000 + Math.random() * 200 
  }}
  style={{ position: 'absolute' }}
- className={`w-64 p-4 border rounded-none cursor-grab active:cursor-grabbing ${task.completed ? 'bg-stone-900/50 border-stone-800/50' : 'bg border-stone-700 hover:border-stone-800 dark:hover:border-stone-300/50'}`}
+ className={`w-64 p-4 border rounded-none cursor-grab active:cursor-grabbing ${task.completed ? 'bg-stone-900/50 border-stone-800/50' : 'bg-stone-950 border-stone-700 hover:border-stone-800 dark:hover:border-stone-300/50'}`}
  >
  <div className="flex items-start gap-3">
  <button 
@@ -249,7 +250,7 @@ export const ActionBoard = () => {
  {task.completed && <X size={12} className="text-black stroke-[3]"/>}
  </button>
  <div className="flex-1">
- <p className={`font-sans font-medium text-sm ${task.completed ? 'text-stone-600 line-through' : 'text-stone-200'}`}>
+ <p className={`font-sans font-medium text-sm ${task.completed ? 'text-stone-400 line-through' : 'text-stone-200'}`}>
  {task.text}
  </p>
  {task.linkedContext && (
@@ -262,14 +263,14 @@ export const ActionBoard = () => {
  window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: task.linkedContext?.type, detail_id: task.linkedContext?.id } as any));
  }
  }}
- className="mt-2 text-[9px] uppercase tracking-widest text-stone-500 hover:text-stone-400 flex items-center gap-1 font-mono transition-colors"
+ className="mt-2 text-[9px] uppercase tracking-widest text-stone-400 hover:text-stone-400 flex items-center gap-1 font-mono transition-colors"
  >
  <Link2 size={10} /> Open Referenced {task.linkedContext.type}
  </button>
  )}
  <div className="flex flex-wrap gap-2 mt-3">
  {task.dueDate && (
- <span className="font-mono text-[8px] flex items-center gap-1 uppercase tracking-widest text-stone-500">
+ <span className="font-mono text-[8px] flex items-center gap-1 uppercase tracking-widest text-stone-400">
  <Clock size={8} /> {new Date(task.dueDate).toLocaleDateString()}
  </span>
  )}
@@ -282,7 +283,7 @@ export const ActionBoard = () => {
  </div>
  <button 
  onClick={(e) => { e.stopPropagation(); setTaskToDelete(task.id); }} 
- className="text-stone-600 hover:text-red-500 transition-all shrink-0"
+ className="text-stone-400 hover:text-red-500 transition-all shrink-0"
  >
  <Trash2 size={14} />
  </button>
@@ -301,7 +302,7 @@ export const ActionBoard = () => {
  onChange={e => setNewTaskText(e.target.value)} 
  onKeyDown={e => e.key === 'Enter' && handleAddTask()}
  placeholder="Define a new imperative..."
- className="flex-1 w-full bg-transparent border-none font-serif italic text-lg focus:outline-none text-stone-300 placeholder:text-stone-700"
+ className="flex-1 w-full bg-transparent border-none font-serif italic text-lg focus:outline-none text-stone-300 placeholder:text-stone-500"
  />
  <div className="flex w-full md:w-auto gap-4">
  <input 
@@ -309,13 +310,13 @@ export const ActionBoard = () => {
  value={newTaskPlatform} 
  onChange={e => setNewTaskPlatform(e.target.value)} 
  placeholder="Platform (e.g. TikTok)"
- className="w-1/2 md:w-32 bg-transparent border-b border-stone-800 py-2 font-mono text-[10px] uppercase tracking-widest focus:outline-none focus:border-stone-500 text-stone-500 placeholder:text-stone-700"
+ className="w-1/2 md:w-32 bg-transparent border-b border-stone-800 py-2 font-mono text-[10px] uppercase tracking-widest focus:outline-none focus:border-stone-500 text-stone-400 placeholder:text-stone-500"
  />
  <input 
  type="date"
  value={newTaskDate} 
  onChange={e => setNewTaskDate(e.target.value)} 
- className="w-1/2 md:w-32 bg-transparent border-b border-stone-800 py-2 font-mono text-[10px] focus:outline-none focus:border-stone-500 text-stone-500"
+ className="w-1/2 md:w-32 bg-transparent border-b border-stone-800 py-2 font-mono text-[10px] focus:outline-none focus:border-stone-500 text-stone-400"
  />
  <button 
  onClick={handleAddTask} 
@@ -333,7 +334,7 @@ export const ActionBoard = () => {
  <button
  key={f}
  onClick={() => setFilter(f)}
- className={`font-mono text-[10px] uppercase tracking-widest font-bold transition-colors ${filter === f ? 'text-stone-500' : 'text-stone-600 hover:text-stone-400'}`}
+ className={`font-mono text-[10px] uppercase tracking-widest font-bold transition-colors ${filter === f ? 'text-stone-400' : 'text-stone-400 hover:text-stone-400'}`}
  >
  {f}
  </button>
@@ -341,7 +342,7 @@ export const ActionBoard = () => {
  </div>
 
  {loading ? (
- <div className="py-24 flex justify-center"><Loader2 size={32} className="animate-spin text-stone-600"/></div>
+ <div className="py-24 px-8"><LoadingSkeleton lines={5} className="w-full max-w-md mx-auto" /></div>
  ) : (
  <>
  {viewMode === 'list' ? (
@@ -370,7 +371,7 @@ export const ActionBoard = () => {
  </div>
  
  <div className="flex-1 flex flex-col gap-2 pb-2">
- <span className={`font-sans font-medium text-lg transition-all ${task.completed ? 'text-stone-600 line-through' : 'text-stone-200'}`}>
+ <span className={`font-sans font-medium text-lg transition-all ${task.completed ? 'text-stone-400 line-through' : 'text-stone-200'}`}>
  {task.text}
  </span>
  {task.linkedContext && (
@@ -383,7 +384,7 @@ export const ActionBoard = () => {
  window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: task.linkedContext?.type, detail_id: task.linkedContext?.id } as any));
  }
  }}
- className="mt-1 text-[9px] uppercase tracking-widest text-stone-500 hover:text-stone-400 flex items-center gap-1 font-mono transition-colors self-start"
+ className="mt-1 text-[9px] uppercase tracking-widest text-stone-400 hover:text-stone-400 flex items-center gap-1 font-mono transition-colors self-start"
  >
  <Link2 size={10} /> Open Referenced {task.linkedContext.type}
  </button>
@@ -391,17 +392,17 @@ export const ActionBoard = () => {
  
  <div className="flex flex-wrap gap-3 items-center mt-1">
  {task.dueDate && (
- <span className={`font-mono text-[9px] flex items-center gap-1.5 uppercase tracking-widest ${task.completed ? 'text-stone-700' : 'text-stone-500'}`}>
+ <span className={`font-mono text-[9px] flex items-center gap-1.5 uppercase tracking-widest ${task.completed ? 'text-stone-500' : 'text-stone-400'}`}>
  <Clock size={10} /> {new Date(task.dueDate).toLocaleDateString()}
  </span>
  )}
  {task.platform && (
- <span className={`px-2 py-0.5 font-mono text-[8px] uppercase tracking-widest ${task.completed ? 'text-stone-600 border border-stone-800/50' : 'text-stone-400 border border-stone-800'}`}>
+ <span className={`px-2 py-0.5 font-mono text-[8px] uppercase tracking-widest ${task.completed ? 'text-stone-400 border border-stone-800/50' : 'text-stone-400 border border-stone-800'}`}>
  {task.platform}
  </span>
  )}
  {task.tags?.map(tag => (
- <span key={tag} className={`px-2 py-0.5 font-mono text-[8px] uppercase tracking-widest bg-transparent ${task.completed ? 'text-stone-700 border border-stone-800/50' : 'text-stone-500 border border-stone-800'}`}>
+ <span key={tag} className={`px-2 py-0.5 font-mono text-[8px] uppercase tracking-widest bg-transparent ${task.completed ? 'text-stone-500 border border-stone-800/50' : 'text-stone-400 border border-stone-800'}`}>
  #{tag}
  </span>
  ))}
@@ -411,13 +412,13 @@ export const ActionBoard = () => {
  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
  <button
  onClick={() => toggleNotes(task.id)}
- className="font-mono text-[9px] uppercase tracking-widest text-stone-500 hover:text-stone-300 flex items-center gap-1"
+ className="font-mono text-[9px] uppercase tracking-widest text-stone-400 hover:text-stone-300 flex items-center gap-1"
  >
  <Plus size={10} /> {task.notes !== undefined || expandedNotes[task.id] ? 'LOG' : 'APPEND'}
  </button>
  <button 
  onClick={() => setTaskToDelete(task.id)} 
- className="p-2 text-stone-600 hover:text-red-500 transition-all shrink-0"
+ className="p-2 text-stone-400 hover:text-red-500 transition-all shrink-0"
  >
  <Trash2 size={14} />
  </button>
@@ -433,7 +434,7 @@ export const ActionBoard = () => {
  exit={{ height: 0, opacity: 0 }}
  className="overflow-hidden ml-[28px] mt-2 relative z-10"
  >
- <div className="font-mono text-[8px] uppercase tracking-widest text-stone-600 mb-2">
+ <div className="font-mono text-[8px] uppercase tracking-widest text-stone-400 mb-2">
  // EXECUTION LOG
  </div>
  <textarea
@@ -450,8 +451,8 @@ export const ActionBoard = () => {
  </AnimatePresence>
  {filteredTasks.length === 0 && (
  <div className="py-24 text-center opacity-30 border border-dashed border-stone-800 rounded-none flex flex-col items-center justify-center gap-4">
- <AlertCircle size={32} className="text-stone-500"/>
- <p className="font-serif italic text-lg text-stone-500">No imperatives found.</p>
+ <AlertCircle size={32} className="text-stone-400"/>
+ <p className="font-serif italic text-lg text-stone-400">No imperatives found.</p>
  </div>
  )}
  </div>
@@ -459,8 +460,8 @@ export const ActionBoard = () => {
  <div className="space-y-12">
  {Object.keys(tasksByDate).length === 0 && (
  <div className="py-24 text-center opacity-30 border border-dashed border-stone-800 rounded-none flex flex-col items-center justify-center gap-4">
- <CalendarDays size={32} className="text-stone-500"/>
- <p className="font-serif italic text-lg text-stone-500">Timeline Empty.</p>
+ <CalendarDays size={32} className="text-stone-400"/>
+ <p className="font-serif italic text-lg text-stone-400">Timeline Empty.</p>
  </div>
  )}
  {Object.entries(tasksByDate).sort().map(([date, groupTasks]) => (
@@ -469,11 +470,11 @@ export const ActionBoard = () => {
  <div className="absolute left-[11px] top-2 bottom-[-48px] w-px bg-stone-800 last:bottom-0"/>
  
  {/* Timeline dot */}
- <div className="absolute left-0 top-1.5 w-6 h-6 rounded-none bg border-2 border-stone-800 flex items-center justify-center">
+ <div className="absolute left-0 top-1.5 w-6 h-6 rounded-none bg-stone-950 border-2 border-stone-800 flex items-center justify-center">
  <div className="w-1.5 h-1.5 rounded-none bg-stone-500/50"/>
  </div>
  
- <div className="font-mono text-[10px] uppercase tracking-[0.2em] font-bold text-stone-500 mb-6 sticky top-0 bg py-2 z-10">
+ <div className="font-mono text-[10px] uppercase tracking-[0.2em] font-bold text-stone-400 mb-6 sticky top-0 bg-stone-950 py-2 z-10">
  {date === 'Unscheduled' ? 'Backlog / Unscheduled' : new Date(date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
  </div>
  
@@ -495,7 +496,7 @@ export const ActionBoard = () => {
  </div>
  
  <div className="flex-1 flex flex-col gap-2 pb-2">
- <span className={`font-sans font-medium text-lg transition-all ${task.completed ? 'text-stone-600 line-through' : 'text-stone-200'}`}>
+ <span className={`font-sans font-medium text-lg transition-all ${task.completed ? 'text-stone-400 line-through' : 'text-stone-200'}`}>
  {task.text}
  </span>
  {task.linkedContext && (
@@ -508,7 +509,7 @@ export const ActionBoard = () => {
  window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: task.linkedContext?.type, detail_id: task.linkedContext?.id } as any));
  }
  }}
- className="mt-1 text-[9px] uppercase tracking-widest text-stone-500 hover:text-stone-400 flex items-center gap-1 font-mono transition-colors self-start"
+ className="mt-1 text-[9px] uppercase tracking-widest text-stone-400 hover:text-stone-400 flex items-center gap-1 font-mono transition-colors self-start"
  >
  <Link2 size={10} /> Open Referenced {task.linkedContext.type}
  </button>
@@ -516,17 +517,17 @@ export const ActionBoard = () => {
  
  <div className="flex flex-wrap gap-3 items-center mt-1">
  {task.dueDate && (
- <span className={`font-mono text-[9px] flex items-center gap-1.5 uppercase tracking-widest ${task.completed ? 'text-stone-700' : 'text-stone-500'}`}>
+ <span className={`font-mono text-[9px] flex items-center gap-1.5 uppercase tracking-widest ${task.completed ? 'text-stone-500' : 'text-stone-400'}`}>
  <Clock size={10} /> {new Date(task.dueDate).toLocaleDateString()}
  </span>
  )}
  {task.platform && (
- <span className={`px-2 py-0.5 font-mono text-[8px] uppercase tracking-widest ${task.completed ? 'text-stone-600 border border-stone-800/50' : 'text-stone-400 border border-stone-800'}`}>
+ <span className={`px-2 py-0.5 font-mono text-[8px] uppercase tracking-widest ${task.completed ? 'text-stone-400 border border-stone-800/50' : 'text-stone-400 border border-stone-800'}`}>
  {task.platform}
  </span>
  )}
  {task.tags?.map(tag => (
- <span key={tag} className={`px-2 py-0.5 font-mono text-[8px] uppercase tracking-widest bg-transparent ${task.completed ? 'text-stone-700 border border-stone-800/50' : 'text-stone-500 border border-stone-800'}`}>
+ <span key={tag} className={`px-2 py-0.5 font-mono text-[8px] uppercase tracking-widest bg-transparent ${task.completed ? 'text-stone-500 border border-stone-800/50' : 'text-stone-400 border border-stone-800'}`}>
  #{tag}
  </span>
  ))}
@@ -536,13 +537,13 @@ export const ActionBoard = () => {
  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
  <button
  onClick={() => toggleNotes(task.id)}
- className="font-mono text-[9px] uppercase tracking-widest text-stone-500 hover:text-stone-300 flex items-center gap-1"
+ className="font-mono text-[9px] uppercase tracking-widest text-stone-400 hover:text-stone-300 flex items-center gap-1"
  >
  <Plus size={10} /> {task.notes !== undefined || expandedNotes[task.id] ? 'LOG' : 'APPEND'}
  </button>
  <button 
  onClick={() => setTaskToDelete(task.id)} 
- className="p-2 text-stone-600 hover:text-red-500 transition-all shrink-0"
+ className="p-2 text-stone-400 hover:text-red-500 transition-all shrink-0"
  >
  <Trash2 size={14} />
  </button>
@@ -558,7 +559,7 @@ export const ActionBoard = () => {
  exit={{ height: 0, opacity: 0 }}
  className="overflow-hidden ml-[28px] mt-2 relative z-10"
  >
- <div className="font-mono text-[8px] uppercase tracking-widest text-stone-600 mb-2">
+ <div className="font-mono text-[8px] uppercase tracking-widest text-stone-400 mb-2">
  // EXECUTION LOG
  </div>
  <textarea

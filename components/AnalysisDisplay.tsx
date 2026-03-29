@@ -6,7 +6,7 @@ import jsPDF from 'jspdf';
 import { ZineMetadata, PocketItem, LineageEntry } from '../types';
 import { generateAudio, animateShardWithVeo, transcribeAudio } from '../services/geminiService';
 import { subscribeToPocketItems, fetchLineageEntry, saveNarrativeThread, saveTask } from '../services/firebaseUtils';
-import { Loader2, X, Volume2, Orbit, Eye, Target, Layers, Moon, Sparkles, Terminal, Quote, ArrowDown, Grid3X3, Printer, Bookmark, Check, Play, Pause, ExternalLink, Download, Share2, Star, FileText, Map, Compass, Zap, RefreshCw, PenTool, Save, Mic, Square, AlertCircle, StickyNote, History, MessageSquareQuote, Radar, Maximize2, Activity, Archive, FolderPlus, Compass as RoadmapIcon, Stars as CelestialIcon, ArrowRight, CornerDownRight, Image as ImageIcon, Film, MousePointer2, Briefcase, BookOpen, ChevronDown, Hash, Search, Menu, Plus, Radio } from 'lucide-react';
+import { Loader2, X, Volume2, Orbit, Eye, Target, Layers, Moon, Sparkles, Terminal, Quote, ArrowDown, Grid3X3, Printer, Bookmark, Check, Play, Pause, ExternalLink, Download, Share2, Star, FileText, Map, Compass, Zap, RefreshCw, PenTool, Save, Mic, Square, AlertCircle, StickyNote, History, MessageSquareQuote, Radar, Maximize2, Activity, Archive, FolderPlus, Compass as RoadmapIcon, Stars as CelestialIcon, ArrowRight, CornerDownRight, Image as ImageIcon, Film, MousePointer2, Briefcase, BookOpen, ChevronDown, Hash, Search, Menu, Plus, Radio, Heart, MessageSquare } from 'lucide-react';
 import { VisualLanguageReflection } from './VisualLanguageReflection';
 import { Visualizer } from './Visualizer';
 import { ExportChamber } from './ExportChamber';
@@ -120,40 +120,48 @@ export const AnalysisDisplay: React.FC<{
  }, [isPlaying]);
  
  const handleResonanceFlip = async () => {
- if (!showLineage) {
- const entry = await fetchLineageEntry(metadata.id);
- setLineageEntry(entry);
+ try {
+  if (!showLineage) {
+  const entry = await fetchLineageEntry(metadata.id);
+  setLineageEntry(entry);
+  }
+  setShowLineage(!showLineage);
+ } catch (e) {
+  console.error("MIMI // Error in handleResonanceFlip: ", e);
  }
- setShowLineage(!showLineage);
  };
  
  const exportZine = async (format: 'pdf' | 'png') => {
- const element = document.getElementById('zine-content');
- if (!element) return;
- 
- const displayTitle = metadata.content?.headlines?.[0] || metadata.title ||"Untitled";
- const canvas = await html2canvas(element);
- if (format === 'png') {
- const link = document.createElement('a');
- link.download = `${displayTitle}.png`;
- link.href = canvas.toDataURL('image/png');
- link.click();
- } else {
- const imgData = canvas.toDataURL('image/png');
- const pdf = new jsPDF('p', 'mm', 'a4');
- const imgProps = pdf.getImageProperties(imgData);
- const pdfWidth = pdf.internal.pageSize.getWidth();
- const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
- pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
- pdf.save(`${displayTitle}.pdf`);
+ try {
+  const element = document.getElementById('zine-content');
+  if (!element) return;
+  
+  const displayTitle = metadata.content?.headlines?.[0] || metadata.title ||"Untitled";
+  const canvas = await html2canvas(element);
+  if (format === 'png') {
+  const link = document.createElement('a');
+  link.download = `${displayTitle}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  } else {
+  const imgData = canvas.toDataURL('image/png');
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const imgProps = pdf.getImageProperties(imgData);
+  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+  pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+  pdf.save(`${displayTitle}.pdf`);
+  }
+ } catch (e) {
+  console.error("MIMI // Error in exportZine: ", e);
  }
  };
  
  // TAILOR INTEGRATION: Fetch styling from the active persona's draft
  const [activeTheme, setActiveTheme] = useState<'organic' | 'synthetic' | 'latent'>(
- metadata.content?.meta?.theme || (typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? 'latent' : 'organic')
+ ['organic', 'synthetic', 'latent'].includes(metadata.content?.meta?.theme) ? metadata.content.meta.theme : (typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? 'latent' : 'organic')
  );
- const themeConfig = THEMES[activeTheme as keyof typeof THEMES];
+ const themeConfig = THEMES[activeTheme as keyof typeof THEMES] || THEMES['organic'];
 
  const tailor = activePersona?.tailorDraft || profile?.tailorDraft;
  const accentColor = activeTheme === 'synthetic' ? themeConfig.accent : (tailor?.chromaticRegistry?.accentSignal || themeConfig.accent);
@@ -1187,6 +1195,14 @@ export const AnalysisDisplay: React.FC<{
  <div className="w-px h-4 bg-stone-200 dark:bg-white/20" />
  <button onClick={() => setShowExport(true)} className="hover:text-stone-900 dark:hover:text-white transition-colors">
  [ EXTRACT ARTIFACT ]
+ </button>
+ <div className="w-px h-4 bg-stone-200 dark:bg-white/20" />
+ <button onClick={handleSaveToPocket} className={`${isSaved ? 'text-red-500' : 'hover:text-red-500'} transition-colors flex items-center gap-2`}>
+ [ {isSaved ? <Heart className="fill-current" size={12} /> : <Heart size={12} />} SAVE ]
+ </button>
+ <div className="w-px h-4 bg-stone-200 dark:bg-white/20" />
+ <button onClick={() => setShowComments(true)} className="hover:text-stone-900 dark:hover:text-white transition-colors flex items-center gap-2">
+ [ <MessageSquare size={12} /> DISCUSS ]
  </button>
  </div>
  </div>

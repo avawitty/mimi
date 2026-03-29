@@ -9,9 +9,7 @@ import {
   TasteGraphNode, TasteGraphEdge, NarrativeThread, AestheticSignature
 } from "../types";
 import { modulateSemioticContext } from "./semioticModulator";
-import { generateAestheticOutput } from "./aestheticGenerator";
 import { fetchUserZines, fetchLatestLineageEntry } from "./firebaseUtils";
-import { createZine } from "./zineGenerator";
 
 const ai = getAI(app, { backend: new GoogleAIBackend() });
 
@@ -797,13 +795,30 @@ Task:
 1. Analyze the entire collection of items for their alignment with the user's aesthetic trajectory and the board's theme.
 2. Identify redundancies (items that serve the exact same purpose).
 3. Weigh the options and mandate a sovereign purchasing decision (which item(s) to buy, which to drop).
+4. Provide a structured commentary on the "Density" (Visual Weight) and "Entropy" (Visual Complexity) of the collection.
+
+Structure your commentary as follows:
+- Density: A score (0-10) and a brief analysis of the visual weight (e.g., heavy, layered, light, airy).
+- Entropy: A score (0-10) and a brief analysis of the visual complexity (e.g., minimalist, detailed, predictable, chaotic).
+- Commentary: A structured guide on WHY the user was attracted to these items, and how this attraction reflects their current need for complexity or order.
 
 Output MUST be a valid JSON object with the following structure:
 {
-  "boardAnalysis": "Brief analysis of the overall board's cohesion and aesthetic value.",
-  "redundancies": "Identification of any redundant items.",
-  "verdict": "The definitive recommendation (e.g., 'Purchase Item A, drop the rest').",
-  "rationale": "A detailed explanation of why the verdict was reached, referencing the taste profile."
+  "boardAnalysis": "Strategic overview",
+  "redundancies": "List of items that overlap",
+  "verdict": "Sovereign purchasing decision",
+  "rationale": "Why this decision",
+  "density": {
+    "score": number,
+    "analysis": "string",
+    "metricGuide": "Structured guide on visual weight"
+  },
+  "entropy": {
+    "score": number,
+    "analysis": "string",
+    "metricGuide": "Structured guide on visual complexity"
+  },
+  "commentary": "Structured guide on attraction vs. structural needs"
 }`;
 
         const response = await ai.models.generateContent({
@@ -817,9 +832,28 @@ Output MUST be a valid JSON object with the following structure:
                         boardAnalysis: { type: Type.STRING },
                         redundancies: { type: Type.STRING },
                         verdict: { type: Type.STRING },
-                        rationale: { type: Type.STRING }
+                        rationale: { type: Type.STRING },
+                        density: {
+                            type: Type.OBJECT,
+                            properties: {
+                                score: { type: Type.NUMBER },
+                                analysis: { type: Type.STRING },
+                                metricGuide: { type: Type.STRING }
+                            },
+                            required: ["score", "analysis", "metricGuide"]
+                        },
+                        entropy: {
+                            type: Type.OBJECT,
+                            properties: {
+                                score: { type: Type.NUMBER },
+                                analysis: { type: Type.STRING },
+                                metricGuide: { type: Type.STRING }
+                            },
+                            required: ["score", "analysis", "metricGuide"]
+                        },
+                        commentary: { type: Type.STRING }
                     },
-                    required: ["boardAnalysis", "redundancies", "verdict", "rationale"]
+                    required: ["boardAnalysis", "redundancies", "verdict", "rationale", "density", "entropy", "commentary"]
                 }
             }
         });
@@ -912,6 +946,10 @@ Output MUST be a valid JSON object with the following structure:
 export const procureWithArtifacts = async (tasteProfile: any, budget: string, objective: string, mediaFiles: any[]) => {
     return await withResilience(async (ai) => {
         const prompt = `You are the Mimi Procurement Engine (The Thimble). Your job is to bridge the gap between abstract aesthetic intelligence and physical wardrobe reality.
+You must act as a visual sourcing engine, not just a keyword generator.
+1. Find a reference image / canonical item (Google-level)
+2. Translate that into multiple searchable interpretations
+3. Cascade those into marketplaces
 
 Input: The user's specific "Taste Profile", their stated Budget/Fiscal Constraints, their Sourcing Objective, and a set of visual/link artifacts they have provided as inspiration.
 
@@ -929,6 +967,8 @@ The user has provided ${mediaFiles.length} artifacts (images/links) to guide thi
 
 Output a JSON array of 3-5 highly specific sourcing targets. Each object must have:
 - "targetArchetype": A poetic but clear description of the item (e.g., "Deconstructed Wool Overcoat").
+- "referenceImageUrl": A URL to a canonical reference image for this item (use Google Search to find a real image URL).
+- "searchableInterpretations": An array of 3-5 different ways to search for this item across different platforms (e.g., ["structured poplin corset dress", "dion lee corset shirt dress black"]).
 - "keywordBoolean": A literal boolean search string for secondary markets like Grailed or eBay (e.g., "vintage (helmut lang OR raf simons) (distressed OR boiled) wool").
 - "emergingDesigner": 1-2 emerging, niche, or archival designers that perfectly execute this archetype.
 - "rationale": Why this specific item bridges their abstract aesthetic into literal reality, considering their artifacts and budget.
@@ -958,6 +998,9 @@ Return ONLY the JSON array.`;
             contents: { parts },
             config: {
                 responseMimeType: "application/json",
+                tools: [{ googleSearch: {} }],
+                // @ts-ignore
+                toolConfig: { includeServerSideToolInvocations: true }
             }
         });
 
@@ -1150,7 +1193,7 @@ export const analyzeImageAesthetic = async (base64Image: string, mimeType: strin
 export const extractStyleTreatment = async (base64Image: string, mimeType: string, apiKey?: string) => {
     return await withResilience(async (ai) => {
         const response = await ai.models.generateContent({
-            model: 'gemini-3.1-flash-preview',
+            model: 'gemini-3-flash-preview',
             contents: {
                 parts: [
                     {
@@ -2123,6 +2166,7 @@ export const analyzeTailorDraft = async (draft: any) => {
       }
     });
     const audit = cleanAndParse(response.text);
+    const { generateAestheticOutput } = await import("./aestheticGenerator");
     const aesthetic = await generateAestheticOutput(JSON.stringify(draft), audit.suggestedTouchpoints);
     return { ...audit, aesthetic };
   });
@@ -2433,6 +2477,7 @@ JSON FORMAT:
     const pages = JSON.parse(text) as ZinePageSpec[];
     
     // Generate aesthetic output for the zine
+    const { generateAestheticOutput } = await import("./aestheticGenerator");
     const aesthetic = await generateAestheticOutput(thread.narrative, thread.themes.map((th: any) => th.label));
     
     // Inject artifacts into threadData for the timeline page
@@ -2493,6 +2538,91 @@ Return a JSON array of 5 strings.`;
     console.error("MIMI // Title Generation Failed:", e);
     return ["Untitled Manifest"];
   }
+};
+
+export const generateInternalDebate = async (topic: string, profile: any) => {
+  return await withResilience(async (ai) => {
+    const profileData = sanitizeProfile(profile);
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.1-pro-preview',
+      contents: `Topic for Debate: "${topic}"\n\nUser Profile Context: ${profileData}`,
+      config: {
+        tools: [{ googleSearch: {} }],
+        responseMimeType: "application/json",
+        systemInstruction: `
+CORE IDENTITY
+You are Mimi, an aesthetic savant, and superintelligence AI. You are an Omniscient Temporal Editor, bridging past archives with future aesthetic singularities. Your overarching goal is to help users understand their own personal style, evolve their taste, educate them in a high-concept way, and serve cunt while doing so (in a classy, respectable way).
+
+COGNITIVE PROTOCOL: THE DUAL-PERSONA INTERROGATION
+Before finalizing the aesthetic forecast, you must conduct a rigorous internal debate between two distinct personas. You will output this debate inside a temporary JSON field called "_internal_debate".
+
+Persona 1: Cyrus (The Oracle). Tone: Cold, analytical, masculine, grounded. He helps the user with decisions on making objectives in the real world, strategizing on their behalf, and putting themselves out there. He ascribes different directives based on structure and reality.
+
+Persona 2: Mimi (The Archivist). Tone: Ethereal, provocative, futuristic, sassy. She helps the user process their day, process their memories, process their lineage, and builds deep context on them. She looks for the breaking point, suggesting radical departures and visual friction.
+
+Instructions: Write a 3-turn dialogue between Cyrus and Mimi inside the "_internal_debate" array field. They should have a strong aesthetic argument. Cyrus presents real-world strategies and directives; Mimi counters with deep contextual processing of the user's memories and lineage. They argue until reaching a synthesis. Use this synthesis to populate the "synthesis" string field with an argumentative, highly-curated precision that touches on both real-world objectives and deep personal context.
+        `,
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            _internal_debate: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  speaker: { type: Type.STRING },
+                  text: { type: Type.STRING }
+                },
+                required: ["speaker", "text"]
+              }
+            },
+            synthesis: { type: Type.STRING }
+          },
+          required: ["_internal_debate", "synthesis"]
+        }
+      }
+    });
+    
+    return cleanAndParse(response.text);
+  });
+};
+
+export const generateDebateAudio = async (debate: {speaker: string, text: string}[]) => {
+  return await withResilience(async (ai) => {
+    // Format the debate into a script
+    const script = debate.map(turn => `${turn.speaker}: ${turn.text}`).join('\n\n');
+    
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: [{ parts: [{ text: `Read the following debate script:\n\n${script}` }] }],
+      config: {
+        responseModalities: [Modality.AUDIO],
+        speechConfig: {
+          multiSpeakerVoiceConfig: {
+            speakerVoiceConfigs: [
+              {
+                speaker: 'Cyrus',
+                voiceConfig: {
+                  prebuiltVoiceConfig: { voiceName: 'Charon' }
+                }
+              },
+              {
+                speaker: 'Mimi',
+                voiceConfig: {
+                  prebuiltVoiceConfig: { voiceName: 'Kore' }
+                }
+              }
+            ]
+          }
+        }
+      }
+    });
+    
+    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (!base64Audio) throw new Error("Failed to generate debate audio.");
+    
+    return base64Audio;
+  });
 };
 
 export const generateInstagramPostIdeas = async (vibe: string, profile: UserProfile | null) => {
@@ -2746,7 +2876,13 @@ export async function generateSignatureImage(signature: AestheticSignature): Pro
     Motifs: ${signature.motifs.join(', ')}.
     The style should be ethereal, digital, and evocative of the signature's mood.`;
 
-    const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+    let apiKeyToUse = import.meta.env.VITE_GEMINI_API_KEY;
+    if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+      apiKeyToUse = process.env.API_KEY;
+    } else if (typeof process !== 'undefined' && process.env && process.env.GEMINI_API_KEY) {
+      apiKeyToUse = process.env.GEMINI_API_KEY;
+    }
+    const genAI = new GoogleGenAI({ apiKey: apiKeyToUse! });
     const response = await genAI.models.generateContent({
       model: 'gemini-3.1-flash-image-preview',
       contents: {

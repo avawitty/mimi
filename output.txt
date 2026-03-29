@@ -1,274 +1,205 @@
-components/Shelf.tsx:  const { user } = useUser();
-components/Shelf.tsx:        if (user && !user.isAnonymous) {
-components/Shelf.tsx:           unsubscribe = subscribeToUserZines(user.uid, (data) => {
-components/Shelf.tsx:  }, [variant, user]);
-components/Shelf.tsx:              <ZineCard key={zine.id} zine={zine} onClick={() => onSelectZine(zine)} currentUserId={user?.uid} />
-components/ProposalWorkspace.tsx:  const { profile, activePersona, user } = useUser();
-components/ProposalWorkspace.tsx:          if (user?.uid) {
-components/ProposalWorkspace.tsx:                  const allItems = await fetchPocketItems(user.uid);
-components/ProposalWorkspace.tsx:  }, [mode, proposal.sourceFolderId, proposal.sourceArtifactIds, user]);
-components/ProposalWorkspace.tsx:              userProfile: profile
-components/TheStand.tsx:            z.userHandle.toLowerCase().includes(q)
-components/ProsceniumView.tsx:  userId: string;
-components/ProsceniumView.tsx:  userHandle: string;
-components/ProsceniumView.tsx:  const { user, profile, loading } = useUser();
-components/ProsceniumView.tsx:          userId: 'ghost', 
-components/ProsceniumView.tsx:          userHandle: 'oracle', 
-components/ProsceniumView.tsx:          userId: 'user1', 
-components/ProsceniumView.tsx:          userHandle: 'velvet_void', 
-components/ProsceniumView.tsx:          userId: 'user2', 
-components/ProsceniumView.tsx:          userHandle: 'chrome_heart', 
-components/ProsceniumView.tsx:    if (!user?.uid) return;
-components/ProsceniumView.tsx:    const unsub = subscribeToFollowing(user.uid, (connections) => {
-components/ProsceniumView.tsx:  }, [user?.uid]);
-components/ProsceniumView.tsx:        data = data.filter(t => followingIds.includes(t.userId));
-components/ProsceniumView.tsx:      if (!t.zineData || !user) return;
-components/ProsceniumView.tsx:          const folderId = await absorbTransmission(user.uid, t.zineData);
-components/ProsceniumView.tsx:      if (!t.zineData || !user) return;
-components/ProsceniumView.tsx:  const handleOpenProfile = (userId: string, e?: React.MouseEvent) => {
-components/ProsceniumView.tsx:    setViewingProfileId(userId);
-components/ProsceniumView.tsx:    if (!user || !profile || !selectedArtifact || !newVibeNote.trim()) return;
-components/ProsceniumView.tsx:      userId: user.uid,
-components/ProsceniumView.tsx:      userHandle: profile.handle,
-components/ProsceniumView.tsx:            {user && (
-components/ProsceniumView.tsx:                                  onClick={(e) => handleOpenProfile(t.userId, e)}
-components/ProsceniumView.tsx:                                  {t.userHandle}
-components/ProsceniumView.tsx:                                        Origin: {t.zineData.authorship || t.userHandle} {t.zineData.lineage?.length > 0 && `(Resonated ${t.zineData.lineage.length}x)`}
-components/ProsceniumView.tsx:                                    onClick={() => handleOpenProfile(selectedArtifact.userId)}
-components/ProsceniumView.tsx:                                    {selectedArtifact.userHandle}
-components/ProsceniumView.tsx:                                                    onClick={() => handleOpenProfile(note.userId)}
-components/ProsceniumView.tsx:                                                      {note.userHandle}
-components/ProsceniumView.tsx:                              {user ? (
-components/ProsceniumView.tsx:            userId={viewingProfileId} 
-components/AboutView.tsx:  { id: 'product_proposal', label: 'Product Proposal', desc: 'Problem statement, user archetypes, solution architecture.' },
-components/AboutView.tsx:  const { user, profile } = useUser();
-components/AboutView.tsx:    if (viewState === 'ENTRY' && user?.uid) {
-components/AboutView.tsx:                const items = await fetchPocketItems(user.uid);
-components/AboutView.tsx:                const props = await fetchUserProposals(user.uid);
-components/AboutView.tsx:  }, [viewState, user]);
-components/AboutView.tsx:    if (!files || !user?.uid || !selectedFolderId) return;
-components/AboutView.tsx:        await addToPocket(user.uid, 'image', {
-components/AboutView.tsx:      const items = await fetchPocketItems(user.uid);
-components/AboutView.tsx:      if (!hasSource || !user?.uid) { console.warn("Proposal: No source data available."); return; }
-components/AboutView.tsx:              userId: user.uid,
-components/Auth.tsx:  const { login, ghostLogin, speedGhostEntrance, authError, user } = useUser();
-components/Auth.tsx:  const isPopupBlocked = displayError?.includes('popup-blocked') || displayError?.includes('cancelled-popup-request') || displayError?.includes('popup-closed-by-user');
-components/Auth.tsx:    if (user && (isAccessing === 'google' || isAccessing === 'email' || isAccessing === 'speed')) {
-components/Auth.tsx:  }, [user, isAccessing]);
-components/Auth.tsx:      if (e.code === 'auth/popup-blocked' || e.code === 'auth/cancelled-popup-request' || e.code === 'auth/popup-closed-by-user') {
-components/GlobalSearchOverlay.tsx:  const { user } = useUser();
-components/GlobalSearchOverlay.tsx:        if (user && !user.isAnonymous) {
-components/GlobalSearchOverlay.tsx:          cloudZines = await fetchUserZines(user.uid) || [];
-components/GlobalSearchOverlay.tsx:          cloudPocket = await fetchPocketItems(user.uid) || [];
-components/GlobalSearchOverlay.tsx:  }, [isOpen, user]);
-components/ScryView.tsx:  const { user, profile, activePersona } = useUser();
-components/ArchiveView.tsx:  const { user } = useUser();
-components/ArchiveView.tsx:      const cloudPocket = user && !user.isAnonymous ? await fetchPocketItems(user.uid) || [] : [];
-components/ArchiveView.tsx:  }, [user]);
-components/TheWard.tsx:CONTEXT: You are auditing the user's live aesthetic data:
-components/TheWard.tsx:GOAL: Discuss the user's aesthetic trajectory, drift, and omissions based on the provided data.
-components/TheWard.tsx:  const { user, profile, featureFlags } = useUser();
-components/TheWard.tsx:  const [userZines, setUserZines] = useState<any[]>([]);
-components/TheWard.tsx:          if (user) {
-components/TheWard.tsx:                  const items = await fetchPocketItems(user.uid);
-components/TheWard.tsx:                  const zines = await fetchUserZines(user.uid);
-components/TheWard.tsx:  }, [user, featureFlags]);
-components/TheWard.tsx:    if (!userZines.length) return [];
-components/TheWard.tsx:    userZines.forEach(zine => {
-components/TheWard.tsx:  }, [userZines]);
-components/TheWard.tsx:    if (!userZines.length) return [];
-components/TheWard.tsx:    userZines.forEach(zine => {
-components/TheWard.tsx:  }, [userZines]);
-components/DarkroomView.tsx:  const { user, profile, hasApiKey, openKeySelector } = useUser();
-components/DarkroomView.tsx:      if (user && !user.isAnonymous) cloudData = await fetchPocketItems(user.uid) || [];
-components/DarkroomView.tsx:  useEffect(() => { loadShards(); }, [user]);
-components/DarkroomView.tsx:        await addToPocket(user?.uid || 'ghost', 'image', {
-components/DarkroomView.tsx:        await addToPocket(user?.uid || 'ghost', 'image', {
-components/DarkroomView.tsx:        await addToPocket(user?.uid || 'ghost', 'image', {
-components/DarkroomView.tsx:        await addToPocket(user?.uid || 'ghost', 'image', {
-components/ArchiveCloudNebula.tsx:  const { user, profile, toggleZineStar } = useUser();
-components/ArchiveCloudNebula.tsx:      if (user && !user.isAnonymous) {
-components/ArchiveCloudNebula.tsx:        unsubUser = subscribeToUserZines(user.uid, (data) => {
-components/ArchiveCloudNebula.tsx:          const connections = await fetchFollowing(user.uid);
-components/ArchiveCloudNebula.tsx:  }, [user]);
-components/ArchiveCloudNebula.tsx:                isCloud={zine.userId && !zine.userId.startsWith('ghost')} 
-components/ArchiveCloudNebula.tsx:            userId={viewingProfileId} 
-components/ConnectionsManager.tsx:  userId: string;
-components/ConnectionsManager.tsx:const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId, onActionComplete }) => {
-components/ConnectionsManager.tsx:        const p = await getUserProfile(userId);
-components/ConnectionsManager.tsx:          const status = await checkConnectionStatus(userId);
-components/ConnectionsManager.tsx:  }, [userId, type]);
-components/ConnectionsManager.tsx:      await acceptFriendRequest(requestId, userId);
-components/ConnectionsManager.tsx:      await removeFriend(userId);
-components/ConnectionsManager.tsx:      await unfollowUser(userId);
-components/ConnectionsManager.tsx:      await sendFriendRequest(userId);
-components/ConnectionsManager.tsx:      await followUser(userId);
-components/ConnectionsManager.tsx:  const { user } = useUser();
-components/ConnectionsManager.tsx:    if (!user) return;
-components/ConnectionsManager.tsx:        fetchFriends(user.uid),
-components/ConnectionsManager.tsx:        fetchFriendRequests(user.uid),
-components/ConnectionsManager.tsx:        fetchFollowers(user.uid),
-components/ConnectionsManager.tsx:        fetchFollowing(user.uid)
-components/ConnectionsManager.tsx:  }, [user]);
-components/ConnectionsManager.tsx:          // Filter out current user
-components/ConnectionsManager.tsx:          setSearchResults(results.filter(r => r.uid !== user?.uid));
-components/ConnectionsManager.tsx:  }, [searchTerm, user]);
-components/ConnectionsManager.tsx:                friends.map(f => <ConnectionItem key={f.id} userId={f.friendId} type="friend" onActionComplete={loadData} />)
-components/ConnectionsManager.tsx:                requests.map(r => <ConnectionItem key={r.id} userId={r.senderId} type="request" requestId={r.id} onActionComplete={loadData} />)
-components/ConnectionsManager.tsx:                followers.map(f => <ConnectionItem key={f.id} userId={f.followerId} type="follower" onActionComplete={loadData} />)
-components/ConnectionsManager.tsx:                following.map(f => <ConnectionItem key={f.id} userId={f.followingId} type="following" onActionComplete={loadData} />)
-components/ConnectionsManager.tsx:                    searchResults.map(r => <ConnectionItem key={r.uid} userId={r.uid} type="search" onActionComplete={loadData} />)
-components/ConnectionsManager.tsx:                    <EmptyState message="No users found matching that handle." />
-components/ExportChamber.tsx:                            <p className="font-serif italic text-2xl text-stone-500">@{metadata.userHandle}</p>
-components/SanctuaryView.tsx:  { id: 'projection_diffuser', label: 'Projection Diffuser', icon: <ShieldAlert size={14} />, desc: 'Stop self-blame loops.' },
-components/SanctuaryView.tsx:  const { user, profile } = useUser();
-components/TreatmentPanel.tsx:  onSaveNew: (treatment: Omit<Treatment, 'id' | 'createdAt' | 'userId'>) => void;
-components/LegalPage.tsx:          Mimi uses a "Sovereign Memory" protocol. Anonymous users exist only in shadow-memory. Anchored users (Swans) sync to the Cloud Registry.
-components/Pocket.tsx:        await updatePocketItem(item.userId, item.id, updates);
-components/Pocket.tsx:            await updatePocketItem(item.userId, item.id, updates);
-components/Pocket.tsx:                                                    await addToPocket(item.userId, 'image', {
-components/Pocket.tsx:  const { user, profile, systemStatus } = useUser();
-components/Pocket.tsx:      if (user && !user.isAnonymous) cloudData = await fetchPocketItems(user.uid) || []; 
-components/Pocket.tsx:  }, [user]);
-components/Pocket.tsx:      await createMoodboard(user?.uid || 'ghost', newFolderName, Array.from(selectedIds));
-components/Pocket.tsx:        const id = await addToPocket(user?.uid || 'ghost', type, newItem);
-components/Pocket.tsx:        const fullItem: PocketItem = { id, userId: user?.uid || 'ghost', type, savedAt: Date.now(), content: newItem };
-components/Pocket.tsx:                        <div className="w-full h-full pointer-events-auto" onClick={(e) => { e.stopPropagation(); if(item.content.analysis && onSelectZine) onSelectZine({ id: item.content.zineId, title: item.content.title, content: item.content.analysis, tone: 'default', timestamp: item.timestamp, userHandle: 'Ghost' } as ZineMetadata); }}>
-components/Pocket.tsx:                                             userId: user?.uid || 'ghost',
-components/Pocket.tsx:                                             userHandle: profile?.handle || 'Ghost',
-components/TailorView.tsx:  const { profile, updateProfile, personas, activePersonaId, switchPersona, updatePersona, user, enabledAlgos, toggleAlgo } = useUser();
-components/TailorView.tsx:            if (user?.uid) {
-components/TailorView.tsx:                    const path = `shards/${user.uid}/${Date.now()}_${Math.random().toString(36).substr(2, 9)}.jpg`;
-components/TailorView.tsx:        if (user?.uid) {
-components/TailorView.tsx:                const path = `logos/${user.uid}/${Date.now()}_logo.jpg`;
-components/CliqueView.tsx:  const { user, profile } = useUser();
-components/CliqueView.tsx:        if (user && !user.isAnonymous) {
-components/CliqueView.tsx:          const userZines = await fetchUserZines(user.uid);
-components/CliqueView.tsx:          setMyPublicZines(userZines.filter(z => z.isPublic) || []);
-components/CliqueView.tsx:  }, [user]);
-components/CliqueView.tsx:               {user?.isAnonymous ? (
-components/PublicProfileModal.tsx:  userId: string;
-components/PublicProfileModal.tsx:export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, onClose, onSelectZine }) => {
-components/PublicProfileModal.tsx:  const { user } = useUser();
-components/PublicProfileModal.tsx:        // Handle mock users
-components/PublicProfileModal.tsx:        if (['ghost', 'user1', 'user2'].includes(userId)) {
-components/PublicProfileModal.tsx:            'user1': {
-components/PublicProfileModal.tsx:              uid: 'user1',
-components/PublicProfileModal.tsx:            'user2': {
-components/PublicProfileModal.tsx:              uid: 'user2',
-components/PublicProfileModal.tsx:          setProfile(mockProfiles[userId]);
-components/PublicProfileModal.tsx:          if (user) {
-components/PublicProfileModal.tsx:            const connStatus = await checkConnectionStatus(userId);
-components/PublicProfileModal.tsx:        const p = await getUserProfile(userId);
-components/PublicProfileModal.tsx:        const z = await fetchUserZines(userId);
-components/PublicProfileModal.tsx:        const followers = await fetchFollowers(userId);
-components/PublicProfileModal.tsx:        const following = await fetchFollowing(userId);
-components/PublicProfileModal.tsx:        if (user) {
-components/PublicProfileModal.tsx:          setIsFollowing(followers.some(f => f.followerId === user.uid));
-components/PublicProfileModal.tsx:          const connStatus = await checkConnectionStatus(userId);
-components/PublicProfileModal.tsx:  }, [userId, user]);
-components/PublicProfileModal.tsx:    if (!user) return;
-components/PublicProfileModal.tsx:        await unfollowUser(userId);
-components/PublicProfileModal.tsx:        await followUser(userId);
-components/PublicProfileModal.tsx:    if (!user) return;
-components/PublicProfileModal.tsx:        await sendFriendRequest(userId);
-components/PublicProfileModal.tsx:        // but it's usually `${user.uid}_${userId}`
-components/PublicProfileModal.tsx:        setRequestId(`${user.uid}_${userId}`);
-components/PublicProfileModal.tsx:        await acceptFriendRequest(requestId, userId);
-components/PublicProfileModal.tsx:        await removeFriend(userId);
-components/PublicProfileModal.tsx:              {user && user.uid !== userId && (
-components/CliqueProtocol.tsx:  const { profile, updateProfile, user } = useUser();
-components/CliqueProtocol.tsx:    if (!user?.uid) return "O2-VOID-000";
-components/CliqueProtocol.tsx:    return `O2-${user.uid.slice(0, 4).toUpperCase()}-${Math.floor(Math.random() * 999)}`;
-components/CliqueProtocol.tsx:  }, [user]);
-components/EditorialSpread.tsx:  const { user, profile } = useUser();
-components/EditorialSpread.tsx:      await addToPocket(user?.uid || 'ghost', 'script', {
-components/AnalysisDisplay.tsx:  const { user, profile, activePersona, toggleZineStar } = useUser();
-components/AnalysisDisplay.tsx:          await addToPocket(user?.uid || 'ghost', 'video', { videoUrl: res, title: `${metadata.title} // Motion`, timestamp: Date.now() });
-components/AnalysisDisplay.tsx:      await addToPocket(user?.uid || 'ghost', 'zine_card', { 
-components/AnalysisDisplay.tsx:              userId: user?.uid || 'ghost',
-components/AnalysisDisplay.tsx:              userHandle: profile?.handle || 'Ghost',
-components/AnalysisDisplay.tsx:                          <span className="font-serif italic text-3xl">@{metadata.userHandle}</span>
-components/AnalysisDisplay.tsx:                                          <span className="font-sans text-[8px] uppercase tracking-widest font-black text-stone-500">@{t.userHandle}</span>
-components/UserProfileView.tsx:const MaskCard: React.FC<{ persona: Persona; isActive: boolean; onSelect: () => void; onDelete: () => void; onUpdate: (p: Persona) => void; userUid: string }> = ({ persona, isActive, onSelect, onDelete, onUpdate, userUid }) => {
-components/UserProfileView.tsx:                const url = await uploadBlob(file, `avatars/${userUid}_mask_${persona.id}_${Date.now()}`);
-components/UserProfileView.tsx:  const { user, profile, updateProfile, logout, personas, activePersonaId, switchPersona, createPersona, updatePersona, deletePersona, linkAccount, verifyIdentity, featureFlags, toggleFeature, keyRing, addKeyToRing, removeKeyFromRing, openKeySelector, signInWithGooglePopup } = useUser();
-components/UserProfileView.tsx:      const prompt = `Generate a short, poetic, and evocative description for a user profile based on their taste profile: ${JSON.stringify(profile.tasteProfile)}. The description should be in the style of a creative director or curator.`;
-components/UserProfileView.tsx:      const available = await isHandleAvailable(handle, user?.uid || '');
-components/UserProfileView.tsx:  }, [handle, user?.uid, profile?.handle]);
-components/UserProfileView.tsx:      if (user?.isAnonymous) {
-components/UserProfileView.tsx:      if (!user) return;
-components/UserProfileView.tsx:          const zines = await fetchUserZines(user.uid);
-components/UserProfileView.tsx:          const pocket = await fetchPocketItems(user.uid);
-components/UserProfileView.tsx:                                const url = await uploadBlob(file, `avatars/${user?.uid}_${Date.now()}`);
-components/UserProfileView.tsx:                                id="userHandle" 
-components/UserProfileView.tsx:                                name="userHandle" 
-components/UserProfileView.tsx:                            userUid={user?.uid || 'ghost'}
-components/ArchivalView.tsx:    const { user, profile } = useUser();
-components/ArchivalView.tsx:        if (mode === 'authored' && user?.uid) {
-components/ArchivalView.tsx:            fetchUserZines(user.uid).then(zines => {
-components/ArchivalView.tsx:    }, [mode, user]);
-components/ArchivalView.tsx:                await addToPocket(user?.uid || 'ghost', type, {
-components/ArchivalView.tsx:        if (!user?.uid) return;
-components/ArchivalView.tsx:            await addToPocket(user.uid, 'image', {
-components/ArchivalView.tsx:        if (!urlInput.trim() || !user?.uid) return;
-components/ArchivalView.tsx:            await addToPocket(user.uid, 'image', {
-components/ArchetypeIndex.tsx:                        src={zine.userAvatar || `https://ui-avatars.com/api/?name=${zine.userHandle}`}
-components/ArchetypeIndex.tsx:                        alt={zine.userHandle}
-components/ArchetypeIndex.tsx:                        {zine.userHandle}
-components/InputStudio.tsx:  const { systemStatus, user: currentUser } = useUser();
-components/InputStudio.tsx:    console.log('InputStudio: typeof user', typeof user);
-components/InputStudio.tsx:    console.log('InputStudio: user is not defined');
-components/LegalOverlay.tsx:        body: "Anonymous users exist only in shadow-memory (localStorage). Once you purge your cache, the machine forgets you. This is true digital death."
-components/ZineLayoutEditor.tsx:  const { profile, user } = useUser();
-components/ZineLayoutEditor.tsx:        if (!user) return;
-components/ZineLayoutEditor.tsx:            const items = await fetchPocketItems(user.uid);
-components/ZineLayoutEditor.tsx:  }, [user]);
-components/UseCasesCarousel.tsx:    description: "Businesses utilize Dossier stacks to architect user personas and future-state product lines, translating debris into defensible strategic vision.",
-components/PatronMintView.tsx:  const { user } = useUser();
-components/PatronMintView.tsx:    // Here we let the user perform the ritual of entering it.
-components/ZineCard.tsx:  const { profile, user } = useUser();
-components/ZineCard.tsx:    if (!user || user.uid !== zine.userId) return;
-components/ZineCard.tsx:    if (isArchived || !user) return;
-components/ZineCard.tsx:      await addToPocket(user.uid, 'zine_card', { 
-components/ZineCard.tsx:            {user && user.uid === zine.userId && (
-components/ZineCard.tsx:                       <span className="font-mono text-[8px] uppercase tracking-widest text-white/60">@{zine.userHandle}</span>
-components/ZineCard.tsx:                    @{zine.userHandle || 'Ghost'}
-components/CliqueRadar.tsx:                        <span className="font-sans text-[8px] uppercase tracking-widest text-stone-500 font-black">@{zine.userHandle}</span>
-components/Visualizer.tsx:  const { user, profile, activePersona } = useUser();
-components/Visualizer.tsx:      await addToPocket(user?.uid || 'ghost', 'text', {
-components/Visualizer.tsx:    await addToPocket(user?.uid || 'ghost', 'image', { 
-components/DossierView.tsx:  const { user, profile } = useUser();
-components/DossierView.tsx:      const data = await fetchDossierFolders(user?.uid || 'ghost');
-components/DossierView.tsx:  useEffect(() => { loadFolders(); }, [user]);
-components/DossierView.tsx:          const results = snap.docs.map(d => d.data() as UserProfile).filter(p => p.uid !== user?.uid);
-components/DossierView.tsx:      await createDossierFolder(user?.uid || 'ghost', newFolderName);
-components/DossierView.tsx:      await createDossierArtifactFromImage(user?.uid || 'ghost', activeFolder.id, file.name, base64);
-components/DossierView.tsx:      await createDossierArtifactFromText(user?.uid || 'ghost', activeFolder.id, title, noteContent);
-components/DossierView.tsx:      const items = await fetchPocketItems(user?.uid || 'ghost');
-components/DossierView.tsx:        await createDossierArtifactFromImage(user?.uid || 'ghost', activeFolder.id, item.content.prompt || item.content.title || 'Imported Shard', item.content.imageUrl);
-components/DossierView.tsx:        await createDossierArtifactFromText(user?.uid || 'ghost', activeFolder.id, item.content.prompt || 'Sonic Shard', `Audio Source: ${item.content.audioUrl}`);
-components/ThePress.tsx:       bodyText: "A Mimi Zine user—working across creative strategy, design, and digital publishing—entered the platform with a familiar problem: too much material, no unifying structure. Using Mimi, the workflow unfolded in three phases: Selection, Synthesis, and Integration."
-components/ThePress.tsx:  const { user } = useUser();
-components/ThePress.tsx:    if (user && filter === 'My Editions') {
-components/ThePress.tsx:      fetchUserZines(user.uid).then(zines => {
-components/ThePress.tsx:  }, [user, filter]);
-components/ThePress.tsx:    if (!user) return;
-components/Diagnostics.tsx:    const user = auth.currentUser;
-components/Diagnostics.tsx:      status: user ? 'success' : 'failure', 
-components/Diagnostics.tsx:      message: user ? `Anchored: ${user.uid.slice(0, 6)}...` : 'No active session found.' 
-components/MesopicLens.tsx:You are currently seeing through the user's camera in real-time.
-components/MesopicLens.tsx:Encourage the user to find better light or angles.
-components/MesopicLens.tsx:  const { user, profile } = useUser();
-components/MesopicLens.tsx:      const imageId = await addToPocket(user?.uid || 'ghost', 'image', { 
-components/MesopicLens.tsx:        await addToPocket(user?.uid || 'ghost', 'analysis_report', {
-components/ObsidianMirror.tsx:  const { user, profile } = useUser();
-components/ObsidianMirror.tsx:      const targetUid = user?.uid || (profile?.uid) || 'ghost_temporary';
-components/ZineComments.tsx:  userId: string;
-components/ZineComments.tsx:  userHandle: string;
-components/ZineComments.tsx:  const { user, profile } = useUser();
-components/ZineComments.tsx:    if (!newComment.trim() || !user) return;
-components/ZineComments.tsx:        userId: user.uid,
-components/ZineComments.tsx:        userHandle: profile?.handle || 'Anonymous',
-components/ZineComments.tsx:                      @{comment.userHandle}
-components/ZineComments.tsx:        {user ? (
+346: <div className="min-h-full flex flex-col md:flex-row bg-archival-beige text-archival-text font-sans"style={{ backgroundImage: 'radial-gradient(#D1CFCA 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }}>
+349: <aside className="w-full md:w-64 border-r border-archival-border flex flex-col h-full sticky top-0 bg-archival-beige/80 backdrop-blur-sm z-10">
+350: <div className="p-8 border-b border-archival-border flex flex-col gap-4">
+351: <div className="flex items-center gap-3">
+352: <div className="w-6 h-8 border border-archival-text rounded-none flex items-end justify-center pb-1 relative overflow-hidden">
+353: <div className="w-full h-px bg-archival-text absolute bottom-1 opacity-30"></div>
+354: <div className="w-1 h-1 bg-archival-text rounded-none mb-1"></div>
+356: <h1 className="font-bodoni italic text-xl">The Thimble</h1>
+358: <div className="text-[9px] uppercase tracking-[0.2em] font-medium opacity-60">System Active: {new Date().toLocaleDateString()}</div>
+361: <nav className="flex-grow p-4 space-y-2">
+364: className={`w-full flex items-center gap-3 px-4 py-3 border text-[10px] uppercase tracking-widest font-semibold transition-all ${activeTab === 'sourcing' ? 'bg-white border-archival-border opacity-100' : 'bg-transparent border-transparent hover:border-archival-border opacity-60 hover:opacity-100 hover:bg-white/50'}`}
+370: className={`w-full flex items-center gap-3 px-4 py-3 border text-[10px] uppercase tracking-widest font-semibold transition-all ${activeTab === 'boards' ? 'bg-white border-archival-border opacity-100' : 'bg-transparent border-transparent hover:border-archival-border opacity-60 hover:opacity-100 hover:bg-white/50'}`}
+376: className={`w-full flex items-center gap-3 px-4 py-3 border text-[10px] uppercase tracking-widest font-semibold transition-all ${activeTab === 'audit' ? 'bg-white border-archival-border opacity-100' : 'bg-transparent border-transparent hover:border-archival-border opacity-60 hover:opacity-100 hover:bg-white/50'}`}
+383: <div className="p-4 border-t border-archival-border">
+384: <div className="text-[9px] uppercase tracking-widest opacity-40 mb-3">Your Boards</div>
+385: <div className="space-y-1 max-h-48 overflow-y-auto custom-scrollbar">
+387: <div key={b.id} className="flex items-center justify-between group">
+390: className={`flex-grow text-left px-3 py-2 text-[10px] uppercase tracking-widest truncate transition-colors ${selectedBoard?.id === b.id ? 'bg-white border border-archival-border font-bold' : 'hover:bg-white/50 opacity-70 hover:opacity-100'}`}
+394: <button onClick={() => handleDeleteBoard(b.id)} className="p-2 opacity-0 group-hover:opacity-100 text-archival-accent hover:text-red-800 transition-opacity">
+400: <div className="mt-4 flex gap-2">
+406: className="flex-grow bg-white/50 border border-archival-border px-3 py-2 text-[10px] uppercase tracking-widest focus:ring-0 focus:border-archival-text outline-none"
+408: <button onClick={handleCreateBoard} className="bg-archival-text text-archival-beige px-3 py-2 hover:bg-black transition-colors">
+415: <div className="p-8 border-t border-archival-border">
+416: <div className="text-[9px] uppercase tracking-widest opacity-40">
+424: <main className="flex-grow p-6 md:p-12 overflow-x-hidden relative">
+425: <header className="mb-12 flex justify-between items-end border-b border-archival-border pb-8">
+427: <h2 className="font-bodoni italic text-4xl md:text-5xl leading-tight">
+434: <div className="text-right hidden md:block">
+435: <div className="text-[10px] tracking-widest uppercase font-semibold">Operational Status</div>
+436: <div className="text-[10px] tracking-widest uppercase text-green-700">Nominal // Ready</div>
+441: <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+442: <section className="lg:col-span-5 space-y-10">
+443: <div className="space-y-6">
+444: <div className="flex justify-between items-center">
+445: <h3 className="font-bodoni italic text-2xl">Visual Context</h3>
+446: <span className="text-[9px] uppercase tracking-tighter opacity-50 font-sans">Required Input</span>
+449: <div className="space-y-2">
+450: <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Upload Images</label>
+456: className={`border-2 border-dashed border-archival-border p-8 text-center transition-colors cursor-pointer group ${isDragging ? 'bg-white/60 border-archival-text' : 'bg-white/30 hover:bg-white/50'}`}
+458: <Upload className="mx-auto text-archival-accent mb-2 group-hover:scale-110 transition-transform"size={24} />
+459: <p className="text-[11px] font-sans opacity-60">Tap to select or drop files here</p>
+460: <input type="file"ref={fileInputRef} onChange={handleFileChange} multiple accept="image/*"className="hidden"/>
+464: <div className="space-y-2">
+465: <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Paste a link</label>
+466: <div className="flex gap-2">
+468: className="flex-grow bg-white/50 border border-archival-border px-4 py-2 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans"
+475: <button onClick={handleAddLink} className="bg-archival-text text-archival-beige px-6 py-2 text-[10px] uppercase tracking-widest hover:bg-black transition-colors">Add</button>
+480: <div className="flex flex-wrap gap-2 mt-4">
+482: <div key={idx} className="relative group w-16 h-16 border border-archival-border overflow-hidden bg-white">
+484: <img src={`data:${file.mimeType};base64,${file.data}`} alt="upload"className="w-full h-full object-cover grayscale opacity-80"/>
+486: <div className="w-full h-full flex items-center justify-center bg-archival-beige/50">
+487: <LinkIcon size={16} className="text-archival-accent"/>
+490: <button onClick={(e) => { e.stopPropagation(); removeMedia(idx); }} className="absolute top-1 right-1 bg-white/90 p-0.5 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
+491: <X size={12} className="text-archival-text"/>
+499: <div className="space-y-6 pt-6 border-t border-archival-border">
+500: <div className="space-y-2">
+501: <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Sourcing Objective</label>
+503: className="w-full bg-white/50 border border-archival-border px-4 py-2 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans italic"
+510: <div className="space-y-2">
+511: <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Fiscal Constraints</label>
+513: className="w-full bg-white/50 border border-archival-border px-4 py-2 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans"
+523: className="w-full py-4 bg-archival-text text-archival-beige text-[11px] uppercase tracking-[0.3em] font-bold hover:bg-black transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+525: {isProcuring ? <Loader2 className="animate-spin"size={16} /> : <Search size={16} />}
+531: <section className="lg:col-span-7 space-y-6">
+532: <div className="flex justify-between items-center">
+533: <h3 className="font-bodoni italic text-2xl">Procurement Targets</h3>
+534: <div className="flex items-center gap-4">
+535: <span className="text-[9px] uppercase tracking-widest font-sans px-2 py-1 border border-archival-border bg-white">
+538: <div className="flex gap-2">
+539: <button className="p-1 hover:bg-white transition-colors border border-transparent hover:border-archival-border"><Filter size={16} /></button>
+540: <button className="p-1 hover:bg-white transition-colors border border-transparent hover:border-archival-border"><SortAsc size={16} /></button>
+546: <div className="border border-archival-border bg-white/40 overflow-hidden">
+547: <table className="w-full text-left border-collapse">
+549: <tr className="border-b border-archival-border text-[9px] uppercase tracking-widest font-bold bg-white/50">
+550: <th className="px-4 py-3">Archetype</th>
+551: <th className="px-4 py-3">Query Boolean</th>
+552: <th className="px-4 py-3">Designers</th>
+553: <th className="px-4 py-3 text-right">Action</th>
+556: <tbody className="divide-y divide-archival-border/50 text-xs">
+559: <tr className="hover:bg-white/60 transition-colors group cursor-pointer" onClick={() => setExpandedTargetIndex(expandedTargetIndex === idx ? null : idx)}>
+560: <td className="px-4 py-4">
+561: <div className="font-bodoni italic text-sm">{target.targetArchetype}</div>
+562: <div className="text-[9px] uppercase opacity-40 font-sans mt-0.5 max-w-xs truncate"title={target.rationale}>{target.rationale}</div>
+564: <td className="px-4 py-4 font-mono text-[10px] opacity-80">
+565: <div className="flex items-center gap-2">
+566: <span className="truncate max-w-[150px]">{target.keywordBoolean}</span>
+567: <button onClick={(e) => { e.stopPropagation(); copyToClipboard(target.keywordBoolean, idx); }} className="text-archival-accent hover:text-archival-text">
+572: <td className="px-4 py-4 text-[10px] uppercase opacity-70">
+575: <td className="px-4 py-4 text-right">
+576: <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+577: <button onClick={(e) => { e.stopPropagation(); saveToPocket(target); }} className="p-1.5 border border-archival-border bg-white hover:bg-archival-text hover:text-white transition-colors"title="Save to Pocket">
+584: <tr className="bg-white/30 border-t border-archival-border/50">
+585: <td colSpan={4} className="px-4 py-6">
+586: <div className="space-y-4">
+588: <h4 className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70 mb-2">Search Platforms</h4>
+589: <div className="flex flex-wrap gap-2">
+594: className="px-3 py-1.5 border border-archival-border bg-white hover:bg-archival-text hover:text-white transition-colors text-[10px] uppercase tracking-wider flex items-center gap-2"
+602: <h4 className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70 mb-2">Add to Board</h4>
+603: <div className="flex items-center gap-2">
+605: className="bg-white border border-archival-border px-3 py-1.5 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans"
+641: <div className="p-12 border border-archival-border bg-archival-beige/40 flex flex-col items-center justify-center text-center">
+642: <div className="text-[10px] uppercase tracking-widest font-semibold mb-3 font-sans">System Intelligence Note</div>
+643: <p className="font-bodoni italic text-sm leading-relaxed opacity-80 max-w-md">
+654: <div className="space-y-12">
+655: <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
+656: <div className="md:col-span-2 flex flex-col">
+657: <div className="flex justify-between items-baseline mb-4">
+658: <h2 className="font-bodoni italic text-2xl">Acquisition Intake</h2>
+659: <span className="text-[10px] uppercase tracking-widest opacity-60">Fig. 01 // Input Terminal</span>
+661: <div className="flex-grow border border-archival-border p-6 bg-white/20 flex flex-col gap-4">
+662: <div className="grid grid-cols-2 gap-4">
+668: className="bg-white/50 border border-archival-border px-4 py-2 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans"
+675: className="bg-white/50 border border-archival-border px-4 py-2 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans"
+678: <div className="flex gap-2">
+684: className="flex-grow bg-white/50 border border-archival-border px-4 py-2 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans"
+686: <button onClick={handleAddItem} className="bg-archival-text text-archival-beige px-6 py-2 text-[10px] uppercase tracking-widest hover:bg-black transition-colors">Add</button>
+691: <div className="flex flex-col">
+692: <div className="flex justify-between items-baseline mb-4">
+693: <h2 className="font-bodoni italic text-2xl">Curator Stats</h2>
+695: <div className="border border-archival-border p-6 flex-grow space-y-6 bg-white/20">
+696: <div className="space-y-1">
+697: <div className="flex justify-between text-[9px] uppercase tracking-widest">
+701: <div className="h-px bg-archival-border w-full">
+702: <div className="h-full bg-archival-text"style={{ width: `${Math.min(boardItems.length * 10, 100)}%` }}></div>
+706: <div className="pt-6 border-t border-archival-border space-y-3">
+710: className="w-full py-3 border border-archival-text text-archival-text text-[10px] uppercase tracking-widest hover:bg-archival-text hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+712: {isAuditingBoard ? <Loader2 className="animate-spin"size={14} /> : <Scale size={14} />}
+736: className="w-full py-3 border border-archival-border text-archival-text text-[10px] uppercase tracking-widest hover:bg-white transition-colors flex items-center justify-center gap-2"
+743: <div className="bg-white p-4 border border-archival-border rotate-1 mt-4">
+744: <span className="text-[8px] uppercase tracking-widest opacity-60 block mb-2">Audit_Note</span>
+745: <p className="font-bodoni italic text-sm leading-snug">"{boardAuditResult.verdict}"</p>
+753: <div className="flex justify-between items-end border-b border-archival-border pb-4 mb-8">
+754: <h2 className="font-bodoni italic text-3xl">Pending Acquisitions</h2>
+755: <div className="flex gap-4 items-center">
+756: <span className="text-[10px] uppercase tracking-widest opacity-60">Log_Ref_Archive</span>
+757: <div className="flex gap-1">
+758: <div className="w-3 h-3 border border-archival-text"></div>
+759: <div className="w-3 h-3 border border-archival-text bg-archival-text"></div>
+764: <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+766: <article key={item.id} className="space-y-4 group">
+767: <div className="aspect-[3/4] border border-archival-border overflow-hidden bg-white relative flex flex-col">
+768: <div className="absolute top-4 left-4 bg-white/90 px-2 py-1 text-[10px] uppercase tracking-widest border border-archival-border z-10">
+771: <button onClick={() => handleDeleteItem(item.id)} className="absolute top-4 right-4 bg-white/90 p-1.5 border border-archival-border z-10 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-800">
+775: <div className="flex-grow flex items-center justify-center p-8 bg-archival-beige/30">
+776: <div className="text-center space-y-4">
+777: <h3 className="font-bodoni text-2xl italic tracking-tight">{item.title}</h3>
+778: <div className="text-sm font-mono opacity-60">{item.price}</div>
+782: <div className="p-4 border-t border-archival-border bg-white flex justify-between items-center">
+783: <a href={item.url} target="_blank"rel="noopener noreferrer"className="text-[10px] uppercase tracking-widest hover:underline flex items-center gap-1">
+791: <div className="col-span-3 py-24 text-center border border-dashed border-archival-border bg-white/20">
+792: <p className="font-bodoni italic text-xl opacity-60">No artifacts acquired yet.</p>
+799: <div className="h-full flex flex-col items-center justify-center text-archival-text space-y-6 max-w-md mx-auto text-center py-24">
+800: <div className="w-24 h-24 rounded-none border border-archival-border flex items-center justify-center bg-white/30">
+801: <FolderPlus className="w-10 h-10 opacity-50"/>
+803: <div className="space-y-2">
+804: <h3 className="font-bodoni italic text-2xl">Select a Board</h3>
+805: <p className="text-sm leading-relaxed opacity-60">Choose a sourcing board from the sidebar to view its artifacts and run a comprehensive fiscal audit.</p>
+812: <div className="max-w-3xl mx-auto space-y-12">
+813: <div className="space-y-6">
+814: <div className="flex justify-between items-center border-b border-archival-border pb-4">
+815: <h3 className="font-bodoni italic text-2xl">Fiscal Audit Input</h3>
+816: <span className="text-[9px] uppercase tracking-tighter opacity-50 font-sans">Comparative Analysis</span>
+819: <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+820: <div className="space-y-2">
+821: <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Artifact 01</label>
+823: className="w-full h-32 bg-white/50 border border-archival-border p-4 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans resize-none"
+839: className="text-[10px] font-sans w-full"
+841: {item1Image && <img src={item1Image} alt="Item 1" className="w-full h-32 object-cover border border-archival-border" />}
+843: <div className="space-y-2">
+844: <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Artifact 02</label>
+846: className="w-full h-32 bg-white/50 border border-archival-border p-4 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans resize-none"
+862: className="text-[10px] font-sans w-full"
+864: {item2Image && <img src={item2Image} alt="Item 2" className="w-full h-32 object-cover border border-archival-border" />}
+868: <div className="space-y-2">
+869: <label className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70">Fiscal Constraint</label>
+871: className="w-full bg-white/50 border border-archival-border px-4 py-3 text-xs focus:ring-0 focus:border-archival-text outline-none font-sans"
+882: className="w-full py-4 bg-archival-text text-archival-beige text-[11px] uppercase tracking-[0.3em] font-bold hover:bg-black transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+884: {isAuditing ? <Loader2 className="animate-spin"size={16} /> : <Scale size={16} />}
+893: className="border border-archival-border bg-white/40 p-8 space-y-8"
+895: <div className="text-center space-y-2 pb-6 border-b border-archival-border">
+896: <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono">Definitive Recommendation</div>
+897: <h3 className="font-bodoni italic text-3xl">{auditResult.verdict}</h3>
+900: <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+901: <div className="space-y-3">
+902: <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono border-b border-archival-border pb-2">Item 1 Analysis</div>
+903: <p className="text-sm leading-relaxed opacity-90">{auditResult.item1Analysis}</p>
+905: <div className="space-y-3">
+906: <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono border-b border-archival-border pb-2">Item 2 Analysis</div>
+907: <p className="text-sm leading-relaxed opacity-90">{auditResult.item2Analysis}</p>
+911: <div className="space-y-3 bg-white/60 p-6 border border-archival-border">
+912: <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono">Rationale</div>
+913: <p className="text-sm leading-relaxed opacity-90">{auditResult.rationale}</p>
+917: <div className="space-y-3 bg-white/60 p-6 border border-archival-border">
+918: <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono">Search Directives</div>
+919: <ul className="list-disc pl-4 space-y-2">
+921: <li key={i} className="text-sm leading-relaxed opacity-90">{directive}</li>
+928: <div className="space-y-3 bg-white/60 p-6 border border-archival-border">
+929: <div className="text-[10px] uppercase tracking-widest opacity-60 font-mono">Search Booleans</div>
+930: <div className="flex flex-wrap gap-2">
+932: <div key={i} className="flex items-center gap-2 bg-archival-border/20 px-3 py-1.5 border border-archival-border">
+933: <span className="font-mono text-[11px] font-medium">{boolean}</span>
+936: className="opacity-50 hover:opacity-100 transition-opacity"
+938: {copiedIndex === i + 1000 ? <Check size={12} className="text-green-600" /> : <Copy size={12} />}
+946: <div className="pt-4 border-t border-archival-border flex justify-end">
+949: className="text-[10px] uppercase tracking-widest font-mono opacity-60 hover:opacity-100 transition-colors flex items-center gap-2"

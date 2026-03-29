@@ -1,7 +1,6 @@
 import { Part, Type, ThinkingLevel } from "@google/genai";
 import { ToneTag, ZineGenerationOptions, UserProfile } from "../types";
 import { withResilience } from "./geminiClient";
-import { generateTagsFromMedia } from "./geminiService";
 import { modulateSemioticContext } from "./semioticModulator";
 import { triggerAlert } from "./errorHandling";
 import { fetchUserZines, fetchLatestLineageEntry } from "./firebaseUtils";
@@ -38,6 +37,7 @@ export const createZine = async (text: string, media: any[], tone: ToneTag, prof
     try {
         // Populate tags if missing
         if (zineOptions && (!zineOptions.tags || zineOptions.tags.length === 0)) {
+            const { generateTagsFromMedia } = await import("./geminiService");
             const generatedTags = await generateTagsFromMedia(text, media);
             zineOptions.tags = generatedTags;
         }
@@ -78,7 +78,7 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
             } else if (useDeep) {
                 model = 'gemini-3.1-pro-preview';
             } else if (useMaps) {
-                model = 'gemini-2.5-flash';
+                model = 'gemini-3-flash-preview';
             }
 
             const profileToUse = opts.bypassTailor ? null : profile;
@@ -248,95 +248,105 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
             parts.push({ text: textPrompt });
 
             const tools: any[] = [];
-            if (useSearch) tools.push({ googleSearch: {} });
-            if (useMaps) tools.push({ googleMaps: {} });
+            if (useMaps) {
+                tools.push({ googleMaps: {} });
+            } else if (useSearch) {
+                tools.push({ googleSearch: {} });
+            }
+
+            const config: any = {
+                temperature: profileToUse?.tailorDraft?.generationTemperature ?? 0.8,
+                thinkingConfig: useDeep ? { thinkingLevel: ThinkingLevel.HIGH } : undefined,
+                tools: tools.length > 0 ? tools : undefined,
+            };
+
+            if (!useMaps) {
+                config.responseMimeType = "application/json";
+                config.responseSchema = {
+                    type: Type.OBJECT,
+                    properties: {
+                        title: { type: Type.STRING },
+                        headlines: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        vocal_summary_blurb: { type: Type.STRING },
+                        header_image_prompt: { type: Type.STRING },
+                        oracular_mirror: { type: Type.STRING },
+                        strategic_hypothesis: { type: Type.STRING },
+                        resonance_score: { type: Type.STRING },
+                        semiotic_signals: { 
+                            type: Type.ARRAY, 
+                            items: { 
+                                type: Type.OBJECT,
+                                properties: {
+                                    motif: { type: Type.STRING },
+                                    context: { type: Type.STRING },
+                                    visual_directive: { type: Type.STRING },
+                                    type: { type: Type.STRING },
+                                    link: { type: Type.STRING },
+                                    semantic_trigger: { type: Type.STRING },
+                                    targeting_rationale: { type: Type.STRING }
+                                }
+                            } 
+                        },
+                        aesthetic_touchpoints: { 
+                            type: Type.ARRAY, 
+                            items: { 
+                                type: Type.OBJECT,
+                                properties: {
+                                    motif: { type: Type.STRING },
+                                    type: { type: Type.STRING }
+                                }
+                            } 
+                        },
+                        celestial_calibration: { type: Type.STRING },
+                        visual_plates: { type: Type.ARRAY, items: { type: Type.STRING } },
+                        roadmap: { 
+                            type: Type.OBJECT,
+                            properties: {
+                                strategicThesis: { type: Type.STRING },
+                                positioningAxis: { type: Type.STRING },
+                                phases: {
+                                    type: Type.ARRAY,
+                                    items: {
+                                        type: Type.OBJECT,
+                                        properties: {
+                                            type: { type: Type.STRING },
+                                            objective: { type: Type.STRING },
+                                            strategicMove: { type: Type.STRING }
+                                        },
+                                        required: ["type", "objective", "strategicMove"]
+                                    }
+                                }
+                            },
+                            required: ["strategicThesis", "positioningAxis", "phases"]
+                        },
+                        originalThought: { type: Type.STRING },
+                        poetic_provocation: { type: Type.STRING },
+                        pages: { 
+                            type: Type.ARRAY, 
+                            items: { 
+                                type: Type.OBJECT,
+                                properties: {
+                                    headline: { type: Type.STRING },
+                                    bodyCopy: { type: Type.STRING },
+                                    supportingText: { type: Type.STRING },
+                                    imagePrompt: { type: Type.STRING }
+                                },
+                                required: ["headline", "bodyCopy", "imagePrompt", "supportingText"]
+                            } 
+                        },
+                        sonic_layer: { type: Type.STRING },
+                        archetype_weights: { type: Type.OBJECT }
+                    },
+                    required: ["title", "headlines", "vocal_summary_blurb", "header_image_prompt", "oracular_mirror", "strategic_hypothesis", "resonance_score", "semiotic_signals", "aesthetic_touchpoints", "celestial_calibration", "visual_plates", "roadmap", "originalThought", "poetic_provocation", "pages", "sonic_layer", "archetype_weights"]
+                };
+            } else {
+                parts.push({ text: "CRITICAL: You MUST output strictly valid JSON matching the following schema. Do NOT wrap in markdown blocks. Schema: { title: string, headlines: string[], vocal_summary_blurb: string, header_image_prompt: string, oracular_mirror: string, strategic_hypothesis: string, resonance_score: string, semiotic_signals: { motif: string, context: string, visual_directive: string, type: string, link: string, semantic_trigger: string, targeting_rationale: string }[], aesthetic_touchpoints: { motif: string, type: string }[], celestial_calibration: string, visual_plates: string[], roadmap: { strategicThesis: string, positioningAxis: string, phases: { type: string, objective: string, strategicMove: string }[] }, originalThought: string, poetic_provocation: string, pages: { headline: string, bodyCopy: string, supportingText: string, imagePrompt: string }[], sonic_layer: string, archetype_weights: any }" });
+            }
 
             const response = await ai.models.generateContent({
                 model: model,
-                contents: parts,
-                config: {
-                    temperature: profileToUse?.tailorDraft?.generationTemperature ?? 0.8,
-                    responseMimeType: "application/json",
-                    thinkingConfig: useDeep ? { thinkingLevel: ThinkingLevel.HIGH } : undefined,
-                    tools: tools.length > 0 ? tools : undefined,
-                    responseSchema: {
-                        type: Type.OBJECT,
-                        properties: {
-                            title: { type: Type.STRING },
-                            headlines: { type: Type.ARRAY, items: { type: Type.STRING } },
-                            vocal_summary_blurb: { type: Type.STRING },
-                            header_image_prompt: { type: Type.STRING },
-                            oracular_mirror: { type: Type.STRING },
-                            strategic_hypothesis: { type: Type.STRING },
-                            resonance_score: { type: Type.STRING },
-                            semiotic_signals: { 
-                                type: Type.ARRAY, 
-                                items: { 
-                                    type: Type.OBJECT,
-                                    properties: {
-                                        motif: { type: Type.STRING },
-                                        context: { type: Type.STRING },
-                                        visual_directive: { type: Type.STRING },
-                                        type: { type: Type.STRING },
-                                        link: { type: Type.STRING },
-                                        semantic_trigger: { type: Type.STRING },
-                                        targeting_rationale: { type: Type.STRING }
-                                    }
-                                } 
-                            },
-                            aesthetic_touchpoints: { 
-                                type: Type.ARRAY, 
-                                items: { 
-                                    type: Type.OBJECT,
-                                    properties: {
-                                        motif: { type: Type.STRING },
-                                        type: { type: Type.STRING }
-                                    }
-                                } 
-                            },
-                            celestial_calibration: { type: Type.STRING },
-                            visual_plates: { type: Type.ARRAY, items: { type: Type.STRING } },
-                            roadmap: { 
-                                type: Type.OBJECT,
-                                properties: {
-                                    strategicThesis: { type: Type.STRING },
-                                    positioningAxis: { type: Type.STRING },
-                                    phases: {
-                                        type: Type.ARRAY,
-                                        items: {
-                                            type: Type.OBJECT,
-                                            properties: {
-                                                type: { type: Type.STRING },
-                                                objective: { type: Type.STRING },
-                                                strategicMove: { type: Type.STRING }
-                                            },
-                                            required: ["type", "objective", "strategicMove"]
-                                        }
-                                    }
-                                },
-                                required: ["strategicThesis", "positioningAxis", "phases"]
-                            },
-                            originalThought: { type: Type.STRING },
-                            poetic_provocation: { type: Type.STRING },
-                            pages: { 
-                                type: Type.ARRAY, 
-                                items: { 
-                                    type: Type.OBJECT,
-                                    properties: {
-                                        headline: { type: Type.STRING },
-                                        bodyCopy: { type: Type.STRING },
-                                        supportingText: { type: Type.STRING },
-                                        imagePrompt: { type: Type.STRING }
-                                    },
-                                    required: ["headline", "bodyCopy", "imagePrompt", "supportingText"]
-                                } 
-                            },
-                            sonic_layer: { type: Type.STRING },
-                            archetype_weights: { type: Type.OBJECT }
-                        },
-                        required: ["title", "headlines", "vocal_summary_blurb", "header_image_prompt", "oracular_mirror", "strategic_hypothesis", "resonance_score", "semiotic_signals", "aesthetic_touchpoints", "celestial_calibration", "visual_plates", "roadmap", "originalThought", "poetic_provocation", "pages", "sonic_layer", "archetype_weights"]
-                    }
-                }
+                contents: { parts: parts },
+                config: config
             });
             
             const content = cleanAndParse(response.text) || {};

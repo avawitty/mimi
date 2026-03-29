@@ -22,8 +22,9 @@ function base64ToUint8Array(base64: string) {
   return bytes;
 }
 
-export const useLiveSession = (systemInstruction: string) => {
+export const useLiveSession = (systemInstruction: string, voiceName: string = 'Kore') => {
   const [isConnected, setIsConnected] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [volume, setVolume] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -43,39 +44,49 @@ export const useLiveSession = (systemInstruction: string) => {
   const audioQueueRef = useRef<AudioBufferSourceNode[]>([]);
 
   const cleanup = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => t.stop());
-      streamRef.current = null;
+    try {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => {
+          try { t.stop(); } catch(e) {}
+        });
+        streamRef.current = null;
+      }
+      if (processorRef.current && inputContextRef.current) {
+        try { processorRef.current.disconnect(); } catch(e) {}
+        if (sourceRef.current) {
+            try { sourceRef.current.disconnect(); } catch(e) {}
+        }
+      }
+      if (audioContextRef.current) {
+        try { audioContextRef.current.close(); } catch(e) {}
+        audioContextRef.current = null;
+      }
+      if (inputContextRef.current) {
+        try { inputContextRef.current.close(); } catch(e) {}
+        inputContextRef.current = null;
+      }
+      if (analyserRef.current) {
+        try { analyserRef.current.disconnect(); } catch(e) {}
+        analyserRef.current = null;
+      }
+      // Note: Gemini SDK doesn't expose an explicit .close() on the session object easily in this version, 
+      // but stopping the stream effectively ends interaction.
+      sessionRef.current = null;
+      setIsConnected(false);
+      setIsConnecting(false);
+      setIsSpeaking(false);
+    } catch (e) {
+      console.error("MIMI // Error during cleanup:", e);
     }
-    if (processorRef.current && inputContextRef.current) {
-      processorRef.current.disconnect();
-      if (sourceRef.current) sourceRef.current.disconnect();
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
-    }
-    if (inputContextRef.current) {
-      inputContextRef.current.close();
-      inputContextRef.current = null;
-    }
-    if (analyserRef.current) {
-      analyserRef.current.disconnect();
-      analyserRef.current = null;
-    }
-    // Note: Gemini SDK doesn't expose an explicit .close() on the session object easily in this version, 
-    // but stopping the stream effectively ends interaction.
-    sessionRef.current = null;
-    setIsConnected(false);
-    setIsSpeaking(false);
   }, []);
 
   const disconnect = useCallback(() => {
     cleanup();
   }, [cleanup]);
 
-  const connect = useCallback(async (retries = 3) => {
+    const connect = useCallback(async (retries = 3) => {
     setError(null);
+    setIsConnecting(true);
     
     for (let i = 0; i < retries; i++) {
       try {
@@ -100,7 +111,7 @@ export const useLiveSession = (systemInstruction: string) => {
             responseModalities: [Modality.AUDIO],
             systemInstruction: systemInstruction,
             speechConfig: {
-              voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } }
+              voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } }
             },
             inputAudioTranscription: {},
             outputAudioTranscription: {}
@@ -108,6 +119,7 @@ export const useLiveSession = (systemInstruction: string) => {
           callbacks: {
             onopen: async () => {
               setIsConnected(true);
+              setIsConnecting(false);
               
               // Start Mic Stream
               try {
@@ -136,7 +148,7 @@ export const useLiveSession = (systemInstruction: string) => {
                   const base64 = btoa(binary);
   
                   sessionPromise.then(session => {
-                    session.sendRealtimeInput({
+                    return session.sendRealtimeInput({
                       audio: {
                         mimeType: 'audio/pcm;rate=16000',
                         data: base64
@@ -163,69 +175,78 @@ export const useLiveSession = (systemInstruction: string) => {
               }
             },
             onmessage: async (msg: LiveServerMessage) => {
-              // Handle Transcriptions
-              if (msg.serverContent?.modelTurn?.parts) {
-                msg.serverContent.modelTurn.parts.forEach(part => {
-                  if (part.text) {
-                    setTranscript(prev => prev + part.text);
-                  }
-                });
-              }
+              try {
+                // Handle Transcriptions
+                if (msg.serverContent?.modelTurn?.parts) {
+                  msg.serverContent.modelTurn.parts.forEach(part => {
+                    if (part.text) {
+                      setTranscript(prev => prev + part.text);
+                    }
+                  });
+                }
 
-              // Handle Audio Output
-              const audioData = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
-              if (audioData && audioContextRef.current) {
-                setIsSpeaking(true);
-                const bytes = base64ToUint8Array(audioData);
-                
-                // Manual PCM decoding (16-bit little-endian to float)
-                const dataInt16 = new Int16Array(bytes.buffer);
-                const audioBuffer = audioContextRef.current.createBuffer(1, dataInt16.length, 24000);
-                const channelData = audioBuffer.getChannelData(0);
-                for (let i = 0; i < dataInt16.length; i++) {
-                  channelData[i] = dataInt16[i] / 32768.0;
+                // Handle Audio Output
+                const audioData = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+                if (audioData && audioContextRef.current) {
+                  setIsSpeaking(true);
+                  const bytes = base64ToUint8Array(audioData);
+                  
+                  // Manual PCM decoding (16-bit little-endian to float)
+                  const dataInt16 = new Int16Array(bytes.buffer);
+                  const audioBuffer = audioContextRef.current.createBuffer(1, dataInt16.length, 24000);
+                  const channelData = audioBuffer.getChannelData(0);
+                  for (let i = 0; i < dataInt16.length; i++) {
+                    channelData[i] = dataInt16[i] / 32768.0;
+                  }
+    
+                  const source = audioContextRef.current.createBufferSource();
+                  source.buffer = audioBuffer;
+                  
+                  // Connect to analyser instead of direct destination
+                  if (analyserRef.current) {
+                    source.connect(analyserRef.current);
+                  } else {
+                    source.connect(audioContextRef.current.destination);
+                  }
+                  
+                  const currentTime = audioContextRef.current.currentTime;
+                  const startTime = Math.max(currentTime, nextStartTimeRef.current);
+                  nextStartTimeRef.current = startTime + audioBuffer.duration;
+                  
+                  source.start(startTime);
+                  source.onended = () => {
+                     // Simple heuristic: if queue implies silence, toggle state
+                     if (audioContextRef.current && audioContextRef.current.currentTime >= nextStartTimeRef.current) {
+                         setIsSpeaking(false);
+                     }
+                  };
+                  audioQueueRef.current.push(source);
                 }
-  
-                const source = audioContextRef.current.createBufferSource();
-                source.buffer = audioBuffer;
-                
-                // Connect to analyser instead of direct destination
-                if (analyserRef.current) {
-                  source.connect(analyserRef.current);
-                } else {
-                  source.connect(audioContextRef.current.destination);
+    
+                if (msg.serverContent?.interrupted) {
+                   audioQueueRef.current.forEach(s => {
+                       try { s.stop(); } catch(e) {}
+                   });
+                   audioQueueRef.current = [];
+                   nextStartTimeRef.current = 0;
+                   setIsSpeaking(false);
                 }
-                
-                const currentTime = audioContextRef.current.currentTime;
-                const startTime = Math.max(currentTime, nextStartTimeRef.current);
-                nextStartTimeRef.current = startTime + audioBuffer.duration;
-                
-                source.start(startTime);
-                source.onended = () => {
-                   // Simple heuristic: if queue implies silence, toggle state
-                   if (audioContextRef.current && audioContextRef.current.currentTime >= nextStartTimeRef.current) {
-                       setIsSpeaking(false);
-                   }
-                };
-                audioQueueRef.current.push(source);
-              }
-  
-              if (msg.serverContent?.interrupted) {
-                 audioQueueRef.current.forEach(s => {
-                     try { s.stop(); } catch(e) {}
-                 });
-                 audioQueueRef.current = [];
-                 nextStartTimeRef.current = 0;
-                 setIsSpeaking(false);
+              } catch (e) {
+                console.error("MIMI // Error processing live message:", e);
               }
             },
             onclose: () => {
               setIsConnected(false);
               cleanup();
             },
-            onerror: (e) => {
-              console.error("Live Session Error", e);
-              setError("Connection severed by server.");
+            onerror: (e: any) => {
+              const errMsg = e?.message || String(e);
+              if (errMsg.includes('Deadline expired')) {
+                console.warn("MIMI // Live Session ended (timeout).");
+              } else {
+                console.error("Live Session Error", e);
+                setError("Connection severed by server.");
+              }
               setIsConnected(false);
               cleanup();
             }
@@ -250,12 +271,19 @@ export const useLiveSession = (systemInstruction: string) => {
 
   const sendVideoFrame = useCallback((base64Image: string) => {
     if (sessionRef.current) {
-        sessionRef.current.sendRealtimeInput({
+      try {
+        const result = sessionRef.current.sendRealtimeInput({
             video: {
                 mimeType: 'image/jpeg',
                 data: base64Image
             }
         });
+        if (result && result.catch) {
+          result.catch((e: any) => console.error("MIMI // Error sending video frame promise:", e));
+        }
+      } catch (e) {
+        console.error("MIMI // Error sending video frame:", e);
+      }
     }
   }, []);
 
@@ -263,5 +291,5 @@ export const useLiveSession = (systemInstruction: string) => {
     return () => cleanup();
   }, []);
 
-  return { connect, disconnect, isConnected, isSpeaking, volume, error, sendVideoFrame, analyser: analyserRef.current, transcript };
+  return { connect, disconnect, isConnected, isConnecting, isSpeaking, volume, error, sendVideoFrame, analyser: analyserRef.current, transcript };
 };

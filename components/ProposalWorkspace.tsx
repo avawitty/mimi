@@ -276,6 +276,7 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  const stage = document.getElementById('proposal-export-stage');
  if (!stage) return;
 
+ try {
  // Convert images to base64 before capture to prevent blank slides
  await convertImagesToBase64(stage);
  
@@ -331,6 +332,9 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  
  setShowExportOverlay(false);
  onClose();
+ } catch (e) {
+ console.error("MIMI // Failed to export proposal:", e);
+ }
  };
 
  const handleUpdateSectionElements = (sectionId: string, newElements: EditorElement[]) => {

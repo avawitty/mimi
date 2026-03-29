@@ -7,6 +7,7 @@ import { getLocalZines } from '../services/localArchive';
 import { ZineMetadata, SeasonReport } from '../types';
 import { useUser } from '../contexts/UserContext';
 import { Ghost, Loader2, RefreshCw, Zap, Archive, Plus } from 'lucide-react';
+import { LoadingSkeleton } from './LoadingSkeleton';
 import { ZineCard } from './ZineCard'; 
 
 interface ShelfProps {
@@ -120,7 +121,7 @@ export const Shelf: React.FC<ShelfProps> = ({ variant, onSelectZine }) => {
  if (loading && zines.length === 0) {
  return (
  <div className="w-full flex flex-col items-center justify-center p-24 gap-4 animate-pulse">
- <Loader2 className="animate-spin text-stone-300"size={32} />
+ <LoadingSkeleton lines={4} className="w-full max-w-sm" />
  <span className="font-sans text-[8px] uppercase tracking-[0.4em] text-stone-400 font-black italic">Consulting Archives...</span>
  </div>
  );

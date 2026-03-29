@@ -2,7 +2,13 @@
 import { doc, setDoc, getDoc, collection, query, where, getDocs, orderBy, limit, deleteDoc, addDoc, updateDoc, arrayUnion, increment, onSnapshot } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, sendPasswordResetEmail, linkWithPopup, linkWithRedirect, signInAnonymously, ActionCodeSettings, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from "firebase/auth";
-import { auth, db, storage, isFullyAuthenticated } from "./firebase";
+import { auth, db, storage } from "./firebaseInit";
+
+export const isFullyAuthenticated = () => {
+  console.info("MIMI // isFullyAuthenticated check:", auth.currentUser ? auth.currentUser.uid : "null", auth.currentUser ? "isAnonymous: " + auth.currentUser.isAnonymous : "");
+  return !!auth.currentUser;
+};
+
 import { ZineContent, ZineMetadata, ToneTag, PocketItem, UserProfile, DossierFolder, DossierArtifact, Treatment, UserPreferences, MediaFile, Proposal, ContextEntry, LineageEntry } from "../types";
 import { saveZineLocally, savePocketItemLocally, getLocalProfile, getLocalPocket, getLocalZines, deleteLocalPocketItem, saveFolderLocally, getLocalFolders, saveArtifactLocally, getLocalArtifacts } from "./localArchive";
 import { syncToShadowMemory, deleteFromShadowMemory } from "./vectorSearch";
@@ -442,8 +448,8 @@ export const linkIdentity = async (forceRedirect: boolean = false): Promise<void
 import { generateAndStoreZineEmbedding } from "./zineEmbeddingService";
 
 export const saveZineToProfile = async (uid: string, handle: string, avatar: string | undefined, zine: ZineContent, tone: ToneTag, coverUrl?: string, deep?: boolean, isPublic?: boolean, isLite?: boolean, artifacts?: MediaFile[], originalInput?: string, transmissionsUsed?: any[], isHighFidelity?: boolean, tags?: string[], treatmentId?: string): Promise<string> => {
-  if (!uid || uid === 'ghost' || !isFullyAuthenticated()) return '';
-  const targetId = `zine_${uid}_${Date.now()}`;
+  const targetUid = uid || 'ghost';
+  const targetId = `zine_${targetUid}_${Date.now()}`;
   
   // Ensure we capture the original thought properly, falling back to metadata if arg is missing
   const rawInput = originalInput || zine.meta?.intent || "";
@@ -473,7 +479,7 @@ export const saveZineToProfile = async (uid: string, handle: string, avatar: str
       userId: t.userId || '' 
     })),
     treatmentId,
-    tags: tags && tags.length > 0 ? tags : await generateTagsFromMedia(JSON.stringify(zine), artifacts || [])
+    tags: tags && tags.length > 0 ? tags : await (await import("./geminiService")).generateTagsFromMedia(JSON.stringify(zine), artifacts || [])
   };
   
   console.info("MIMI // saveZineToProfile: Starting zine save for:", uid);
@@ -519,6 +525,7 @@ export const saveZineToProfile = async (uid: string, handle: string, avatar: str
       generateAndStoreZineEmbedding(meta);
       
       // Save Lineage Entry
+      const { generateProfoundSignature } = await import("./thoughtSignatureService");
       await saveLineageEntry({
         artifact_id: targetId,
         userId: uid,
@@ -562,11 +569,12 @@ export const updateTasteGraph = async (uid: string, type: PocketItem['type'], co
     let isImage = false;
     let mimeType = 'image/jpeg';
 
-    if (type === 'image' && content.imageUrl) {
-      textToAnalyze = content.imageUrl;
+    let imageUrl = content.imageUrl || content.image;
+    if (type === 'image' && imageUrl) {
+      textToAnalyze = imageUrl;
       isImage = true;
-      if (content.imageUrl.startsWith('data:')) {
-         const match = content.imageUrl.match(/^data:(image\/[a-zA-Z0-9]+);base64,(.+)$/);
+      if (imageUrl.startsWith('data:')) {
+         const match = imageUrl.match(/^data:(image\/[a-zA-Z0-9]+);base64,(.+)$/);
          if (match) {
             mimeType = match[1];
             textToAnalyze = match[2];
@@ -588,6 +596,7 @@ export const updateTasteGraph = async (uid: string, type: PocketItem['type'], co
     }
 
     console.info("MIMI // Taste Graph: Analyzing content:", textToAnalyze.substring(0, 50));
+    const { extractTasteVector } = await import("./geminiService");
     const newVector = await extractTasteVector(textToAnalyze, isImage, mimeType);
     console.info("MIMI // Taste Graph: New Vector Extracted:", newVector);
     if (!newVector || Object.keys(newVector).length === 0) {
@@ -636,13 +645,31 @@ export const updateTasteGraph = async (uid: string, type: PocketItem['type'], co
 };
 
 
-export const addToPocket = async (uid: string, type: PocketItem['type'], content: any, embedding?: number[], deltaVerdict?: any): Promise<string | undefined> => {
+export const addToPocket = async (uid: string, type: PocketItem['type'], content: any, embedding?: number[], deltaVerdict?: any, originalContent?: any): Promise<string | undefined> => {
   if (!uid) return;
   const randomId = Math.random().toString(36).substring(2, 9);
   const itemId = `item_${Date.now()}_${randomId}`;
   
+  const contentForAnalysis = originalContent || content;
+  
+  const mediaItems = contentForAnalysis.media || [];
+  if (type === 'image') {
+    if (contentForAnalysis.imageUrl && contentForAnalysis.imageUrl.startsWith('data:')) {
+      mediaItems.push({ type: 'image', data: contentForAnalysis.imageUrl });
+    } else if (contentForAnalysis.image && contentForAnalysis.image.startsWith('data:')) {
+      mediaItems.push({ type: 'image', data: contentForAnalysis.image });
+    }
+  }
+
   // Generate tags automatically
-  const tags = await generateTagsFromMedia(JSON.stringify(content), content.media || []);
+  const { generateTagsFromMedia } = await import("./geminiService");
+  // Remove the base64 string from the text content to avoid blowing up the prompt
+  const textContent = { ...contentForAnalysis };
+  delete textContent.imageUrl;
+  delete textContent.image;
+  delete textContent.media;
+  
+  const tags = await generateTagsFromMedia(JSON.stringify(textContent), mediaItems);
   
   const item: PocketItem = { id: itemId, userId: uid, type, savedAt: Date.now(), content, notes: content.notes || "", tags, embedding, deltaVerdict };
   
@@ -662,7 +689,7 @@ export const addToPocket = async (uid: string, type: PocketItem['type'], content
       await setDoc(doc(db, "pocket", itemId), sanitizeFirestoreData(item));
       syncToShadowMemory(item);
       // Asynchronously update the taste graph
-      updateTasteGraph(uid, type, content);
+      updateTasteGraph(uid, type, contentForAnalysis);
       invalidatePocketCache();
     } catch (e) { console.warn("MIMI // Pocket Sync Skipped:", e.code); }
   }
@@ -1127,6 +1154,7 @@ export const createDossierArtifactFromImage = async (uid: string, folderId: stri
   }
 
   // Generate tags automatically
+  const { generateTagsFromMedia } = await import("./geminiService");
   const tags = await generateTagsFromMedia(`Image artifact: ${title}`);
   
   const artifact: DossierArtifact = {
@@ -1141,7 +1169,7 @@ export const createDossierArtifactFromImage = async (uid: string, folderId: stri
   if (uid && auth.currentUser && navigator.onLine) {
     try { 
       await setDoc(doc(db, "dossier_artifacts", id), sanitizeFirestoreData(artifact)); 
-      updateTasteGraph(uid, 'image', { imageUrl: finalImageUrl });
+      updateTasteGraph(uid, 'image', { imageUrl: imageUrl });
     } catch (e) {}
   }
   return id;
@@ -1176,6 +1204,7 @@ export const createDossierArtifactFromText = async (uid: string, folderId: strin
   const id = `artifact_${Date.now()}`;
   
   // Generate tags automatically
+  const { generateTagsFromMedia } = await import("./geminiService");
   const tags = await generateTagsFromMedia(`Text artifact: ${title} - ${text}`);
   
   const artifact: DossierArtifact = {

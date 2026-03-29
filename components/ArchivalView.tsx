@@ -7,6 +7,7 @@ import { ArchiveListView } from './ArchiveListView';
 import { ZineMetadata, PocketItem } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Upload, ImageIcon, FileText, X, Loader2, Search, ArrowRight, Check } from 'lucide-react';
+import { LoadingSkeleton } from './LoadingSkeleton';
 import { useUser } from '../contexts/UserContext';
 import { fetchUserZines, fetchPocketItems } from '../services/firebase';
 import { compressImage } from '../services/geminiService';
@@ -176,7 +177,7 @@ const InjectShardModal: React.FC<{ onClose: () => void, onInjected: () => void }
  <ArrowRight size={16} className="text-stone-300 self-center"/>
  </button>
  ))}
- {loading && <div className="col-span-full py-12 flex justify-center"><Loader2 size={32} className="animate-spin text-stone-300"/></div>}
+ {loading && <div className="col-span-full py-12 px-8"><LoadingSkeleton lines={6} /></div>}
  </div>
  )}
 

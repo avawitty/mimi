@@ -377,9 +377,9 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  <div className="space-y-2">
  <span className="font-sans text-[7px] uppercase tracking-[0.2em] font-black text-stone-600 dark:text-stone-400 block">Authority Anchor</span>
  <p className="font-serif italic text-sm text-stone-500 leading-snug border-b border-stone-100 dark:border-stone-900 pb-4">
- <strong>Core Claim:</strong> {content.roadmap.authorityAnchor.coreClaim}<br/>
- <strong>Repetition Vector:</strong> {content.roadmap.authorityAnchor.repetitionVector}<br/>
- <strong>Exclusion Principle:</strong> {content.roadmap.authorityAnchor.exclusionPrinciple}
+ <strong>Core Claim:</strong> {content.roadmap.authorityAnchor?.coreClaim}<br/>
+ <strong>Repetition Vector:</strong> {content.roadmap.authorityAnchor?.repetitionVector}<br/>
+ <strong>Exclusion Principle:</strong> {content.roadmap.authorityAnchor?.exclusionPrinciple}
  </p>
  </div>
  </div>

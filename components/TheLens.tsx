@@ -55,6 +55,7 @@ export const TheLens = () => {
 
  const handlePushToBoard = async () => {
  if (!captureResult?.data?.tasks || !user?.uid) return;
+ try {
  for (const task of captureResult.data.tasks) {
  await saveTask(user.uid, {
  id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -68,6 +69,9 @@ export const TheLens = () => {
  window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
  detail: { message:"Directives pushed to Action Board.", icon: <ArrowRight size={14} /> } 
  }));
+ } catch (e) {
+ console.error("MIMI // Failed to push tasks to board:", e);
+ }
  };
 
  const handleNodeSelect = async (node: any) => {
@@ -86,6 +90,7 @@ export const TheLens = () => {
 
  const handlePushLatentDirective = async () => {
  if (!latentAnalysisResult?.architectural_directive || !user?.uid) return;
+ try {
  const task = latentAnalysisResult.architectural_directive;
  await saveTask(user.uid, {
  id: `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -98,6 +103,9 @@ export const TheLens = () => {
  window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
  detail: { message:"Latent Directive pushed to Action Board.", icon: <ArrowRight size={14} /> } 
  }));
+ } catch (e) {
+ console.error("MIMI // Failed to push latent directive:", e);
+ }
  };
 
  const startLens = async () => {

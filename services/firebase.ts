@@ -81,11 +81,6 @@ export const ensureAuth = async () => {
   return auth;
 };
 
-export const isFullyAuthenticated = () => {
-  console.info("MIMI // isFullyAuthenticated check:", auth.currentUser ? auth.currentUser.uid : "null", auth.currentUser ? "isAnonymous: " + auth.currentUser.isAnonymous : "");
-  return !!auth.currentUser;
-};
-
 export const ensureDb = async () => db;
 export const ensureStorage = async () => storage;
 

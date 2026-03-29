@@ -256,9 +256,24 @@ async function startServer() {
 
   // Vite middleware for development
   const distPath = path.join(process.cwd(), 'dist');
-  if (process.env.NODE_ENV !== "production") {
+  
+  let viteAvailable = false;
+  try {
+    if (typeof require !== 'undefined') {
+      require.resolve('vite');
+    } else {
+      await import.meta.resolve('vite');
+    }
+    viteAvailable = true;
+  } catch (e) {
+    viteAvailable = false;
+  }
+
+  if (process.env.NODE_ENV !== "production" && viteAvailable) {
     try {
-      const { createServer: createViteServer } = await import("vite");
+      // Use dynamic import with a variable to prevent esbuild from trying to bundle it
+      const viteModuleName = 'vite';
+      const { createServer: createViteServer } = await import(viteModuleName);
       const vite = await createViteServer({
         server: { middlewareMode: true },
         appType: "spa",

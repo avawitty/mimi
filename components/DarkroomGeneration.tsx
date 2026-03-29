@@ -47,7 +47,11 @@ export const DarkroomGeneration: React.FC = () => {
  addLog("INGESTING CATALYST ARTIFACT...");
  
  try {
- const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+ let apiKeyToUse = import.meta.env.VITE_GEMINI_API_KEY;
+      if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+        apiKeyToUse = process.env.API_KEY;
+      }
+      const ai = new GoogleGenAI({ apiKey: apiKeyToUse });
  const analysisPrompt = `Analyze this image and provide the following data in JSON format:
  1. palette: An array of 4 dominant hex color codes.
  2. dof: Estimated depth of field (e.g.,"f/2.8 (SHALLOW)","f/8 (DEEP)").
@@ -133,7 +137,11 @@ export const DarkroomGeneration: React.FC = () => {
  addLog("INITIALIZING SYNTHESIS PROTOCOL...");
 
  try {
- const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+ let apiKeyToUse = import.meta.env.VITE_GEMINI_API_KEY;
+      if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+        apiKeyToUse = process.env.API_KEY;
+      }
+      const ai = new GoogleGenAI({ apiKey: apiKeyToUse });
  
  if (generationType === 'video') {
  addLog("ALLOCATING VEO-3.1-FAST COMPUTE...");
@@ -167,7 +175,16 @@ export const DarkroomGeneration: React.FC = () => {
 
  const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
  if (downloadLink) {
- setResultUrl(downloadLink);
+ addLog("FETCHING VIDEO BLOB...");
+ const response = await fetch(downloadLink, {
+ method: 'GET',
+ headers: {
+ 'x-goog-api-key': apiKeyToUse,
+ },
+ });
+ const blob = await response.blob();
+ const videoUrl = URL.createObjectURL(blob);
+ setResultUrl(videoUrl);
  addLog("RENDER COMPLETE. OUTPUT VAT READY.");
  } else {
  throw new Error("Failed to get video URL");
@@ -178,7 +195,11 @@ export const DarkroomGeneration: React.FC = () => {
  const model = 'gemini-3.1-flash-image-preview';
  const finalPrompt = generationType === 'anime' ? `Anime style, high quality, masterpiece: ${prompt}` : prompt;
  
- let contents: any = finalPrompt;
+ let contents: any = {
+ parts: [
+ { text: finalPrompt }
+ ]
+ };
  
  if (catalyst) {
  addLog("INJECTING CATALYST IMAGE DATA...");

@@ -37,7 +37,7 @@ export const archiveManager = {
          processedContent.imageUrl = await this.uploadMedia(userId, processedContent.imageUrl, 'artifacts/pocket_main');
       }
 
-      const itemId = await addToPocket(userId, type, processedContent, embedding, deltaVerdict);
+      const itemId = await addToPocket(userId, type, processedContent, embedding, deltaVerdict, content);
       
       window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
         detail: { message: "Artifact Archived in Firebase.", type: 'success' } 

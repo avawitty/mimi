@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Folder, Plus, Trash2, Edit2, X, Check, Loader2, Search } from 'lucide-react';
+import { LoadingSkeleton } from './LoadingSkeleton';
 import { useUser } from '../contexts/UserContext';
 import { hasAccess } from '../constants';
 import { fetchZineFolders, createZineFolder, updateZineFolder, deleteZineFolder, moveZineToFolder, subscribeToUserZines } from '../services/firebaseUtils';
@@ -142,7 +143,7 @@ export const ZineFolders: React.FC<ZineFoldersProps> = ({ onSelectZine }) => {
  if (loading) {
  return (
  <div className="w-full h-64 flex items-center justify-center">
- <Loader2 size={32} className="animate-spin text-stone-300"/>
+ <LoadingSkeleton lines={4} className="w-full max-w-sm" />
  </div>
  );
  }

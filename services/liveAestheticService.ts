@@ -18,39 +18,44 @@ export class LiveAestheticService {
   }
 
   async connect() {
-    this.session = await this.ai.live.connect({
-      model: "gemini-2.5-flash-native-audio-preview-12-2025",
-      callbacks: {
-        onopen: () => {
-          console.log("Live Aesthetic Session Opened");
-        },
+    try {
+      this.session = await this.ai.live.connect({
+        model: "gemini-2.5-flash-native-audio-preview-12-2025",
+        callbacks: {
+          onopen: () => {
+            console.log("Live Aesthetic Session Opened");
+          },
         onmessage: async (message: LiveServerMessage) => {
-          if (message.serverContent?.modelTurn?.parts[0]?.text) {
-            try {
-              const text = message.serverContent.modelTurn.parts[0].text;
-              // Attempt to parse JSON if the model returns it, otherwise treat as scribe reading
-              if (text.includes('{')) {
-                const jsonMatch = text.match(/\{.*\}/s);
-                if (jsonMatch) {
-                  const data = JSON.parse(jsonMatch[0]);
+          try {
+            if (message.serverContent?.modelTurn?.parts?.[0]?.text) {
+              try {
+                const text = message.serverContent.modelTurn.parts[0].text;
+                // Attempt to parse JSON if the model returns it, otherwise treat as scribe reading
+                if (text.includes('{')) {
+                  const jsonMatch = text.match(/\{.*\}/s);
+                  if (jsonMatch) {
+                    const data = JSON.parse(jsonMatch[0]);
+                    this.onAnalysis({
+                      scribeReading: data.reading || text,
+                      colorFrequency: data.colors || {},
+                      archetypes: data.archetypes || {},
+                      timestamp: Date.now()
+                    });
+                  }
+                } else {
                   this.onAnalysis({
-                    scribeReading: data.reading || text,
-                    colorFrequency: data.colors || {},
-                    archetypes: data.archetypes || {},
+                    scribeReading: text,
+                    colorFrequency: {},
+                    archetypes: {},
                     timestamp: Date.now()
                   });
                 }
-              } else {
-                this.onAnalysis({
-                  scribeReading: text,
-                  colorFrequency: {},
-                  archetypes: {},
-                  timestamp: Date.now()
-                });
+              } catch (e) {
+                console.error("Failed to parse live analysis", e);
               }
-            } catch (e) {
-              console.error("Failed to parse live analysis", e);
             }
+          } catch (e) {
+            console.error("MIMI // Unhandled error in liveAestheticService onmessage", e);
           }
         },
         onerror: (error: any) => {
@@ -70,21 +75,39 @@ export class LiveAestheticService {
         Tone: Poetic, high-fashion, slightly cryptic, prophetic.`,
       },
     });
+    } catch (e) {
+      console.error("MIMI // Failed to connect Live Aesthetic Service:", e);
+      throw e;
+    }
   }
 
   sendVideoFrame(base64Data: string) {
     if (this.session) {
-      this.session.sendRealtimeInput({
-        video: { data: base64Data, mimeType: 'image/jpeg' }
-      });
+      try {
+        const result = this.session.sendRealtimeInput({
+          video: { data: base64Data, mimeType: 'image/jpeg' }
+        });
+        if (result && result.catch) {
+          result.catch((e: any) => console.error("MIMI // Error sending video frame promise:", e));
+        }
+      } catch (e) {
+        console.error("MIMI // Error sending video frame:", e);
+      }
     }
   }
 
   sendAudioChunk(base64Data: string) {
     if (this.session) {
-      this.session.sendRealtimeInput({
-        audio: { data: base64Data, mimeType: 'audio/pcm;rate=16000' }
-      });
+      try {
+        const result = this.session.sendRealtimeInput({
+          audio: { data: base64Data, mimeType: 'audio/pcm;rate=16000' }
+        });
+        if (result && result.catch) {
+          result.catch((e: any) => console.error("MIMI // Error sending audio chunk promise:", e));
+        }
+      } catch (e) {
+        console.error("MIMI // Error sending audio chunk:", e);
+      }
     }
   }
 

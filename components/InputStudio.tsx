@@ -4,7 +4,7 @@ import { MediaFile, ToneTag, PocketItem, ZineGenerationOptions } from '../types'
 import { useRecorder } from '../hooks/useRecorder';
 import { useTasteLogging } from '../hooks/useTasteLogging';
 import { Plus, BrainCircuit, X, Globe, MapPin, Mic, Loader2, Square, Check, Radio, Mail, Info, Sparkles, AlertCircle, Eraser, Zap, Image as ImageIcon, Link as LinkIcon, Twitter, Instagram, Shield, Users, ArrowUpRight, FolderOpen, Paperclip, ChevronLeft, ChevronRight, GripVertical, FileText, Filter, Wand2, ChevronDown, Scissors, ShoppingBag, FolderPlus, Radar, Trash2 } from 'lucide-react';
-import { transcribeAudio, compressImage, generateTagsFromMedia, analyzeImageAesthetic, generateZineTitle, analyzeAudio, applyAestheticRefraction, generateAutoAwesomePrompt, analyzeAestheticDelta } from '../services/geminiService';
+import { transcribeAudio, generateTagsFromMedia, analyzeImageAesthetic, generateZineTitle, analyzeAudio, applyAestheticRefraction, generateAutoAwesomePrompt, analyzeAestheticDelta } from '../services/geminiService';
 import { PromptOrchestrator } from './PromptOrchestrator';
 import { TheThimble } from './TheThimble';
 import { DeltaVerdictCard } from './DeltaVerdictCard';
@@ -82,10 +82,28 @@ export const InputStudio: React.FC<{
  // Initialize with a value if none provided
  const [input, setInput] = useState(() => {
  if (initialValue) return initialValue;
+ const savedDraft = localStorage.getItem('mimi_draft_input');
+ if (savedDraft) return savedDraft;
  return DEFAULT_STARTERS[Math.floor(Math.random() * DEFAULT_STARTERS.length)] || '';
  });
- const [title, setTitle] = useState('');
+ const [title, setTitle] = useState(() => {
+ const savedTitle = localStorage.getItem('mimi_draft_title');
+ return savedTitle || '';
+ });
  const [provocationIndex, setProvocationIndex] = useState(0);
+
+ // Autosave draft
+ useEffect(() => {
+ const timeoutId = setTimeout(() => {
+ if (input && !DEFAULT_STARTERS.includes(input)) {
+ localStorage.setItem('mimi_draft_input', input);
+ }
+ if (title) {
+ localStorage.setItem('mimi_draft_title', title);
+ }
+ }, 1000);
+ return () => clearTimeout(timeoutId);
+ }, [input, title]);
 
  useEffect(() => {
  const interval = setInterval(() => {
@@ -96,8 +114,12 @@ export const InputStudio: React.FC<{
 
  const handleAutoGenerateTitle = async () => {
  if (!input) return;
+ try {
  const generatedTitle = await generateZineTitle(input);
  setTitle(generatedTitle);
+ } catch (e) {
+ console.error("MIMI // Failed to generate title:", e);
+ }
  };
 
  const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
@@ -123,6 +145,7 @@ export const InputStudio: React.FC<{
  const [showColophon, setShowColophon] = useState(false);
  const [promptIndex, setPromptIndex] = useState(0);
  const [legalType, setLegalType] = useState<'privacy' | 'terms' | null>(null);
+ const [showConfirmation, setShowConfirmation] = useState(false);
  const [activeTags, setActiveTags] = useState<string[]>([]);
  const [activeTreatmentId, setActiveTreatmentId] = useState<string | null>(null);
  
@@ -134,18 +157,24 @@ export const InputStudio: React.FC<{
  try {
  const files = Array.from(e.target.files);
  const newMedia = await Promise.all(files.map(async (f) => {
- const data = await new Promise<string>((resolve, reject) => {
- const reader = new FileReader();
- reader.onloadend = () => resolve(reader.result as string);
- reader.onerror = reject;
- reader.readAsDataURL(f);
- });
+ let data: string;
+ if (f.type.startsWith('image/')) {
+   const { compressImage } = await import('../services/imageUtils');
+   data = await compressImage(f, 800, 800, 0.7);
+ } else {
+   data = await new Promise<string>((resolve, reject) => {
+   const reader = new FileReader();
+   reader.onloadend = () => resolve(reader.result as string);
+   reader.onerror = reject;
+   reader.readAsDataURL(f);
+   });
+ }
  return {
  file: f,
  type: (f.type.startsWith('image/') ? 'image' : f.type.startsWith('audio/') ? 'audio' : 'video') as 'image' | 'audio' | 'video',
  url: URL.createObjectURL(f),
  data,
- mimeType: f.type,
+ mimeType: f.type.startsWith('image/') ? 'image/jpeg' : f.type,
  name: f.name
  };
  }));
@@ -180,6 +209,9 @@ export const InputStudio: React.FC<{
  taskMode,
  zineOptions: { ...zineOptions, customTitle: title, selectedTreatmentId: activeTreatmentId || zineOptions.selectedTreatmentId }
  });
+ 
+ localStorage.removeItem('mimi_draft_input');
+ localStorage.removeItem('mimi_draft_title');
  }, [onRefine, input, mediaFiles, selectedTone, deepThinking, liteMode, useTailorProfile, isHighFidelity, useSearch, useMaps, taskMode, zineOptions, title, activeThread, activeTreatmentId, profile]);
 
  const handleBatchAnalyze = async () => {
@@ -712,11 +744,52 @@ export const InputStudio: React.FC<{
  </div>
 
  {/* Submit Button */}
- <button onClick={triggerAccession} className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 dark:border-white/20 hover:border-primary dark:hover:border-white transition-colors text-primary dark:text-white mb-4">
+ <button onClick={() => setShowConfirmation(true)} className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 dark:border-white/20 hover:border-primary dark:hover:border-white transition-colors text-primary dark:text-white mb-4">
  → SUBMIT TO ISSUE
  </button>
  </div>
  </motion.div>
+
+ {/* Confirmation Overlay */}
+ <AnimatePresence>
+ {showConfirmation && (
+ <motion.div
+ initial={{ opacity: 0 }}
+ animate={{ opacity: 1 }}
+ exit={{ opacity: 0 }}
+ className="fixed inset-0 z-[100] flex items-center justify-center bg-stone-100/90 dark:bg-stone-900/90 backdrop-blur-md"
+ >
+ <motion.div
+ initial={{ scale: 0.95, y: 20 }}
+ animate={{ scale: 1, y: 0 }}
+ exit={{ scale: 0.95, y: 20 }}
+ className="bg-white dark:bg-stone-800 p-8 max-w-lg w-full border border-stone-200 dark:border-stone-700 flex flex-col items-center text-center shadow-2xl"
+ >
+ <h2 className="font-serif italic text-2xl mb-4 text-primary dark:text-white">Confirm Submission</h2>
+ <p className="text-sm text-stone-600 dark:text-stone-400 mb-8">
+ You are about to submit this artifact to the issue. This action will initiate the synthesis process.
+ </p>
+ <div className="flex gap-4 w-full">
+ <button
+ onClick={() => setShowConfirmation(false)}
+ className="flex-1 py-3 text-[10px] uppercase tracking-widest border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors"
+ >
+ Cancel
+ </button>
+ <button
+ onClick={() => {
+ setShowConfirmation(false);
+ triggerAccession();
+ }}
+ className="flex-1 py-3 text-[10px] uppercase tracking-widest bg-primary dark:bg-white text-white dark:text-black hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors"
+ >
+ Confirm & Submit
+ </button>
+ </div>
+ </motion.div>
+ </motion.div>
+ )}
+ </AnimatePresence>
  
  {/* ... (rest of the component) */}
 

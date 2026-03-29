@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
 import { ArrowRight, Check, Key, Loader2 } from 'lucide-react';
-import { createCheckoutSession } from '../services/stripe';
-import { PlanTier } from '../constants';
-import '../types';
 
 export const MembershipView: React.FC = () => {
  const { user, profile, upgradePlan } = useUser();

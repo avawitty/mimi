@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, UserPlus, UserMinus, Check, X, Loader2, Users, Heart, ArrowRight, Search, Handshake, Clock, Link2Off, Zap } from 'lucide-react';
+import { LoadingSkeleton } from './LoadingSkeleton';
 import { useUser } from '../contexts/UserContext';
 import { fetchFollowers, fetchFollowing, fetchFriends, fetchFriendRequests, acceptFriendRequest, rejectFriendRequest, removeFriend, unfollowUser, Friendship, FriendRequest, Connection, sendFriendRequest, followUser, checkConnectionStatus } from '../services/connections';
 import { getUserProfile, searchUsers } from '../services/firebaseUtils';
