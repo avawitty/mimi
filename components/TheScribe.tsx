@@ -287,7 +287,7 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  
  {activeTab === 'engine' && (
  <motion.div key="engine"initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
- <p className="font-serif italic text-xl text-nous-text0">"The mirror awaits your query."</p>
+ <p className="font-serif italic text-xl text-nous-subtle">"The mirror awaits your query."</p>
  <div className="relative">
  <span className="absolute left-0 top-1/2 -translate-y-1/2 font-mono text-nous-subtle">{'>'}</span>
  <input 
@@ -379,7 +379,7 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  {isGeneratingDebate && (
  <div className="flex flex-col items-center justify-center space-y-4 py-8">
  <Loader2 size={24} className="animate-spin text-nous-subtle"/>
- <p className="font-mono text-[10px] text-nous-text0 uppercase tracking-widest">
+ <p className="font-mono text-[10px] text-nous-subtle uppercase tracking-widest">
  Orchestrating Dual-Persona Synthesis...
  </p>
  </div>

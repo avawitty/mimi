@@ -172,7 +172,7 @@ export const ZineFolders: React.FC<ZineFoldersProps> = ({ onSelectZine }) => {
  onClick={() => setActiveFolder(null)}
  onDragOver={handleDragOver}
  onDrop={(e) => handleDrop(e, null)}
- className={`p-3 rounded-none flex items-center gap-3 cursor-pointer transition-all ${activeFolder === null ? 'bg-nous-text text-nous-base ' : 'bg-nous-base /50 text-nous-text0 hover:bg-nous-base '}`}
+ className={`p-3 rounded-none flex items-center gap-3 cursor-pointer transition-all ${activeFolder === null ? 'bg-nous-text text-nous-base ' : 'bg-nous-base /50 text-nous-subtle hover:bg-nous-base '}`}
  >
  <Folder size={16} className={activeFolder === null ? 'text-nous-base' : 'text-nous-subtle'} />
  <span className="font-sans text-xs font-medium flex-1">Quick Stash</span>
@@ -186,7 +186,7 @@ export const ZineFolders: React.FC<ZineFoldersProps> = ({ onSelectZine }) => {
  onClick={() => setActiveFolder(folder.id)}
  onDragOver={handleDragOver}
  onDrop={(e) => handleDrop(e, folder.id)}
- className={`group p-3 rounded-none flex items-center gap-3 cursor-pointer transition-all ${activeFolder === folder.id ? 'bg-nous-text text-nous-base ' : 'bg-nous-base /50 text-nous-text0 hover:bg-nous-base '}`}
+ className={`group p-3 rounded-none flex items-center gap-3 cursor-pointer transition-all ${activeFolder === folder.id ? 'bg-nous-text text-nous-base ' : 'bg-nous-base /50 text-nous-subtle hover:bg-nous-base '}`}
  >
  <Folder size={16} className={activeFolder === folder.id ? 'text-nous-base' : 'text-nous-subtle'} />
  <span className="font-sans text-xs font-medium flex-1 truncate">{folder.name}</span>
@@ -226,7 +226,7 @@ export const ZineFolders: React.FC<ZineFoldersProps> = ({ onSelectZine }) => {
  {displayedZines.length === 0 ? (
  <div className="h-64 flex flex-col items-center justify-center border-2 border-dashed border-nous-border rounded-none">
  <Folder size={32} className="text-nous-subtle mb-4"/>
- <p className="font-serif italic text-xl text-nous-text0">Empty Directory</p>
+ <p className="font-serif italic text-xl text-nous-subtle">Empty Directory</p>
  <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle mt-2">Drag and drop zines here</p>
  </div>
  ) : (

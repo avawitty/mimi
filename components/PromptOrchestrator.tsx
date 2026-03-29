@@ -68,7 +68,7 @@ export const PromptOrchestrator: React.FC<PromptOrchestratorProps> = ({ isOpen, 
  return (
  <div className="flex flex-col gap-6 w-full">
  <div className="space-y-2">
- <label className="font-sans text-[9px] uppercase tracking-widest text-nous-text0">Intent / Treatment</label>
+ <label className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle">Intent / Treatment</label>
  <textarea
  value={intent}
  onChange={(e) => setIntent(e.target.value)}
@@ -103,12 +103,12 @@ export const PromptOrchestrator: React.FC<PromptOrchestratorProps> = ({ isOpen, 
  onClick={() => handleCopy(p.id, p.text)}
  className="text-nous-subtle hover:text-nous-text hover:text-nous-text transition-colors flex-shrink-0"
  >
- {copiedId === p.id ? <Check size={14} className="text-nous-text0"/> : <Copy size={14} />}
+ {copiedId === p.id ? <Check size={14} className="text-nous-subtle"/> : <Copy size={14} />}
  </button>
  </div>
  
  <div className="bg-nous-base p-2 rounded-none border border-nous-border">
- <p className="font-sans text-[9px] uppercase tracking-wider text-nous-text0 mb-1">Rationale</p>
+ <p className="font-sans text-[9px] uppercase tracking-wider text-nous-subtle mb-1">Rationale</p>
  <p className="font-sans text-[11px] text-nous-subtle leading-snug">{p.rationale}</p>
  </div>
 

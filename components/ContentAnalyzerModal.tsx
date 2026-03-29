@@ -96,7 +96,7 @@ export const ContentAnalyzerModal: React.FC<ContentAnalyzerModalProps> = ({ onCl
  {!analysisResult ? (
  <div className="flex flex-col h-full">
  <h4 className="text-2xl font-serif italic text-nous-text mb-2">Artifact Analysis</h4>
- <p className="text-nous-text0 text-xs font-mono uppercase tracking-widest mb-8">Upload media for deep diagnostic</p>
+ <p className="text-nous-subtle text-xs font-mono uppercase tracking-widest mb-8">Upload media for deep diagnostic</p>
  
  {!file ? (
  <div 
@@ -145,7 +145,7 @@ export const ContentAnalyzerModal: React.FC<ContentAnalyzerModalProps> = ({ onCl
  ) : (
  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
  <div className="border border-nous-border p-6">
- <h4 className="text-[10px] font-mono tracking-widest uppercase text-nous-text0 mb-4 border-b border-nous-border pb-2">
+ <h4 className="text-[10px] font-mono tracking-widest uppercase text-nous-subtle mb-4 border-b border-nous-border pb-2">
  Diagnostic Read
  </h4>
  <p className="text-nous-text font-serif text-sm leading-relaxed">
@@ -160,7 +160,7 @@ export const ContentAnalyzerModal: React.FC<ContentAnalyzerModalProps> = ({ onCl
  <ul className="space-y-4">
  {analysisResult.actionPlan.map((action, idx) => (
  <li key={idx} className="flex items-start gap-3 text-xs font-mono">
- <span className="text-nous-text0 mt-0.5">✦</span>
+ <span className="text-nous-subtle mt-0.5">✦</span>
  <span className="leading-relaxed">{action}</span>
  </li>
  ))}
@@ -170,7 +170,7 @@ export const ContentAnalyzerModal: React.FC<ContentAnalyzerModalProps> = ({ onCl
  <div className="flex justify-center pt-4">
  <button 
  onClick={() => { setFile(null); setAnalysisResult(null); }}
- className="text-[10px] font-mono tracking-widest uppercase text-nous-text0 hover:text-nous-text transition-colors"
+ className="text-[10px] font-mono tracking-widest uppercase text-nous-subtle hover:text-nous-text transition-colors"
  >
  [ INGEST ANOTHER ARTIFACT ]
  </button>

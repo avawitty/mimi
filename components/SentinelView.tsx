@@ -11,7 +11,7 @@ const IntegrityMeter: React.FC<{ score: number }> = ({ score }) => (
  <div className="space-y-2">
  <div className="flex justify-between items-end">
  <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Structural Integrity</span>
- <span className="font-mono text-xl font-black text-nous-text0">{score}%</span>
+ <span className="font-mono text-xl font-black text-nous-subtle">{score}%</span>
  </div>
  <div className="h-2 w-full bg-nous-base rounded-none overflow-hidden">
  <motion.div 
@@ -79,13 +79,13 @@ export const SentinelView: React.FC = () => {
  
  {/* HEADER */}
  <header className="space-y-8 border-b border-black/5 /5 pb-12">
- <div className="flex items-center gap-4 text-nous-text0">
+ <div className="flex items-center gap-4 text-nous-subtle">
  <ShieldCheck size={18} className="animate-pulse"/>
  <span className="font-sans text-[10px] uppercase tracking-[0.6em] font-black italic">System Self-Reflection</span>
  </div>
  <div className="space-y-4">
  <h2 className="font-serif text-5xl md:text-7xl italic tracking-tighter leading-none">The Sentinel.</h2>
- <p className="font-serif italic text-xl text-nous-text0 max-w-2xl">
+ <p className="font-serif italic text-xl text-nous-subtle max-w-2xl">
  Visualization of your aesthetic algorithm. The Sentinel tracks consistency, drift, and structural integrity across all manifests.
  </p>
  </div>
@@ -169,7 +169,7 @@ export const SentinelView: React.FC = () => {
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Enter The Ward</span>
  </button>
  </div>
- <p className="font-serif italic text-lg text-nous-text0 leading-relaxed text-balance">
+ <p className="font-serif italic text-lg text-nous-subtle leading-relaxed text-balance">
  The Sentinel monitors deviations from your stated"Tailor"manifesto. High drift indicates an evolving aesthetic or a loss of coherence.
  </p>
  
@@ -177,7 +177,7 @@ export const SentinelView: React.FC = () => {
  <div className="p-4 bg-white border border-nous-border rounded-none">
  <div className="flex justify-between items-end mb-2">
  <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Drift Score</span>
- <span className={`font-mono text-lg font-black ${driftScore > 50 ? 'text-red-500' : 'text-nous-text0'}`}>{Math.round(driftScore)}</span>
+ <span className={`font-mono text-lg font-black ${driftScore > 50 ? 'text-red-500' : 'text-nous-subtle'}`}>{Math.round(driftScore)}</span>
  </div>
  <div className="h-1 w-full bg-nous-base rounded-none overflow-hidden">
  <motion.div initial={{ width: 0 }} animate={{ width: `${driftScore}%` }} className={`h-full ${driftScore > 50 ? 'bg-red-500' : 'bg-nous-base0'}`} />
@@ -186,7 +186,7 @@ export const SentinelView: React.FC = () => {
  <div className="p-4 bg-white border border-nous-border rounded-none">
  <div className="flex justify-between items-end mb-2">
  <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Omission Index</span>
- <span className={`font-mono text-lg font-black ${omissionIndex > 50 ? 'text-amber-500' : 'text-nous-text0'}`}>{Math.round(omissionIndex)}</span>
+ <span className={`font-mono text-lg font-black ${omissionIndex > 50 ? 'text-amber-500' : 'text-nous-subtle'}`}>{Math.round(omissionIndex)}</span>
  </div>
  <div className="h-1 w-full bg-nous-base rounded-none overflow-hidden">
  <motion.div initial={{ width: 0 }} animate={{ width: `${omissionIndex}%` }} className={`h-full ${omissionIndex > 50 ? 'bg-amber-500' : 'bg-nous-base0'}`} />
@@ -223,7 +223,7 @@ export const SentinelView: React.FC = () => {
  <div className="p-8 bg-nous-text text-nous-base rounded-none space-y-6 relative overflow-hidden">
  <div className="absolute top-0 right-0 p-6 opacity-20"><Layers size={64} /></div>
  <div className="relative z-10 space-y-4">
- <span className="font-sans text-[9px] uppercase tracking-widest text-nous-text0 font-black">Primary Logic</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle font-black">Primary Logic</span>
  <p className="font-header text-3xl italic tracking-tighter leading-none">
 "{profile?.tailorDraft?.aestheticCore?.eraFocus ||"Undefined Era"} / {profile?.tasteProfile?.dominant_archetypes?.[0] ||"Unknown Archetype"}"
  </p>

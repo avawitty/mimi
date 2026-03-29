@@ -37,10 +37,10 @@ export const MimiZineLayout: React.FC = () => {
  <header className="px-12 py-8 flex justify-between items-center">
  <div className="flex flex-col">
  <h1 className="font-serif text-4xl italic">Mimi</h1>
- <p className="font-sans text-[9px] uppercase tracking-[0.2em] text-nous-text0">A CREATIVE SANCTUARY FOR YOUR DIGITAL THREADS.</p>
+ <p className="font-sans text-[9px] uppercase tracking-[0.2em] text-nous-subtle">A CREATIVE SANCTUARY FOR YOUR DIGITAL THREADS.</p>
  <p className="font-sans text-[8px] uppercase tracking-[0.2em] text-nous-subtle">HOME / STUDIO</p>
  </div>
- <div className="flex gap-4 text-nous-text0">
+ <div className="flex gap-4 text-nous-subtle">
  <Zap size={16} className="hover:text-nous-text transition-colors cursor-pointer"/>
  <Moon size={16} className="hover:text-nous-text transition-colors cursor-pointer"/>
  <Sun size={16} className="hover:text-nous-text transition-colors cursor-pointer"/>
@@ -51,11 +51,11 @@ export const MimiZineLayout: React.FC = () => {
  <div className="flex-1 flex">
  {/* Left Column */}
  <div className="w-[35%] max-w-[450px] p-12 flex flex-col gap-8">
- <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-nous-text0 font-bold">AUTO AWESOME TITLE</div>
+ <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-nous-subtle font-bold">AUTO AWESOME TITLE</div>
  <input 
  type="text"
  placeholder="ENTER ZINE TITLE..."
- className="w-full bg-transparent border-b border-nous-border pb-2 text-sm uppercase tracking-widest text-nous-text0 placeholder:text-nous-subtle outline-none"
+ className="w-full bg-transparent border-b border-nous-border pb-2 text-sm uppercase tracking-widest text-nous-subtle placeholder:text-nous-subtle outline-none"
  />
  
  <div className="border border-nous-border rounded-none p-8 flex flex-col gap-6 bg-white/50">
@@ -86,27 +86,27 @@ export const MimiZineLayout: React.FC = () => {
  {/* Bottom Action Controls */}
  <div className="absolute bottom-16 flex items-center gap-12">
  <div className="flex gap-10">
- <button className="flex flex-col items-center gap-2 text-nous-text0 hover:text-nous-text transition-colors">
+ <button className="flex flex-col items-center gap-2 text-nous-subtle hover:text-nous-text transition-colors">
  <Waves size={20} strokeWidth={1.5} />
  <span className="font-sans text-[9px] uppercase tracking-[0.2em]">SIGNAL</span>
  </button>
- <button className="flex flex-col items-center gap-2 text-nous-text0 hover:text-nous-text transition-colors">
+ <button className="flex flex-col items-center gap-2 text-nous-subtle hover:text-nous-text transition-colors">
  <Smile size={20} strokeWidth={1.5} />
  <span className="font-sans text-[9px] uppercase tracking-[0.2em]">ROOT</span>
  </button>
- <button className="flex flex-col items-center gap-2 text-nous-text0 hover:text-nous-text transition-colors">
+ <button className="flex flex-col items-center gap-2 text-nous-subtle hover:text-nous-text transition-colors">
  <Shirt size={20} strokeWidth={1.5} />
  <span className="font-sans text-[9px] uppercase tracking-[0.2em]">TAILOR</span>
  </button>
  </div>
- <a href="#"className="font-sans text-[9px] uppercase tracking-[0.2em] text-nous-text0 hover:text-nous-text transition-colors">→ SUBMIT TO ISSUE</a>
+ <a href="#"className="font-sans text-[9px] uppercase tracking-[0.2em] text-nous-subtle hover:text-nous-text transition-colors">→ SUBMIT TO ISSUE</a>
  </div>
  </div>
  </div>
 
  {/* Footer */}
  <footer className="px-12 py-8 flex justify-end items-end">
- <div className="flex gap-8 font-sans text-[9px] uppercase tracking-[0.2em] text-nous-text0">
+ <div className="flex gap-8 font-sans text-[9px] uppercase tracking-[0.2em] text-nous-subtle">
  <a href="#">PRIVACY</a>
  <a href="#">COMMUNITY</a>
  </div>

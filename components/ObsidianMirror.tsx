@@ -155,7 +155,7 @@ export const ObsidianMirror: React.FC = () => {
  </div>
  <div className="space-y-4 max-w-md mx-auto">
  <h3 className="font-sans text-[10px] uppercase tracking-[0.4em] font-black text-red-500">Handshake Failure</h3>
- <p className="font-serif italic text-xl md:text-2xl text-nous-text0 leading-tight">
+ <p className="font-serif italic text-xl md:text-2xl text-nous-subtle leading-tight">
 "{error}"
  </p>
  </div>
@@ -186,7 +186,7 @@ export const ObsidianMirror: React.FC = () => {
  <Fingerprint size={10} />
  <span className="font-sans text-[7px] uppercase tracking-widest font-black">Lens Provenance</span>
  </div>
- <p className="font-serif italic text-sm text-nous-text0 leading-relaxed">
+ <p className="font-serif italic text-sm text-nous-subtle leading-relaxed">
  {provenance}
  </p>
  </motion.div>

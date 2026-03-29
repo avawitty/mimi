@@ -48,7 +48,7 @@ const CONTENT = {
  <div className="mt-0.5 text-red-900 dark:text-red-400">{cap.icon}</div>
  <div>
  <h4 className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-text">{cap.title}</h4>
- <p className="font-serif italic text-xs text-nous-text0">{cap.desc}</p>
+ <p className="font-serif italic text-xs text-nous-subtle">{cap.desc}</p>
  </div>
  </div>
  ))}
@@ -184,7 +184,7 @@ export const CuratorNote: React.FC<{ isOpen: boolean; onClose: () => void }> = (
  {/* Card Footer (Actions) */}
  <div className="p-4 border-t border-nous-border/50 /50 bg/80 dark:bg/80 flex justify-between items-center backdrop-blur-sm shrink-0">
  <span className="font-serif italic text-xs text-nous-subtle">"Sovereignty requires structure."</span>
- <button onClick={onClose} className="p-2 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors text-nous-text0">
+ <button onClick={onClose} className="p-2 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors text-nous-subtle">
  <ArrowDown size={16} />
  </button>
  </div>

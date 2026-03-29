@@ -50,7 +50,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  <div className="fixed inset-0 z-[20000] bg-nous-base text-nous-text flex items-center justify-center p-8">
  <div className="max-w-md text-center space-y-4">
  <p className="font-serif italic text-xl text-red-400">Artifact Structural Failure</p>
- <p className="font-sans text-xs text-nous-text0">The metadata for this zine is incomplete or corrupted.</p>
+ <p className="font-sans text-xs text-nous-subtle">The metadata for this zine is incomplete or corrupted.</p>
  <button onClick={onClose} className="px-6 py-2 bg-nous-text text-nous-base rounded-none font-sans text-xs font-black">Close</button>
  </div>
  </div>
@@ -234,7 +234,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  <aside className="w-full md:w-[400px] border-r border-nous-border bg-white flex flex-col p-8 shrink-0 z-20 overflow-y-auto no-scrollbar">
  <div className="flex justify-between items-center mb-12">
  <div className="space-y-1">
- <span className="font-sans text-[8px] uppercase tracking-[0.5em] font-black text-nous-text0">Extraction Protocol</span>
+ <span className="font-sans text-[8px] uppercase tracking-[0.5em] font-black text-nous-subtle">Extraction Protocol</span>
  <h2 className="font-serif text-3xl italic tracking-tighter text-nous-text text-nous-text">Extract Artifact.</h2>
  </div>
  <button onClick={onClose} className="p-2 text-nous-subtle hover:text-red-500 transition-all rounded-none hover:bg-nous-base"><X size={20}/></button>
@@ -248,10 +248,10 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  <button key={m.id} onClick={() => setExportMode(m.id as any)} className={`text-left p-5 rounded-none border transition-all ${exportMode === m.id ? 'bg-nous-base /20 border-nous-border ring-1 ring-stone-500/20' : 'text-nous-subtle border-nous-border hover:bg-nous-base '}`}>
  <div className="flex items-center justify-between mb-2">
  <div className="flex items-center gap-3">
- <div className={exportMode === m.id ? 'text-nous-text0' : 'text-nous-subtle'}>{m.icon}</div>
- <p className={`font-serif italic text-lg ${exportMode === m.id ? 'text-nous-text text-nous-text' : 'text-nous-text0'}`}>{m.label}</p>
+ <div className={exportMode === m.id ? 'text-nous-subtle' : 'text-nous-subtle'}>{m.icon}</div>
+ <p className={`font-serif italic text-lg ${exportMode === m.id ? 'text-nous-text text-nous-text' : 'text-nous-subtle'}`}>{m.label}</p>
  </div>
- {exportMode === m.id && <CheckCircle2 size={14} className="text-nous-text0"/>}
+ {exportMode === m.id && <CheckCircle2 size={14} className="text-nous-subtle"/>}
  </div>
  <p className="font-sans text-[9px] text-nous-subtle leading-relaxed uppercase tracking-wide opacity-80 pl-9">{m.desc}</p>
  </button>
@@ -264,7 +264,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  <div className="grid grid-cols-2 gap-2">
  {SECTION_DEFS.map(s => (
  <button key={s.id} onClick={() => toggleSection(s.id)} className={`flex items-center gap-3 p-3 rounded-none border transition-all ${selectedSections.has(s.id) ? 'bg-nous-base border-nous-border text-nous-text text-nous-text' : 'text-nous-subtle border-transparent hover:bg-nous-base '}`}>
- <div className={selectedSections.has(s.id) ? 'text-nous-text0' : ''}>{s.icon}</div>
+ <div className={selectedSections.has(s.id) ? 'text-nous-subtle' : ''}>{s.icon}</div>
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">{s.label}</span>
  </button>
  ))}
@@ -283,7 +283,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
 
  {/* PREVIEW AREA */}
  <main className="flex-1 bg-stone-200/50 dark:bg overflow-y-auto p-4 md:p-12 flex justify-center no-scrollbar">
- <AnimatePresence>{isGenerating && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-white/80 /80 backdrop-blur-md z-50 flex items-center justify-center"><div className="bg-white p-12 rounded-none text-center space-y-6 border border-nous-border"><Loader2 size={40} className="animate-spin text-nous-text0 mx-auto"/><div className="space-y-2"><p className="font-serif italic text-2xl text-nous-text text-nous-text">“Compressing Reality...”</p><p className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle">Preparing High-Fidelity Output</p></div></div></motion.div>}</AnimatePresence>
+ <AnimatePresence>{isGenerating && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-white/80 /80 backdrop-blur-md z-50 flex items-center justify-center"><div className="bg-white p-12 rounded-none text-center space-y-6 border border-nous-border"><Loader2 size={40} className="animate-spin text-nous-subtle mx-auto"/><div className="space-y-2"><p className="font-serif italic text-2xl text-nous-text text-nous-text">“Compressing Reality...”</p><p className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle">Preparing High-Fidelity Output</p></div></div></motion.div>}</AnimatePresence>
  
  <div id="export-target"className={`transition-all duration-500 ${exportMode === 'scroll' ? 'bg-white ' : ''}`} style={containerStyle}>
  
@@ -299,7 +299,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  </div>
  <div className="h-px w-24 bg-stone-200"/>
  <div className="space-y-2">
- <p className="font-serif italic text-2xl text-nous-text0">@{metadata.userHandle}</p>
+ <p className="font-serif italic text-2xl text-nous-subtle">@{metadata.userHandle}</p>
  <p className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle font-black">{metadata.tone} // {new Date(metadata.timestamp).toLocaleDateString()}</p>
  </div>
  </div>
@@ -353,7 +353,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  />
  </div>
  <h2 className="font-serif text-3xl italic tracking-tight uppercase mb-4 text-nous-text text-nous-text">{page.headline}</h2>
- <p className="font-serif italic text-base text-nous-text0 leading-relaxed">{page.bodyCopy}</p>
+ <p className="font-serif italic text-base text-nous-subtle leading-relaxed">{page.bodyCopy}</p>
  </div>
  ))}
 
@@ -376,7 +376,7 @@ export const ExportChamber: React.FC<ExportChamberProps> = ({ metadata, onClose 
  </div>
  <div className="space-y-2">
  <span className="font-sans text-[7px] uppercase tracking-[0.2em] font-black text-nous-subtle block">Authority Anchor</span>
- <p className="font-serif italic text-sm text-nous-text0 leading-snug border-b border-nous-border pb-4">
+ <p className="font-serif italic text-sm text-nous-subtle leading-snug border-b border-nous-border pb-4">
  <strong>Core Claim:</strong> {content.roadmap.authorityAnchor?.coreClaim}<br/>
  <strong>Repetition Vector:</strong> {content.roadmap.authorityAnchor?.repetitionVector}<br/>
  <strong>Exclusion Principle:</strong> {content.roadmap.authorityAnchor?.exclusionPrinciple}

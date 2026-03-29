@@ -75,7 +75,7 @@ export const SignatureImageGenerator: React.FC<Props> = ({ signature }) => {
  <div className="aspect-square border border-nous-border overflow-hidden bg-nous-base">
  <img src={frame.url} alt={`Reference ${idx + 1}`} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"referrerPolicy="no-referrer"/>
  </div>
- <div className="font-mono text-[8px] text-nous-text0 uppercase tracking-widest">
+ <div className="font-mono text-[8px] text-nous-subtle uppercase tracking-widest">
  {frame.metadata}
  </div>
  </div>

@@ -26,7 +26,7 @@ export const CollabModal: React.FC<CollabModalProps> = ({
  <div className="bg p-8 rounded-none max-w-lg w-full space-y-6 border border-nous-border">
  <div className="flex justify-between items-center border-b border-nous-border pb-4">
  <h3 className="font-serif italic text-2xl text-nous-text">Manage Collaborators.</h3>
- <button onClick={onClose}><X size={20} className="text-nous-text0 hover:text-nous-subtle"/></button>
+ <button onClick={onClose}><X size={20} className="text-nous-subtle hover:text-nous-subtle"/></button>
  </div>
  <div className="space-y-4">
  <div className="flex gap-2">
@@ -38,17 +38,17 @@ export const CollabModal: React.FC<CollabModalProps> = ({
  />
  <button onClick={handleSearchCollaborators} className="px-4 py-2 bg-nous-base0 text-black rounded-none font-mono text-[9px] uppercase font-bold tracking-widest hover:bg-stone-600 transition-colors">Search</button>
  </div>
- {isSearchingCollab && <Loader2 size={20} className="animate-spin text-nous-text0 mx-auto"/>}
+ {isSearchingCollab && <Loader2 size={20} className="animate-spin text-nous-subtle mx-auto"/>}
  <div className="space-y-2 max-h-60 overflow-y-auto">
  {collabSearchResults.map(profile => (
  <div key={profile.uid} className="flex justify-between items-center p-2 border border-nous-border rounded-none">
  <span className="font-mono text-sm text-nous-subtle">{profile.handle}</span>
- <button onClick={() => handleAddCollaborator(profile.uid)} className="text-nous-text0 hover:text-nous-subtle"><Plus size={16} /></button>
+ <button onClick={() => handleAddCollaborator(profile.uid)} className="text-nous-subtle hover:text-nous-subtle"><Plus size={16} /></button>
  </div>
  ))}
  </div>
  <div className="border-t border-nous-border pt-4 space-y-2">
- <h4 className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-text0">Current Collaborators</h4>
+ <h4 className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-subtle">Current Collaborators</h4>
  {collabProfiles.map(profile => (
  <div key={profile.uid} className="flex justify-between items-center p-2 border border-nous-border rounded-none">
  <span className="font-mono text-sm text-nous-subtle">{profile.handle}</span>

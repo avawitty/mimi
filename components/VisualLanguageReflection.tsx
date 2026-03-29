@@ -11,7 +11,7 @@ export const VisualLanguageReflection: React.FC<{
  return (
  <div className="w-full max-w-2xl bg dark:bg border border-blue-400 p-8">
  <div className="flex items-center gap-3 mb-6">
- <Target size={20} className="text-nous-text0"/>
+ <Target size={20} className="text-nous-subtle"/>
  <h2 className="font-sans text-[10px] uppercase tracking-[0.3em] font-black text-nous-subtle">Visual Language Reflection</h2>
  </div>
  

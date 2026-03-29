@@ -15,13 +15,13 @@ export const NotificationsPanel: React.FC = () => {
 
  return (
  <div className="notifications-panel p-4 bg border border-nous-border">
- <h2 className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-text0 mb-4">Notifications</h2>
+ <h2 className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-subtle mb-4">Notifications</h2>
  {notifications.length === 0 ? (
- <p className="font-serif italic text-sm text-nous-text0">No new notifications.</p>
+ <p className="font-serif italic text-sm text-nous-subtle">No new notifications.</p>
  ) : (
  <ul>
  {notifications.map(n => (
- <li key={n.id} className={`mb-2 p-3 border ${n.read ? 'bg-transparent border-nous-border text-nous-text0' : 'bg-nous-base border-nous-border text-nous-subtle'}`}>
+ <li key={n.id} className={`mb-2 p-3 border ${n.read ? 'bg-transparent border-nous-border text-nous-subtle' : 'bg-nous-base border-nous-border text-nous-subtle'}`}>
  <h3 className="font-mono text-[9px] uppercase tracking-widest font-bold mb-1">{n.title}</h3>
  <p className="font-serif italic text-sm">{n.message}</p>
  </li>

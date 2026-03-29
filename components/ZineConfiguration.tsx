@@ -26,7 +26,7 @@ export const ZineConfiguration: React.FC<ZineConfigurationProps> = ({ zineOption
  className={`text-left p-3 border rounded-none transition-colors flex items-center justify-between ${!zineOptions.selectedTreatmentId ? 'border-primary  bg-primary/5 /5' : 'border-nous-border hover:border-primary/50 dark:hover:border-white/50'}`}
  >
  <div>
- <p className={`font-sans text-xs uppercase tracking-widest ${!zineOptions.selectedTreatmentId ? 'text-primary text-nous-text font-bold' : 'text-nous-text0'}`}>Default / Manual</p>
+ <p className={`font-sans text-xs uppercase tracking-widest ${!zineOptions.selectedTreatmentId ? 'text-primary text-nous-text font-bold' : 'text-nous-subtle'}`}>Default / Manual</p>
  <p className="text-[10px] text-nous-subtle mt-1">Use manual directives or default Tailor logic.</p>
  </div>
  {!zineOptions.selectedTreatmentId && <Check size={14} className="text-primary text-nous-text"/>}
@@ -39,10 +39,10 @@ export const ZineConfiguration: React.FC<ZineConfigurationProps> = ({ zineOption
  className={`text-left p-3 border rounded-none transition-colors flex items-center justify-between ${zineOptions.selectedTreatmentId === t.id ? 'border-nous-border bg-nous-base0/5' : 'border-nous-border hover:border-nous-border /50'}`}
  >
  <div>
- <p className={`font-serif italic text-sm ${zineOptions.selectedTreatmentId === t.id ? 'text-nous-text0' : 'text-nous-subtle '}`}>{t.treatmentName}</p>
+ <p className={`font-serif italic text-sm ${zineOptions.selectedTreatmentId === t.id ? 'text-nous-subtle' : 'text-nous-subtle '}`}>{t.treatmentName}</p>
  <p className="text-[10px] font-mono text-nous-subtle mt-1 line-clamp-1">{t.applicationLogic}</p>
  </div>
- {zineOptions.selectedTreatmentId === t.id && <Check size={14} className="text-nous-text0"/>}
+ {zineOptions.selectedTreatmentId === t.id && <Check size={14} className="text-nous-subtle"/>}
  </button>
  ))}
  </div>

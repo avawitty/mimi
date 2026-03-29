@@ -90,7 +90,7 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
  transition={{ delay: 0.1, type: 'spring' }}
  className="flex flex-col items-center gap-4"
  >
- <div className="w-16 h-16 bg-white rounded-none flex items-center justify-center text-nous-text0">
+ <div className="w-16 h-16 bg-white rounded-none flex items-center justify-center text-nous-subtle">
  <Check size={32} strokeWidth={3} />
  </div>
  <h2 className="font-serif italic text-4xl tracking-tighter">Access Granted.</h2>
@@ -129,7 +129,7 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
  {/* CORE TIER */}
  <div className="border border/20 p-6 flex flex-col bg-white/50 backdrop-blur-sm relative">
  <h3 className="font-serif italic text-2xl text">Core</h3>
- <div className="font-mono text-[10px] uppercase tracking-widest text-nous-text0 mb-4">Interpreter</div>
+ <div className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle mb-4">Interpreter</div>
  <div className="text-3xl font-light tracking-tighter mb-6">$13<span className="text-sm text-nous-subtle">/mo</span></div>
  <ul className="space-y-3 mb-8 flex-1 text-sm text-nous-subtle">
  <li className="flex items-start gap-2"><Check size={14} className="mt-1 shrink-0"/> Unlimited Archive saves</li>
@@ -152,7 +152,7 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
  <div className="border-2 border p-6 flex flex-col bg-white relative transform md:-translate-y-4">
  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg text-white text-[9px] font-mono uppercase tracking-widest px-3 py-1">Most Popular</div>
  <h3 className="font-serif italic text-2xl text">Pro</h3>
- <div className="font-mono text-[10px] uppercase tracking-widest text-nous-text0 mb-4">Strategist</div>
+ <div className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle mb-4">Strategist</div>
  <div className="text-3xl font-light tracking-tighter mb-6">$35<span className="text-sm text-nous-subtle">/mo</span></div>
  <ul className="space-y-3 mb-8 flex-1 text-sm text-nous-subtle">
  <li className="flex items-start gap-2"><Check size={14} className="mt-1 shrink-0"/> Everything in Core</li>
@@ -188,7 +188,7 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
  <button 
  onClick={() => handleSubscribe('lab')}
  disabled={!!isCheckoutLoading || profile?.planStatus === 'lab'}
- className={`w-full py-3 border border-nous-border font-sans text-[10px] uppercase tracking-[0.2em] font-bold transition-colors flex justify-center items-center gap-2 ${profile?.planStatus === 'lab' ? 'bg-nous-base text-nous-text0 border-nous-border cursor-not-allowed' : 'hover:bg-white hover:text'}`}
+ className={`w-full py-3 border border-nous-border font-sans text-[10px] uppercase tracking-[0.2em] font-bold transition-colors flex justify-center items-center gap-2 ${profile?.planStatus === 'lab' ? 'bg-nous-base text-nous-subtle border-nous-border cursor-not-allowed' : 'hover:bg-white hover:text'}`}
  >
  {isCheckoutLoading === 'lab' ? <Loader2 size={14} className="animate-spin"/> : profile?.planStatus === 'lab' ? 'Current Plan' : 'Shape The System'}
  </button>

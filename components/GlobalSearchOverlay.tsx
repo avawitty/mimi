@@ -93,7 +93,7 @@ export const GlobalSearchOverlay: React.FC<{ isOpen: boolean; onClose: () => voi
  placeholder="Trace an artifact by intent or form..."
  className="w-full bg-transparent border-b-2 border-nous-border py-8 font-serif italic text-3xl md:text-6xl text-nous-text  focus:outline-none focus:border-nous-border dark:focus:border-nous-border transition-all placeholder:text-nous-text"
  />
- {loading && <div className="absolute right-4 top-1/2 -translate-y-1/2"><Loader2 className="animate-spin text-nous-text0"/></div>}
+ {loading && <div className="absolute right-4 top-1/2 -translate-y-1/2"><Loader2 className="animate-spin text-nous-subtle"/></div>}
  </div>
 
  <div className="flex-1 overflow-y-auto no-scrollbar space-y-16 pb-32">
@@ -101,7 +101,7 @@ export const GlobalSearchOverlay: React.FC<{ isOpen: boolean; onClose: () => voi
  <>
  {filtered.zines.length > 0 && (
  <section className="space-y-8">
- <div className="flex items-center gap-3 text-nous-text0">
+ <div className="flex items-center gap-3 text-nous-subtle">
  <FileText size={14} />
  <span className="font-sans text-[9px] uppercase tracking-widest font-black">Authored Manifests</span>
  </div>
@@ -137,7 +137,7 @@ export const GlobalSearchOverlay: React.FC<{ isOpen: boolean; onClose: () => voi
  >
  <div className="w-12 h-12 bg-black overflow-hidden rounded-none flex-shrink-0">
  {p.type === 'image' && <img src={p.content.imageUrl} className="w-full h-full object-cover grayscale group-hover:grayscale-0"/>}
- {p.type !== 'image' && <div className="w-full h-full flex items-center justify-center text-nous-text0"><Radio size={16}/></div>}
+ {p.type !== 'image' && <div className="w-full h-full flex items-center justify-center text-nous-subtle"><Radio size={16}/></div>}
  </div>
  <div className="flex-1 min-w-0">
  <h5 className="font-serif italic text-sm text-nous-subtle truncate">{p.content.prompt || p.content.name || 'Untitled'}</h5>

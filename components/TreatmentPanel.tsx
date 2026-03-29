@@ -59,10 +59,10 @@ export const TreatmentPanel: React.FC<TreatmentPanelProps> = ({ treatments, onAp
  </div>
  <div className="flex flex-col">
  <span className="font-sans text-[10px] uppercase tracking-[0.4em] font-black text-nous-subtle">Aesthetic Presets</span>
- <span className="font-mono text-[7px] text-nous-text0 uppercase tracking-widest">Registry_Darkroom_v2</span>
+ <span className="font-mono text-[7px] text-nous-subtle uppercase tracking-widest">Registry_Darkroom_v2</span>
  </div>
  </div>
- <button onClick={onClose} className="p-3 text-nous-text0 hover:text-nous-text transition-all bg-white/5 border border-white/10"><X size={20}/></button>
+ <button onClick={onClose} className="p-3 text-nous-subtle hover:text-nous-text transition-all bg-white/5 border border-white/10"><X size={20}/></button>
  </header>
 
  <div className="flex-1 overflow-y-auto no-scrollbar p-8">
@@ -81,7 +81,7 @@ export const TreatmentPanel: React.FC<TreatmentPanelProps> = ({ treatments, onAp
  <Zap size={32} strokeWidth={1} />
  </div>
  <div className="space-y-2">
- <p className="font-serif italic text-2xl text-nous-text0">“No Logic Shards Bound.”</p>
+ <p className="font-serif italic text-2xl text-nous-subtle">“No Logic Shards Bound.”</p>
  <p className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle">Manifest a preset to begin batching.</p>
  </div>
  </div>
@@ -108,8 +108,8 @@ export const TreatmentPanel: React.FC<TreatmentPanelProps> = ({ treatments, onAp
  <h4 className="font-header text-3xl italic tracking-tighter text-white mb-4 relative z-10">{t.name}</h4>
  <div className="p-5 bg-black/40 border border-white/5 relative z-10">
  <div className="flex items-center gap-2 mb-3">
- <Sliders size={10} className="text-nous-text0"/>
- <span className="font-sans text-[7px] uppercase tracking-widest text-nous-text0 font-black">Pixel Logic</span>
+ <Sliders size={10} className="text-nous-subtle"/>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Pixel Logic</span>
  </div>
  <p className="font-serif italic text-base text-nous-subtle leading-relaxed line-clamp-3">"{t.instruction}"</p>
  </div>
@@ -120,7 +120,7 @@ export const TreatmentPanel: React.FC<TreatmentPanelProps> = ({ treatments, onAp
  
  <button 
  onClick={() => setMode('create')}
- className="w-full py-10 border border-dashed border-nous-border text-nous-text0 hover:text-nous-text hover:border-indigo-500 transition-all flex flex-col items-center justify-center gap-4 bg-white/2 hover:bg-indigo-500/5 group"
+ className="w-full py-10 border border-dashed border-nous-border text-nous-subtle hover:text-nous-text hover:border-indigo-500 transition-all flex flex-col items-center justify-center gap-4 bg-white/2 hover:bg-indigo-500/5 group"
  >
  <div className="p-4 bg-nous-base border border-nous-border group-hover:scale-110 transition-transform">
  <Plus size={32} strokeWidth={1} />
@@ -131,7 +131,7 @@ export const TreatmentPanel: React.FC<TreatmentPanelProps> = ({ treatments, onAp
  </motion.div>
  ) : (
  <motion.div key="create"initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="space-y-12">
- <button onClick={() => setMode('list')} className="flex items-center gap-4 text-nous-text0 mb-8 hover:text-nous-text transition-colors group">
+ <button onClick={() => setMode('list')} className="flex items-center gap-4 text-nous-subtle mb-8 hover:text-nous-text transition-colors group">
  <ArrowRight size={16} className="rotate-180 group-hover:-translate-x-1 transition-transform"/>
  <span className="font-sans text-[9px] uppercase tracking-widest font-black">Back to Vault</span>
  </button>
@@ -143,7 +143,7 @@ export const TreatmentPanel: React.FC<TreatmentPanelProps> = ({ treatments, onAp
 
  <div className="space-y-12">
  <div className="space-y-3">
- <label htmlFor="presetName"className="font-sans text-[9px] uppercase tracking-[0.4em] font-black text-nous-text0">Preset Identity</label>
+ <label htmlFor="presetName"className="font-sans text-[9px] uppercase tracking-[0.4em] font-black text-nous-subtle">Preset Identity</label>
  <input 
  id="presetName"
  name="presetName"
@@ -157,9 +157,9 @@ export const TreatmentPanel: React.FC<TreatmentPanelProps> = ({ treatments, onAp
 
  <div className="space-y-6">
  <div className="flex justify-between items-center">
- <label htmlFor="presetInstruction"className="font-sans text-[9px] uppercase tracking-[0.4em] font-black text-nous-text0">Visual Mandate</label>
+ <label htmlFor="presetInstruction"className="font-sans text-[9px] uppercase tracking-[0.4em] font-black text-nous-subtle">Visual Mandate</label>
  <div className="flex items-center gap-2">
- <Sparkles size={12} className="text-nous-text0"/>
+ <Sparkles size={12} className="text-nous-subtle"/>
  <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle italic">Mimi Suggestions</span>
  </div>
  </div>
@@ -187,15 +187,15 @@ export const TreatmentPanel: React.FC<TreatmentPanelProps> = ({ treatments, onAp
 
  <div className="space-y-4">
  <div className="flex items-center gap-3 mb-2">
- <Settings2 size={12} className="text-nous-text0"/>
- <label className="font-sans text-[9px] uppercase tracking-[0.4em] font-black text-nous-text0">Development Protocol</label>
+ <Settings2 size={12} className="text-nous-subtle"/>
+ <label className="font-sans text-[9px] uppercase tracking-[0.4em] font-black text-nous-subtle">Development Protocol</label>
  </div>
  <div className="grid grid-cols-2 gap-4">
- <button onClick={() => setNewVariance('interpretive')} className={`py-6 px-6 border font-sans text-[10px] uppercase tracking-widest font-black transition-all flex flex-col items-center gap-2 ${newVariance === 'interpretive' ? 'bg-nous-base text-nous-text border-white' : 'border-nous-border text-nous-text0 hover:border-nous-border'}`}>
+ <button onClick={() => setNewVariance('interpretive')} className={`py-6 px-6 border font-sans text-[10px] uppercase tracking-widest font-black transition-all flex flex-col items-center gap-2 ${newVariance === 'interpretive' ? 'bg-nous-base text-nous-text border-white' : 'border-nous-border text-nous-subtle hover:border-nous-border'}`}>
  <Wand2 size={16} />
  Interpretive
  </button>
- <button onClick={() => setNewVariance('anchored')} className={`py-6 px-6 border font-sans text-[10px] uppercase tracking-widest font-black transition-all flex flex-col items-center gap-2 ${newVariance === 'anchored' ? 'bg-nous-base text-nous-text border-white' : 'border-nous-border text-nous-text0 hover:border-nous-border'}`}>
+ <button onClick={() => setNewVariance('anchored')} className={`py-6 px-6 border font-sans text-[10px] uppercase tracking-widest font-black transition-all flex flex-col items-center gap-2 ${newVariance === 'anchored' ? 'bg-nous-base text-nous-text border-white' : 'border-nous-border text-nous-subtle hover:border-nous-border'}`}>
  <Anchor size={16} />
  Anchored
  </button>
@@ -232,7 +232,7 @@ export const TreatmentPanel: React.FC<TreatmentPanelProps> = ({ treatments, onAp
  </AnimatePresence>
 
  <footer className="h-24 border-t border-nous-border px-10 flex items-center justify-center bg-black/40 shrink-0">
- <p className="font-serif italic text-xs text-nous-text0 text-center">“Consistency is the highest form of visual intelligence.”</p>
+ <p className="font-serif italic text-xs text-nous-subtle text-center">“Consistency is the highest form of visual intelligence.”</p>
  </footer>
  </motion.div>
  );

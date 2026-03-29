@@ -54,12 +54,12 @@ const SonicShardPlayer: React.FC<{ url: string }> = ({ url }) => {
  <audio ref={audioRef} src={url} onEnded={() => setIsPlaying(false)} className="hidden"/>
  <div className="relative">
  <div className={`absolute inset-0 bg-nous-base0/20 blur-xl rounded-none transition-opacity duration-1000 ${isPlaying ? 'opacity-100' : 'opacity-0'}`} />
- <button onClick={togglePlay} className="relative z-10 p-5 bg-white rounded-none hover:scale-110 active:scale-95 transition-all text-nous-text0">
+ <button onClick={togglePlay} className="relative z-10 p-5 bg-white rounded-none hover:scale-110 active:scale-95 transition-all text-nous-subtle">
  {isPlaying ? <Pause size={24} /> : <Play size={24} className="ml-1"/>}
  </button>
  </div>
  <div className="space-y-1">
- <Waves size={32} className={`text-nous-text0/40 mx-auto ${isPlaying ? 'animate-pulse' : ''}`} />
+ <Waves size={32} className={`text-nous-subtle/40 mx-auto ${isPlaying ? 'animate-pulse' : ''}`} />
  <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle">Sonic Refraction</span>
  </div>
  </div>
@@ -84,19 +84,19 @@ const FinancialBriefOverlay: React.FC<{ report: InvestmentReport; onClose: () =>
  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[6000] bg-nous-base/95 backdrop-blur-xl flex items-center justify-center p-6 md:p-12 overflow-y-auto">
  <div className="w-full max-w-4xl bg border border-nous-border rounded-none overflow-hidden flex flex-col max-h-[90vh]">
  <header className="flex justify-between items-center p-8 border-b border-nous-border bg-black/50 shrink-0">
- <div className="flex items-center gap-4 text-nous-text0">
+ <div className="flex items-center gap-4 text-nous-subtle">
  <Wallet size={20} />
  <span className="font-sans text-[10px] uppercase tracking-[0.6em] font-black italic">The Strategist // Fiscal Audit</span>
  </div>
- <button onClick={onClose} className="p-2 text-nous-text0 hover:text-nous-text"><X size={20} /></button>
+ <button onClick={onClose} className="p-2 text-nous-subtle hover:text-nous-text"><X size={20} /></button>
  </header>
  
  <div className="flex-1 overflow-y-auto p-8 md:p-12 space-y-12">
  <section className="space-y-6">
  <div className="flex justify-between items-start">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0">Executive Thesis</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">Executive Thesis</span>
  <div className="flex items-center gap-2 px-3 py-1 bg-nous-base0/10 border border-nous-border/20 rounded-none">
- <Activity size={12} className="text-nous-text0"/>
+ <Activity size={12} className="text-nous-subtle"/>
  <span className="font-mono text-[9px] text-nous-subtle font-bold">IMPACT: {report.capsule_impact_score}/100</span>
  </div>
  </div>
@@ -107,7 +107,7 @@ const FinancialBriefOverlay: React.FC<{ report: InvestmentReport; onClose: () =>
  </section>
 
  <section className="space-y-8">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0 border-b border-nous-border pb-2 block">Capital Allocation Roadmap</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle border-b border-nous-border pb-2 block">Capital Allocation Roadmap</span>
  <div className="grid gap-4">
  {report.capital_allocation.map((item, i) => (
  <div key={i} className="p-6 bg-nous-base/50 border border-nous-border rounded-none flex flex-col md:flex-row gap-6">
@@ -115,7 +115,7 @@ const FinancialBriefOverlay: React.FC<{ report: InvestmentReport; onClose: () =>
  <span className={`font-sans text-[8px] uppercase tracking-widest font-black px-2 py-1 rounded-none ${item.category === 'KEYSTONE ASSET' ? 'bg-nous-base0 text-black' : item.category === 'VANITY METRIC' ? 'bg-red-500/20 text-red-400' : 'bg-nous-base text-nous-subtle'}`}>
  {item.category}
  </span>
- <p className="font-mono text-[9px] text-nous-text0 pt-2">{item.fiscal_route}</p>
+ <p className="font-mono text-[9px] text-nous-subtle pt-2">{item.fiscal_route}</p>
  </div>
  <div className="flex-1 space-y-3">
  <div className="flex flex-wrap gap-2">
@@ -233,7 +233,7 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  {item.agentEnrichment && (
  <div className="p-6 bg-nous-base /50 rounded-none border border-nous-border space-y-4">
  <div className="flex items-center gap-2">
- <Fingerprint size={14} className="text-nous-text0"/>
+ <Fingerprint size={14} className="text-nous-subtle"/>
  <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">Agent Enrichment</span>
  </div>
  <div className="grid grid-cols-2 gap-4">
@@ -257,7 +257,7 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  </div>
  <div className="flex flex-wrap gap-2">
  {item.content.semiotic_touchpoints.map((pt: string, i: number) => (
- <span key={i} className="px-2 py-1 bg-white text-nous-text0 font-mono text-[8px] rounded-none border border-nous-border">
+ <span key={i} className="px-2 py-1 bg-white text-nous-subtle font-mono text-[8px] rounded-none border border-nous-border">
  {pt}
  </span>
  ))}
@@ -270,7 +270,7 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  {item.type === 'zine_card' && (
  <div className="w-full max-w-2xl bg-white p-6 md:p-12 space-y-8 overflow-y-auto max-h-[80vh] border border-nous-border">
  <div className="space-y-2 border-b border-nous-border pb-6">
- <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-nous-text0 font-black">Zine Inspection</span>
+ <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-nous-subtle font-black">Zine Inspection</span>
  <h2 className="font-serif text-4xl italic text-nous-text text-nous-text">{item.content.title}</h2>
  </div>
  
@@ -325,7 +325,7 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  {item.type === 'analysis_report' && (
  <div className="w-full max-w-2xl bg-nous-text text-nous-base p-6 md:p-12 space-y-8 overflow-y-auto max-h-[80vh]">
  <div className="space-y-2 border-b border-white/10 pb-6">
- <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-nous-text0 font-black">The Lens Analysis</span>
+ <span className="font-sans text-[10px] uppercase tracking-[0.4em] text-nous-subtle font-black">The Lens Analysis</span>
  <h2 className="font-serif text-4xl italic">{item.content.title}</h2>
  </div>
  
@@ -381,7 +381,7 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  {!isEditing ? (
  <button onClick={() => setIsEditing(true)} className="text-nous-subtle hover:text-nous-text hover:text-nous-text"><Pencil size={14} /></button>
  ) : (
- <button onClick={handleSave} className="text-nous-text0 hover:text-nous-subtle"><Check size={14} /></button>
+ <button onClick={handleSave} className="text-nous-subtle hover:text-nous-subtle"><Check size={14} /></button>
  )}
  </div>
  
@@ -403,9 +403,9 @@ const ShardDetailView: React.FC<{ item: PocketItem; onClose: () => void; onUpdat
  ) : (
  <div className="space-y-4">
  <h2 className="font-serif text-4xl italic text-nous-text text-nous-text leading-tight">{title || 'Untitled Fragment'}</h2>
- {description && <p className="font-serif text-sm text-nous-text0 italic leading-relaxed">{description}</p>}
+ {description && <p className="font-serif text-sm text-nous-subtle italic leading-relaxed">{description}</p>}
  {price && (
- <div className="flex items-center gap-2 text-nous-text0 font-mono text-sm bg-nous-base0/5 px-3 py-2 rounded-none w-fit border border-nous-border/10">
+ <div className="flex items-center gap-2 text-nous-subtle font-mono text-sm bg-nous-base0/5 px-3 py-2 rounded-none w-fit border border-nous-border/10">
  <DollarSign size={14} />
  <span className="font-black">{price}</span>
  </div>
@@ -779,7 +779,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  <AnimatePresence>
  {isAnalyzing && (
  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[7000] bg-white/80 /80 backdrop-blur-xl flex flex-col items-center justify-center gap-8">
- <Loader2 size={48} className={`animate-spin ${activeAgent === 'strategist' ? 'text-nous-text0' : 'text-indigo-500'}`} />
+ <Loader2 size={48} className={`animate-spin ${activeAgent === 'strategist' ? 'text-nous-subtle' : 'text-indigo-500'}`} />
  <div className="text-center space-y-2">
  <h3 className="font-serif text-3xl italic text-nous-text text-nous-text">
  {activeAgent === 'strategist' ?"Summoning The Strategist...":"Invoking The Curator..."}
@@ -806,7 +806,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  placeholder="Search fragments..."
  className="w-full bg-nous-base border-none py-2 pl-10 pr-10 font-sans text-sm focus:outline-none focus:ring-1 focus:ring-stone-500 transition-all rounded-none"
  />
- <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-nous-subtle group-focus-within:text-nous-text0 transition-colors"/>
+ <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-nous-subtle group-focus-within:text-nous-subtle transition-colors"/>
  {searchQuery && (
  <button type="button"onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-nous-subtle hover:text-red-500">
  <X size={14} />
@@ -823,7 +823,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  <Plus size={12} /> Inject
  </button>
  <div className="flex items-center gap-2 px-3 py-1.5 bg-nous-base rounded-none border border-black/5">
- <Shield size={10} className={systemStatus.auth === 'anchored' ? 'text-nous-text0' : 'text-nous-subtle'} />
+ <Shield size={10} className={systemStatus.auth === 'anchored' ? 'text-nous-subtle' : 'text-nous-subtle'} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">
  {systemStatus.auth === 'anchored' ? 'SYNC' : 'LOCAL'}
  </span>
@@ -867,7 +867,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  className="mb-12 p-6 bg-nous-base0/5 border border-nous-border/20 rounded-none overflow-hidden"
  >
  <div className="flex items-center gap-3 mb-4">
- <Sparkles size={16} className="text-nous-text0"/>
+ <Sparkles size={16} className="text-nous-subtle"/>
  <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">AI Search Insight</span>
  </div>
  <p className="font-serif italic text-xl text-nous-subtle leading-relaxed">
@@ -882,7 +882,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  {activeTrendReport && (
  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="mb-24 p-10 md:p-20 bg-nous-text text-nous-base border border-nous-border/30 rounded-none relative overflow-hidden group">
  <div className="flex justify-between items-start mb-16">
- <div className="flex items-center gap-4 text-nous-text0">
+ <div className="flex items-center gap-4 text-nous-subtle">
  <Radar size={20} className="animate-pulse"/>
  <span className="font-sans text-[11px] uppercase tracking-[0.6em] font-black italic">Anti-WGSN Trend Synthesis</span>
  </div>
@@ -891,11 +891,11 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  <div className="grid md:grid-cols-12 gap-16 md:gap-24">
  <div className="md:col-span-7 space-y-12">
  <div className="space-y-4">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0">Emerging Pattern Signals</span>
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Emerging Pattern Signals</span>
  <div className="space-y-4">
  {activeTrendReport.pattern_signals?.map((s, i) => (
  <div key={i} className="flex gap-6 items-start">
- <span className="font-mono text-[9px] text-nous-text0 pt-1.5">SIGNAL_{i+1}</span>
+ <span className="font-mono text-[9px] text-nous-subtle pt-1.5">SIGNAL_{i+1}</span>
  <p className="font-serif italic text-2xl md:text-4xl text-nous-text">{s}</p>
  </div>
  ))}
@@ -909,7 +909,7 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  {activeAudit && (
  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="mb-24 p-10 md:p-20 bg-white border-2 border-nous-border/20 rounded-none relative overflow-hidden group">
  <div className="flex justify-between items-start mb-16">
- <div className="flex items-center gap-4 text-nous-text0">
+ <div className="flex items-center gap-4 text-nous-subtle">
  <Briefcase size={20} />
  <span className="font-sans text-[11px] uppercase tracking-[0.6em] font-black italic">Editorial Designer Brief</span>
  </div>
@@ -942,9 +942,9 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  {item.type === 'image' && <img src={item.content.thumbnailUrl || item.content.imageUrl} className="w-full h-full object-cover transition-all duration-[2s]"loading="lazy"/>}
  {item.type === 'analysis_report' && (
  <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-nous-text text-nous-base gap-4 text-center border border-nous-border/20">
- <Radar size={32} className="text-nous-text0 opacity-50"/>
+ <Radar size={32} className="text-nous-subtle opacity-50"/>
  <h3 className="font-serif italic text-xl text-white line-clamp-2">{item.content.title}</h3>
- <span className="font-sans text-[6px] uppercase tracking-widest text-nous-text0 font-black">The Lens Analysis</span>
+ <span className="font-sans text-[6px] uppercase tracking-widest text-nous-subtle font-black">The Lens Analysis</span>
  </div>
  )}
  {item.type === 'moodboard' && (
@@ -963,8 +963,8 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  })}
  {(!item.content.itemIds || item.content.itemIds.length === 0) && (
  <div className="col-span-2 row-span-2 flex flex-col items-center justify-center p-8 bg-nous-text text-nous-base gap-4 text-center">
- <FolderOpen size={32} className="text-nous-text0 opacity-30"/>
- <span className="font-sans text-[6px] uppercase tracking-widest text-nous-text0 font-black">Empty Stack</span>
+ <FolderOpen size={32} className="text-nous-subtle opacity-30"/>
+ <span className="font-sans text-[6px] uppercase tracking-widest text-nous-subtle font-black">Empty Stack</span>
  </div>
  )}
  <div className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-black/40 backdrop-blur-[2px] opacity-100 group-hover:opacity-0 transition-opacity pointer-events-none">

@@ -85,7 +85,7 @@ export const Visualizer: React.FC<{
  });
  
  window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
- detail: { message:"Motion Refraction Manifested.", icon: <Check size={14} className="text-nous-text0"/> } 
+ detail: { message:"Motion Refraction Manifested.", icon: <Check size={14} className="text-nous-subtle"/> } 
  }));
  } catch (e) {
  console.error("MIMI // V-O Refraction Failure:", e);
@@ -124,7 +124,7 @@ export const Visualizer: React.FC<{
  });
  
  window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
- detail: { message:"Analysis Saved to Pocket.", icon: <Check size={14} className="text-nous-text0"/> } 
+ detail: { message:"Analysis Saved to Pocket.", icon: <Check size={14} className="text-nous-subtle"/> } 
  }));
  } catch (e) {
  console.error("MIMI // Analysis Failure:", e);
@@ -188,7 +188,7 @@ export const Visualizer: React.FC<{
  <AnimatePresence>
  {(isLoading || isAnimating || isAnalyzing) && (
  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-30 bg-nous-base/40 backdrop-blur-xl flex flex-col items-center justify-center gap-6">
- <Loader2 size={32} className="animate-spin text-nous-text0"/>
+ <Loader2 size={32} className="animate-spin text-nous-subtle"/>
  <span className="font-sans text-[8px] uppercase tracking-[0.6em] text-white font-black animate-pulse">
  {isAnalyzing ? 'Analyzing Mise en Scène...' : isAnimating ? 'Refracting Motion...' : 'Developing Plate...'}
  </span>
@@ -223,7 +223,7 @@ export const Visualizer: React.FC<{
  ))}
  </div>
  <button onClick={(e) => { e.stopPropagation(); setIsEditing(true); }} className="p-2.5 text-nous-subtle hover:text-nous-text transition-colors"><Pencil size={14}/></button>
- <button onClick={saveToPocket} className={`p-2.5 transition-all ${isPocketSaved ? 'text-nous-text0' : 'text-nous-subtle hover:text-nous-text'}`}>{isPocketSaved ? <Check size={14}/> : <Bookmark size={14}/>}</button>
+ <button onClick={saveToPocket} className={`p-2.5 transition-all ${isPocketSaved ? 'text-nous-subtle' : 'text-nous-subtle hover:text-nous-text'}`}>{isPocketSaved ? <Check size={14}/> : <Bookmark size={14}/>}</button>
  <button onClick={handleAnalyze} disabled={isAnalyzing} className="p-2.5 text-nous-subtle hover:text-indigo-400"><Eye size={14}/></button>
  <button onClick={handleAnimate} disabled={isAnimating} className="p-2.5 text-nous-subtle hover:text-amber-400"><Film size={14}/></button>
  <div className="w-px h-6 bg-white/10 mx-1"/>

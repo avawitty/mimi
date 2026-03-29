@@ -81,7 +81,7 @@ export const LegalOverlay: React.FC<LegalOverlayProps> = ({ type, onClose }) => 
  >
  <div className="flex items-center gap-4">
  <div className="w-8 h-px bg-stone-200"/>
- <h3 className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0">{s.head}</h3>
+ <h3 className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">{s.head}</h3>
  </div>
  <p className="font-serif italic text-lg text-nous-subtle leading-relaxed pl-12">
  {s.body}

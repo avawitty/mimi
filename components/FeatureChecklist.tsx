@@ -19,7 +19,7 @@ export const FeatureChecklist: React.FC = () => {
  <li key={feature.name} className="flex items-center justify-between text-sm font-mono">
  <span>{feature.name}</span>
  <span className={`px-2 py-0.5 rounded-none text-[10px] ${
- feature.status === 'in-progress' ? 'bg-amber-100 text-amber-800' : 'bg-nous-base text-nous-text0'
+ feature.status === 'in-progress' ? 'bg-amber-100 text-amber-800' : 'bg-nous-base text-nous-subtle'
  }`}>
  {feature.status}
  </span>

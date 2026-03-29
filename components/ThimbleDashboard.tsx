@@ -421,7 +421,7 @@ export const ThimbleDashboard = () => {
  >
  {b.title}
  </button>
- <button onClick={() => handleDeleteBoard(b.id)} className="p-2 opacity-0 group-hover:opacity-100 text-nous-text0 hover:text-red-800 transition-opacity">
+ <button onClick={() => handleDeleteBoard(b.id)} className="p-2 opacity-0 group-hover:opacity-100 text-nous-subtle hover:text-red-800 transition-opacity">
  <Trash2 size={12} />
  </button>
  </div>
@@ -485,7 +485,7 @@ export const ThimbleDashboard = () => {
  onClick={() => fileInputRef.current?.click()}
  className={`border-2 border-dashed border-nous-border p-8 text-center transition-colors cursor-pointer group ${isDragging ? 'bg-white/60 /60 border-nous-border ' : 'bg-white/30 /30 hover:bg-white/50 /50'}`}
  >
- <Upload className="mx-auto text-nous-text0 mb-2 group-hover:scale-110 transition-transform"size={24} />
+ <Upload className="mx-auto text-nous-subtle mb-2 group-hover:scale-110 transition-transform"size={24} />
  <p className="text-[11px] font-sans opacity-60">Tap to select or drop files here</p>
  <input type="file"ref={fileInputRef} onChange={handleFileChange} multiple accept="image/*"className="hidden"/>
  </div>
@@ -516,7 +516,7 @@ export const ThimbleDashboard = () => {
  <img src={file.data} alt="link thumbnail"className="w-full h-full object-cover grayscale opacity-80"referrerPolicy="no-referrer"/>
  ) : (
  <div className="w-full h-full flex items-center justify-center bg-nous-base/50 /50">
- <LinkIcon size={16} className="text-nous-text0"/>
+ <LinkIcon size={16} className="text-nous-subtle"/>
  </div>
  )}
  <button onClick={(e) => { e.stopPropagation(); removeMedia(idx); }} className="absolute top-1 right-1 bg-white/90 /90 p-0.5 rounded-none opacity-0 group-hover:opacity-100 transition-opacity">
@@ -596,7 +596,7 @@ export const ThimbleDashboard = () => {
  <td className="px-4 py-4 font-mono text-[10px] opacity-80">
  <div className="flex items-center gap-2">
  <span className="truncate max-w-[150px]">{target.keywordBoolean}</span>
- <button onClick={(e) => { e.stopPropagation(); copyToClipboard(target.keywordBoolean, idx); }} className="text-nous-text0 hover:text-nous-text">
+ <button onClick={(e) => { e.stopPropagation(); copyToClipboard(target.keywordBoolean, idx); }} className="text-nous-subtle hover:text-nous-text">
  {copiedIndex === idx ? <Check size={12} /> : <Copy size={12} />}
  </button>
  </div>
@@ -656,7 +656,7 @@ export const ThimbleDashboard = () => {
  className="font-mono text-[10px] opacity-80 flex-grow bg-transparent border-none focus:ring-0 outline-none w-full"
  onClick={(e) => (e.target as HTMLInputElement).select()}
  />
- <button onClick={(e) => { e.stopPropagation(); copyToClipboard(target.keywordBoolean, idx); }} className="text-nous-text0 hover:text-nous-text p-1 flex-shrink-0">
+ <button onClick={(e) => { e.stopPropagation(); copyToClipboard(target.keywordBoolean, idx); }} className="text-nous-subtle hover:text-nous-text p-1 flex-shrink-0">
  {copiedIndex === idx ? <Check size={12} /> : <Copy size={12} />}
  </button>
  </div>

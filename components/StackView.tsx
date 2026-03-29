@@ -25,7 +25,7 @@ export const StackView: React.FC<{ stackId: string }> = ({ stackId }) => {
  return (
  <div className="p-8">
  <h1 className="text-4xl font-serif italic">{stack.title}</h1>
- <p className="text-nous-text0">{stack.description}</p>
+ <p className="text-nous-subtle">{stack.description}</p>
  <div className="flex gap-4 mt-4">
  <button 
  onClick={() => {

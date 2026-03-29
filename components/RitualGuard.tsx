@@ -29,7 +29,7 @@ export const RitualGuard: React.FC<{ feature: FeatureKey; children: React.ReactN
  </div>
 
  <div className="p-8 bg-nous-base border border-black/5 /5 rounded-none space-y-4">
- <p className="font-serif italic text-lg text-nous-text0">{reason}</p>
+ <p className="font-serif italic text-lg text-nous-subtle">{reason}</p>
  <div className="flex items-center justify-center gap-3 text-nous-subtle pt-4 border-t border-black/5">
  <Clock size={12} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Window: {nextWindow}</span>

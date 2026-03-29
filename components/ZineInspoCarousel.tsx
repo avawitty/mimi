@@ -85,16 +85,16 @@ export const ZineInspoCarousel: React.FC = () => {
  </div>
  <div className="grid grid-cols-2 gap-2">
  <div>
- <p className="font-sans text-[8px] uppercase tracking-widest text-nous-text0 mb-1">Primary Axis</p>
+ <p className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle mb-1">Primary Axis</p>
  <p className="italic text-nous-subtle text-xs truncate">{signature.primaryAxis}</p>
  </div>
  <div>
- <p className="font-sans text-[8px] uppercase tracking-widest text-nous-text0 mb-1">Secondary Axis</p>
+ <p className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle mb-1">Secondary Axis</p>
  <p className="italic text-indigo-600 dark:text-indigo-400 text-xs truncate">{signature.secondaryAxis}</p>
  </div>
  </div>
  <div>
- <p className="font-sans text-[8px] uppercase tracking-widest text-nous-text0 mb-1">Core Trait</p>
+ <p className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle mb-1">Core Trait</p>
  <p className="italic text-nous-subtle text-xs">{signature.coreTrait || 'Evolving'}</p>
  </div>
  </div>
@@ -115,13 +115,13 @@ export const ZineInspoCarousel: React.FC = () => {
  
  <div className="absolute inset-0 opacity-40 pointer-events-none flex items-center justify-center">
  <div className="absolute w-2 h-2 bg-nous-base0 rounded-none top-1/4 left-1/4"></div>
- <div className="absolute text-[8px] font-mono text-nous-text0 top-1/4 left-1/4 ml-3 mt-0.5">Texture</div>
+ <div className="absolute text-[8px] font-mono text-nous-subtle top-1/4 left-1/4 ml-3 mt-0.5">Texture</div>
  
  <div className="absolute w-3 h-3 bg-indigo-500 rounded-none top-1/2 left-1/2"></div>
- <div className="absolute text-[8px] font-mono text-nous-text0 top-1/2 left-1/2 ml-4 mt-1">Brutalism</div>
+ <div className="absolute text-[8px] font-mono text-nous-subtle top-1/2 left-1/2 ml-4 mt-1">Brutalism</div>
  
  <div className="absolute w-2 h-2 bg-amber-500 rounded-none bottom-1/3 right-1/4"></div>
- <div className="absolute text-[8px] font-mono text-nous-text0 bottom-1/3 right-1/4 ml-3 mt-0.5">90s Web</div>
+ <div className="absolute text-[8px] font-mono text-nous-subtle bottom-1/3 right-1/4 ml-3 mt-0.5">90s Web</div>
 
  <svg className="absolute inset-0 w-full h-full">
  <line x1="25%"y1="25%"x2="50%"y2="50%"stroke="currentColor"className="text-nous-subtle"strokeWidth="1"/>
@@ -130,12 +130,12 @@ export const ZineInspoCarousel: React.FC = () => {
  </div>
 
  <div className="mt-auto z-10 relative">
- <p className="font-sans text-[8px] uppercase tracking-widest text-nous-text0">Nodes & Edges</p>
- <p className="italic text-nous-text0 text-xs mt-1">
+ <p className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle">Nodes & Edges</p>
+ <p className="italic text-nous-subtle text-xs mt-1">
  {graphNodes.length > 0 ? `${graphNodes.length} nodes mapped in your network` : 'Mapping your semantic network'}
  </p>
- <p className="font-sans text-[8px] uppercase tracking-widest text-nous-text0 mt-2">Active Connections</p>
- <p className="italic text-nous-text0 text-xs mt-1">
+ <p className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle mt-2">Active Connections</p>
+ <p className="italic text-nous-subtle text-xs mt-1">
  {graphNodes.length > 2 ? 'High density' : 'Building connections'}
  </p>
  </div>
@@ -151,19 +151,19 @@ export const ZineInspoCarousel: React.FC = () => {
  <div className="space-y-3 mt-4 overflow-hidden flex-1">
  {latestThread ? (
  <div className="border-l border-nous-border pl-3">
- <p className="font-sans text-[8px] uppercase tracking-widest text-nous-text0 mb-1">{latestThread.title || 'Latest Thread'}</p>
+ <p className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle mb-1">{latestThread.title || 'Latest Thread'}</p>
  <p className="italic text-nous-subtle text-xs line-clamp-3">{latestThread.narrative}</p>
- <p className="font-sans text-[8px] uppercase tracking-widest text-nous-text0 mt-2">Status</p>
+ <p className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle mt-2">Status</p>
  <p className="italic text-nous-subtle text-xs">{latestThread.status || 'Active'}</p>
  </div>
  ) : (
  <>
  <div className="border-l border-nous-border pl-3">
- <p className="font-sans text-[8px] uppercase tracking-widest text-nous-text0 mb-1">Thread 01</p>
+ <p className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle mb-1">Thread 01</p>
  <p className="italic text-nous-subtle text-xs line-clamp-1">The decay of digital memory</p>
  </div>
  <div className="border-l border-nous-border pl-3">
- <p className="font-sans text-[8px] uppercase tracking-widest text-nous-text0 mb-1">Thread 02</p>
+ <p className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle mb-1">Thread 02</p>
  <p className="italic text-nous-subtle text-xs line-clamp-1">Tactile interfaces in modernism</p>
  </div>
  </>
@@ -181,7 +181,7 @@ export const ZineInspoCarousel: React.FC = () => {
  return (
  <div className="w-full max-w-md relative">
  <div className="flex items-center justify-between mb-4">
- <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-nous-text0 font-bold">ZINE INSPO</div>
+ <div className="font-sans text-[9px] uppercase tracking-[0.3em] text-nous-subtle font-bold">ZINE INSPO</div>
  <div className="flex gap-2">
  <button onClick={prevView} className="p-1 text-nous-subtle hover:text-nous-text transition-colors">
  <ChevronLeft size={14} />

@@ -75,7 +75,7 @@ export const Tooltip: React.FC<TooltipProps> = ({ text, binaryText, children, po
  <AnimatePresence mode="wait">
  {showBinary && binaryText ? (
  <motion.div key="binary"initial={{ opacity: 0, x: 5 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -5 }} className="space-y-2">
- <span className="font-sans text-[6px] uppercase tracking-widest font-black text-nous-text0">Clinical ID:</span>
+ <span className="font-sans text-[6px] uppercase tracking-widest font-black text-nous-subtle">Clinical ID:</span>
  <p className="font-mono text-[10px] leading-tight text-nous-subtle uppercase tracking-tighter">
  {binaryText}
  </p>

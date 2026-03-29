@@ -130,9 +130,9 @@ const InjectShardModal: React.FC<{ onClose: () => void, onInjected: () => void }
  </header>
 
  <div className="flex border-b border-nous-border shrink-0">
- <button onClick={() => { setMode('upload'); setSelectedZine(null); }} className={`flex-1 py-4 font-sans text-[9px] uppercase tracking-widest font-black transition-all ${mode === 'upload' ? 'bg-nous-base text-nous-text0 border-b-2 border-nous-border' : 'text-nous-subtle hover:text-nous-subtle'}`}>Upload File</button>
- <button onClick={() => setMode('authored')} className={`flex-1 py-4 font-sans text-[9px] uppercase tracking-widest font-black transition-all ${mode === 'authored' ? 'bg-nous-base text-nous-text0 border-b-2 border-nous-border' : 'text-nous-subtle hover:text-nous-subtle'}`}>From Authored</button>
- <button onClick={() => { setMode('url'); setSelectedZine(null); }} className={`flex-1 py-4 font-sans text-[9px] uppercase tracking-widest font-black transition-all ${mode === 'url' ? 'bg-nous-base text-nous-text0 border-b-2 border-nous-border' : 'text-nous-subtle hover:text-nous-subtle'}`}>URL Injection</button>
+ <button onClick={() => { setMode('upload'); setSelectedZine(null); }} className={`flex-1 py-4 font-sans text-[9px] uppercase tracking-widest font-black transition-all ${mode === 'upload' ? 'bg-nous-base text-nous-subtle border-b-2 border-nous-border' : 'text-nous-subtle hover:text-nous-subtle'}`}>Upload File</button>
+ <button onClick={() => setMode('authored')} className={`flex-1 py-4 font-sans text-[9px] uppercase tracking-widest font-black transition-all ${mode === 'authored' ? 'bg-nous-base text-nous-subtle border-b-2 border-nous-border' : 'text-nous-subtle hover:text-nous-subtle'}`}>From Authored</button>
+ <button onClick={() => { setMode('url'); setSelectedZine(null); }} className={`flex-1 py-4 font-sans text-[9px] uppercase tracking-widest font-black transition-all ${mode === 'url' ? 'bg-nous-base text-nous-subtle border-b-2 border-nous-border' : 'text-nous-subtle hover:text-nous-subtle'}`}>URL Injection</button>
  </div>
 
  <div className="flex-1 overflow-y-auto p-8 no-scrollbar">
@@ -157,7 +157,7 @@ const InjectShardModal: React.FC<{ onClose: () => void, onInjected: () => void }
  <input type="file"ref={fileInputRef} onChange={handleFileUpload} className="hidden"multiple accept="image/*,audio/*"/>
  <Upload size={32} className="text-nous-subtle group-hover:text-nous-text transition-colors"/>
  <div className="text-center">
- <p className="font-serif italic text-xl text-nous-text0">Drop shards here.</p>
+ <p className="font-serif italic text-xl text-nous-subtle">Drop shards here.</p>
  <p className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle mt-2">Images or Audio (max 10MB)</p>
  </div>
  </div>
@@ -236,7 +236,7 @@ const InjectShardModal: React.FC<{ onClose: () => void, onInjected: () => void }
 
  {loading && mode !== 'authored' && (
  <div className="absolute inset-0 bg-white/50 /50 backdrop-blur-sm flex items-center justify-center z-50">
- <Loader2 size={48} className="animate-spin text-nous-text0"/>
+ <Loader2 size={48} className="animate-spin text-nous-subtle"/>
  </div>
  )}
  </div>
@@ -305,19 +305,19 @@ export const ArchivalView: React.FC<ArchivalViewProps> = ({ onSelectZine }) => {
  </button>
  <button 
  onClick={() => setActiveTab('folders')}
- className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'folders' ? 'text-nous-text text-nous-text border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text0'}`}
+ className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'folders' ? 'text-nous-text text-nous-text border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-subtle'}`}
  >
  Folders
  </button>
  <button 
  onClick={() => setActiveTab('pocket')}
- className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'pocket' ? 'text-nous-text text-nous-text border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text0'}`}
+ className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'pocket' ? 'text-nous-text text-nous-text border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-subtle'}`}
  >
  Curated
  </button>
  <button 
  onClick={() => setActiveTab('list')}
- className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'list' ? 'text-nous-text text-nous-text border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text0'}`}
+ className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'list' ? 'text-nous-text text-nous-text border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-subtle'}`}
  >
  List
  </button>

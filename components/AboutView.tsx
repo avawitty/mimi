@@ -50,7 +50,7 @@ const ProposalShell: React.FC<{
  <span className={step === 'EXPORT' ? 'text-nous-text text-nous-text font-black' : ''}>04 Manifest</span>
  </div>
  </div>
- <span className="font-serif italic text-sm text-nous-text0">{title}</span>
+ <span className="font-serif italic text-sm text-nous-subtle">{title}</span>
  </header>
  
  {/* SHELL BODY */}
@@ -213,7 +213,7 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  </div>
  <div className="space-y-4 text-center">
  <h3 className="font-serif text-3xl italic text-white tracking-tighter">Assisted Assembly.</h3>
- <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-black text-nous-text0 animate-pulse">{loadingText}</p>
+ <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-black text-nous-subtle animate-pulse">{loadingText}</p>
  </div>
  </motion.div>
  )}
@@ -231,7 +231,7 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  
  <div className="w-full max-w-5xl bg-white border border-nous-border rounded-none p-8 md:p-16 space-y-12">
  <div className="space-y-4 text-center">
- <div className="flex items-center justify-center gap-3 text-nous-text0">
+ <div className="flex items-center justify-center gap-3 text-nous-subtle">
  <Layers size={20} />
  <span className="font-sans text-[9px] uppercase tracking-[0.5em] font-black italic">Material Binding</span>
  </div>
@@ -243,7 +243,7 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle border-b border-nous-border pb-2 block">Strategic Logic</span>
  <div className="space-y-3">
  {PROPOSAL_PRESETS.map(p => (
- <button key={p.id} onClick={() => setSelectedPreset(p.id)} className={`w-full text-left p-4 rounded-none border transition-all ${selectedPreset === p.id ? 'bg-nous-text text-nous-base border-transparent ' : 'bg-transparent border-nous-border text-nous-text0 hover:border-nous-border'}`}>
+ <button key={p.id} onClick={() => setSelectedPreset(p.id)} className={`w-full text-left p-4 rounded-none border transition-all ${selectedPreset === p.id ? 'bg-nous-text text-nous-base border-transparent ' : 'bg-transparent border-nous-border text-nous-subtle hover:border-nous-border'}`}>
  <div className="flex justify-between items-center mb-1"><span className="font-serif italic text-lg leading-none">{p.label}</span>{selectedPreset === p.id && <CheckCircle2 size={14} />}</div>
  <p className="font-sans text-[7px] uppercase tracking-wide opacity-70">{p.desc}</p>
  </button>
@@ -257,7 +257,7 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  <div className="w-12 h-12 bg-stone-200 rounded-none flex items-center justify-center text-nous-subtle"><FolderOpen size={20} /></div>
  <div>
  <p className="font-serif italic text-xl text-nous-text text-nous-text line-clamp-2">{folderData?.name || availableFolders.find(f => f.id === selectedFolderId)?.content.name || 'Selected Folder'}</p>
- <p className="font-sans text-[8px] uppercase tracking-widest text-nous-text0 font-black">Source Locked</p>
+ <p className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle font-black">Source Locked</p>
  </div>
  </div>
 
@@ -278,7 +278,7 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  >
  <input type="file"ref={fileInputRef} onChange={handleFileUpload} className="hidden"multiple accept="image/*"/>
  {isUploading ? (
- <Loader2 size={20} className="animate-spin text-nous-text0 mx-auto"/>
+ <Loader2 size={20} className="animate-spin text-nous-subtle mx-auto"/>
  ) : (
  <div className="space-y-2">
  <Upload size={16} className="mx-auto text-nous-subtle group-hover:text-nous-text transition-colors"/>
@@ -309,7 +309,7 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-black">Strategic Suite</span>
  </div>
  <h1 className="font-serif text-6xl md:text-8xl italic tracking-tighter text-nous-text text-nous-text leading-none">The Proposal.</h1>
- <p className="font-serif italic text-xl md:text-2xl text-nous-text0 leading-relaxed max-w-xl mx-auto">
+ <p className="font-serif italic text-xl md:text-2xl text-nous-subtle leading-relaxed max-w-xl mx-auto">
  Transmute your archival debris into defensible strategic artifacts.
  </p>
  </div>
@@ -319,13 +319,13 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  <section>
  <div className="flex items-center gap-4 mb-8">
  <FolderOpen size={16} className="text-nous-subtle"/>
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0">Source Selection</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">Source Selection</span>
  <div className="h-px flex-1 bg-nous-base"/>
  </div>
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
  {availableFolders.map(folder => (
  <button key={folder.id} onClick={() => handleSelectFolder(folder.id)} className="group p-8 bg-white border border-nous-border rounded-none hover:border-nous-border hover: transition-all text-left flex flex-col gap-6">
- <div className="flex justify-between items-start"><FolderOpen size={24} className="text-nous-subtle group-hover:text-nous-text0 transition-colors"/><ArrowRight size={16} className="text-nous-subtle opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all"/></div>
+ <div className="flex justify-between items-start"><FolderOpen size={24} className="text-nous-subtle group-hover:text-nous-subtle transition-colors"/><ArrowRight size={16} className="text-nous-subtle opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all"/></div>
  <div><h4 className="font-serif italic text-2xl text-nous-text text-nous-text line-clamp-1">{folder.content.name}</h4><span className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle font-black">{folder.content.itemIds?.length || 0} Artifacts</span></div>
  </button>
  ))}
@@ -338,14 +338,14 @@ export const ProposalView: React.FC<{ folderData?: any; onClose?: () => void }> 
  <section>
  <div className="flex items-center gap-4 mb-8">
  <ScrollText size={16} className="text-nous-subtle"/>
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0">Proposal Registry</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">Proposal Registry</span>
  <div className="h-px flex-1 bg-nous-base"/>
  </div>
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
  {savedProposals.map(p => (
  <button key={p.id} onClick={() => handleOpenProposal(p)} className="text-left p-6 bg-nous-base /40 border border-nous-border rounded-none hover:border-nous-border transition-all group">
  <div className="flex justify-between items-start mb-4">
- <div className="p-2 bg-white rounded-none text-nous-subtle group-hover:text-nous-text0"><FileText size={14} /></div>
+ <div className="p-2 bg-white rounded-none text-nous-subtle group-hover:text-nous-subtle"><FileText size={14} /></div>
  <span className="font-mono text-[8px] text-nous-subtle">{new Date(p.updatedAt).toLocaleDateString()}</span>
  </div>
  <h4 className="font-serif italic text-lg text-nous-text text-nous-text line-clamp-2 leading-tight">{p.title}</h4>

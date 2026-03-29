@@ -30,7 +30,7 @@ const DraggableArtifact: React.FC<{ artifact: PocketItem }> = ({ artifact }) => 
  <GripVertical size={16} className="text-nous-subtle mt-1 shrink-0"/>
  <div className="flex-1 min-w-0">
  <h4 className="font-serif italic text-sm truncate">{artifact.title || 'Untitled'}</h4>
- <p className="font-sans text-[10px] text-nous-text0 truncate mt-1">{(artifact as any).url || 'No URL'}</p>
+ <p className="font-sans text-[10px] text-nous-subtle truncate mt-1">{(artifact as any).url || 'No URL'}</p>
  </div>
  </div>
  );
@@ -76,7 +76,7 @@ const ConstellationDropZone: React.FC<{
  </div>
  
  <textarea
- className="w-full bg-transparent font-sans text-xs text-nous-text0 mb-6 resize-none outline-none"
+ className="w-full bg-transparent font-sans text-xs text-nous-subtle mb-6 resize-none outline-none"
  placeholder="Add a description..."
  value={constellation.description || ''}
  onChange={(e) => onUpdateDescription(constellation.id, e.target.value)}
@@ -265,7 +265,7 @@ export const TasteConstellation: React.FC = () => {
  <div className="w-64 border-r border-nous-border flex flex-col bg-white/50 /20 shrink-0">
  <div className="p-6 border-b border-nous-border">
  <h3 className="font-serif italic text-2xl">Artifacts</h3>
- <p className="font-sans text-[10px] uppercase tracking-widest text-nous-text0 mt-2">Drag to group</p>
+ <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle mt-2">Drag to group</p>
  </div>
  <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-3">
  {artifacts.map(artifact => (
@@ -279,7 +279,7 @@ export const TasteConstellation: React.FC = () => {
  <div className="p-8 md:p-12 border-b border-nous-border flex justify-between items-end shrink-0">
  <div>
  <h2 className="text-4xl md:text-5xl font-serif italic">Taste Constellations</h2>
- <p className="text-nous-text0 font-sans text-[10px] uppercase tracking-[0.2em] mt-4">Manual Semantic Grouping</p>
+ <p className="text-nous-subtle font-sans text-[10px] uppercase tracking-[0.2em] mt-4">Manual Semantic Grouping</p>
  </div>
  <button 
  onClick={handleCreateConstellation}

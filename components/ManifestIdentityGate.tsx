@@ -12,7 +12,7 @@ export const ManifestIdentityGate: React.FC<{ children: React.ReactNode }> = ({ 
  if (!user || user.isAnonymous) {
  return (
  <div className="flex flex-col items-center justify-center p-8 border border-nous-border/20 bg-nous-base/40 rounded-none backdrop-blur-md">
- <Sparkles className="w-8 h-8 text-nous-text0 mb-4 animate-pulse"/>
+ <Sparkles className="w-8 h-8 text-nous-subtle mb-4 animate-pulse"/>
  <h3 className="font-serif italic text-xl text-nous-text mb-2">Identity Required</h3>
  <p className="text-nous-subtle text-sm text-center mb-6 max-w-xs">
  To bridge into a subscription, your memory must be anchored to a Sovereign Identity.

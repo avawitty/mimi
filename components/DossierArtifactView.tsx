@@ -27,14 +27,14 @@ export const DossierArtifactView: React.FC<{ artifact: DossierArtifact; onClose:
  <div className="h-20 border-b border-nous-border px-6 md:px-12 flex justify-between items-center sticky top-0 bg/90 backdrop-blur-xl z-[100] print:hidden">
  <button onClick={onClose} className="flex items-center gap-4 group">
  <div className="p-2 border border-nous-border rounded-none group-hover:border-nous-border group-hover:text-nous-text transition-all"><X size={16} /></div>
- <span className="font-mono text-[9px] uppercase tracking-[0.2em] font-bold text-nous-text0 group-hover:text-nous-text transition-colors">Close Artifact</span>
+ <span className="font-mono text-[9px] uppercase tracking-[0.2em] font-bold text-nous-subtle group-hover:text-nous-text transition-colors">Close Artifact</span>
  </button>
  <div className="flex items-center gap-4">
- <button onClick={handleShare} className="flex items-center gap-3 px-6 py-2 bg-nous-base border border-nous-border rounded-none font-mono text-[9px] uppercase tracking-widest font-bold text-nous-text0 hover:text-nous-text0 hover:border-nous-border/50 transition-all">
- {copied ? <Check size={12} className="text-nous-text0"/> : <Share2 size={12} />}
+ <button onClick={handleShare} className="flex items-center gap-3 px-6 py-2 bg-nous-base border border-nous-border rounded-none font-mono text-[9px] uppercase tracking-widest font-bold text-nous-subtle hover:text-nous-subtle hover:border-nous-border/50 transition-all">
+ {copied ? <Check size={12} className="text-nous-subtle"/> : <Share2 size={12} />}
  {copied ? 'Link Copied' : 'Share Shard'}
  </button>
- <button onClick={handleExportPdf} className="p-3 bg-nous-base border border-nous-border text-nous-subtle hover:text-nous-text0 hover:border-nous-border/50 rounded-none transition-all">
+ <button onClick={handleExportPdf} className="p-3 bg-nous-base border border-nous-border text-nous-subtle hover:text-nous-subtle hover:border-nous-border/50 rounded-none transition-all">
  <Download size={18} />
  </button>
  </div>
@@ -42,7 +42,7 @@ export const DossierArtifactView: React.FC<{ artifact: DossierArtifact; onClose:
 
  <div className="max-w-6xl mx-auto px-6 md:px-12 py-16 md:py-24 space-y-12 relative z-10">
  <header className="space-y-6">
- <div className="flex items-center gap-4 text-nous-text0">
+ <div className="flex items-center gap-4 text-nous-subtle">
  <ScanLine size={18} className="animate-pulse"/>
  <span className="font-mono text-[9px] uppercase tracking-[0.4em] font-bold">Artifact Analysis</span>
  </div>
@@ -57,14 +57,14 @@ export const DossierArtifactView: React.FC<{ artifact: DossierArtifact; onClose:
  <img src={artifact.content} className="w-full h-auto object-contain"alt={artifact.title} />
  ) : artifact.type === 'strategy' ? (
  <div className="p-8 text-center space-y-4">
- <Target size={48} className="mx-auto text-nous-text0 opacity-50"/>
+ <Target size={48} className="mx-auto text-nous-subtle opacity-50"/>
  <h3 className="font-serif italic text-2xl text-nous-subtle">Strategy Audit</h3>
- <p className="font-mono text-[10px] text-nous-text0 uppercase tracking-widest">Platform Analysis</p>
+ <p className="font-mono text-[10px] text-nous-subtle uppercase tracking-widest">Platform Analysis</p>
  </div>
  ) : (
  <div className="p-8 text-center space-y-4">
  <FileText size={48} className="mx-auto text-nous-subtle"/>
- <p className="font-mono text-[10px] text-nous-text0 uppercase tracking-widest">Text Document</p>
+ <p className="font-mono text-[10px] text-nous-subtle uppercase tracking-widest">Text Document</p>
  </div>
  )}
  </div>
@@ -76,7 +76,7 @@ export const DossierArtifactView: React.FC<{ artifact: DossierArtifact; onClose:
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pt-8 border-t border-nous-border">
  <div className="flex items-center gap-4">
  <span className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-subtle">Type:</span>
- <span className="font-mono text-sm text-nous-text0 uppercase tracking-widest border border-nous-border/20 bg-nous-base0/5 px-3 py-1 rounded-none">{artifact.type || 'Unknown'}</span>
+ <span className="font-mono text-sm text-nous-subtle uppercase tracking-widest border border-nous-border/20 bg-nous-base0/5 px-3 py-1 rounded-none">{artifact.type || 'Unknown'}</span>
  </div>
  <div className="flex flex-col items-start md:items-end">
  <span className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-subtle">Timestamp</span>
@@ -100,15 +100,15 @@ export const DossierArtifactView: React.FC<{ artifact: DossierArtifact; onClose:
  <div className="bg-nous-base p-1 border border-nous-border rounded-none relative overflow-hidden group-hover:border-nous-border/30 transition-all duration-500">
  <img src={el.content} className="w-full h-auto object-cover grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-700"/>
  <div className="absolute top-2 right-2">
- <Pin size={12} className={`text-nous-text0 ${el.style?.hasPin ?"opacity-100":"opacity-0"}`} />
+ <Pin size={12} className={`text-nous-subtle ${el.style?.hasPin ?"opacity-100":"opacity-0"}`} />
  </div>
  <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/80 backdrop-blur-sm border-t border-nous-border flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity">
- <span className="font-mono text-[7px] uppercase tracking-widest text-nous-text0">IMG_SEQ_0{idx+1}</span>
+ <span className="font-mono text-[7px] uppercase tracking-widest text-nous-subtle">IMG_SEQ_0{idx+1}</span>
  </div>
  </div>
  {el.notes && (
  <div className="px-2 space-y-3 border-l border-nous-border pl-4">
- <div className="flex items-center gap-3 text-nous-text0">
+ <div className="flex items-center gap-3 text-nous-subtle">
  <Quote size={10} />
  <span className="font-mono text-[8px] uppercase tracking-widest font-bold">Annotation</span>
  </div>
@@ -121,8 +121,8 @@ export const DossierArtifactView: React.FC<{ artifact: DossierArtifact; onClose:
  <div className="flex-1 bg-nous-base/50 p-8 flex flex-col justify-start text-left border border-nous-border hover:border-nous-border/30 transition-colors rounded-none relative overflow-hidden">
  <div className="absolute top-0 left-0 w-1 h-full bg-nous-base group-hover:bg-nous-base0 transition-colors"/>
  <div className="flex justify-between items-center mb-6 border-b border-nous-border pb-2">
- <div className="flex items-center gap-2 text-nous-text0">
- <Terminal size={12} className="text-nous-text0"/>
+ <div className="flex items-center gap-2 text-nous-subtle">
+ <Terminal size={12} className="text-nous-subtle"/>
  <span className="font-mono text-[8px] uppercase tracking-widest font-bold">
  {el.type === 'analysis_pin' ? 'System_Log' : 'Text_Fragment'}
  </span>
@@ -137,11 +137,11 @@ export const DossierArtifactView: React.FC<{ artifact: DossierArtifact; onClose:
  return (
  <div className="space-y-6 text-sm">
  <div>
- <h4 className="font-mono text-[10px] uppercase tracking-widest text-nous-text0 mb-2">Opening Line</h4>
+ <h4 className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle mb-2">Opening Line</h4>
  <p className="italic text-nous-subtle">"{data.openingLine}"</p>
  </div>
  <div>
- <h4 className="font-mono text-[10px] uppercase tracking-widest text-nous-text0 mb-2">Aesthetic Audit</h4>
+ <h4 className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle mb-2">Aesthetic Audit</h4>
  <ul className="list-disc pl-4 space-y-1 text-nous-subtle">
  <li><strong>Palette:</strong> {data.aestheticAudit.palette}</li>
  <li><strong>Density:</strong> {data.aestheticAudit.density}</li>
@@ -150,13 +150,13 @@ export const DossierArtifactView: React.FC<{ artifact: DossierArtifact; onClose:
  </ul>
  </div>
  <div>
- <h4 className="font-mono text-[10px] uppercase tracking-widest text-nous-text0 mb-2">Strategy Shift</h4>
+ <h4 className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle mb-2">Strategy Shift</h4>
  <ul className="list-disc pl-4 space-y-1 text-nous-subtle">
  {data.strategyShift.map((s: string, i: number) => <li key={i}>{s}</li>)}
  </ul>
  </div>
  <div>
- <h4 className="font-mono text-[10px] uppercase tracking-widest text-nous-text0 mb-2">Identity Reframe</h4>
+ <h4 className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle mb-2">Identity Reframe</h4>
  <p className="italic text-nous-subtle">"{data.identityReframe}"</p>
  </div>
  </div>
@@ -179,7 +179,7 @@ export const DossierArtifactView: React.FC<{ artifact: DossierArtifact; onClose:
  {artifact.report && (
  <section className="grid md:grid-cols-12 gap-16 md:gap-32 pt-24 border-t border-nous-border items-start">
  <div className="md:col-span-7 space-y-12">
- <div className="flex items-center gap-4 text-nous-text0">
+ <div className="flex items-center gap-4 text-nous-subtle">
  <Cpu size={18} />
  <span className="font-mono text-[9px] uppercase tracking-[0.4em] font-bold">Executive Synthesis</span>
  </div>
@@ -193,11 +193,11 @@ export const DossierArtifactView: React.FC<{ artifact: DossierArtifact; onClose:
  <aside className="md:col-span-5 space-y-8">
  <div className="p-8 bg-nous-base/30 border border-nous-border rounded-none space-y-8">
  <div className="space-y-2">
- <span className="font-mono text-[8px] uppercase tracking-widest font-bold text-nous-text0">Frequency Audit</span>
+ <span className="font-mono text-[8px] uppercase tracking-widest font-bold text-nous-subtle">Frequency Audit</span>
  <p className="font-serif italic text-2xl text-nous-text">{artifact.report.coreFrequency}</p>
  </div>
  <div className="space-y-4">
- <span className="font-mono text-[8px] uppercase tracking-widest font-bold text-nous-text0">Chromatic Data</span>
+ <span className="font-mono text-[8px] uppercase tracking-widest font-bold text-nous-subtle">Chromatic Data</span>
  <div className="flex gap-2">
  {artifact.report.colorStory?.map((c, i) => (
  <div key={i} className="w-8 h-8 rounded-none border border-nous-border"style={{ backgroundColor: c.hex }} title={c.name} />
@@ -221,7 +221,7 @@ export const DossierArtifactView: React.FC<{ artifact: DossierArtifact; onClose:
  <div className="opacity-10 pointer-events-none select-none">
  <h1 className="font-serif italic text-[8rem] md:text-[12rem] text-nous-text">Mimi.</h1>
  </div>
- <button onClick={onClose} className="px-12 py-4 border border-nous-border hover:border-nous-border text-nous-text0 hover:text-nous-text0 font-mono text-[9px] uppercase tracking-[0.4em] font-bold rounded-none transition-all">Return to Grid</button>
+ <button onClick={onClose} className="px-12 py-4 border border-nous-border hover:border-nous-border text-nous-subtle hover:text-nous-subtle font-mono text-[9px] uppercase tracking-[0.4em] font-bold rounded-none transition-all">Return to Grid</button>
  </footer>
  </div>
  </div>

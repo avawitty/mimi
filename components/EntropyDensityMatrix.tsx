@@ -112,7 +112,7 @@ export const EntropyDensityMatrix: React.FC<EntropyDensityMatrixProps> = ({
 
  {/* Controls & Readout */}
  <div className="mt-4 flex flex-col items-center w-full max-w-[300px]">
- <div className="flex justify-between w-full text-xs font-mono text-nous-text0 mb-2">
+ <div className="flex justify-between w-full text-xs font-mono text-nous-subtle mb-2">
  <span>Density: {density.toFixed(1)}</span>
  <span>Entropy: {entropy.toFixed(1)}</span>
  </div>

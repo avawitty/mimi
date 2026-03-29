@@ -76,7 +76,7 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
  <h2 className="text-h1 text-nous-text  mb-3">
  {user?.isAnonymous ? 'Claim your trial' : 'Join the Vanguard'}
  </h2>
- <p className="text-body text-nous-text0 max-w-[280px] mx-auto">
+ <p className="text-body text-nous-subtle max-w-[280px] mx-auto">
  {user?.isAnonymous 
  ? 'You have 12 credits waiting. Enter your email to unlock the full Mimi Zine experience.'
  : 'A sovereign editorial machine for the aesthetic superintelligence. Translate latent intent into defensible conceptual architecture.'}
@@ -150,7 +150,7 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
  <button
  type="button"
  onClick={() => setIsRegistering(!isRegistering)}
- className="text-xs text-nous-text0 hover:text-nous-text hover:text-nous-text transition-colors"
+ className="text-xs text-nous-subtle hover:text-nous-text hover:text-nous-text transition-colors"
  >
  {isRegistering ? 'Already have access? Sign in' :"Don't have an account? Join Waitlist"}
  </button>

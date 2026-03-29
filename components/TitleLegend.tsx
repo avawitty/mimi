@@ -26,7 +26,7 @@ export const TitleLegend: React.FC = () => {
  <div className="w-2 h-2 rounded-none bg-nous-base0"/>
  <div className="flex flex-col">
  <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle">Sovereign Authority</span>
- <span className="font-serif italic text-[11px] text-nous-text0 leading-none">The primary identifier for this manifest frequency.</span>
+ <span className="font-serif italic text-[11px] text-nous-subtle leading-none">The primary identifier for this manifest frequency.</span>
  </div>
  </div>
  
@@ -34,7 +34,7 @@ export const TitleLegend: React.FC = () => {
  <div className="w-2 h-2 rounded-none bg-amber-500"/>
  <div className="flex flex-col">
  <span className="font-sans text-[7px] uppercase tracking-widest font-black text-amber-600 dark:text-amber-400">Semiotic Weight</span>
- <span className="font-serif italic text-[11px] text-nous-text0 leading-none">Determines how the Oracle interprets your debris.</span>
+ <span className="font-serif italic text-[11px] text-nous-subtle leading-none">Determines how the Oracle interprets your debris.</span>
  </div>
  </div>
  </div>

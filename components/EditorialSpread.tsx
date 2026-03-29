@@ -14,7 +14,7 @@ const SpecimenSVG: React.FC<{ type: number }> = ({ type }) => {
  if (type === 1) return (
  <svg viewBox="0 0 100 150"className="w-full h-full stroke-stone-400 dark:stroke-stone-600 fill-none opacity-60"strokeWidth="0.5">
  <path d="M50,140 Q45,100 50,60 M50,110 Q30,90 25,75 M50,90 Q70,70 75,55 M50,60 Q40,30 50,10 Q60,30 50,60"strokeDasharray="2 1"/>
- <circle cx="50"cy="10"fill="currentColor"r="2"className="text-nous-text0"/>
+ <circle cx="50"cy="10"fill="currentColor"r="2"className="text-nous-subtle"/>
  <path d="M48,12 Q45,5 50,2 Q55,5 52,12"/>
  <path d="M25,75 Q20,70 24,65 Q28,70 25,75"/>
  </svg>
@@ -25,7 +25,7 @@ const SpecimenSVG: React.FC<{ type: number }> = ({ type }) => {
  <path d="M20,20 L40,15 L70,20"/>
  <path d="M15,75 L30,85 L60,80"/>
  <path d="M40,40 Q50,35 60,40 Q65,55 55,65 Q40,60 40,40"strokeDasharray="1 1"/>
- <circle cx="50"cy="50"fill="currentColor"r="1"className="text-nous-text0"/>
+ <circle cx="50"cy="50"fill="currentColor"r="1"className="text-nous-subtle"/>
  </svg>
  );
  return null;
@@ -87,7 +87,7 @@ export const EditorialSpread: React.FC<EditorialSpreadProps> = ({ article, onClo
  {/* FLOATING SPECIMEN SKETCH (Desktop Only) */}
  <div className="fixed right-12 top-32 w-32 pointer-events-none opacity-40 z-10 hidden xl:block">
  <SpecimenSVG type={1} />
- <div className="mt-2 font-mono text-[9px] uppercase tracking-tighter text-nous-text0">
+ <div className="mt-2 font-mono text-[9px] uppercase tracking-tighter text-nous-subtle">
  <div className="border-t border-nous-border pt-1">Specimen 04-F</div>
  <div className="opacity-70 italic">Dry. Flora Structure</div>
  <div className="mt-1 flex items-center gap-1 opacity-50">
@@ -124,7 +124,7 @@ export const EditorialSpread: React.FC<EditorialSpreadProps> = ({ article, onClo
  </div>
  <div className="text-center space-y-2">
  <h2 className="font-serif text-4xl italic">Access Restricted.</h2>
- <p className="font-mono text-xs uppercase tracking-widest text-nous-text0">Swan Clearance Required</p>
+ <p className="font-mono text-xs uppercase tracking-widest text-nous-subtle">Swan Clearance Required</p>
  </div>
  </div>
  ) : (
@@ -165,7 +165,7 @@ export const EditorialSpread: React.FC<EditorialSpreadProps> = ({ article, onClo
 
  {article.content.sections?.map((section: any, i: number) => (
  <div key={i} className="mb-16">
- <h3 className="font-mono uppercase tracking-[0.2em] text-sm border-b border-nous-border pb-2 mb-8 flex items-center gap-2 text-nous-text0">
+ <h3 className="font-mono uppercase tracking-[0.2em] text-sm border-b border-nous-border pb-2 mb-8 flex items-center gap-2 text-nous-subtle">
  <span className="text-nous-subtle">0{i+1}.</span> {section.domain ||"SECTION"}
  </h3>
  

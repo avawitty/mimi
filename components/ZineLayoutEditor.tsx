@@ -515,7 +515,7 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
  {showExportMenu && (
  <div className="absolute top-full right-0 mt-2 bg-black/80 backdrop-blur-xl border border-white/20 rounded-none flex flex-col w-40 z-50 overflow-hidden">
  <button onClick={() => handleExport('png')} className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 text-left transition-colors text-white">
- <FileImage size={12} className="text-nous-text0"/>
+ <FileImage size={12} className="text-nous-subtle"/>
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">PNG Asset</span>
  </button>
  <button onClick={() => handleExport('jpg')} className="flex items-center gap-3 px-4 py-3 hover:bg-white/10 text-left transition-colors text-white">
@@ -644,8 +644,8 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
  <button onClick={() => imageUploadRef.current?.click()} className="flex flex-col items-center justify-center gap-2 aspect-square border border-stone-50 rounded-none bg-nous-base/50 /50 active:scale-95"><ImageIcon size={18} className="text-nous-subtle"/><span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-nous-subtle">Image</span></button> 
  <button onClick={() => addElement('text', 'THREAD NOTE\n──────────────\nThis artifact echoes a recurring theme in your archive.')} className="flex flex-col items-center justify-center gap-2 aspect-square border border-stone-50 rounded-none bg-nous-base/50 /50 active:scale-95"><Sparkles size={18} className="text-nous-subtle"/><span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-nous-subtle">Thread</span></button> 
  <button onClick={handleGenerateSignals} disabled={isGeneratingSignals} className="flex flex-col items-center justify-center gap-2 aspect-square border border-nous-border/20 rounded-none bg-nous-base0/5 active:scale-95 group">
- {isGeneratingSignals ? <Loader2 size={18} className="text-nous-text0 animate-spin"/> : <Radar size={18} className="text-nous-text0 group-hover:scale-110 transition-transform"/>}
- <span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-nous-text0">Scry</span>
+ {isGeneratingSignals ? <Loader2 size={18} className="text-nous-subtle animate-spin"/> : <Radar size={18} className="text-nous-subtle group-hover:scale-110 transition-transform"/>}
+ <span className="text-[6px] md:text-[8px] font-black uppercase tracking-[0.2em] text-nous-subtle">Scry</span>
  </button>
  </div>
  )}
@@ -653,7 +653,7 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
  <div className="space-y-8 lg:space-y-10 animate-fade-in pb-12">
  {suggestedThread && selectedElement.type === 'image' && (
  <div className="bg-nous-base0/5 border border-nous-border/20 p-4 rounded-none space-y-3">
- <div className="flex items-center gap-2 text-nous-text0">
+ <div className="flex items-center gap-2 text-nous-subtle">
  <Sparkles size={14} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Thread Discovered</span>
  </div>
@@ -753,14 +753,14 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
  </div>
  </div>
  <div className="space-y-3">
- <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-text0 flex items-center gap-2">
+ <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle flex items-center gap-2">
  <Sparkles size={12} /> Insight
  </span>
  {!imageAnalysis ? (
  <button 
  onClick={handleAnalyzeImage} 
  disabled={isAnalyzingImage}
- className="w-full py-3 border border-nous-border/30 bg-nous-base0/5 text-nous-text0 rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-nous-base0/10 transition-all flex items-center justify-center gap-2"
+ className="w-full py-3 border border-nous-border/30 bg-nous-base0/5 text-nous-subtle rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-nous-base0/10 transition-all flex items-center justify-center gap-2"
  >
  {isAnalyzingImage ? <Loader2 size={12} className="animate-spin"/> : <Radar size={12} />}
  {isAnalyzingImage ?"Consulting Oracle...":"Analyze Semiotics"}
@@ -787,7 +787,7 @@ export const ZineLayoutEditor: React.FC<ZineLayoutEditorProps> = ({ page, tone, 
  )}
  </div>
  <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle">Optical Filters</span><div className="grid grid-cols-3 gap-2">{IMAGE_FILTERS.map(f => <button key={f.name} onClick={() => updateStyle({ filter: f.value })} className={`p-2.5 lg:p-3 border rounded-none transition-all text-center ${selectedElement.style.filter === f.value ? 'bg-nous-text text-nous-base   border-transparent' : 'border-nous-border text-nous-subtle'}`}><span className="text-[6px] lg:text-[8px] uppercase font-black block">{f.name}</span></button>)}</div></div>
- {sovereignTreatments.length > 0 && <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-text0">Darkroom Logic Presets</span><div className="grid gap-2">{sovereignTreatments.map(t => <button key={t.id} onClick={() => updateStyle({ filter: t.instruction })} className="text-left p-3 bg-nous-base border border-nous-border rounded-none hover:border-nous-border transition-all flex justify-between items-center group"><span className="font-serif italic text-xs text-nous-subtle">{t.name}</span><Droplet size={10} className="text-nous-text0 opacity-0 group-hover:opacity-100"/></button>)}</div></div>}
+ {sovereignTreatments.length > 0 && <div className="space-y-3"><span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle">Darkroom Logic Presets</span><div className="grid gap-2">{sovereignTreatments.map(t => <button key={t.id} onClick={() => updateStyle({ filter: t.instruction })} className="text-left p-3 bg-nous-base border border-nous-border rounded-none hover:border-nous-border transition-all flex justify-between items-center group"><span className="font-serif italic text-xs text-nous-subtle">{t.name}</span><Droplet size={10} className="text-nous-subtle opacity-0 group-hover:opacity-100"/></button>)}</div></div>}
  </section>
  )}
  </div>

@@ -136,7 +136,7 @@ export const SignatureView: React.FC = () => {
  <div className="flex-1 flex flex-col items-center justify-center p-12 text-center h-full bg dark:bg">
  <Fingerprint size={48} className="text-nous-subtle mb-6"/>
  <h2 className="font-serif italic text-3xl text-nous-text mb-2">No Signature Found</h2>
- <p className="text-nous-text0 max-w-md mb-6">Your archive is currently empty. Create more artifacts in the Studio to generate your aesthetic fingerprint.</p>
+ <p className="text-nous-subtle max-w-md mb-6">Your archive is currently empty. Create more artifacts in the Studio to generate your aesthetic fingerprint.</p>
  <button 
  onClick={async () => {
  if (!user) return;
@@ -180,9 +180,9 @@ export const SignatureView: React.FC = () => {
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-nous-border pb-8">
  <div>
  <h1 className="text-5xl md:text-7xl font-light italic tracking-tight">Signature</h1>
- <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-nous-text0 mt-4">Aesthetic Fingerprint & Lineage</p>
+ <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-nous-subtle mt-4">Aesthetic Fingerprint & Lineage</p>
  {activePersona?.tailorDraft && (
- <p className="font-sans text-[10px] uppercase tracking-widest text-nous-text0 mt-2 flex items-center gap-1">
+ <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle mt-2 flex items-center gap-1">
  <Sparkles size={10} /> Signature influenced by active Tailor Directives
  </p>
  )}
@@ -246,7 +246,7 @@ export const SignatureView: React.FC = () => {
  <h2 className="text-3xl italic font-light">Aesthetic DNA</h2>
  <p className="font-sans text-[8px] uppercase tracking-[0.2em] text-nous-subtle mt-1">Mimi Intelligence Output</p>
  </div>
- <Fingerprint className="text-nous-text0/50"size={32} />
+ <Fingerprint className="text-nous-subtle/50"size={32} />
  </div>
 
  <div className="space-y-8 relative z-10">
@@ -279,7 +279,7 @@ export const SignatureView: React.FC = () => {
 
  {/* Material & Semantic Blueprint */}
  <div className="pt-6 border-t border-nous-border">
- <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] text-nous-text0 mb-4">Material & Semantic Blueprint</h3>
+ <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] text-nous-subtle mb-4">Material & Semantic Blueprint</h3>
  
  <div className="space-y-4">
  <div>
@@ -290,11 +290,11 @@ export const SignatureView: React.FC = () => {
  <div className="w-8 h-8 border border-nous-border"style={{ backgroundColor: hex }} />
  <div className="flex flex-col">
  <span className="font-mono text-[10px] uppercase tracking-widest text-nous-text font-bold">{hex}</span>
- <span className="font-mono text-[8px] uppercase tracking-widest text-nous-text0">Swatch {i + 1}</span>
+ <span className="font-mono text-[8px] uppercase tracking-widest text-nous-subtle">Swatch {i + 1}</span>
  </div>
  </div>
  )) || (
- <span className="font-mono text-[9px] text-nous-text0">Awaiting Extraction...</span>
+ <span className="font-mono text-[9px] text-nous-subtle">Awaiting Extraction...</span>
  )}
  </div>
  </div>
@@ -395,7 +395,7 @@ export const SignatureView: React.FC = () => {
  <div key={idx} className="bg-white/50 /50 border border-nous-border p-4 flex items-center justify-between group hover:border-indigo-500/50 transition-colors">
  <div>
  <h4 className="font-serif text-lg text-nous-text">{item.artist}</h4>
- <p className="font-sans text-[10px] uppercase tracking-widest text-nous-text0">{item.movement}</p>
+ <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle">{item.movement}</p>
  </div>
  <div className="flex items-center gap-4">
  <div className="w-32 h-1 bg-stone-200 relative overflow-hidden">
@@ -432,7 +432,7 @@ export const SignatureView: React.FC = () => {
  <Activity className="text-rose-500"size={20} />
  <h3 className="text-2xl italic">Creative Cycles</h3>
  </div>
- <p className="font-sans text-[10px] uppercase tracking-widest text-nous-text0 mb-6">Output volume & mood patterns</p>
+ <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle mb-6">Output volume & mood patterns</p>
  
  <div className="h-[300px] w-full bg-white/30 /30 border border-nous-border p-4">
  <ResponsiveContainer width="100%"height="100%"minWidth={1} minHeight={1}>
@@ -459,10 +459,10 @@ export const SignatureView: React.FC = () => {
  {/* Motif Frequency Analyzer */}
  <div className="space-y-6 min-h-[300px]">
  <div className="flex items-center gap-3">
- <Layers className="text-nous-text0"size={20} />
+ <Layers className="text-nous-subtle"size={20} />
  <h3 className="text-2xl italic">Motif Frequency</h3>
  </div>
- <p className="font-sans text-[10px] uppercase tracking-widest text-nous-text0 mb-6">Evolution of recurring visual elements</p>
+ <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle mb-6">Evolution of recurring visual elements</p>
  
  <div className="h-[300px] w-full bg-white/30 /30 border border-nous-border p-4">
  <ResponsiveContainer width="100%"height="100%"minWidth={1} minHeight={1}>

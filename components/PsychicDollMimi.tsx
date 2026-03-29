@@ -190,7 +190,7 @@ export const PsychicDollMimi: React.FC<PsychicDollMimiProps> = ({ analyser, clas
  initial={{ opacity: 0 }}
  animate={{ opacity: 1 }}
  exit={{ opacity: 0 }}
- className="font-mono text-[9px] uppercase tracking-widest text-nous-text0"
+ className="font-mono text-[9px] uppercase tracking-widest text-nous-subtle"
  >
  Speak your thoughts to Mimi...
  </motion.div>

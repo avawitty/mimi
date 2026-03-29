@@ -36,7 +36,7 @@ export const ArchiveListView: React.FC<ArchiveListViewProps> = ({ items, zines, 
  return (
  <div className="w-full p-8">
  <div className="flex gap-4 mb-8">
- <button onClick={() => setSortConfig({ key: 'newest', direction: 'desc' })} className="font-sans text-[10px] uppercase tracking-widest font-black text-nous-text0">Newest</button>
+ <button onClick={() => setSortConfig({ key: 'newest', direction: 'desc' })} className="font-sans text-[10px] uppercase tracking-widest font-black text-nous-subtle">Newest</button>
  </div>
  <table className="w-full text-left font-sans text-[10px] uppercase tracking-widest">
  <thead>

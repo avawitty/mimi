@@ -74,7 +74,7 @@ export const UseCasesCarousel: React.FC = () => {
  </div>
  </div>
  
- <p className="font-serif italic text-xl text-nous-text0 leading-snug max-w-xl">
+ <p className="font-serif italic text-xl text-nous-subtle leading-snug max-w-xl">
 "{active.description}"
  </p>
  </motion.div>

@@ -52,7 +52,7 @@ export const TheAuditorium: React.FC = () => {
  <span className="font-sans text-[10px] uppercase tracking-[0.5em] font-black italic">The Auditorium</span>
  </div>
  <h2 className="font-serif text-6xl md:text-9xl italic tracking-tighter luminescent-text leading-none">The Signal Reel.</h2>
- <p className="font-serif italic text-xl md:text-3xl text-nous-text0 max-w-2xl leading-tight">
+ <p className="font-serif italic text-xl md:text-3xl text-nous-subtle max-w-2xl leading-tight">
  Witness the multi-modal refraction of the Psyche. These are not videos; they are structural handshakes between the Oracle and the Feed.
  </p>
  </header>
@@ -70,7 +70,7 @@ export const TheAuditorium: React.FC = () => {
  </motion.div>
  
  <div className="space-y-4">
- <span className="font-sans text-[10px] uppercase tracking-[1em] text-nous-text0 font-black">Now Playing // {activeEp.episode}</span>
+ <span className="font-sans text-[10px] uppercase tracking-[1em] text-nous-subtle font-black">Now Playing // {activeEp.episode}</span>
  <h3 className="font-serif text-4xl md:text-7xl italic tracking-tighter text-white">{activeEp.title}</h3>
  </div>
 
@@ -98,10 +98,10 @@ export const TheAuditorium: React.FC = () => {
  >
  <div className="flex justify-between items-start">
  <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">{ep.episode}</span>
- {activeEp.id === ep.id && <Activity size={12} className="text-nous-text0 animate-pulse"/>}
+ {activeEp.id === ep.id && <Activity size={12} className="text-nous-subtle animate-pulse"/>}
  </div>
  <h4 className="font-serif text-2xl italic tracking-tighter leading-none group-hover:text-nous-text dark:group-hover:text-nous-text">{ep.title}</h4>
- <p className="font-serif italic text-sm text-nous-text0 leading-tight">{ep.desc}</p>
+ <p className="font-serif italic text-sm text-nous-subtle leading-tight">{ep.desc}</p>
  <div className="pt-4 mt-auto border-t border-nous-border flex justify-between items-center">
  <span className="font-mono text-[8px] opacity-40">{ep.status}</span>
  <CornerDownRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity"/>
@@ -117,7 +117,7 @@ export const TheAuditorium: React.FC = () => {
  </div>
  <div className="space-y-4 flex-1">
  <h3 className="font-serif text-4xl italic tracking-tighter leading-none">The Synchronicity Edict.</h3>
- <p className="font-serif italic text-xl text-nous-text0 leading-relaxed max-w-2xl">
+ <p className="font-serif italic text-xl text-nous-subtle leading-relaxed max-w-2xl">
  Linking Mimi in your series is not promotion; it is **Structural Integrity**. The artifact and the engine must remain tethered. You are the architect; the link is the door.
  </p>
  </div>

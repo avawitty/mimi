@@ -104,7 +104,7 @@ const ProposalExportOverlay: React.FC<{
  <ArrowRight size={14} className="text-nous-subtle group-hover:translate-x-1 transition-transform"/>
  </button>
  </div>
- {isExporting && <div className="text-center text-nous-text0 font-mono text-xs animate-pulse">Rendering High-Fidelity Plate...</div>}
+ {isExporting && <div className="text-center text-nous-subtle font-mono text-xs animate-pulse">Rendering High-Fidelity Plate...</div>}
  </motion.div>
  </div>
  );
@@ -600,10 +600,10 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  <div className="p-8 space-y-10 min-w-[320px]">
  <div className="p-6 bg-nous-base /50 rounded-none border border-nous-border space-y-4">
  <div className="flex items-center justify-between">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0">Aesthetic Core</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">Aesthetic Core</span>
  <Settings2 size={14} className="text-nous-subtle"/>
  </div>
- <p className="font-serif italic text-xs text-nous-text0 leading-snug">Pull typographic and chromatic DNA from your active Tailor persona.</p>
+ <p className="font-serif italic text-xs text-nous-subtle leading-snug">Pull typographic and chromatic DNA from your active Tailor persona.</p>
  <button onClick={handleSyncTailor} className="w-full py-3 bg-white border border-nous-border rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:border-nous-border transition-colors flex items-center justify-center gap-2">
  <RefreshCw size={10} /> Sync Profile
  </button>
@@ -612,7 +612,7 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle flex items-center gap-2"><Type size={12} /> Typography</span>
  <div className="space-y-2">
  {FONTS.map(font => (
- <button key={font.value} onClick={() => setLayoutConfig(p => ({ ...p, fontSet: [font.value, p.fontSet[1]] }))} className={`w-full text-left p-3 border rounded-none transition-all text-sm ${layoutConfig.fontSet[0] === font.value ? 'border-nous-text  bg-nous-base ' : 'border-nous-border text-nous-text0'}`} style={{ fontFamily: font.value }}>{font.label}</button>
+ <button key={font.value} onClick={() => setLayoutConfig(p => ({ ...p, fontSet: [font.value, p.fontSet[1]] }))} className={`w-full text-left p-3 border rounded-none transition-all text-sm ${layoutConfig.fontSet[0] === font.value ? 'border-nous-text  bg-nous-base ' : 'border-nous-border text-nous-subtle'}`} style={{ fontFamily: font.value }}>{font.label}</button>
  ))}
  </div>
  <div className="flex gap-2">
@@ -657,7 +657,7 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  <p className="font-serif italic text-sm text-nous-subtle truncate">{item.content.prompt || item.content.name ||"Artifact"}</p>
  <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">{item.type}</span>
  </div>
- <div className="opacity-0 group-hover:opacity-100 text-nous-text0 transition-opacity"><Plus size={16} /></div>
+ <div className="opacity-0 group-hover:opacity-100 text-nous-subtle transition-opacity"><Plus size={16} /></div>
  </button>
  ))}
  </div>
@@ -671,11 +671,11 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  <motion.aside key="assistant-sidebar"initial={{ width: 0, opacity: 0 }} animate={{ width: 320, opacity: 1 }} exit={{ width: 0, opacity: 0 }} className="bg-white border-r border-nous-border overflow-y-auto no-scrollbar shrink-0 z-40 hidden md:block">
  <div className="p-8 space-y-10 min-w-[320px]">
  <div className="space-y-4">
- <div className="flex items-center gap-3 text-nous-text0">
+ <div className="flex items-center gap-3 text-nous-subtle">
  <Sparkles size={18} className="animate-pulse"/>
  <span className="font-sans text-[9px] uppercase tracking-[0.5em] font-black italic">Proposal Assistant</span>
  </div>
- <p className="font-serif italic text-sm text-nous-text0 leading-relaxed">
+ <p className="font-serif italic text-sm text-nous-subtle leading-relaxed">
  Refine the current slide using natural language. The Assistant reads your proposal context, source folder, and profile.
  </p>
  </div>
@@ -700,7 +700,7 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
 
  <div className="p-6 bg-nous-base /50 rounded-none border border-nous-border space-y-3 opacity-60">
  <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle flex items-center gap-2"><Terminal size={10} /> Active Context</span>
- <div className="text-[9px] font-mono text-nous-text0 space-y-1">
+ <div className="text-[9px] font-mono text-nous-subtle space-y-1">
  <p>Source: {folderItems.length} Artifacts</p>
  <p>Profile: {activePersona?.name || 'Ghost'}</p>
  <p>Logic: {layoutConfig.template.toUpperCase()}</p>
@@ -714,11 +714,11 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  <motion.aside key="collaborators-sidebar"initial={{ width: 0, opacity: 0 }} animate={{ width: 320, opacity: 1 }} exit={{ width: 0, opacity: 0 }} className="bg-white border-r border-nous-border overflow-y-auto no-scrollbar shrink-0 z-40 hidden md:block">
  <div className="p-8 space-y-10 min-w-[320px]">
  <div className="space-y-4">
- <div className="flex items-center gap-3 text-nous-text0">
+ <div className="flex items-center gap-3 text-nous-subtle">
  <Users size={18} />
  <span className="font-sans text-[9px] uppercase tracking-widest font-black">Workspace Access</span>
  </div>
- <p className="font-serif italic text-sm text-nous-text0">Manage who can view and edit this proposal.</p>
+ <p className="font-serif italic text-sm text-nous-subtle">Manage who can view and edit this proposal.</p>
  </div>
  
  <div className="space-y-6">
@@ -727,11 +727,11 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  <div className="flex items-center justify-between p-3 bg-nous-base border border-nous-border rounded-none">
  <div className="flex items-center gap-3">
  <div className="w-8 h-8 rounded-none bg-stone-200 flex items-center justify-center">
- <Shield size={14} className="text-nous-text0"/>
+ <Shield size={14} className="text-nous-subtle"/>
  </div>
  <div>
  <p className="font-sans text-[10px] uppercase tracking-widest font-bold text-nous-text">@{profile?.handle || 'You'}</p>
- <p className="font-serif italic text-xs text-nous-text0">Owner</p>
+ <p className="font-serif italic text-xs text-nous-subtle">Owner</p>
  </div>
  </div>
  </div>
@@ -800,10 +800,10 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
 
  {/* AI VARIATIONS */}
  <div className="space-y-3">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0 flex items-center gap-2"><Sparkles size={10} /> AI Refinements</span>
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle flex items-center gap-2"><Sparkles size={10} /> AI Refinements</span>
  {isGeneratingVariations ? (
  <div className="flex items-center gap-2 py-4 justify-center">
- <Loader2 size={14} className="animate-spin text-nous-text0"/>
+ <Loader2 size={14} className="animate-spin text-nous-subtle"/>
  <span className="font-mono text-[8px] text-nous-subtle 0 uppercase">Consulting Oracle...</span>
  </div>
  ) : aiVariations ? (
@@ -821,7 +821,7 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  }}
  className="w-full text-left p-2 bg-nous-base border border-nous-border rounded-none hover:border-nous-border transition-all group"
  >
- <span className="block font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle group-hover:text-nous-text0 mb-1">{v.label}</span>
+ <span className="block font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle group-hover:text-nous-subtle mb-1">{v.label}</span>
  <p className="font-serif italic text-[10px] text-nous-subtle line-clamp-2">{v.content}</p>
  </button>
  ))}
@@ -963,8 +963,8 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  {/* OPACITY */}
  <div className="space-y-2 pt-4 border-t border-nous-border">
  <div className="flex justify-between">
- <span className="font-mono text-[9px] text-nous-text0">OPACITY</span>
- <span className="font-mono text-[9px] text-nous-text0">{isNaN(Number(selectedImageElement.style.opacity)) ? 100 : Math.round((selectedImageElement.style.opacity !== undefined ? Number(selectedImageElement.style.opacity) : 1) * 100)}%</span>
+ <span className="font-mono text-[9px] text-nous-subtle">OPACITY</span>
+ <span className="font-mono text-[9px] text-nous-subtle">{isNaN(Number(selectedImageElement.style.opacity)) ? 100 : Math.round((selectedImageElement.style.opacity !== undefined ? Number(selectedImageElement.style.opacity) : 1) * 100)}%</span>
  </div>
  <SemanticSteps 
  steps={[
@@ -982,8 +982,8 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  {/* CORNER RADIUS */}
  <div className="space-y-2">
  <div className="flex justify-between">
- <span className="font-mono text-[9px] text-nous-text0">RADIUS</span>
- <span className="font-mono text-[9px] text-nous-text0">{selectedImageElement.style.borderRadius || 0}px</span>
+ <span className="font-mono text-[9px] text-nous-subtle">RADIUS</span>
+ <span className="font-mono text-[9px] text-nous-subtle">{selectedImageElement.style.borderRadius || 0}px</span>
  </div>
  <SemanticSteps 
  steps={[
@@ -999,7 +999,7 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
 
  {/* FILTERS */}
  <div className="space-y-2">
- <span className="font-mono text-[9px] text-nous-text0 block">TREATMENT</span>
+ <span className="font-mono text-[9px] text-nous-subtle block">TREATMENT</span>
  <div className="grid grid-cols-3 gap-2">
  {[
  { label: 'RAW', val: 'none' },
@@ -1045,7 +1045,7 @@ export const ProposalWorkspace: React.FC<ProposalWorkspaceProps> = ({ proposal, 
  ))}
  </div>
  <div className="h-4 w-px bg-stone-200 hidden md:block"/>
- <button onClick={handleAddPage} className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-nous-base border border-nous-border rounded-none font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0 hover:text-nous-text hover:text-nous-text transition-all">
+ <button onClick={handleAddPage} className="hidden md:flex items-center gap-1.5 px-3 py-1 bg-nous-base border border-nous-border rounded-none font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle hover:text-nous-text hover:text-nous-text transition-all">
  <Plus size={10} /> Add Slide
  </button>
  {proposal.content.sections.length > 1 && (

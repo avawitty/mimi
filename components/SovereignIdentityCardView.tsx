@@ -17,7 +17,7 @@ export const SovereignIdentityCardView: React.FC<{ card: SovereignIdentityCard }
  </div>
  ))}
  </div>
- <div className="text-xs font-mono text-nous-text0">
+ <div className="text-xs font-mono text-nous-subtle">
  Taste Drift: {card.tasteDriftPercentage?.toFixed(2) || '0.00'}%
  </div>
  </div>

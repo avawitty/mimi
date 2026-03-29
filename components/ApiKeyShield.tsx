@@ -51,7 +51,7 @@ export const ApiKeyShield: React.FC<{ isOpen: boolean; onClose: () => void }> = 
  </div>
  </div>
 
- <div className="space-y-8 font-serif italic text-lg text-nous-text0 leading-relaxed text-balance">
+ <div className="space-y-8 font-serif italic text-lg text-nous-subtle leading-relaxed text-balance">
  <p>
  The Oracle has reached its maximum frequency for this period. To continue manifesting, anchor a fresh Sovereign Key or manage your Key Ring.
  </p>

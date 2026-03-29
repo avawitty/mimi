@@ -26,7 +26,7 @@ export const ValidationLegend: React.FC = () => {
  <div className="w-2 h-2 rounded-none bg"/>
  <div className="flex flex-col">
  <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle">Structural Alignment</span>
- <span className="font-serif italic text-[11px] text-nous-text0 leading-none">The fragment adheres to simulation logic.</span>
+ <span className="font-serif italic text-[11px] text-nous-subtle leading-none">The fragment adheres to simulation logic.</span>
  </div>
  </div>
  
@@ -34,7 +34,7 @@ export const ValidationLegend: React.FC = () => {
  <div className="w-2 h-2 rounded-none bg"/>
  <div className="flex flex-col">
  <span className="font-sans text-[7px] uppercase tracking-widest font-black text-red-600 dark:text-red-400">Archival Dissonance</span>
- <span className="font-serif italic text-[11px] text-nous-text0 leading-none">Recalibration required for manifestation.</span>
+ <span className="font-serif italic text-[11px] text-nous-subtle leading-none">Recalibration required for manifestation.</span>
  </div>
  </div>
  </div>

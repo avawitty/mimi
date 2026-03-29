@@ -253,13 +253,13 @@ export const UserProfileView: React.FC = () => {
 
  <header className="max-w-7xl mx-auto mb-8 flex justify-between items-end">
  <div>
- <span className="text-[10px] uppercase tracking-[0.3em] font-mono text-nous-text0 mb-1 block">System Profile // Access Level: Sovereign</span>
+ <span className="text-[10px] uppercase tracking-[0.3em] font-mono text-nous-subtle mb-1 block">System Profile // Access Level: Sovereign</span>
  <h1 className="font-serif text-4xl italic">Sovereign Profile & Logic Registry</h1>
  </div>
  <div className="text-right hidden md:block">
  <span className="text-[10px] uppercase tracking-widest font-mono text-nous-subtle">Registry ID: {user?.uid?.substring(0, 8).toUpperCase() || '00-MZ-892-X'}</span>
  <div className="flex items-center justify-end gap-2 mt-1">
- <span className="text-[10px] uppercase tracking-widest font-mono text-nous-text0">Status: Synced</span>
+ <span className="text-[10px] uppercase tracking-widest font-mono text-nous-subtle">Status: Synced</span>
  </div>
  </div>
  </header>
@@ -296,7 +296,7 @@ export const UserProfileView: React.FC = () => {
  </div>
 
  <div className="mb-8">
- <label className="text-[10px] uppercase tracking-widest font-mono text-nous-text0 block mb-2">Registry Handle</label>
+ <label className="text-[10px] uppercase tracking-widest font-mono text-nous-subtle block mb-2">Registry Handle</label>
  <input 
  value={handle} 
  onChange={e => setHandle(e.target.value)} 
@@ -306,7 +306,7 @@ export const UserProfileView: React.FC = () => {
  </div>
 
  <div className="mb-8">
- <label className="text-[10px] uppercase tracking-widest font-mono text-nous-text0 block mb-4">External Resources</label>
+ <label className="text-[10px] uppercase tracking-widest font-mono text-nous-subtle block mb-4">External Resources</label>
  <div className="space-y-3 max-h-48 overflow-y-auto no-scrollbar pr-2">
  {externalLinks.map((link, i) => (
  <div key={i} className="flex items-center justify-between text-xs font-mono border-l-2 border-nous-border pl-3 py-1">
@@ -357,7 +357,7 @@ export const UserProfileView: React.FC = () => {
  <div className="flex justify-between items-start mb-6">
  <div>
  <h2 className="font-serif italic text-2xl text-nous-text  mb-2">Aesthetic Identity</h2>
- <p className="font-sans text-[10px] uppercase tracking-widest text-nous-text0 mb-6">Semantic Baseline</p>
+ <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle mb-6">Semantic Baseline</p>
  </div>
  <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'thimble' }))} className="text-[10px] uppercase tracking-widest border-b border-nous-border pb-0.5">Taste Dashboard</button>
  </div>
@@ -365,7 +365,7 @@ export const UserProfileView: React.FC = () => {
  {profile?.tasteProfile ? (
  <div className="space-y-6">
  <div>
- <h3 className="text-[10px] uppercase tracking-widest font-mono text-nous-text0 mb-3">Dominant Archetypes</h3>
+ <h3 className="text-[10px] uppercase tracking-widest font-mono text-nous-subtle mb-3">Dominant Archetypes</h3>
  <div className="flex flex-wrap gap-2">
  {profile.tasteProfile.dominant_archetypes?.map((archetype, i) => (
  <span key={i} className="px-4 py-2 bg-nous-base text-nous-text text-xs font-mono rounded-none border border-nous-border">
@@ -376,7 +376,7 @@ export const UserProfileView: React.FC = () => {
  </div>
  {profile.tasteProfile.constraints && profile.tasteProfile.constraints.length > 0 && (
  <div>
- <h3 className="text-[10px] uppercase tracking-widest font-mono text-nous-text0 mb-3">Constraints</h3>
+ <h3 className="text-[10px] uppercase tracking-widest font-mono text-nous-subtle mb-3">Constraints</h3>
  <div className="flex flex-wrap gap-2">
  {profile.tasteProfile.constraints?.map((constraint, i) => (
  <span key={i} className="px-4 py-2 bg-nous-base /50 text-nous-subtle text-xs font-mono rounded-none border border-nous-border">
@@ -401,14 +401,14 @@ export const UserProfileView: React.FC = () => {
  onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'taste-graph' }))}
  className="p-4 border border-nous-border text-left hover:bg-nous-base transition-colors rounded-none"
  >
- <h4 className="font-mono text-[10px] uppercase tracking-widest text-nous-text0 mb-2">Taste Graph</h4>
+ <h4 className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle mb-2">Taste Graph</h4>
  <p className="text-xs text-nous-subtle leading-relaxed italic">Visualizing sensory benchmarks across ingested artifacts.</p>
  </button>
  <button 
  onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'taste-graph' }))}
  className="p-4 border border-nous-border text-left hover:bg-nous-base transition-colors rounded-none"
  >
- <h4 className="font-mono text-[10px] uppercase tracking-widest text-nous-text0 mb-2">Semantic Network</h4>
+ <h4 className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle mb-2">Semantic Network</h4>
  <p className="text-xs text-nous-subtle leading-relaxed italic">Mapping relationships between disparate creative nodes.</p>
  </button>
  </div>
@@ -423,12 +423,12 @@ export const UserProfileView: React.FC = () => {
  >
  <div className="flex justify-between items-start mb-6">
  <h2 className="font-serif text-2xl italic">Global Structural Logic</h2>
- <span className="text-[10px] uppercase tracking-widest font-mono px-3 py-1 border border-nous-border rounded-none text-nous-text0">Agent Config</span>
+ <span className="text-[10px] uppercase tracking-widest font-mono px-3 py-1 border border-nous-border rounded-none text-nous-subtle">Agent Config</span>
  </div>
  
  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
  <div>
- <label className="text-[10px] uppercase tracking-widest font-mono text-nous-text0 block mb-3">Grounding Logic Tags</label>
+ <label className="text-[10px] uppercase tracking-widest font-mono text-nous-subtle block mb-3">Grounding Logic Tags</label>
  <div className="flex flex-wrap gap-2 mb-6">
  <button onClick={() => setArchetype('editorial-serif')} className={`text-[10px] font-mono border px-4 py-2 rounded-none ${archetype === 'editorial-serif' ? 'bg-nous-text text-nous-base border-nous-text' : 'bg-white border-nous-border '}`}>Editorial</button>
  <button onClick={() => setArchetype('minimalist-sans')} className={`text-[10px] font-mono border px-4 py-2 rounded-none ${archetype === 'minimalist-sans' ? 'bg-nous-text text-nous-base border-nous-text' : 'bg-white border-nous-border '}`}>Minimalist</button>
@@ -438,7 +438,7 @@ export const UserProfileView: React.FC = () => {
  <div className="space-y-6">
  <div>
  <div className="flex justify-between items-center mb-2">
- <label className="text-[10px] uppercase tracking-widest font-mono text-nous-text0">Curator Agent</label>
+ <label className="text-[10px] uppercase tracking-widest font-mono text-nous-subtle">Curator Agent</label>
  <button onClick={() => setCuratorEnabled(!curatorEnabled)} className={`text-[10px] font-mono px-2 py-1 rounded-none border ${curatorEnabled ? 'text-nous-text border-nous-border bg-nous-base ' : 'text-nous-subtle border-nous-border '}`}>{curatorEnabled ? 'ENABLED' : 'DISABLED'}</button>
  </div>
  <SemanticSteps 
@@ -454,7 +454,7 @@ export const UserProfileView: React.FC = () => {
  </div>
  <div>
  <div className="flex justify-between items-center mb-2">
- <label className="text-[10px] uppercase tracking-widest font-mono text-nous-text0">Sentinel Agent</label>
+ <label className="text-[10px] uppercase tracking-widest font-mono text-nous-subtle">Sentinel Agent</label>
  <button onClick={() => setSentinelEnabled(!sentinelEnabled)} className={`text-[10px] font-mono px-2 py-1 rounded-none border ${sentinelEnabled ? 'text-nous-text border-nous-border bg-nous-base ' : 'text-nous-subtle border-nous-border '}`}>{sentinelEnabled ? 'ENABLED' : 'DISABLED'}</button>
  </div>
  <SemanticSteps 
@@ -472,7 +472,7 @@ export const UserProfileView: React.FC = () => {
  </div>
  
  <div className="flex flex-col">
- <label className="text-[10px] uppercase tracking-widest font-mono text-nous-text0 block mb-3">The Eraser Line</label>
+ <label className="text-[10px] uppercase tracking-widest font-mono text-nous-subtle block mb-3">The Eraser Line</label>
  <textarea 
  value={tasteDefinition}
  onChange={e => setTasteDefinition(e.target.value)}
@@ -512,7 +512,7 @@ export const UserProfileView: React.FC = () => {
  <button onClick={() => setIsEditingMask(false)} className="text-nous-subtle hover:text-nous-text"><Settings size={16}/></button>
  </div>
  <div>
- <label className="text-[10px] uppercase tracking-widest font-mono text-nous-text0 block mb-4">Temperature: {editingMaskTemp}</label>
+ <label className="text-[10px] uppercase tracking-widest font-mono text-nous-subtle block mb-4">Temperature: {editingMaskTemp}</label>
  <SemanticSteps 
  steps={[
  { label: '0.0', value: 0 },
@@ -540,11 +540,11 @@ export const UserProfileView: React.FC = () => {
  
  <div className="bg-nous-base /50 rounded-none p-4 mb-6 border border-nous-border">
  <div className="flex justify-between text-[10px] font-mono mb-2">
- <span className="text-nous-text0">Identity Namespace</span>
+ <span className="text-nous-subtle">Identity Namespace</span>
  <span>{activePersona?.id.substring(0, 8).toUpperCase() || 'PN-8821'}</span>
  </div>
  <div className="flex justify-between text-[10px] font-mono">
- <span className="text-nous-text0">Parameters</span>
+ <span className="text-nous-subtle">Parameters</span>
  <button onClick={() => {
  setEditingMaskTemp(activePersona?.operationalParameters?.temperature || 0.7);
  setIsEditingMask(true);
@@ -612,7 +612,7 @@ export const UserProfileView: React.FC = () => {
  <div className="flex flex-col gap-4 w-full md:w-auto">
  <div>
  <h2 className="font-serif text-2xl italic mb-2">Sovereign Backup</h2>
- <p className="text-[10px] uppercase tracking-widest font-mono text-nous-text0">Last commit: {new Date().toLocaleTimeString()} UTC</p>
+ <p className="text-[10px] uppercase tracking-widest font-mono text-nous-subtle">Last commit: {new Date().toLocaleTimeString()} UTC</p>
  </div>
  <button onClick={handleExportData} disabled={isExporting} className="flex items-center justify-center gap-2 px-6 py-4 border border-nous-border text-[10px] uppercase tracking-widest hover:bg-nous-base transition-colors rounded-none w-full">
  {isExporting ? <Loader2 size={14} className="animate-spin"/> : <Download size={14} />}

@@ -51,7 +51,7 @@ export default function MimiIntroSequence({ onComplete }: MimiIntroSequenceProps
  initial={{ opacity: 0 }}
  animate={{ opacity: 1 }}
  transition={{ duration: 1.5, ease: 'easeOut', delay: 0.8 }}
- className="font-mono text-[9px] uppercase tracking-[0.4em] text-nous-text0 max-w-sm leading-relaxed"
+ className="font-mono text-[9px] uppercase tracking-[0.4em] text-nous-subtle max-w-sm leading-relaxed"
  >
  A sovereign sanctuary for discrete creative synthesis.
  </motion.p>
@@ -80,7 +80,7 @@ export default function MimiIntroSequence({ onComplete }: MimiIntroSequenceProps
  initial={{ opacity: 0 }}
  animate={{ opacity: 1 }}
  transition={{ duration: 1.5, ease: 'easeOut', delay: 0.8 }}
- className="font-mono text-[9px] uppercase tracking-[0.4em] text-nous-text0 max-w-sm leading-relaxed"
+ className="font-mono text-[9px] uppercase tracking-[0.4em] text-nous-subtle max-w-sm leading-relaxed"
  >
  A sovereign sanctuary for discrete creative synthesis.
  </motion.p>

@@ -57,7 +57,7 @@ export const ProsceniumView: React.FC<{ onSelectZine: (z: ZineMetadata) => void,
  <div className="flex flex-col border-b border-nous-border pb-12 gap-8">
  <div className="space-y-6">
  <div className="flex items-center gap-3 text-nous-subtle">
- <Globe2 size={16} className="text-nous-text0 animate-pulse"/>
+ <Globe2 size={16} className="text-nous-subtle animate-pulse"/>
  <span className="font-sans text-[10px] uppercase tracking-[0.5em] font-black italic">The Sovereign Showroom</span>
  </div>
  <div className="space-y-2">
@@ -79,7 +79,7 @@ export const ProsceniumView: React.FC<{ onSelectZine: (z: ZineMetadata) => void,
  <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Portal Status</span>
  <span className="font-serif italic text-sm text-nous-text text-nous-text">{myPublicZines.length} Public Manifests</span>
  </div>
- <Activity size={14} className="text-nous-text0 animate-pulse"/>
+ <Activity size={14} className="text-nous-subtle animate-pulse"/>
  </div>
  </div>
  </div>
@@ -95,7 +95,7 @@ export const ProsceniumView: React.FC<{ onSelectZine: (z: ZineMetadata) => void,
  <button onClick={() => onSelectZine(zine)} className="flex items-center gap-2 font-serif italic text-nous-subtle hover:text-nous-text hover:text-nous-text">
  Witness Full Manifest <ArrowRight size={12} />
  </button>
- <button onClick={() => handleShare(zine.id)} className="p-2 text-nous-subtle hover:text-nous-text0">
+ <button onClick={() => handleShare(zine.id)} className="p-2 text-nous-subtle hover:text-nous-subtle">
  {copiedId === zine.id ? <Check size={14} /> : <Share2 size={14} />}
  </button>
  </div>
@@ -136,11 +136,11 @@ export const ProsceniumView: React.FC<{ onSelectZine: (z: ZineMetadata) => void,
  <div key={zine.id} className="space-y-6 group">
  <ZineCard zine={zine} onClick={() => onSelectZine(zine)} />
  <div className="flex justify-between items-center px-4">
- <button onClick={() => handleShare(zine.id)} className="flex items-center gap-3 px-6 py-2 bg-nous-base border border-nous-border rounded-none font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle hover:text-nous-text0 transition-all">
+ <button onClick={() => handleShare(zine.id)} className="flex items-center gap-3 px-6 py-2 bg-nous-base border border-nous-border rounded-none font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle hover:text-nous-subtle transition-all">
  {copiedId === zine.id ? <Check size={12} /> : <Share2 size={12} />}
  {copiedId === zine.id ? 'Link Preserved' : 'Get Share Link'}
  </button>
- <span className="font-sans text-[7px] uppercase tracking-widest text-nous-text0 font-black">Public</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle font-black">Public</span>
  </div>
  </div>
  ))}

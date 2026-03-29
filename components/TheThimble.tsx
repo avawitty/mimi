@@ -92,12 +92,12 @@ export const TheThimble: React.FC<TheThimbleProps> = ({ profile, isOpen }) => {
  <Network className="w-4 h-4 text-nous-subtle"/>
  <span className="font-bold tracking-widest text-nous-text uppercase">Aesthetic Retrieval</span>
  </div>
- <span className="text-[10px] text-nous-text0 uppercase tracking-widest">Engine v2</span>
+ <span className="text-[10px] text-nous-subtle uppercase tracking-widest">Engine v2</span>
  </div>
 
  <div className="p-4 border-b border-nous-border space-y-4 relative z-10">
  <div className="space-y-2">
- <label className="text-[10px] uppercase tracking-widest text-nous-text0">Visual Anchor / Core Query</label>
+ <label className="text-[10px] uppercase tracking-widest text-nous-subtle">Visual Anchor / Core Query</label>
  <textarea
  value={anchorQuery}
  onChange={(e) => setAnchorQuery(e.target.value)}
@@ -123,7 +123,7 @@ export const TheThimble: React.FC<TheThimbleProps> = ({ profile, isOpen }) => {
  <div className="flex-1 overflow-y-auto p-4 space-y-6 relative z-10">
  {/* Loading States */}
  {retrievalState !== 'idle' && retrievalState !== 'complete' && (
- <div className="space-y-4 font-mono text-[10px] uppercase tracking-widest text-nous-text0 mt-4">
+ <div className="space-y-4 font-mono text-[10px] uppercase tracking-widest text-nous-subtle mt-4">
  <div className={`flex items-center gap-3 ${retrievalState === 'extracting' ? 'text-nous-text ' : 'opacity-50'}`}>
  {retrievalState === 'extracting' ? <Loader2 className="w-3 h-3 animate-spin"/> : <Check className="w-3 h-3"/>}
  Extracting Visual Tokens...
@@ -145,7 +145,7 @@ export const TheThimble: React.FC<TheThimbleProps> = ({ profile, isOpen }) => {
  
  {/* Visual Tokens */}
  <div className="space-y-3">
- <div className="text-[10px] uppercase tracking-widest text-nous-text0 border-b border-nous-border pb-2 flex items-center gap-2">
+ <div className="text-[10px] uppercase tracking-widest text-nous-subtle border-b border-nous-border pb-2 flex items-center gap-2">
  <Layers className="w-3 h-3"/> Visual Tokens
  </div>
  <div className="grid grid-cols-2 gap-4">
@@ -178,7 +178,7 @@ export const TheThimble: React.FC<TheThimbleProps> = ({ profile, isOpen }) => {
 
  {/* Interpretations */}
  <div className="space-y-3">
- <div className="text-[10px] uppercase tracking-widest text-nous-text0 border-b border-nous-border pb-2 flex items-center gap-2">
+ <div className="text-[10px] uppercase tracking-widest text-nous-subtle border-b border-nous-border pb-2 flex items-center gap-2">
  <Network className="w-3 h-3"/> Interpretations
  </div>
  <div className="space-y-2">
@@ -201,7 +201,7 @@ export const TheThimble: React.FC<TheThimbleProps> = ({ profile, isOpen }) => {
  {/* Marketplaces & Foundations */}
  <div className="grid grid-cols-2 gap-4">
  <div className="space-y-3">
- <div className="text-[10px] uppercase tracking-widest text-nous-text0 border-b border-nous-border pb-2 flex items-center gap-2">
+ <div className="text-[10px] uppercase tracking-widest text-nous-subtle border-b border-nous-border pb-2 flex items-center gap-2">
  <Database className="w-3 h-3"/> Marketplaces
  </div>
  <div className="space-y-1">
@@ -214,7 +214,7 @@ export const TheThimble: React.FC<TheThimbleProps> = ({ profile, isOpen }) => {
  </div>
  </div>
  <div className="space-y-3">
- <div className="text-[10px] uppercase tracking-widest text-nous-text0 border-b border-nous-border pb-2">
+ <div className="text-[10px] uppercase tracking-widest text-nous-subtle border-b border-nous-border pb-2">
  Foundations
  </div>
  <div className="space-y-1">

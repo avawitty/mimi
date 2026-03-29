@@ -159,7 +159,7 @@ export const DailyTransmission: React.FC = () => {
  ) : (
  <div className="flex items-center gap-2">
  <Heart size={10} className="text-nous-text opacity-20 group-hover:opacity-100 transition-opacity"/>
- <Sparkles size={12} className={`text-nous-subtle group-hover:text-nous-subtle transition-colors ${activeEdict && !isTired ? 'animate-pulse text-nous-text0' : ''}`} />
+ <Sparkles size={12} className={`text-nous-subtle group-hover:text-nous-subtle transition-colors ${activeEdict && !isTired ? 'animate-pulse text-nous-subtle' : ''}`} />
  </div>
  )}
  </motion.button>

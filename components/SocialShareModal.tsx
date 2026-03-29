@@ -60,7 +60,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ metadata, on
  <div className="p-8 md:p-10 space-y-8">
  <div className="flex justify-between items-start">
  <div className="space-y-2">
- <div className="flex items-center gap-3 text-nous-text0">
+ <div className="flex items-center gap-3 text-nous-subtle">
  <Share2 size={16} />
  <span className="font-sans text-[9px] uppercase tracking-[0.5em] font-black">Distribution Interface</span>
  </div>
@@ -96,7 +96,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ metadata, on
  />
  <button 
  onClick={handleCopy} 
- className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 transition-all ${copied ? 'text-nous-text0 scale-110' : 'text-nous-subtle hover:text-nous-text '}`}
+ className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 transition-all ${copied ? 'text-nous-subtle scale-110' : 'text-nous-subtle hover:text-nous-text '}`}
  title="Copy Imperial Link"
  >
  {copied ? <Check size={14} /> : <Copy size={14} />}
@@ -118,7 +118,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ metadata, on
  onClick={handleNativeShare}
  className="flex flex-col items-center justify-center gap-3 py-6 bg-nous-base border border-nous-border rounded-none hover:bg-nous-base dark:hover:bg-stone-700 transition-all group"
  >
- <Send size={20} className="text-nous-text0 group-hover:scale-110 transition-transform"/>
+ <Send size={20} className="text-nous-subtle group-hover:scale-110 transition-transform"/>
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Share Sheet</span>
  </button>
  </div>
@@ -129,7 +129,7 @@ export const SocialShareModal: React.FC<SocialShareModalProps> = ({ metadata, on
  <Instagram size={14} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-black italic">The Story Protocol</span>
  </div>
- <p className="font-serif italic text-xs text-nous-text0 leading-relaxed">
+ <p className="font-serif italic text-xs text-nous-subtle leading-relaxed">
  Download the high-fidelity plates from the <span className="text-nous-text text-nous-text underline">Export Chamber</span>. Attach your <span className="font-bold">Imperial Link</span> to IG Stories to anchor the witness.
  </p>
  </div>

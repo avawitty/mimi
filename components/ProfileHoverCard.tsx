@@ -132,9 +132,9 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = ({ isOpen, onCl
  Save
  </button>
  </div>
- {isCheckingHandle && <div className="text-[10px] text-nous-text0 flex items-center gap-1"><Loader2 size={10} className="animate-spin"/> Checking...</div>}
+ {isCheckingHandle && <div className="text-[10px] text-nous-subtle flex items-center gap-1"><Loader2 size={10} className="animate-spin"/> Checking...</div>}
  {!isCheckingHandle && handleAvailable === false && <div className="text-[10px] text-red-500">Handle unavailable</div>}
- {!isCheckingHandle && handleAvailable === true && newUsername !== profile?.handle && newUsername.length >= 2 && <div className="text-[10px] text-nous-text0">Handle available</div>}
+ {!isCheckingHandle && handleAvailable === true && newUsername !== profile?.handle && newUsername.length >= 2 && <div className="text-[10px] text-nous-subtle">Handle available</div>}
  </div>
  ) : (
  <div className="flex items-center gap-2 mb-1 group cursor-pointer"onClick={() => setIsEditingUsername(true)}>
@@ -145,11 +145,11 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = ({ isOpen, onCl
  </div>
  )}
  
- <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-nous-text0 mb-1 truncate">
+ <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-nous-subtle mb-1 truncate">
  <span>{authProvider} Authorized</span>
- <CheckCircle2 size={10} className="text-nous-text0"/>
+ <CheckCircle2 size={10} className="text-nous-subtle"/>
  </div>
- <div className="text-[10px] uppercase tracking-widest text-nous-text0 truncate">
+ <div className="text-[10px] uppercase tracking-widest text-nous-subtle truncate">
  {user.email}
  </div>
  </div>
@@ -157,7 +157,7 @@ export const ProfileHoverCard: React.FC<ProfileHoverCardProps> = ({ isOpen, onCl
 
  <div className="space-y-3 pt-4 border-t border-nous-border">
  <div className="flex justify-between items-center">
- <span className="font-sans text-[10px] uppercase tracking-widest text-nous-text0">Membership Tier</span>
+ <span className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle">Membership Tier</span>
  <span className={`font-serif italic text-sm ${
  profile?.plan === 'lab' ? 'text-nous-subtle ' :
  profile?.plan === 'pro' ? 'text-purple-600 dark:text-purple-400' :

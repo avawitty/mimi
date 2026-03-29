@@ -44,7 +44,7 @@ export const TrajectoryExpansion: React.FC<{ article: any, onClose: () => void }
  </span>
  </div>
  <h1 className="font-serif text-5xl md:text-7xl leading-[0.9] mb-6 text-nous-text">{article.headline}</h1>
- <p className="font-serif italic text-2xl text-nous-text0 leading-tight">{article.subtitle}</p>
+ <p className="font-serif italic text-2xl text-nous-subtle leading-tight">{article.subtitle}</p>
  </div>
 
  <div className="w-full h-px bg-stone-200 mb-16"/>
@@ -80,7 +80,7 @@ export const TrajectoryExpansion: React.FC<{ article: any, onClose: () => void }
  <h3 className="font-mono text-xs uppercase tracking-widest mb-6 flex items-center gap-2 text-nous-subtle 0">
  <Fingerprint size={14} /> Field Notes
  </h3>
- <div className="space-y-8 font-mono text-[10px] uppercase tracking-wider text-nous-text0">
+ <div className="space-y-8 font-mono text-[10px] uppercase tracking-wider text-nous-subtle">
  <div>
  <span className="block text-nous-subtle mb-2">Author</span>
  <span className="text-nous-text">{article.content.author}</span>

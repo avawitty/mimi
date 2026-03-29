@@ -159,7 +159,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  };
 
  const getStatusIcon = () => {
- if (connectionStatus === 'friends') return <span title="Connected"><Handshake size={20} className="text-nous-text0"/></span>;
+ if (connectionStatus === 'friends') return <span title="Connected"><Handshake size={20} className="text-nous-subtle"/></span>;
  if (connectionStatus === 'request_sent' || connectionStatus === 'request_received') return <span title="Pending"><Clock size={20} className="text-amber-500 animate-pulse"/></span>;
  if (connectionStatus === 'none') return <span title="Disconnected"><Link2Off size={20} className="text-nous-subtle"/></span>;
  if (isFollowing) return <span title="Resonating"><Zap size={20} className="text-indigo-500"/></span>;
@@ -169,7 +169,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  const renderConnectButton = () => {
  if (connectLoading) {
  return (
- <button disabled className="px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 border border-nous-border text-nous-text0">
+ <button disabled className="px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 border border-nous-border text-nous-subtle">
  <Loader2 size={14} className="animate-spin"/>
  </button>
  );
@@ -178,7 +178,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  switch (connectionStatus) {
  case 'friends':
  return (
- <button onClick={handleConnectAction} className="px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-nous-base text-nous-text0 border border-nous-border hover:text-red-500 hover:border-red-500/30"title="Disconnect">
+ <button onClick={handleConnectAction} className="px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-nous-base text-nous-subtle border border-nous-border hover:text-red-500 hover:border-red-500/30"title="Disconnect">
  <Link2Off size={14} />
  </button>
  );
@@ -194,7 +194,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  <button onClick={handleConnectAction} className="px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 bg-nous-base0 text-white -stone-500/20 hover:bg-stone-600">
  <Check size={14} /> Accept
  </button>
- <button onClick={handleRejectRequest} className="px-6 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 border border-nous-border text-nous-text0 hover:text-red-500">
+ <button onClick={handleRejectRequest} className="px-6 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 border border-nous-border text-nous-subtle hover:text-red-500">
  <X size={14} />
  </button>
  </div>
@@ -244,14 +244,14 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  
  {(profile.tailorDraft as any)?.typographyIntent?.archetype && (
  <div className="mt-2 px-3 py-1 bg-nous-base border border-nous-border rounded-none inline-block">
- <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0">
+ <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">
  Archetype: {(profile.tailorDraft as any).typographyIntent.archetype.replace('-', ' ')}
  </span>
  </div>
  )}
  
  {(profile.tasteProfile as any)?.definition && (
- <p className="mt-4 font-serif italic text-sm text-nous-text0 max-w-sm text-center">
+ <p className="mt-4 font-serif italic text-sm text-nous-subtle max-w-sm text-center">
 "{(profile.tasteProfile as any).definition}"
  </p>
  )}
@@ -273,7 +273,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  <button 
  onClick={handleFollowToggle}
  disabled={actionLoading}
- className={`px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 ${isFollowing ? 'bg-nous-base text-nous-text0 border border-nous-border ' : 'bg-nous-text text-nous-base '}`}
+ className={`px-8 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center gap-2 ${isFollowing ? 'bg-nous-base text-nous-subtle border border-nous-border ' : 'bg-nous-text text-nous-base '}`}
  >
  {actionLoading ? <Loader2 size={14} className="animate-spin"/> : isFollowing ? <><UserMinus size={14} /> Stop Resonating</> : <><UserPlus size={14} /> Resonate</>}
  </button>
@@ -282,7 +282,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  )}
  </>
  ) : (
- <div className="py-12"><p className="font-serif italic text-nous-text0">Profile not found.</p></div>
+ <div className="py-12"><p className="font-serif italic text-nous-subtle">Profile not found.</p></div>
  )}
  </div>
  
@@ -309,7 +309,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  <img src={zine.coverImageUrl} alt={zine.title} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"/>
  ) : (
  <div className="w-full h-full flex items-center justify-center p-4 text-center">
- <span className="font-serif italic text-sm text-nous-text0">{zine.title}</span>
+ <span className="font-serif italic text-sm text-nous-subtle">{zine.title}</span>
  </div>
  )}
  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -320,7 +320,7 @@ export const PublicProfileModal: React.FC<PublicProfileModalProps> = ({ userId, 
  </div>
  ) : (
  <div className="text-center py-12">
- <p className="font-serif italic text-nous-text0">No public manifests available.</p>
+ <p className="font-serif italic text-nous-subtle">No public manifests available.</p>
  </div>
  )}
  </div>

@@ -43,7 +43,7 @@ export const RegistryAlert: React.FC = () => {
  : 'bg-nous-base/90 border-nous-border/50 text-nous-text'
  }`}
  >
- <div className={`shrink-0 ${alert.type === 'error' ? 'text-red-500' : alert.type === 'announcement' ? 'text-blue-500' : 'text-nous-text0'}`}>
+ <div className={`shrink-0 ${alert.type === 'error' ? 'text-red-500' : alert.type === 'announcement' ? 'text-blue-500' : 'text-nous-subtle'}`}>
  {alert.icon || (alert.type === 'error' ? <AlertCircle size={18} /> : alert.type === 'announcement' ? <Info size={18} /> : <CheckCircle size={18} />)}
  </div>
  <div className="flex-1">

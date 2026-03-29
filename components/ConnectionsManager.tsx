@@ -117,7 +117,7 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId
  if (!profile) return null;
 
  const getStatusIcon = () => {
- if (type === 'friend' || connectionStatus?.status === 'friends') return <span title="Connected"><Handshake size={12} className="text-nous-text0"/></span>;
+ if (type === 'friend' || connectionStatus?.status === 'friends') return <span title="Connected"><Handshake size={12} className="text-nous-subtle"/></span>;
  if (type === 'request' || connectionStatus?.status === 'request_sent' || connectionStatus?.status === 'request_received') return <span title="Pending"><Clock size={12} className="text-amber-500 animate-pulse"/></span>;
  if (type === 'following') return <span title="Resonating"><Zap size={12} className="text-indigo-500"/></span>;
  if (type === 'search' && connectionStatus?.status === 'none') return <span title="Disconnected"><Link2Off size={12} className="text-nous-subtle"/></span>;
@@ -147,7 +147,7 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId
  <button 
  onClick={handleAccept} 
  disabled={actionLoading}
- className="p-2 text-nous-text0 hover:bg-nous-base 0/10 rounded-none transition-colors"
+ className="p-2 text-nous-subtle hover:bg-nous-base 0/10 rounded-none transition-colors"
  title="Accept Request"
  >
  {actionLoading ? <Loader2 size={14} className="animate-spin"/> : <Check size={16} />}
@@ -182,7 +182,7 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId
  ) : type === 'search' ? (
  <div className="flex items-center gap-2">
  {connectionStatus?.status === 'friends' ? (
- <div className="p-2 text-nous-text0 bg-nous-base0/10 rounded-none"title="Connected">
+ <div className="p-2 text-nous-subtle bg-nous-base0/10 rounded-none"title="Connected">
  <Handshake size={16} />
  </div>
  ) : connectionStatus?.status === 'request_sent' ? (
@@ -210,7 +210,7 @@ const ConnectionItem: React.FC<ConnectionItemProps> = ({ userId, type, requestId
  <button 
  onClick={handleFollow} 
  disabled={actionLoading}
- className="p-2 border border-nous-border rounded-none text-nous-text0 hover:bg-nous-base transition-all"
+ className="p-2 border border-nous-border rounded-none text-nous-subtle hover:bg-nous-base transition-all"
  title="Resonate"
  >
  {actionLoading ? <Loader2 size={14} className="animate-spin"/> : <Zap size={16} />}
@@ -309,7 +309,7 @@ export const ConnectionsManager: React.FC = () => {
  {tab.icon}
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">{tab.label}</span>
  {tab.count > 0 && (
- <span className={`ml-1 px-1.5 py-0.5 rounded-none text-[7px] font-black ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-nous-base text-nous-text0'}`}>
+ <span className={`ml-1 px-1.5 py-0.5 rounded-none text-[7px] font-black ${activeTab === tab.id ? 'bg-white/20 text-white' : 'bg-nous-base text-nous-subtle'}`}>
  {tab.count}
  </span>
  )}
@@ -384,7 +384,7 @@ export const ConnectionsManager: React.FC = () => {
  <EmptyState message="No users found matching that handle."/>
  ) : (
  <div className="col-span-full py-10 text-center opacity-40">
- <p className="font-serif italic text-nous-text0">Enter at least 2 characters to search.</p>
+ <p className="font-serif italic text-nous-subtle">Enter at least 2 characters to search.</p>
  </div>
  )}
  </div>
@@ -400,6 +400,6 @@ export const ConnectionsManager: React.FC = () => {
 const EmptyState: React.FC<{ message: string }> = ({ message }) => (
  <div className="col-span-full py-20 flex flex-col items-center justify-center text-center space-y-4 opacity-40">
  <Users size={40} className="text-nous-subtle"/>
- <p className="font-serif italic text-nous-text0">{message}</p>
+ <p className="font-serif italic text-nous-subtle">{message}</p>
  </div>
 );

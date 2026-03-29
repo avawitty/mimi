@@ -90,7 +90,7 @@ export const LiveMentor: React.FC<LiveMentorProps> = ({ name, role, voiceName, s
  <div className="space-y-2 text-center">
  <span className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle block">Active Mentor</span>
  <h2 className="font-serif text-4xl italic text-nous-text ">{name}.</h2>
- <p className="font-sans text-[10px] uppercase tracking-widest text-nous-text0">{role}</p>
+ <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle">{role}</p>
  </div>
  
  {children}
@@ -121,15 +121,15 @@ export const LiveMentor: React.FC<LiveMentorProps> = ({ name, role, voiceName, s
  {error ? (
  <p className="font-mono text-[10px] text-red-500 uppercase tracking-widest">{error}</p>
  ) : isConnecting ? (
- <p className="font-mono text-[10px] text-nous-text0 uppercase tracking-widest">
+ <p className="font-mono text-[10px] text-nous-subtle uppercase tracking-widest">
  Establishing Link...
  </p>
  ) : isConnected ? (
- <p className="font-mono text-[10px] text-nous-text0 uppercase tracking-widest">
+ <p className="font-mono text-[10px] text-nous-subtle uppercase tracking-widest">
  {isSpeaking ? 'Transmitting...' : 'Listening...'}
  </p>
  ) : (
- <p className="font-serif italic text-sm text-nous-text0">Tap to initiate vocal sync.</p>
+ <p className="font-serif italic text-sm text-nous-subtle">Tap to initiate vocal sync.</p>
  )}
  </div>
 

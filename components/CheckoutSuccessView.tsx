@@ -55,13 +55,13 @@ export const CheckoutSuccessView: React.FC<CheckoutSuccessViewProps> = ({ plan, 
  <div className="space-y-6">
  <div className="w-16 h-16 border-2 border-nous-border border-t-stone-500 rounded-none animate-spin mx-auto"/>
  <h2 className="font-serif italic text-3xl">Activating Membership...</h2>
- <p className="font-sans text-xs uppercase tracking-widest text-nous-text0">Please do not close this window</p>
+ <p className="font-sans text-xs uppercase tracking-widest text-nous-subtle">Please do not close this window</p>
  </div>
  ) : error ? (
  <div className="space-y-6">
  <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-none flex items-center justify-center mx-auto text-2xl">!</div>
  <h2 className="font-serif italic text-3xl">Activation Error</h2>
- <p className="text-nous-text0">{error}</p>
+ <p className="text-nous-subtle">{error}</p>
  <button 
  onClick={onContinue}
  className="px-6 py-3 bg-nous-text text-nous-base rounded-none font-sans text-xs uppercase tracking-widest font-bold hover:bg-nous-text0 transition-colors"
@@ -71,13 +71,13 @@ export const CheckoutSuccessView: React.FC<CheckoutSuccessViewProps> = ({ plan, 
  </div>
  ) : (
  <div className="space-y-8">
- <div className="w-20 h-20 bg-nous-base /30 text-nous-text0 rounded-none flex items-center justify-center mx-auto">
+ <div className="w-20 h-20 bg-nous-base /30 text-nous-subtle rounded-none flex items-center justify-center mx-auto">
  <CheckCircle2 size={40} />
  </div>
  
  <div className="space-y-4">
  <h1 className="font-serif italic text-5xl tracking-tighter">Welcome to {planNames[plan]}.</h1>
- <p className="font-sans text-sm uppercase tracking-[0.2em] text-nous-text0 font-bold">
+ <p className="font-sans text-sm uppercase tracking-[0.2em] text-nous-subtle font-bold">
  Your capabilities have been unlocked
  </p>
  </div>

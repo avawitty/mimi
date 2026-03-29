@@ -49,7 +49,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({ currentViewMode, s
  {MENU_STRUCTURE.map((section, index) => (
  <React.Fragment key={section.section}>
  <div className="relative group">
- <button className="font-sans text-[10px] uppercase tracking-[0.2em] font-medium text-nous-text0 hover:text-nous-text hover:text-nous-text transition-colors">
+ <button className="font-sans text-[10px] uppercase tracking-[0.2em] font-medium text-nous-subtle hover:text-nous-text hover:text-nous-text transition-colors">
  {section.section}
  </button>
  <div className="absolute top-full left-0 pt-2 w-48 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto z-[5000]">

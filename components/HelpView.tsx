@@ -18,7 +18,7 @@ export const HelpView: React.FC = () => {
  <BookOpen size={16} />
  <span className="font-sans text-[9px] uppercase tracking-[0.2em] font-bold">System Documentation</span>
  </div>
- <p className="font-sans text-xs uppercase tracking-widest text-nous-text0">
+ <p className="font-sans text-xs uppercase tracking-widest text-nous-subtle">
  Vol. 01 / Architecture
  </p>
  </div>
@@ -66,7 +66,7 @@ export const HelpView: React.FC = () => {
  <Sparkles size={18} className="text-nous-subtle group-hover:text-nous-text transition-colors"/>
  <h3 className="font-serif text-3xl italic tracking-tight">1. Studio</h3>
  </div>
- <p className="font-sans text-sm text-nous-text0 leading-relaxed">
+ <p className="font-sans text-sm text-nous-subtle leading-relaxed">
  <span className="font-bold text-nous-text">The Artifact Engine.</span> Where you act. The primary workspace for assembling artifacts, adjusting materiality via Tailor Tools, and utilizing historical presets.
  </p>
  </div>
@@ -76,7 +76,7 @@ export const HelpView: React.FC = () => {
  <ShieldCheck size={18} className="text-nous-subtle group-hover:text-indigo-500 transition-colors"/>
  <h3 className="font-serif text-3xl italic tracking-tight">2. Signature</h3>
  </div>
- <p className="font-sans text-sm text-nous-text0 leading-relaxed">
+ <p className="font-sans text-sm text-nous-subtle leading-relaxed">
  <span className="font-bold text-nous-text">The Identity Dashboard.</span> Where you define who you are. The analytical backbone providing your Aesthetic Genome, Taste Graph, and the Calibration Ritual (The Ward).
  </p>
  </div>
@@ -86,7 +86,7 @@ export const HelpView: React.FC = () => {
  <Archive size={18} className="text-nous-subtle group-hover:text-amber-500 transition-colors"/>
  <h3 className="font-serif text-3xl italic tracking-tight">3. Archive</h3>
  </div>
- <p className="font-sans text-sm text-nous-text0 leading-relaxed">
+ <p className="font-sans text-sm text-nous-subtle leading-relaxed">
  <span className="font-bold text-nous-text">The Creative Memory.</span> Where you remember. A living map of your raw fragments, indexed by motif, including the Temporal Nebula and the Darkroom for unprocessed thoughts.
  </p>
  </div>
@@ -96,7 +96,7 @@ export const HelpView: React.FC = () => {
  <Compass size={18} className="text-nous-subtle group-hover:text-rose-500 transition-colors"/>
  <h3 className="font-serif text-3xl italic tracking-tight">4. Threads</h3>
  </div>
- <p className="font-sans text-sm text-nous-text0 leading-relaxed">
+ <p className="font-sans text-sm text-nous-subtle leading-relaxed">
  <span className="font-bold text-nous-text">The Narrative Engine.</span> Where you connect. Visualizes semantic paths through your history (Biographical, Influence, Emotional) and predicts aesthetic drift via Trace & Scry.
  </p>
  </div>
@@ -106,7 +106,7 @@ export const HelpView: React.FC = () => {
  <LayoutGrid size={18} className="text-nous-subtle group-hover:text-cyan-500 transition-colors"/>
  <h3 className="font-serif text-3xl italic tracking-tight">5. Floor</h3>
  </div>
- <p className="font-sans text-sm text-nous-text0 leading-relaxed">
+ <p className="font-sans text-sm text-nous-subtle leading-relaxed">
  <span className="font-bold text-nous-text">The Cultural Intelligence Layer.</span> Where you observe. The external view connecting you to the wider world via the Resonance Feed and Trend Trajectories.
  </p>
  </div>
@@ -131,7 +131,7 @@ export const HelpView: React.FC = () => {
  <Paperclip size={16} className="text-nous-subtle group-hover:text-nous-text dark:group-hover:text-nous-text transition-colors"/>
  <h3 className="font-serif text-xl italic tracking-tight">Upload Media</h3>
  </div>
- <p className="font-sans text-xs text-nous-text0 leading-relaxed">
+ <p className="font-sans text-xs text-nous-subtle leading-relaxed">
  Attach images, videos, or audio fragments to your zine. The engine will analyze these artifacts and weave their aesthetic DNA into the final manifest.
  </p>
  </div>
@@ -141,7 +141,7 @@ export const HelpView: React.FC = () => {
  <Mic size={16} className="text-nous-subtle group-hover:text-red-500 transition-colors"/>
  <h3 className="font-serif text-xl italic tracking-tight">Voice Transcription</h3>
  </div>
- <p className="font-sans text-xs text-nous-text0 leading-relaxed">
+ <p className="font-sans text-xs text-nous-subtle leading-relaxed">
  Speak your thoughts directly into the engine. Perfect for capturing raw, unfiltered streams of consciousness before they dissipate.
  </p>
  </div>
@@ -151,7 +151,7 @@ export const HelpView: React.FC = () => {
  <Zap size={16} className="text-nous-subtle group-hover:text-yellow-500 transition-colors"/>
  <h3 className="font-serif text-xl italic tracking-tight">Lite Mode</h3>
  </div>
- <p className="font-sans text-xs text-nous-text0 leading-relaxed">
+ <p className="font-sans text-xs text-nous-subtle leading-relaxed">
  Lightning-fast generations using the Flash Lite model. Ideal for quick thoughts, rapid iteration, and capturing fleeting aesthetic impulses.
  </p>
  </div>
@@ -161,7 +161,7 @@ export const HelpView: React.FC = () => {
  <BrainCircuit size={16} className="text-nous-subtle group-hover:text-purple-500 transition-colors"/>
  <h3 className="font-serif text-xl italic tracking-tight">Deep Thinking</h3>
  </div>
- <p className="font-sans text-xs text-nous-text0 leading-relaxed">
+ <p className="font-sans text-xs text-nous-subtle leading-relaxed">
  Engages the Pro model with high-level reasoning. Produces deep, semiotic explorations and complex, long-form zines with profound structural rigor.
  </p>
  </div>
@@ -171,7 +171,7 @@ export const HelpView: React.FC = () => {
  <Globe size={16} className="text-nous-subtle group-hover:text-blue-500 transition-colors"/>
  <h3 className="font-serif text-xl italic tracking-tight">Search Grounding</h3>
  </div>
- <p className="font-sans text-xs text-nous-text0 leading-relaxed">
+ <p className="font-sans text-xs text-nous-subtle leading-relaxed">
  Anchors your zines with relevant, real-time search data from the web. Ensures your aesthetic musings are connected to current cultural events.
  </p>
  </div>
@@ -181,7 +181,7 @@ export const HelpView: React.FC = () => {
  <MapPin size={16} className="text-nous-subtle group-hover:text-orange-500 transition-colors"/>
  <h3 className="font-serif text-xl italic tracking-tight">Maps Grounding</h3>
  </div>
- <p className="font-sans text-xs text-nous-text0 leading-relaxed">
+ <p className="font-sans text-xs text-nous-subtle leading-relaxed">
  Integrates location-based intelligence and spatial context. Perfect for psychogeographic explorations and architectural critiques.
  </p>
  </div>
@@ -191,7 +191,7 @@ export const HelpView: React.FC = () => {
  <Sparkles size={16} className="text-nous-subtle group-hover:text-nous-text transition-colors"/>
  <h3 className="font-serif text-xl italic tracking-tight">Task Intelligence</h3>
  </div>
- <p className="font-sans text-xs text-nous-text0 leading-relaxed">
+ <p className="font-sans text-xs text-nous-subtle leading-relaxed">
  Instructs Mimi to perform specific, high-precision tasks (e.g., analysis, identification) rather than open-ended generation, while maintaining her persona.
  </p>
  </div>
@@ -201,7 +201,7 @@ export const HelpView: React.FC = () => {
  <Wand2 size={16} className="text-nous-subtle group-hover:text-red-500 transition-colors"/>
  <h3 className="font-serif text-xl italic tracking-tight">Prompt Engine</h3>
  </div>
- <p className="font-sans text-xs text-nous-text0 leading-relaxed">
+ <p className="font-sans text-xs text-nous-subtle leading-relaxed">
  Generates random, thought-provoking prompts to break creative block and push your aesthetic boundaries into uncharted territory.
  </p>
  </div>
@@ -211,7 +211,7 @@ export const HelpView: React.FC = () => {
  <Eraser size={16} className="text-nous-subtle group-hover:text-nous-text dark:group-hover:text-nous-text transition-colors"/>
  <h3 className="font-serif text-xl italic tracking-tight">Clear Input</h3>
  </div>
- <p className="font-sans text-xs text-nous-text0 leading-relaxed">
+ <p className="font-sans text-xs text-nous-subtle leading-relaxed">
  Wipes the slate clean. A necessary destruction before new creation.
  </p>
  </div>
@@ -233,60 +233,60 @@ export const HelpView: React.FC = () => {
  
  <div className="group">
  <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 /5">
- <Briefcase size={18} className="text-nous-subtle group-hover:text-nous-text0 transition-colors"/>
+ <Briefcase size={18} className="text-nous-subtle group-hover:text-nous-subtle transition-colors"/>
  <h3 className="font-serif text-3xl italic tracking-tight">Projects</h3>
  </div>
- <p className="font-sans text-sm text-nous-text0 leading-relaxed">
+ <p className="font-sans text-sm text-nous-subtle leading-relaxed">
  Organize your manifests into strategic folders within the Archive. Generate <span className="text-nous-text font-medium">Strategic Memos</span> to synthesize the contents of a folder into actionable creative direction.
  </p>
  </div>
 
  <div className="group">
  <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 /5">
- <Compass size={18} className="text-nous-subtle group-hover:text-nous-text0 transition-colors"/>
+ <Compass size={18} className="text-nous-subtle group-hover:text-nous-subtle transition-colors"/>
  <h3 className="font-serif text-3xl italic tracking-tight">Scry</h3>
  </div>
- <p className="font-sans text-sm text-nous-text0 leading-relaxed">
+ <p className="font-sans text-sm text-nous-subtle leading-relaxed">
  Located in Threads. Query your archive using natural language. The Oracle will synthesize an answer based entirely on your past manifests and curated knowledge.
  </p>
  </div>
 
  <div className="group">
  <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 /5">
- <ShieldCheck size={18} className="text-nous-subtle group-hover:text-nous-text0 transition-colors"/>
+ <ShieldCheck size={18} className="text-nous-subtle group-hover:text-nous-subtle transition-colors"/>
  <h3 className="font-serif text-3xl italic tracking-tight">The Ward</h3>
  </div>
- <p className="font-sans text-sm text-nous-text0 leading-relaxed">
+ <p className="font-sans text-sm text-nous-subtle leading-relaxed">
  The autonomous governance module within your Signature. <span className="text-nous-text font-medium">Curator</span> analyzes your actual output, while <span className="text-nous-text font-medium">Sentinel</span> compares it against your Tailor settings to detect"Aesthetic Drift".
  </p>
  </div>
 
  <div className="group">
  <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 /5">
- <FlaskConical size={18} className="text-nous-subtle group-hover:text-nous-text0 transition-colors"/>
+ <FlaskConical size={18} className="text-nous-subtle group-hover:text-nous-subtle transition-colors"/>
  <h3 className="font-serif text-3xl italic tracking-tight">Darkroom</h3>
  </div>
- <p className="font-sans text-sm text-nous-text0 leading-relaxed">
+ <p className="font-sans text-sm text-nous-subtle leading-relaxed">
  An experimental space in the Archive for visual synthesis. Combine multiple image shards to generate entirely new, cohesive visual concepts based on your archive's DNA.
  </p>
  </div>
 
  <div className="group">
  <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 /5">
- <Target size={18} className="text-nous-subtle group-hover:text-nous-text0 transition-colors"/>
+ <Target size={18} className="text-nous-subtle group-hover:text-nous-subtle transition-colors"/>
  <h3 className="font-serif text-3xl italic tracking-tight">The Loom</h3>
  </div>
- <p className="font-sans text-sm text-nous-text0 leading-relaxed">
+ <p className="font-sans text-sm text-nous-subtle leading-relaxed">
  <span className="text-nous-text font-medium">Platform Strategy.</span> A multi-step diagnostic ritual that analyzes your intent, platform dynamics (Instagram, TikTok, YouTube, Substack, Facebook), and aesthetic identity to generate actionable, platform-specific content strategies.
  </p>
  </div>
 
  <div className="group">
  <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 /5">
- <ListChecks size={18} className="text-nous-subtle group-hover:text-nous-text0 transition-colors"/>
+ <ListChecks size={18} className="text-nous-subtle group-hover:text-nous-subtle transition-colors"/>
  <h3 className="font-serif text-3xl italic tracking-tight">Action Board</h3>
  </div>
- <p className="font-sans text-sm text-nous-text0 leading-relaxed">
+ <p className="font-sans text-sm text-nous-subtle leading-relaxed">
  <span className="text-nous-text font-medium">Strategic Imperatives.</span> A centralized hub for managing tasks exported from The Loom or created manually. Organize your content creation workflow with list and timeline views.
  </p>
  </div>

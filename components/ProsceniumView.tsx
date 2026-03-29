@@ -255,14 +255,14 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
  
  <div className="max-w-7xl mx-auto pt-20 px-6 md:px-12 pb-32">
  <header className="mb-16 space-y-6 text-center">
- <div className={`inline-flex items-center gap-2 px-4 py-1 rounded-none border font-sans text-[9px] uppercase tracking-[0.3em] font-black ${isOfflineMode ? 'border-nous-border/30 text-nous-text0' : 'border-nous-border/30 text-nous-text0'}`}>
+ <div className={`inline-flex items-center gap-2 px-4 py-1 rounded-none border font-sans text-[9px] uppercase tracking-[0.3em] font-black ${isOfflineMode ? 'border-nous-border/30 text-nous-subtle' : 'border-nous-border/30 text-nous-subtle'}`}>
  {isOfflineMode ? <WifiOff size={12} /> : activeChannel === 'following' ? <Users size={12} className="text-indigo-500"/> : <Eye size={12} className="animate-pulse"/>} 
  {isOfflineMode ? 'Local Archive' : activeChannel === 'following' ? 'Inner Circle' : 'Live Exhibition'}
  </div>
  <h1 className="font-serif text-6xl md:text-8xl italic tracking-tighter leading-none luminescent-text">
  The Proscenium.
  </h1>
- <p className="font-serif italic text-xl text-nous-text0 max-w-xl mx-auto">
+ <p className="font-serif italic text-xl text-nous-subtle max-w-xl mx-auto">
  The collective gallery. Witness the aesthetic artifacts of the swarm.
  </p>
  </header>
@@ -284,7 +284,7 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
  )}
  <button 
  onClick={() => setActiveChannel('local')}
- className={`font-sans text-[10px] uppercase tracking-[0.2em] font-black pb-4 transition-all ${activeChannel === 'local' ? 'text-nous-text text-nous-text border-b-2 border-nous-text ' : 'text-nous-subtle hover:text-nous-text0'}`}
+ className={`font-sans text-[10px] uppercase tracking-[0.2em] font-black pb-4 transition-all ${activeChannel === 'local' ? 'text-nous-text text-nous-text border-b-2 border-nous-text ' : 'text-nous-subtle hover:text-nous-subtle'}`}
  >
  Local Echoes
  </button>
@@ -308,7 +308,7 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
  <img src={t.imageUrl} alt={t.content} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700"referrerPolicy="no-referrer"/>
  ) : (
  <div className="w-full h-full flex items-center justify-center p-8 bg-gradient-to-br from-stone-100 to-stone-200 dark:from-stone-800 dark:to-stone-900">
- <p className="font-serif text-2xl italic text-center text-nous-text0">"{t.content}"</p>
+ <p className="font-serif text-2xl italic text-center text-nous-subtle">"{t.content}"</p>
  </div>
  )}
 
@@ -459,7 +459,7 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
  <div className="flex items-center gap-2">
  <button 
  onClick={() => handleOpenProfile(note.userId)}
- className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0 hover:text-nous-subtle transition-colors"
+ className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle hover:text-nous-subtle transition-colors"
  >
  {note.userHandle}
  </button>
@@ -484,7 +484,7 @@ export const ProsceniumView: React.FC<ProsceniumViewProps> = ({ onSelectZine }) 
  <button 
  onClick={handleAddVibeNote}
  disabled={isSubmittingVibe || !newVibeNote.trim()}
- className="px-4 bg-nous-base0/10 text-nous-text0 border border-nous-border/30 hover:bg-nous-base0/20 disabled:opacity-50 transition-colors flex items-center justify-center"
+ className="px-4 bg-nous-base0/10 text-nous-subtle border border-nous-border/30 hover:bg-nous-base0/20 disabled:opacity-50 transition-colors flex items-center justify-center"
  >
  {isSubmittingVibe ? <Loader2 size={14} className="animate-spin"/> : <Zap size={14} />}
  </button>

@@ -121,7 +121,7 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
  <header className="flex flex-col border-b border-nous-border pb-12 gap-8">
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
  <div className="space-y-4">
- <div className="flex items-center gap-3 text-nous-text0">
+ <div className="flex items-center gap-3 text-nous-subtle">
  <Archive size={16} />
  <span className="font-sans text-[8px] uppercase tracking-[0.5em] font-black italic">Sovereign Registry // Your Public Storefront</span>
  </div>
@@ -131,7 +131,7 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
  <div className="flex items-center gap-0 bg-white border border-nous-border rounded-none overflow-hidden">
  <button 
  onClick={() => setNebulaMode('strategist')}
- className={`flex items-center gap-3 px-6 md:px-8 py-3 transition-all ${nebulaMode === 'strategist' ? 'bg-nous-base text-nous-text text-nous-text' : 'text-nous-text0 hover:text-nous-subtle'}`}
+ className={`flex items-center gap-3 px-6 md:px-8 py-3 transition-all ${nebulaMode === 'strategist' ? 'bg-nous-base text-nous-text text-nous-text' : 'text-nous-subtle hover:text-nous-subtle'}`}
  >
  <Wind size={14} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Strategist</span>
@@ -139,7 +139,7 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
  <div className="w-px h-8 bg-stone-200"/>
  <button 
  onClick={() => setNebulaMode('vibe')}
- className={`flex items-center gap-3 px-6 md:px-8 py-3 transition-all ${nebulaMode === 'vibe' ? 'bg-nous-base0 text-white' : 'text-nous-text0 hover:text-nous-subtle'}`}
+ className={`flex items-center gap-3 px-6 md:px-8 py-3 transition-all ${nebulaMode === 'vibe' ? 'bg-nous-base0 text-white' : 'text-nous-subtle hover:text-nous-subtle'}`}
  >
  <Network size={14} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Vibe</span>
@@ -147,7 +147,7 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
  <div className="w-px h-8 bg-stone-200"/>
  <button 
  onClick={() => setNebulaMode('network')}
- className={`flex items-center gap-3 px-6 md:px-8 py-3 transition-all ${nebulaMode === 'network' ? 'bg-indigo-500 text-white' : 'text-nous-text0 hover:text-nous-subtle'}`}
+ className={`flex items-center gap-3 px-6 md:px-8 py-3 transition-all ${nebulaMode === 'network' ? 'bg-indigo-500 text-white' : 'text-nous-subtle hover:text-nous-subtle'}`}
  >
  <Radio size={14} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Network</span>
@@ -156,7 +156,7 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
  <button 
  onClick={handleAnalyze}
  disabled={isAnalyzing}
- className={`flex items-center gap-3 px-6 md:px-8 py-3 transition-all ${isAnalyzing ? 'bg-nous-base0 text-white' : 'text-nous-text0 hover:text-nous-text '}`}
+ className={`flex items-center gap-3 px-6 md:px-8 py-3 transition-all ${isAnalyzing ? 'bg-nous-base0 text-white' : 'text-nous-subtle hover:text-nous-text '}`}
  >
  {isAnalyzing ? <Loader2 size={14} className="animate-spin"/> : <BrainCircuit size={14} />}
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Analyze</span>
@@ -238,7 +238,7 @@ export const ArchiveCloudNebula: React.FC<{ onSelectZine: (zine: ZineMetadata) =
 
  {nebulaMode === 'network' ? (
  <div className="w-full pt-12">
- <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] font-black text-nous-text0 mb-8 text-center">Your Resonating Network</h3>
+ <h3 className="font-sans text-[10px] uppercase tracking-[0.2em] font-black text-nous-subtle mb-8 text-center">Your Resonating Network</h3>
  {followingProfiles.length === 0 ? (
  <div className="py-32 text-center opacity-30 space-y-8">
  <Radio size={64} className="mx-auto"/>
@@ -354,7 +354,7 @@ const ZineShelfItem: React.FC<{ zine: ZineMetadata, onSelect: () => void, isClou
  {onSaveToPocket && (
  <button 
  onClick={(e) => { e.stopPropagation(); onSaveToPocket(); }}
- className="text-nous-text0 hover:text-nous-text transition-colors"
+ className="text-nous-subtle hover:text-nous-text transition-colors"
  title="Save to Pocket"
  >
  <Folder size={16} />
@@ -369,18 +369,18 @@ const ZineShelfItem: React.FC<{ zine: ZineMetadata, onSelect: () => void, isClou
  </div>
  </div>
  <div className="p-6 flex-grow flex flex-col justify-center cursor-pointer z-10"onClick={onSelect}>
- <div className="text-[10px] uppercase tracking-widest font-mono text-nous-text0 mb-4">REF_{shortId}</div>
+ <div className="text-[10px] uppercase tracking-widest font-mono text-nous-subtle mb-4">REF_{shortId}</div>
  <h2 className="font-serif text-4xl italic leading-tight mb-2 text-nous-text text-nous-text hover:text-nous-subtle transition-colors">{zine.title}</h2>
  <p className="font-mono text-xs text-nous-subtle mt-4">SYNTHESIS_SCORE: {synthesisScore}</p>
  </div>
  <div className="border-t border-nous-border bg-nous-base p-4 grid grid-cols-2 gap-4 font-mono text-[9px] uppercase tracking-widest text-nous-subtle cursor-pointer z-10"onClick={onSelect}>
  <div>
- <span className="block text-nous-text0 mb-1">Anchored</span>
+ <span className="block text-nous-subtle mb-1">Anchored</span>
  <span className="text-nous-text">{dateStr}</span>
  </div>
  <div className="flex justify-between items-end">
  <div>
- <span className="block text-nous-text0 mb-1">Frequency</span>
+ <span className="block text-nous-subtle mb-1">Frequency</span>
  <span className="text-nous-text">Alpha-Decay</span>
  </div>
  {isCloud && <div className="w-1.5 h-1.5 rounded-none bg-nous-base0 animate-pulse mb-1"/>}
@@ -409,7 +409,7 @@ const ZineShelfItem: React.FC<{ zine: ZineMetadata, onSelect: () => void, isClou
  {onSaveToPocket && (
  <button 
  onClick={(e) => { e.stopPropagation(); onSaveToPocket(); }}
- className="text-nous-text0 hover:text-nous-text transition-colors"
+ className="text-nous-subtle hover:text-nous-text transition-colors"
  title="Save to Pocket"
  >
  <Folder size={14} />
@@ -417,14 +417,14 @@ const ZineShelfItem: React.FC<{ zine: ZineMetadata, onSelect: () => void, isClou
  )}
  <button 
  onClick={(e) => { e.stopPropagation(); onToggleStar(); }}
- className={`transition-colors ${isStarred ? 'text-amber-500' : 'text-nous-text0 hover:text-amber-500'}`}
+ className={`transition-colors ${isStarred ? 'text-amber-500' : 'text-nous-subtle hover:text-amber-500'}`}
  >
  <Star size={14} fill={isStarred ?"currentColor":"none"} />
  </button>
  </div>
  </div>
  <div className="flex-grow cursor-pointer"onClick={onSelect}>
- <div className="text-[9px] uppercase tracking-widest font-mono text-nous-text0 mb-2">REF_{shortId}</div>
+ <div className="text-[9px] uppercase tracking-widest font-mono text-nous-subtle mb-2">REF_{shortId}</div>
  <h2 className="font-serif text-3xl italic leading-tight text-nous-text text-nous-text hover:text-nous-subtle transition-colors">{zine.title}</h2>
  </div>
  <div className="mt-8 pt-4 border-t border-nous-border/50 /50 flex justify-between items-end cursor-pointer"onClick={onSelect}>
@@ -473,10 +473,10 @@ const ZineShelfItem: React.FC<{ zine: ZineMetadata, onSelect: () => void, isClou
  </div>
  </div>
  <div className="mt-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex justify-between items-center border-t border-nous-border pt-4">
- <span className="text-[9px] uppercase tracking-widest font-mono text-nous-text0">REF_{shortId} // {zine.tone}</span>
+ <span className="text-[9px] uppercase tracking-widest font-mono text-nous-subtle">REF_{shortId} // {zine.tone}</span>
  <div className="flex items-center gap-2">
  {isCloud && <div className="w-1.5 h-1.5 rounded-none bg-nous-base0 animate-pulse"/>}
- <span className="text-[9px] uppercase tracking-widest font-mono text-nous-text0">{dateStr}</span>
+ <span className="text-[9px] uppercase tracking-widest font-mono text-nous-subtle">{dateStr}</span>
  </div>
  </div>
  </motion.div>
@@ -499,7 +499,7 @@ const InitSequenceCard: React.FC<{ mode: string }> = ({ mode }) => {
  >
  <div>
  <h3 className="font-serif text-2xl italic text-white mb-4">Initialize Sequence</h3>
- <p className="font-sans text-xs text-nous-text0 mb-8 leading-relaxed">
+ <p className="font-sans text-xs text-nous-subtle mb-8 leading-relaxed">
  Begin a new manifestation. Connect disparate nodes to form a cohesive dossier.
  </p>
  </div>
@@ -523,10 +523,10 @@ const InitSequenceCard: React.FC<{ mode: string }> = ({ mode }) => {
  <div>
  <div className="flex items-center gap-2 mb-6">
  <span className="w-2 h-2 rounded-none bg-stone-400 animate-pulse"></span>
- <span className="font-mono text-[9px] uppercase tracking-widest text-nous-text0">System Ready</span>
+ <span className="font-mono text-[9px] uppercase tracking-widest text-nous-subtle">System Ready</span>
  </div>
  <h3 className="font-serif text-3xl italic text-white mb-4">New Archive Entry</h3>
- <p className="font-sans text-sm text-nous-text0 mb-8 leading-relaxed">
+ <p className="font-sans text-sm text-nous-subtle mb-8 leading-relaxed">
  Catalog a new module into the canon.
  </p>
  </div>
@@ -549,7 +549,7 @@ const InitSequenceCard: React.FC<{ mode: string }> = ({ mode }) => {
  className="col-span-1 md:col-span-6 lg:col-span-4 flex items-center justify-center border border-dashed border-nous-border hover:border-nous-border transition-colors min-h-[200px] group cursor-pointer"
  >
  <div className="text-center opacity-50 group-hover:opacity-100 transition-opacity">
- <Zap size={24} className="mx-auto mb-4 text-nous-text0 group-hover:text-nous-text dark:group-hover:text-nous-text transition-colors"/>
+ <Zap size={24} className="mx-auto mb-4 text-nous-subtle group-hover:text-nous-text dark:group-hover:text-nous-text transition-colors"/>
  <span className="font-mono text-[9px] uppercase tracking-widest text-nous-subtle group-hover:text-nous-text dark:group-hover:text-nous-text transition-colors">Draft Protocol</span>
  </div>
  </motion.div>

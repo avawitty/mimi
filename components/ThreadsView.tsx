@@ -210,7 +210,7 @@ export const ThreadsView: React.FC = () => {
  {/* Header */}
  <div className="border-b border-nous-border pb-8">
  <h2 className="text-4xl md:text-5xl font-serif italic text-nous-text">Narrative Pathing</h2>
- <p className="text-nous-text0 font-sans text-[10px] uppercase tracking-[0.2em] mt-4">Semantic Paths Through Creative History</p>
+ <p className="text-nous-subtle font-sans text-[10px] uppercase tracking-[0.2em] mt-4">Semantic Paths Through Creative History</p>
  </div>
 
  {/* Navigation Tabs */}

@@ -81,7 +81,7 @@ export const CreditMeter: React.FC = () => {
  <span className="font-mono text-2xl font-light tracking-tighter text-nous-text ">
  {credits}
  </span>
- <span className="font-sans text-[10px] uppercase tracking-widest text-nous-text0 mb-1">
+ <span className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle mb-1">
  Credits Remaining
  </span>
  </div>
@@ -94,14 +94,14 @@ export const CreditMeter: React.FC = () => {
  />
  </div>
  {!isGhost && !isExpired && (
- <p className="font-sans text-[9px] text-nous-text0 mt-2">
+ <p className="font-sans text-[9px] text-nous-subtle mt-2">
  {daysLeft} {daysLeft === 1 ? 'day' : 'days'} remaining in trial.
  </p>
  )}
  </>
  )}
  {isPaid && (
- <p className="font-sans text-[10px] text-nous-text0">
+ <p className="font-sans text-[10px] text-nous-subtle">
  Unlimited generations active.
  </p>
  )}

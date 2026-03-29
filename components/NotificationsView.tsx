@@ -22,7 +22,7 @@ export const NotificationsView: React.FC = () => {
  >
  <h2 className="font-serif text-4xl italic text-nous-text  mb-8">Registry Updates</h2>
  {notifications.length === 0 ? (
- <p className="font-sans text-nous-text0">No updates in the registry.</p>
+ <p className="font-sans text-nous-subtle">No updates in the registry.</p>
  ) : (
  <ul className="space-y-4">
  {notifications.map(n => (

@@ -75,7 +75,7 @@ export const OnboardingModal: React.FC = () => {
  </div>
  <div className="space-y-4">
  <h1 className="font-serif text-5xl md:text-6xl italic tracking-tighter text-nous-text ">The Vanguard.</h1>
- <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold text-nous-text0">Sovereign Initialization</p>
+ <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold text-nous-subtle">Sovereign Initialization</p>
  </div>
  <div className="space-y-6 max-w-md mx-auto text-left">
  <p className="font-serif italic text-lg text-nous-subtle leading-relaxed text-center">
@@ -115,7 +115,7 @@ export const OnboardingModal: React.FC = () => {
  </div>
  <div className="space-y-4">
  <h2 className="font-serif text-4xl md:text-5xl italic tracking-tighter text-nous-text text-nous-text">Your Moniker.</h2>
- <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold text-nous-text0">Establish Identity</p>
+ <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold text-nous-subtle">Establish Identity</p>
  </div>
  
  <div className="max-w-sm mx-auto relative">
@@ -129,7 +129,7 @@ export const OnboardingModal: React.FC = () => {
  />
  </div>
 
- <p className="font-sans text-[10px] uppercase tracking-widest text-nous-text0 max-w-xs mx-auto leading-relaxed">
+ <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle max-w-xs mx-auto leading-relaxed">
  This is how you will be known within the community loop. It can be changed later.
  </p>
 
@@ -153,7 +153,7 @@ export const OnboardingModal: React.FC = () => {
  </div>
  </div>
  <h2 className="font-serif text-4xl md:text-5xl italic tracking-tighter text-nous-text text-nous-text">Aesthetic Vectors.</h2>
- <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold text-nous-text0">Select 3 or more</p>
+ <p className="font-sans text-[10px] uppercase tracking-[0.4em] font-bold text-nous-subtle">Select 3 or more</p>
  </div>
  
  <div className="flex flex-wrap justify-center gap-3 max-w-xl mx-auto">
@@ -166,7 +166,7 @@ export const OnboardingModal: React.FC = () => {
  className={`px-4 py-2 font-sans text-[10px] uppercase tracking-widest border transition-all duration-300 ${
  isSelected 
  ? 'bg-nous-text text-nous-base border-nous-text ' 
- : 'bg-transparent text-nous-text0 border-nous-border hover:border-nous-border '
+ : 'bg-transparent text-nous-subtle border-nous-border hover:border-nous-border '
  }`}
  >
  {interest}

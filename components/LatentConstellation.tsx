@@ -157,7 +157,7 @@ export const LatentConstellation = () => {
  <div className="flex gap-4">
  <div className="flex items-center gap-2">
  <div className="w-2 h-2 bg-nous-base"/>
- <span className="text-[9px] font-mono text-nous-text0 uppercase tracking-widest font-bold">User Node</span>
+ <span className="text-[9px] font-mono text-nous-subtle uppercase tracking-widest font-bold">User Node</span>
  </div>
  <div className="flex items-center gap-2">
  <div className="w-2 h-2 bg-stone-300"/>

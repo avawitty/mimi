@@ -32,7 +32,7 @@ export const DeskMess: React.FC<{ onMuseEngaged?: () => void }> = ({ onMuseEngag
  <Thimble 
  isActive={false} 
  onClick={handleThimbleClick} 
- className="w-12 h-12 text-nous-text0 hover:text-nous-subtle transition-colors"
+ className="w-12 h-12 text-nous-subtle hover:text-nous-subtle transition-colors"
  />
  </div>
 

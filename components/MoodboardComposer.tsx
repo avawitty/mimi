@@ -127,13 +127,13 @@ export const MoodboardComposer: React.FC<MoodboardComposerProps> = ({ selectedIt
  >
  <header className="h-20 border-b border-nous-border px-8 flex justify-between items-center bg z-[100]">
  <button onClick={onCancel} className="flex items-center gap-4 group">
- <div className="p-2 border border-nous-border group-hover:bg-nous-base group-hover:text-nous-subtle transition-all text-nous-text0"><X size={16} /></div>
- <span className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-text0 group-hover:text-nous-subtle">Cancel Manifest</span>
+ <div className="p-2 border border-nous-border group-hover:bg-nous-base group-hover:text-nous-subtle transition-all text-nous-subtle"><X size={16} /></div>
+ <span className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-subtle group-hover:text-nous-subtle">Cancel Manifest</span>
  </button>
  
  <div className="flex items-center gap-6">
  <div className="flex flex-col items-end">
- <span className="font-mono text-[9px] uppercase tracking-widest text-nous-text0 font-bold">Composition Cycle</span>
+ <span className="font-mono text-[9px] uppercase tracking-widest text-nous-subtle font-bold">Composition Cycle</span>
  <span className="font-serif italic text-sm text-nous-subtle">{elements.length} Constituent Fragments</span>
  </div>
  <button onClick={() => onFinalize(elements, { backgroundColor: '#050505', aspectRatio:"16:9"})} className="px-6 py-3 border border-nous-border text-nous-subtle font-mono text-[9px] uppercase tracking-widest font-bold hover:bg-nous-base hover:text-nous-text transition-all flex items-center gap-3">
@@ -150,7 +150,7 @@ export const MoodboardComposer: React.FC<MoodboardComposerProps> = ({ selectedIt
  <main className={`flex-1 overflow-y-auto no-scrollbar py-20 px-6 md:px-12 ${getMoodboardStyle()}`}>
  <div className="max-w-6xl mx-auto space-y-16">
  <div className="text-center space-y-4 mb-20 border-b border-nous-border pb-8">
- <div className="flex items-center justify-center gap-3 text-nous-text0">
+ <div className="flex items-center justify-center gap-3 text-nous-subtle">
  <LayoutGrid size={16} />
  <span className="font-mono text-[9px] uppercase tracking-widest font-bold">Manifest Composition</span>
  </div>
@@ -169,10 +169,10 @@ export const MoodboardComposer: React.FC<MoodboardComposerProps> = ({ selectedIt
  className="group relative flex flex-col gap-6"
  >
  <div className="absolute top-4 right-4 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
- <button onClick={() => togglePin(el.id)} className={`p-2 border transition-all ${el.style.hasPin ? 'bg-nous-base text-nous-text border-nous-border' : 'bg-transparent text-nous-text0 border-nous-border hover:border-nous-border'}`}>
+ <button onClick={() => togglePin(el.id)} className={`p-2 border transition-all ${el.style.hasPin ? 'bg-nous-base text-nous-text border-nous-border' : 'bg-transparent text-nous-subtle border-nous-border hover:border-nous-border'}`}>
  <Pin size={12} fill={el.style.hasPin ?"currentColor":"none"} />
  </button>
- <button onClick={() => removeElement(el.id)} className="p-2 bg-transparent text-nous-text0 border border-nous-border hover:text-red-500 hover:border-red-900/50 transition-all">
+ <button onClick={() => removeElement(el.id)} className="p-2 bg-transparent text-nous-subtle border border-nous-border hover:text-red-500 hover:border-red-900/50 transition-all">
  <Trash2 size={12} />
  </button>
  </div>
@@ -186,13 +186,13 @@ export const MoodboardComposer: React.FC<MoodboardComposerProps> = ({ selectedIt
  }`}>
  <img src={el.content} className="w-full aspect-[3/4] object-cover transition-all duration-1000 grayscale group-hover:grayscale-0"/>
  <div className="pt-4 pb-1 px-1 opacity-20 group-hover:opacity-100 transition-opacity flex justify-between items-center border-t border-nous-border mt-3">
- <span className="font-mono text-[9px] uppercase tracking-widest text-nous-text0">shrd_0{idx+1}</span>
- <span className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-text0">IMAGE</span>
+ <span className="font-mono text-[9px] uppercase tracking-widest text-nous-subtle">shrd_0{idx+1}</span>
+ <span className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-subtle">IMAGE</span>
  </div>
  </div>
  {el.notes && (
  <div className="px-2 space-y-2 opacity-60 group-hover:opacity-100 transition-opacity border-l border-nous-border pl-4">
- <div className="flex items-center gap-2 text-nous-text0">
+ <div className="flex items-center gap-2 text-nous-subtle">
  <Quote size={10} />
  <span className="font-mono text-[9px] uppercase tracking-widest font-bold">Linked Remark</span>
  </div>
@@ -203,7 +203,7 @@ export const MoodboardComposer: React.FC<MoodboardComposerProps> = ({ selectedIt
  ) : (
  <div className={`p-8 bg-transparent border border-nous-border h-full flex flex-col justify-start text-left transition-all duration-700`}>
  <div className="flex items-center justify-between mb-6 border-b border-nous-border pb-4">
- <div className="flex items-center gap-2 text-nous-text0">
+ <div className="flex items-center gap-2 text-nous-subtle">
  <Terminal size={12} />
  <span className="font-mono text-[9px] uppercase tracking-widest font-bold">
  {el.type === 'analysis_pin' ? 'Tech_Debrief' : 'Thought_Shard'}
@@ -218,7 +218,7 @@ export const MoodboardComposer: React.FC<MoodboardComposerProps> = ({ selectedIt
  </div>
  {el.notes && (
  <div className="mt-8 pt-4 border-t border-nous-border opacity-60">
- <span className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-text0 block mb-2">Field Note</span>
+ <span className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-subtle block mb-2">Field Note</span>
  <p className="font-serif italic text-xs text-nous-subtle line-clamp-2 leading-tight">"{el.notes}"</p>
  </div>
  )}

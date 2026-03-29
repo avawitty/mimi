@@ -26,7 +26,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ currentView,
  
  let iconColorClass = isActive ? 'text-nous-text' : 'text-nous-subtle';
  if (tab.id === 'membership' && profile?.plan && profile.plan !== 'free') {
- iconColorClass = profile.plan === 'lab' ? 'text-nous-text0' :
+ iconColorClass = profile.plan === 'lab' ? 'text-nous-subtle' :
  profile.plan === 'pro' ? 'text-purple-500' :
  'text-orange-500';
  }

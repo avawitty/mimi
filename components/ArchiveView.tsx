@@ -84,7 +84,7 @@ export const ArchiveView: React.FC<ArchiveViewProps> = ({ onSelectZine }) => {
  </button>
  <button 
  onClick={() => setActiveTab('list')}
- className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'list' ? 'text-nous-text text-nous-text border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-text0'}`}
+ className={`font-sans text-[12px] uppercase tracking-[0.6em] pb-3 transition-all font-black border-b-2 ${activeTab === 'list' ? 'text-nous-text text-nous-text border-nous-text ' : 'text-nous-subtle border-transparent hover:text-nous-subtle'}`}
  >
  List
  </button>

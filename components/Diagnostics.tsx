@@ -92,13 +92,13 @@ export const Diagnostics: React.FC = () => {
  <div key={r.id} className="flex items-center gap-4 p-4 border border-nous-border rounded-none bg-nous-base/20">
  <div className={`p-2 rounded-none ${
  r.status === 'pending' ? 'bg-nous-base text-nous-subtle' :
- r.status === 'success' ? 'bg-nous-base /20 text-nous-text0' :
+ r.status === 'success' ? 'bg-nous-base /20 text-nous-subtle' :
  'bg-red-50 dark:bg-red-900/20 text-red-500'
  }`}>
  {r.status === 'pending' ? r.icon : r.status === 'success' ? <CheckCircle size={16} /> : <XCircle size={16} />}
  </div>
  <div>
- <p className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0">{r.label}</p>
+ <p className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">{r.label}</p>
  <p className="font-serif italic text-sm text-nous-text text-nous-text">
  {r.status === 'pending' && !isRunning ? 'Ready' : r.message || 'Checking...'}
  </p>

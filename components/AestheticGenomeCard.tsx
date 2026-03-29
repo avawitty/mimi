@@ -13,17 +13,17 @@ export const AestheticGenomeCard: React.FC<{ signature: AestheticSignature }> = 
 
  <div className="grid grid-cols-2 gap-6 mb-8">
  <div>
- <label className="block text-nous-text0 text-xs uppercase mb-1">Primary Axis</label>
+ <label className="block text-nous-subtle text-xs uppercase mb-1">Primary Axis</label>
  <p className="text-xl font-light">{signature.primaryAxis}</p>
  </div>
  <div>
- <label className="block text-nous-text0 text-xs uppercase mb-1">Secondary Axis</label>
+ <label className="block text-nous-subtle text-xs uppercase mb-1">Secondary Axis</label>
  <p className="text-xl font-light">{signature.secondaryAxis}</p>
  </div>
  </div>
 
  <div className="mb-8">
- <label className="block text-nous-text0 text-xs uppercase mb-3">Motif Frequency Distribution</label>
+ <label className="block text-nous-subtle text-xs uppercase mb-3">Motif Frequency Distribution</label>
  <div className="space-y-2">
  {signature.motifEvolution.slice(0, 5).map((m, i) => (
  <div key={i} className="flex items-center gap-3">
@@ -34,7 +34,7 @@ export const AestheticGenomeCard: React.FC<{ signature: AestheticSignature }> = 
  style={{ width: `${(m.frequency / maxFrequency) * 100}%` }}
  />
  </div>
- <span className="text-xs text-nous-text0 w-8 text-right">{m.frequency}</span>
+ <span className="text-xs text-nous-subtle w-8 text-right">{m.frequency}</span>
  </div>
  ))}
  </div>

@@ -111,7 +111,7 @@ export const TheStand: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> 
  <button 
  key={f} 
  onClick={() => setFilter(f as any)}
- className={`font-sans text-[10px] uppercase tracking-[0.2em] font-black pb-2 transition-all ${filter === f ? 'text-nous-text0 border-b-2 border-nous-border' : 'text-nous-subtle hover:text-nous-subtle border-b-2 border-transparent'}`}
+ className={`font-sans text-[10px] uppercase tracking-[0.2em] font-black pb-2 transition-all ${filter === f ? 'text-nous-subtle border-b-2 border-nous-border' : 'text-nous-subtle hover:text-nous-subtle border-b-2 border-transparent'}`}
  >
  {f}
  </button>
@@ -120,7 +120,7 @@ export const TheStand: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> 
 
  {/* SEARCH */}
  <div className="relative group w-full md:w-auto">
- <Search size={14} className="absolute left-0 top-1/2 -translate-y-1/2 text-nous-subtle group-focus-within:text-nous-text0 transition-colors"/>
+ <Search size={14} className="absolute left-0 top-1/2 -translate-y-1/2 text-nous-subtle group-focus-within:text-nous-subtle transition-colors"/>
  <input 
  type="text"
  value={searchQuery}

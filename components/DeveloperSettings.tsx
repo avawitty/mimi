@@ -23,20 +23,20 @@ export const DeveloperSettings: React.FC<{ onClose: () => void }> = ({ onClose }
  <div className="w-full max-w-2xl bg-nous-base border border-nous-border rounded-none p-8 md:p-12 space-y-10 flex flex-col max-h-[85vh]">
  <div className="flex justify-between items-start shrink-0">
  <div className="space-y-2">
- <div className="flex items-center gap-3 text-nous-text0">
+ <div className="flex items-center gap-3 text-nous-subtle">
  <Cpu size={18} />
  <span className="font-sans text-[10px] uppercase tracking-[0.5em] font-black italic">System Logic</span>
  </div>
  <h2 className="font-serif text-3xl italic text-white">Agent Protocols.</h2>
  </div>
- <button onClick={onClose} className="p-2 text-nous-text0 hover:text-nous-text"><X size={24} /></button>
+ <button onClick={onClose} className="p-2 text-nous-subtle hover:text-nous-text"><X size={24} /></button>
  </div>
 
  <div className="flex gap-8 border-b border-white/5 shrink-0">
- <button onClick={() => setActiveTab('config')} className={`pb-3 font-sans text-[9px] uppercase tracking-widest font-black transition-all ${activeTab === 'config' ? 'text-white border-b-2 border-white' : 'text-nous-text0'}`}>
+ <button onClick={() => setActiveTab('config')} className={`pb-3 font-sans text-[9px] uppercase tracking-widest font-black transition-all ${activeTab === 'config' ? 'text-white border-b-2 border-white' : 'text-nous-subtle'}`}>
  Configuration
  </button>
- <button onClick={() => setActiveTab('console')} className={`pb-3 font-sans text-[9px] uppercase tracking-widest font-black transition-all ${activeTab === 'console' ? 'text-white border-b-2 border-white' : 'text-nous-text0'}`}>
+ <button onClick={() => setActiveTab('console')} className={`pb-3 font-sans text-[9px] uppercase tracking-widest font-black transition-all ${activeTab === 'console' ? 'text-white border-b-2 border-white' : 'text-nous-subtle'}`}>
  Live Console
  </button>
  </div>
@@ -51,7 +51,7 @@ export const DeveloperSettings: React.FC<{ onClose: () => void }> = ({ onClose }
  <Sparkles size={14} className="text-indigo-400"/>
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">The Curator</span>
  </div>
- <p className="font-serif italic text-xs text-nous-text0">Auto-enrich uploads with cultural metadata.</p>
+ <p className="font-serif italic text-xs text-nous-subtle">Auto-enrich uploads with cultural metadata.</p>
  </div>
  <button 
  onClick={() => setAgentConfig({ ...agentConfig, curatorEnabled: !agentConfig.curatorEnabled })}
@@ -67,7 +67,7 @@ export const DeveloperSettings: React.FC<{ onClose: () => void }> = ({ onClose }
  <ShieldCheck size={14} className="text-red-400"/>
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">The Sentinel</span>
  </div>
- <p className="font-serif italic text-xs text-nous-text0">Audit aesthetic drift against manifesto.</p>
+ <p className="font-serif italic text-xs text-nous-subtle">Audit aesthetic drift against manifesto.</p>
  </div>
  <button 
  onClick={() => setAgentConfig({ ...agentConfig, sentinelEnabled: !agentConfig.sentinelEnabled })}
@@ -84,7 +84,7 @@ export const DeveloperSettings: React.FC<{ onClose: () => void }> = ({ onClose }
  <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Curator Thinking Budget</span>
  <span className="font-serif italic text-[10px] text-nous-subtle">Impact: Semiotic depth of shard analysis.</span>
  </div>
- <span className="font-mono text-[10px] text-nous-text0">{agentConfig.curatorThinkingBudget} Tokens</span>
+ <span className="font-mono text-[10px] text-nous-subtle">{agentConfig.curatorThinkingBudget} Tokens</span>
  </div>
  <SemanticSteps 
  steps={[
@@ -96,7 +96,7 @@ export const DeveloperSettings: React.FC<{ onClose: () => void }> = ({ onClose }
  value={agentConfig.curatorThinkingBudget}
  onChange={(val) => setAgentConfig({ ...agentConfig, curatorThinkingBudget: val })}
  />
- <p className="font-serif italic text-[10px] text-nous-text0 leading-relaxed">
+ <p className="font-serif italic text-[10px] text-nous-subtle leading-relaxed">
  A higher budget for the Curator allows it to perform deeper cultural cross-referencing and more sophisticated semiotic decoding of your shards. 
  <span className="text-amber-500/60 ml-1">Warning: High values increase analysis latency.</span>
  </p>
@@ -108,7 +108,7 @@ export const DeveloperSettings: React.FC<{ onClose: () => void }> = ({ onClose }
  <span className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle">Sentinel Thinking Budget</span>
  <span className="font-serif italic text-[10px] text-nous-subtle">Impact: Precision of aesthetic drift detection.</span>
  </div>
- <span className="font-mono text-[10px] text-nous-text0">{agentConfig.sentinelThinkingBudget} Tokens</span>
+ <span className="font-mono text-[10px] text-nous-subtle">{agentConfig.sentinelThinkingBudget} Tokens</span>
  </div>
  <SemanticSteps 
  steps={[
@@ -120,14 +120,14 @@ export const DeveloperSettings: React.FC<{ onClose: () => void }> = ({ onClose }
  value={agentConfig.sentinelThinkingBudget}
  onChange={(val) => setAgentConfig({ ...agentConfig, sentinelThinkingBudget: val })}
  />
- <p className="font-serif italic text-[10px] text-nous-text0 leading-relaxed">
+ <p className="font-serif italic text-[10px] text-nous-subtle leading-relaxed">
  The Sentinel uses this budget to audit your recent debris against your stated Manifesto. 
  Higher budgets result in more nuanced detection of aesthetic drift and more insightful clinical observations.
  </p>
  </div>
 
  <div className="p-4 bg-nous-base0/5 border border-nous-border/10 rounded-none">
- <p className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0 mb-2 flex items-center gap-2">
+ <p className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle mb-2 flex items-center gap-2">
  <Activity size={10} /> Performance Note
  </p>
  <p className="font-serif italic text-[10px] text-nous-subtle leading-relaxed">
@@ -144,12 +144,12 @@ export const DeveloperSettings: React.FC<{ onClose: () => void }> = ({ onClose }
  {agentLogs.map(log => (
  <div key={log.id} className="border-b border-nous-border pb-2 mb-2 last:border-0">
  <div className="flex gap-2 items-center mb-1">
- <span className="text-nous-text0">{new Date(log.timestamp).toLocaleTimeString()}</span>
+ <span className="text-nous-subtle">{new Date(log.timestamp).toLocaleTimeString()}</span>
  <span className={`uppercase font-bold ${log.agent === 'curator' ? 'text-indigo-400' : 'text-red-400'}`}>[{log.agent}]</span>
  </div>
  <p className="pl-14">{log.message}</p>
  {log.data && (
- <pre className="pl-14 mt-1 text-nous-text0 overflow-x-auto">{JSON.stringify(log.data, null, 2)}</pre>
+ <pre className="pl-14 mt-1 text-nous-subtle overflow-x-auto">{JSON.stringify(log.data, null, 2)}</pre>
  )}
  </div>
  ))}

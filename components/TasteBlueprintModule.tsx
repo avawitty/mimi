@@ -89,7 +89,7 @@ export const TasteBlueprintModule: React.FC = () => {
  </h2>
  </div>
  
- <p className="text-sm text-nous-text0 mb-4 font-serif italic">
+ <p className="text-sm text-nous-subtle mb-4 font-serif italic">
  Drop a link, image, or thought. Mimi will analyze how it aligns with your Taste DNA.
  </p>
  <div className="relative">
@@ -125,7 +125,7 @@ export const TasteBlueprintModule: React.FC = () => {
  </div>
 
  <div className="space-y-4 relative z-10">
- <p className="text-sm text-nous-text0 font-serif italic">Your taste is currently manifesting as:</p>
+ <p className="text-sm text-nous-subtle font-serif italic">Your taste is currently manifesting as:</p>
  <div className="flex flex-wrap gap-2">
  {tasteLanguage.length > 0 ? tasteLanguage.map(tag => (
  <span key={tag} className="px-2 py-1 bg-nous-base text-nous-text text-[9px] uppercase tracking-widest font-bold border border-nous-border">{tag}</span>
@@ -176,7 +176,7 @@ export const TasteBlueprintModule: React.FC = () => {
  <ul className="space-y-2">
  {reflection.analysis.pros.map((pro, i) => (
  <li key={i} className="flex items-start gap-2 text-sm text-nous-subtle font-serif">
- <CheckCircle size={14} className="text-nous-text0 mt-0.5 shrink-0"/>
+ <CheckCircle size={14} className="text-nous-subtle mt-0.5 shrink-0"/>
  <span>{pro}</span>
  </li>
  ))}
@@ -236,7 +236,7 @@ export const TasteBlueprintModule: React.FC = () => {
  {reflection.extractedSignals.silhouette && <span className="px-2 py-1 bg-nous-base text-[9px] uppercase tracking-widest font-bold border border-nous-border">Shape: {reflection.extractedSignals.silhouette}</span>}
  {reflection.extractedSignals.material && <span className="px-2 py-1 bg-nous-base text-[9px] uppercase tracking-widest font-bold border border-nous-border">Material: {reflection.extractedSignals.material}</span>}
  {reflection.extractedSignals.tags.map(tag => (
- <span key={tag} className="px-2 py-1 bg-transparent border border-nous-border text-[9px] uppercase tracking-widest font-bold text-nous-text0">#{tag}</span>
+ <span key={tag} className="px-2 py-1 bg-transparent border border-nous-border text-[9px] uppercase tracking-widest font-bold text-nous-subtle">#{tag}</span>
  ))}
  </div>
  </div>

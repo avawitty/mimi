@@ -302,7 +302,7 @@ export const ActionBoard = () => {
  onChange={e => setNewTaskText(e.target.value)} 
  onKeyDown={e => e.key === 'Enter' && handleAddTask()}
  placeholder="Define a new imperative..."
- className="flex-1 w-full bg-transparent border-none font-serif italic text-lg focus:outline-none text-nous-text placeholder:text-nous-text0"
+ className="flex-1 w-full bg-transparent border-none font-serif italic text-lg focus:outline-none text-nous-text placeholder:text-nous-subtle"
  />
  <div className="flex w-full md:w-auto gap-4">
  <input 
@@ -310,7 +310,7 @@ export const ActionBoard = () => {
  value={newTaskPlatform} 
  onChange={e => setNewTaskPlatform(e.target.value)} 
  placeholder="Platform (e.g. TikTok)"
- className="w-1/2 md:w-32 bg-transparent border-b border-nous-border py-2 font-mono text-[10px] uppercase tracking-widest focus:outline-none focus:border-nous-border text-nous-text placeholder:text-nous-text0"
+ className="w-1/2 md:w-32 bg-transparent border-b border-nous-border py-2 font-mono text-[10px] uppercase tracking-widest focus:outline-none focus:border-nous-border text-nous-text placeholder:text-nous-subtle"
  />
  <input 
  type="date"

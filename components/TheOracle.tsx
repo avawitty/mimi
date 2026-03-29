@@ -9,7 +9,7 @@ export const TheOracle: React.FC = () => {
 
  if (!profile?.tasteProfile?.sovereignIdentity) {
  return (
- <div className="flex-1 flex items-center justify-center p-8 text-center text-nous-text0 italic font-serif h-full">
+ <div className="flex-1 flex items-center justify-center p-8 text-center text-nous-subtle italic font-serif h-full">
  The Oracle requires a Sovereign Identity Card to read your aesthetic horoscope.
  </div>
  );
@@ -29,7 +29,7 @@ export const TheOracle: React.FC = () => {
  initial={{ opacity: 0, y: 10 }}
  animate={{ opacity: 1, y: 0 }}
  transition={{ delay: 0.1 }}
- className="text-xs font-sans uppercase tracking-widest text-nous-text0 mb-8"
+ className="text-xs font-sans uppercase tracking-widest text-nous-subtle mb-8"
  >
  Your Daily Aesthetic Horoscope
  </motion.p>

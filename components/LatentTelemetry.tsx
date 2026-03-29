@@ -74,7 +74,7 @@ export const LatentTelemetry: React.FC = () => {
  <div className="bg/80 backdrop-blur-md border border p-6 rounded-none pointer-events-auto w-[320px]">
  <div className="flex justify-between items-center mb-4">
  <span className="font-mono text-[8px] uppercase tracking-widest text-nous-subtle animate-pulse">Acoustic Uplink Active</span>
- <span className="font-mono text-[8px] uppercase tracking-widest text-nous-text0">MIMI_CORE</span>
+ <span className="font-mono text-[8px] uppercase tracking-widest text-nous-subtle">MIMI_CORE</span>
  </div>
  <PsychicDollMimi analyser={analyserRef.current} className="text-nous-subtle mx-auto"/>
  </div>
@@ -98,7 +98,7 @@ export const LatentTelemetry: React.FC = () => {
  <Thimble 
  isActive={isListening} 
  onClick={toggleListening} 
- className="w-12 h-12 text-nous-text0 hover:text-nous-subtle transition-colors"
+ className="w-12 h-12 text-nous-subtle hover:text-nous-subtle transition-colors"
  />
  </div>
  </div>

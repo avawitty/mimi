@@ -28,7 +28,7 @@ export const ShardAnalyzer: React.FC<ShardAnalyzerProps> = ({ shards, draft, onC
  if (!res) throw new Error("Visual signal lost in the threshold.");
  setReport(res);
  window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
- detail: { message:"Resonance Mapping Complete.", icon: <CheckCircle size={14} className="text-nous-text0"/> } 
+ detail: { message:"Resonance Mapping Complete.", icon: <CheckCircle size={14} className="text-nous-subtle"/> } 
  }));
  } catch (e) {
  console.error("MIMI // Shard Audit Failure:", e);
@@ -45,11 +45,11 @@ export const ShardAnalyzer: React.FC<ShardAnalyzerProps> = ({ shards, draft, onC
  <div className="w-full space-y-12 py-12 border-t border-black/5 /5 animate-fade-in">
  <div className="flex justify-between items-center px-4">
  <div className="space-y-1">
- <div className="flex items-center gap-3 text-nous-text0">
+ <div className="flex items-center gap-3 text-nous-subtle">
  <Radar size={16} className={loading ? 'animate-spin' : ''} />
  <span className="font-sans text-[10px] uppercase tracking-[0.4em] font-black italic">Visual Language Reflection</span>
  </div>
- <p className="font-serif italic text-sm text-nous-text0">Audit your visual artifacts against your stated core logic.</p>
+ <p className="font-serif italic text-sm text-nous-subtle">Audit your visual artifacts against your stated core logic.</p>
  </div>
  {!report && !loading && (
  <button 
@@ -66,18 +66,18 @@ export const ShardAnalyzer: React.FC<ShardAnalyzerProps> = ({ shards, draft, onC
  {loading ? (
  <motion.div key="loading"initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-20 flex flex-col items-center gap-6">
  <div className="relative">
- <Loader2 className="animate-spin text-nous-text0"size={32} />
+ <Loader2 className="animate-spin text-nous-subtle"size={32} />
  <div className="absolute inset-0 border-t border-nous-border rounded-none animate-ping opacity-20"/>
  </div>
- <span className="font-sans text-[8px] uppercase tracking-[0.6em] text-nous-text0 font-black animate-pulse">Triangulating Frequencies...</span>
+ <span className="font-sans text-[8px] uppercase tracking-[0.6em] text-nous-subtle font-black animate-pulse">Triangulating Frequencies...</span>
  </motion.div>
  ) : error ? (
  <motion.div key="error"initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-20 text-center space-y-6">
  <div className="p-4 bg-red-50 dark:bg-red-950/20 rounded-none border border-red-100 dark:border-red-900/30 inline-block">
  <AlertTriangle size={24} className="text-red-500 animate-pulse"/>
  </div>
- <p className="font-serif italic text-xl text-nous-text0">"{error}"</p>
- <button onClick={performAudit} className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0 border-b border-nous-border pb-1">Retry Analysis</button>
+ <p className="font-serif italic text-xl text-nous-subtle">"{error}"</p>
+ <button onClick={performAudit} className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle border-b border-nous-border pb-1">Retry Analysis</button>
  </motion.div>
  ) : report ? (
  <motion.div key="report"initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="px-4">

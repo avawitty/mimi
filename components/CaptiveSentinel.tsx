@@ -34,7 +34,7 @@ export const CaptiveSentinel: React.FC<{ onClose: () => void }> = ({ onClose }) 
  <div className="flex flex-col items-center justify-center text-center text-nous-text font-serif relative z-10">
  <button 
  onClick={onClose} 
- className="absolute -top-16 right-0 p-4 text-nous-text0 hover:text-nous-subtle transition-all"
+ className="absolute -top-16 right-0 p-4 text-nous-subtle hover:text-nous-subtle transition-all"
  >
  <X className="w-6 h-6"/>
  </button>
@@ -113,7 +113,7 @@ export const CaptiveSentinel: React.FC<{ onClose: () => void }> = ({ onClose }) 
  <h2 className="font-serif text-5xl md:text-7xl italic tracking-tighter text-white leading-[0.85] selection:bg-red-600">
  Zuckerberg is clocking.
  </h2>
- <p className="font-sans text-[9px] uppercase tracking-[0.6em] text-nous-text0 font-black">Environmental Structural Failure</p>
+ <p className="font-sans text-[9px] uppercase tracking-[0.6em] text-nous-subtle font-black">Environmental Structural Failure</p>
  </div>
  </div>
 

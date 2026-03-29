@@ -380,11 +380,11 @@ export const InputStudio: React.FC<{
  placeholder="ENTER ZINE TITLE..."
  value={title || ''}
  onChange={(e) => setTitle(e.target.value)}
- className="w-full bg-transparent border-b border-nous-border pb-2 text-sm uppercase tracking-widest text-nous-text0 placeholder:text-nous-subtle outline-none text-center"
+ className="w-full bg-transparent border-b border-nous-border pb-2 text-sm uppercase tracking-widest text-nous-subtle placeholder:text-nous-subtle outline-none text-center"
  />
  </div>
  <p className="text-[8px] uppercase tracking-widest text-nous-subtle">PROMPT_CYCLE {promptIndex + 1}</p>
- <p className="text-[10px] uppercase tracking-widest text-nous-text0">"{DEFAULT_PROMPTS[promptIndex]}"</p>
+ <p className="text-[10px] uppercase tracking-widest text-nous-subtle">"{DEFAULT_PROMPTS[promptIndex]}"</p>
  </div>
 
  {/* Fragments of a conversation regarding... (textarea) */}
@@ -395,7 +395,7 @@ export const InputStudio: React.FC<{
  animate={{ opacity: 1, y: 0 }}
  className="mb-4 px-3 py-1 bg-nous-base border border-nous-border rounded-none flex items-center gap-2"
  >
- <Sparkles size={10} className="text-nous-text0"/>
+ <Sparkles size={10} className="text-nous-subtle"/>
  <span className="text-[9px] uppercase tracking-widest text-nous-subtle font-bold">Task Intelligence Active</span>
  </motion.div>
  )}
@@ -411,7 +411,7 @@ export const InputStudio: React.FC<{
  {/* Studio Toolbar - Neomorphic with Tooltips */}
  <div className="flex items-center gap-2 p-1.5 px-4 mb-6 rounded-none bg-nous-base dark: border border-white/20 /20">
  <div className="relative group flex items-center justify-center">
- <button onClick={() => mediaInputRef.current?.click()} className="p-1.5 text-nous-text0 hover:text-primary hover:text-nous-text transition-colors">
+ <button onClick={() => mediaInputRef.current?.click()} className="p-1.5 text-nous-subtle hover:text-primary hover:text-nous-text transition-colors">
  <Paperclip size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
@@ -420,7 +420,7 @@ export const InputStudio: React.FC<{
  </div>
 
  <div className="relative group flex items-center justify-center">
- <button onClick={startRecording} className={`p-1.5 transition-colors ${isRecording ? 'text-red-500' : 'text-nous-text0 hover:text-primary hover:text-nous-text'}`}>
+ <button onClick={startRecording} className={`p-1.5 transition-colors ${isRecording ? 'text-red-500' : 'text-nous-subtle hover:text-primary hover:text-nous-text'}`}>
  <Mic size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
@@ -431,7 +431,7 @@ export const InputStudio: React.FC<{
  <div className="w-px h-3 bg-stone-300 dark:bg-stone-700 mx-1"/>
 
  <div className="relative group flex items-center justify-center">
- <button onClick={() => setLiteMode(!liteMode)} className={`p-1.5 transition-colors ${liteMode ? 'text-yellow-500' : 'text-nous-text0 hover:text-yellow-500'}`}>
+ <button onClick={() => setLiteMode(!liteMode)} className={`p-1.5 transition-colors ${liteMode ? 'text-yellow-500' : 'text-nous-subtle hover:text-yellow-500'}`}>
  <Zap size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
@@ -440,7 +440,7 @@ export const InputStudio: React.FC<{
  </div>
 
  <div className="relative group flex items-center justify-center">
- <button onClick={() => setDeepThinking(!deepThinking)} className={`p-1.5 transition-colors ${deepThinking ? 'text-purple-500' : 'text-nous-text0 hover:text-purple-500'}`}>
+ <button onClick={() => setDeepThinking(!deepThinking)} className={`p-1.5 transition-colors ${deepThinking ? 'text-purple-500' : 'text-nous-subtle hover:text-purple-500'}`}>
  <BrainCircuit size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
@@ -449,7 +449,7 @@ export const InputStudio: React.FC<{
  </div>
 
  <div className="relative group flex items-center justify-center">
- <button onClick={() => setUseSearch(!useSearch)} className={`p-1.5 transition-colors ${useSearch ? 'text-blue-500' : 'text-nous-text0 hover:text-blue-500'}`}>
+ <button onClick={() => setUseSearch(!useSearch)} className={`p-1.5 transition-colors ${useSearch ? 'text-blue-500' : 'text-nous-subtle hover:text-blue-500'}`}>
  <Globe size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
@@ -458,7 +458,7 @@ export const InputStudio: React.FC<{
  </div>
 
  <div className="relative group flex items-center justify-center">
- <button onClick={() => setUseMaps(!useMaps)} className={`p-1.5 transition-colors ${useMaps ? 'text-orange-500' : 'text-nous-text0 hover:text-orange-500'}`}>
+ <button onClick={() => setUseMaps(!useMaps)} className={`p-1.5 transition-colors ${useMaps ? 'text-orange-500' : 'text-nous-subtle hover:text-orange-500'}`}>
  <MapPin size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
@@ -467,7 +467,7 @@ export const InputStudio: React.FC<{
  </div>
 
  <div className="relative group flex items-center justify-center">
- <button onClick={() => setTaskMode(!taskMode)} className={`p-1.5 transition-colors ${taskMode ? 'text-nous-text ' : 'text-nous-text0 hover:text-nous-text '}`}>
+ <button onClick={() => setTaskMode(!taskMode)} className={`p-1.5 transition-colors ${taskMode ? 'text-nous-text ' : 'text-nous-subtle hover:text-nous-text '}`}>
  <Sparkles size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
@@ -476,7 +476,7 @@ export const InputStudio: React.FC<{
  </div>
 
  <div className="relative group flex items-center justify-center">
- <button onClick={() => setUseTailorProfile(!useTailorProfile)} className={`p-1.5 transition-colors ${useTailorProfile ? 'text-indigo-500' : 'text-nous-text0 hover:text-indigo-500'}`}>
+ <button onClick={() => setUseTailorProfile(!useTailorProfile)} className={`p-1.5 transition-colors ${useTailorProfile ? 'text-indigo-500' : 'text-nous-subtle hover:text-indigo-500'}`}>
  <Scissors size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
@@ -500,7 +500,7 @@ export const InputStudio: React.FC<{
  }
  }} 
  disabled={isGeneratingPrompt}
- className={`p-1.5 transition-colors ${isGeneratingPrompt ? 'text-red-500 animate-pulse' : 'text-nous-text0 hover:text-red-500'}`}
+ className={`p-1.5 transition-colors ${isGeneratingPrompt ? 'text-red-500 animate-pulse' : 'text-nous-subtle hover:text-red-500'}`}
  >
  <Wand2 size={16} strokeWidth={1.0} />
  </button>
@@ -510,7 +510,7 @@ export const InputStudio: React.FC<{
  </div>
 
  <div className="relative group flex items-center justify-center">
- <button onClick={() => setInput('')} className="p-1.5 text-nous-text0 hover:text-nous-text transition-colors">
+ <button onClick={() => setInput('')} className="p-1.5 text-nous-subtle hover:text-nous-text transition-colors">
  <Eraser size={16} strokeWidth={1.0} />
  </button>
  <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
@@ -524,7 +524,7 @@ export const InputStudio: React.FC<{
  {mediaFiles.length > 0 && (
  <div className="flex flex-col items-center w-full">
  <div className="flex items-center justify-between w-full max-w-4xl mb-4 px-4">
- <h3 className="text-[10px] uppercase tracking-widest text-nous-text0 font-bold">Artifacts ({mediaFiles.length})</h3>
+ <h3 className="text-[10px] uppercase tracking-widest text-nous-subtle font-bold">Artifacts ({mediaFiles.length})</h3>
  <button 
  onClick={() => {
  setIsSelectionMode(!isSelectionMode);
@@ -648,7 +648,7 @@ export const InputStudio: React.FC<{
  {isAnalyzing[index] ? 'Analyzing...' : 'Analyze'}
  </button>
  {mediaAnalysis[index] && (
- <div className="mt-1 text-[7px] text-nous-text0 leading-tight">
+ <div className="mt-1 text-[7px] text-nous-subtle leading-tight">
  <p className="truncate">{mediaAnalysis[index].tags.slice(0, 3).join(', ')}</p>
  <button 
  onClick={async (e) => {
@@ -724,7 +724,7 @@ export const InputStudio: React.FC<{
  {isAnalyzing[index] ? 'Analyzing...' : 'Analyze'}
  </button>
  {mediaAnalysis[index] && (
- <div className="mt-1 text-[7px] text-nous-text0 w-full leading-tight">
+ <div className="mt-1 text-[7px] text-nous-subtle w-full leading-tight">
  <p className="truncate">{mediaAnalysis[index].tags.slice(0, 3).join(', ')}</p>
  <p className="truncate">Mood: {mediaAnalysis[index].aesthetic.mood[0]}</p>
  {mediaAnalysis[index].deltaVerdict && (
@@ -801,7 +801,7 @@ export const InputStudio: React.FC<{
  <button
  key={mode}
  onClick={() => togglePanel(mode)}
- className={`relative px-4 py-2 rounded-none transition-all duration-300 ${isActive ? 'bg-nous-text text-nous-base ' : 'text-nous-text0 hover:text-nous-text '}`}
+ className={`relative px-4 py-2 rounded-none transition-all duration-300 ${isActive ? 'bg-nous-text text-nous-base ' : 'text-nous-subtle hover:text-nous-text '}`}
  >
  <span className={`text-[10px] uppercase tracking-widest font-bold ${isActive ? 'font-serif italic text-sm' : ''}`}>
  {mode}
@@ -849,7 +849,7 @@ export const InputStudio: React.FC<{
  poeticMeaning="The silent hum of the machine, listening to the space between your words."
  functionalMeaning="A visual indicator of the system's background processing and readiness to interpret your input."
  >
- <span className="text-[10px] uppercase tracking-[0.2em] text-nous-text0">Latent Telemetry</span>
+ <span className="text-[10px] uppercase tracking-[0.2em] text-nous-subtle">Latent Telemetry</span>
  </GlossaryTooltip>
  <div className="flex gap-[2px] items-end h-3">
  {[...Array(5)].map((_, i) => (
@@ -916,7 +916,7 @@ export const InputStudio: React.FC<{
  )}
  {activePanel === 'signal' && (
  <div className="flex flex-col gap-6">
- <p className="text-xs uppercase tracking-widest text-nous-text0">AI Tags</p>
+ <p className="text-xs uppercase tracking-widest text-nous-subtle">AI Tags</p>
  <TagGenerator 
  context={input} 
  onAddTags={(tags) => {
@@ -925,7 +925,7 @@ export const InputStudio: React.FC<{
  />
  {activeTags.length > 0 && (
  <div className="mt-4">
- <p className="text-[10px] uppercase tracking-widest text-nous-text0 mb-2">Active Tags</p>
+ <p className="text-[10px] uppercase tracking-widest text-nous-subtle mb-2">Active Tags</p>
  <div className="flex flex-wrap gap-2">
  {activeTags.map(tag => (
  <span key={tag} className="px-2 py-1 bg-black/5 /5 text-[10px] uppercase tracking-widest rounded-none flex items-center gap-1">
@@ -940,7 +940,7 @@ export const InputStudio: React.FC<{
  )}
  {activePanel === 'treatments' && (
  <div className="flex flex-col gap-6">
- <p className="text-xs uppercase tracking-widest text-nous-text0 mb-4">Treatment Panel / Directives</p>
+ <p className="text-xs uppercase tracking-widest text-nous-subtle mb-4">Treatment Panel / Directives</p>
  <ZineConfiguration 
  zineOptions={zineOptions} 
  setZineOptions={setZineOptions} 
@@ -954,7 +954,7 @@ export const InputStudio: React.FC<{
 
  {activePanel === 'orchestrator' && (
  <div className="flex flex-col gap-6">
- <p className="text-xs uppercase tracking-widest text-nous-text0 mb-4">Prompt Orchestrator</p>
+ <p className="text-xs uppercase tracking-widest text-nous-subtle mb-4">Prompt Orchestrator</p>
  
  {/* Treatment Filters */}
  {profile?.savedTreatments && profile.savedTreatments.length > 0 && (
@@ -965,7 +965,7 @@ export const InputStudio: React.FC<{
  <button
  key={t.id}
  onClick={() => setActiveTreatmentId(activeTreatmentId === t.id ? null : t.id)}
- className={`px-3 py-1.5 text-[10px] uppercase tracking-widest rounded-none border transition-colors ${activeTreatmentId === t.id ? 'border-nous-border text-nous-text bg-nous-base ' : 'border-nous-border text-nous-text0 hover:border-nous-border '}`}
+ className={`px-3 py-1.5 text-[10px] uppercase tracking-widest rounded-none border transition-colors ${activeTreatmentId === t.id ? 'border-nous-border text-nous-text bg-nous-base ' : 'border-nous-border text-nous-subtle hover:border-nous-border '}`}
  >
  [{t.treatmentName}]
  </button>

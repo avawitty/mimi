@@ -560,7 +560,7 @@ export default function DossierView() {
  await savePocketItem(moodboardItem);
  
  window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
- detail: { message:"Moodboard Manifested in Archive.", icon: <Check size={14} className="text-nous-text0"/> } 
+ detail: { message:"Moodboard Manifested in Archive.", icon: <Check size={14} className="text-nous-subtle"/> } 
  }));
  
  setViewMode('grid');
@@ -631,10 +631,10 @@ export default function DossierView() {
  <div className="bg-[#1C1917] p-8 max-w-sm w-full space-y-6 border border-nous-border">
  <div className="space-y-2">
  <h3 className="font-serif italic text-xl text-nous-text">Purge Imperative?</h3>
- <p className="font-mono text-[10px] text-nous-text0 uppercase tracking-widest">This action cannot be undone.</p>
+ <p className="font-mono text-[10px] text-nous-subtle uppercase tracking-widest">This action cannot be undone.</p>
  </div>
  <div className="flex gap-4">
- <button onClick={() => setTaskToDelete(null)} className="flex-1 py-3 text-nous-text0 hover:text-nous-subtle font-mono text-[9px] uppercase tracking-widest font-bold border border-nous-border hover:border-nous-border transition-all">Cancel</button>
+ <button onClick={() => setTaskToDelete(null)} className="flex-1 py-3 text-nous-subtle hover:text-nous-subtle font-mono text-[9px] uppercase tracking-widest font-bold border border-nous-border hover:border-nous-border transition-all">Cancel</button>
  <button onClick={confirmDeleteTask} className="flex-1 py-3 bg-red-900/20 text-red-500 border border-red-900/50 hover:bg-red-900/40 font-mono text-[9px] uppercase tracking-widest font-bold transition-all">Confirm</button>
  </div>
  </div>
@@ -645,10 +645,10 @@ export default function DossierView() {
  <div className="bg-[#1C1917] p-8 max-w-sm w-full space-y-6 border border-nous-border">
  <div className="space-y-2">
  <h3 className="font-serif italic text-xl text-nous-text">Purge Artifact?</h3>
- <p className="font-mono text-[10px] text-nous-text0 uppercase tracking-widest">This action cannot be undone.</p>
+ <p className="font-mono text-[10px] text-nous-subtle uppercase tracking-widest">This action cannot be undone.</p>
  </div>
  <div className="flex gap-4">
- <button onClick={() => setArtifactToDelete(null)} className="flex-1 py-3 text-nous-text0 hover:text-nous-subtle font-mono text-[9px] uppercase tracking-widest font-bold border border-nous-border hover:border-nous-border transition-all">Cancel</button>
+ <button onClick={() => setArtifactToDelete(null)} className="flex-1 py-3 text-nous-subtle hover:text-nous-subtle font-mono text-[9px] uppercase tracking-widest font-bold border border-nous-border hover:border-nous-border transition-all">Cancel</button>
  <button onClick={confirmDeleteArtifact} className="flex-1 py-3 bg-red-900/20 text-red-500 border border-red-900/50 hover:bg-red-900/40 font-mono text-[9px] uppercase tracking-widest font-bold transition-all">Confirm</button>
  </div>
  </div>
@@ -668,7 +668,7 @@ export default function DossierView() {
  className="border-r border-nous-border bg-[#1C1917] flex flex-col hidden md:flex shrink-0 print:hidden overflow-hidden"
  >
  <div className="p-6 border-b border-nous-border space-y-6 w-72">
- <div className="flex items-center justify-between text-nous-text0">
+ <div className="flex items-center justify-between text-nous-subtle">
  <div className="flex items-center gap-3">
  <Briefcase size={14} />
  <span className="font-mono text-[9px] uppercase tracking-[0.2em] font-bold">Project Registry</span>
@@ -679,7 +679,7 @@ export default function DossierView() {
  </div>
  
  <div className="relative group">
- <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-nous-subtle group-focus-within:text-nous-text0 transition-colors"/>
+ <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-nous-subtle group-focus-within:text-nous-subtle transition-colors"/>
  <input 
  type="text"
  value={folderSearchTerm}
@@ -691,7 +691,7 @@ export default function DossierView() {
 
  <button 
  onClick={() => setShowNewFolder(true)}
- className="w-full py-3 border border-dashed border-nous-border hover:border-nous-border /50 font-mono text-[9px] uppercase tracking-widest font-bold text-nous-text0 hover:text-nous-text transition-all flex items-center justify-center gap-2 group"
+ className="w-full py-3 border border-dashed border-nous-border hover:border-nous-border /50 font-mono text-[9px] uppercase tracking-widest font-bold text-nous-subtle hover:text-nous-text transition-all flex items-center justify-center gap-2 group"
  >
  <Plus size={12} className="group-hover:rotate-90 transition-transform"/> Initialize Project
  </button>
@@ -705,7 +705,7 @@ export default function DossierView() {
  <button
  key={folder.id}
  onClick={() => setActiveFolder(folder)}
- className={`w-full text-left px-4 py-3 border border-transparent transition-all group relative overflow-hidden ${activeFolder?.id === folder.id ? 'bg-nous-base0/5 border-nous-border/20 text-nous-text0' : 'hover:bg-nous-base hover:border-nous-border text-nous-text0'}`}
+ className={`w-full text-left px-4 py-3 border border-transparent transition-all group relative overflow-hidden ${activeFolder?.id === folder.id ? 'bg-nous-base0/5 border-nous-border/20 text-nous-subtle' : 'hover:bg-nous-base hover:border-nous-border text-nous-subtle'}`}
  >
  <div className="flex justify-between items-start relative z-10">
  <h4 className={`font-serif italic text-sm truncate pr-4 transition-colors ${activeFolder?.id === folder.id ? 'text-nous-subtle' : 'group-hover:text-nous-subtle'}`}>{folder.name}</h4>
@@ -716,7 +716,7 @@ export default function DossierView() {
  ))
  )}
  {filteredFolders.length === 0 && folderSearchTerm && (
- <div className="p-8 text-center opacity-30 font-mono text-[9px] uppercase tracking-widest text-nous-text0">No matches found.</div>
+ <div className="p-8 text-center opacity-30 font-mono text-[9px] uppercase tracking-widest text-nous-subtle">No matches found.</div>
  )}
  </div>
  </motion.aside>
@@ -818,7 +818,7 @@ export default function DossierView() {
  <div className="flex justify-between items-start mb-6 border-b border-[#1C1917] pb-2">
  <div className="flex items-center gap-2">
  <h3 className="font-mono text-[10px] uppercase tracking-widest font-bold text-[#1C1917]">Micro-Log // Punchlist</h3>
- <button onClick={handleAutoPunchlist} disabled={isGeneratingPunchlist} className="text-[#1C1917] hover:text-nous-text0 transition-colors"title="Auto-Awesome Directives">
+ <button onClick={handleAutoPunchlist} disabled={isGeneratingPunchlist} className="text-[#1C1917] hover:text-nous-subtle transition-colors"title="Auto-Awesome Directives">
  {isGeneratingPunchlist ? <Loader2 size={12} className="animate-spin"/> : <Sparkles size={12} />}
  </button>
  </div>
@@ -911,7 +911,7 @@ export default function DossierView() {
  </div>
  ) : (
  <div className="flex-1 flex flex-col items-center justify-center p-12 text-center space-y-8 opacity-20">
- <Briefcase size={64} strokeWidth={1} className="text-nous-text0"/>
+ <Briefcase size={64} strokeWidth={1} className="text-nous-subtle"/>
  <div className="space-y-2">
  <h3 className="font-serif italic text-3xl text-nous-subtle">Select a Project Dossier.</h3>
  <p className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-subtle">Or initialize a new container from the registry.</p>
@@ -928,12 +928,12 @@ export default function DossierView() {
  <div className="bg-[#1C1917] p-10 max-w-sm w-full space-y-8 border border-nous-border relative overflow-hidden">
  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-stone-500 to-transparent opacity-50"/>
  <div className="text-center space-y-2">
- <FolderPlus size={32} className="mx-auto text-nous-text0"/>
+ <FolderPlus size={32} className="mx-auto text-nous-subtle"/>
  <h3 className="font-serif italic text-2xl text-nous-text">New Dossier.</h3>
  </div>
- <input value={newFolderName} onChange={e => setNewFolderName(e.target.value)} placeholder="Project Name..."className="w-full border-b border-nous-border bg-transparent py-2 text-center font-mono text-lg focus:outline-none focus:border-nous-border transition-colors text-nous-text0 placeholder:text-nous-subtle"autoFocus />
+ <input value={newFolderName} onChange={e => setNewFolderName(e.target.value)} placeholder="Project Name..."className="w-full border-b border-nous-border bg-transparent py-2 text-center font-mono text-lg focus:outline-none focus:border-nous-border transition-colors text-nous-subtle placeholder:text-nous-subtle"autoFocus />
  <div className="flex gap-4">
- <button onClick={() => setShowNewFolder(false)} className="flex-1 py-3 text-nous-text0 hover:text-nous-subtle font-mono text-[9px] uppercase font-bold tracking-widest border border-nous-border hover:border-nous-border transition-all">Cancel</button>
+ <button onClick={() => setShowNewFolder(false)} className="flex-1 py-3 text-nous-subtle hover:text-nous-subtle font-mono text-[9px] uppercase font-bold tracking-widest border border-nous-border hover:border-nous-border transition-all">Cancel</button>
  <button onClick={handleCreateFolder} className="flex-[2] py-3 bg-nous-base0 text-black font-mono text-[9px] uppercase font-bold tracking-widest hover:scale-105 transition-all">Initialize</button>
  </div>
  </div>
@@ -945,13 +945,13 @@ export default function DossierView() {
  <div className="bg-[#1C1917] p-8 max-w-lg w-full space-y-6 border border-nous-border">
  <div className="flex justify-between items-center border-b border-nous-border pb-4">
  <h3 className="font-serif italic text-2xl text-nous-text">New Field Note.</h3>
- <button onClick={() => setShowNoteModal(false)}><X size={20} className="text-nous-text0 hover:text-nous-subtle"/></button>
+ <button onClick={() => setShowNoteModal(false)}><X size={20} className="text-nous-subtle hover:text-nous-subtle"/></button>
  </div>
  <div className="space-y-4">
  <input value={noteTitle} onChange={e => setNoteTitle(e.target.value)} placeholder="Note Title..."className="w-full bg-nous-base/50 border border-nous-border p-3 font-mono text-sm focus:outline-none focus:border-nous-border text-nous-subtle placeholder:text-nous-subtle"/>
  <textarea value={noteContent} onChange={e => setNoteContent(e.target.value)} placeholder="Capture thought..."className="w-full h-48 bg-nous-base/50 border border-nous-border p-4 font-serif italic text-base focus:outline-none focus:border-nous-border resize-none text-nous-subtle placeholder:text-nous-subtle"/>
  </div>
- <button onClick={handleSaveNote} disabled={isSavingNote || !noteContent.trim()} className="w-full py-4 bg-nous-base/20 border border-nous-border/50 text-nous-text0 font-mono text-[9px] uppercase font-bold tracking-widest flex items-center justify-center gap-2 hover:bg-nous-base/40 transition-colors disabled:opacity-50">
+ <button onClick={handleSaveNote} disabled={isSavingNote || !noteContent.trim()} className="w-full py-4 bg-nous-base/20 border border-nous-border/50 text-nous-subtle font-mono text-[9px] uppercase font-bold tracking-widest flex items-center justify-center gap-2 hover:bg-nous-base/40 transition-colors disabled:opacity-50">
  {isSavingNote ? <Loader2 size={14} className="animate-spin"/> : <Save size={14} />} Anchor Note
  </button>
  </div>
@@ -962,16 +962,16 @@ export default function DossierView() {
  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[7000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
  <div className="bg-[#1C1917] p-8 max-w-2xl w-full space-y-6 border border-nous-border max-h-[80vh] overflow-y-auto">
  <div className="flex justify-between items-center border-b border-nous-border pb-4">
- <h3 className="font-serif italic text-2xl text-nous-text0">Strategic Blueprint.</h3>
- <button onClick={() => setShowBlueprintModal(false)}><X size={20} className="text-nous-text0 hover:text-nous-subtle"/></button>
+ <h3 className="font-serif italic text-2xl text-nous-subtle">Strategic Blueprint.</h3>
+ <button onClick={() => setShowBlueprintModal(false)}><X size={20} className="text-nous-subtle hover:text-nous-subtle"/></button>
  </div>
  <div className="space-y-6 font-mono text-xs text-nous-subtle">
- <div><h4 className="text-nous-text0 uppercase tracking-widest mb-1">Inciting Debris</h4><p>{activeBlueprint.inciting_debris}</p></div>
- <div><h4 className="text-nous-text0 uppercase tracking-widest mb-1">Structural Pivot</h4><p>{activeBlueprint.structural_pivot}</p></div>
- <div><h4 className="text-nous-text0 uppercase tracking-widest mb-1">Climax Manifest</h4><p>{activeBlueprint.climax_manifest}</p></div>
- <div><h4 className="text-nous-text0 uppercase tracking-widest mb-1">End Product Spec</h4><p>{activeBlueprint.end_product_spec}</p></div>
+ <div><h4 className="text-nous-subtle uppercase tracking-widest mb-1">Inciting Debris</h4><p>{activeBlueprint.inciting_debris}</p></div>
+ <div><h4 className="text-nous-subtle uppercase tracking-widest mb-1">Structural Pivot</h4><p>{activeBlueprint.structural_pivot}</p></div>
+ <div><h4 className="text-nous-subtle uppercase tracking-widest mb-1">Climax Manifest</h4><p>{activeBlueprint.climax_manifest}</p></div>
+ <div><h4 className="text-nous-subtle uppercase tracking-widest mb-1">End Product Spec</h4><p>{activeBlueprint.end_product_spec}</p></div>
  </div>
- <button onClick={() => setShowBlueprintModal(false)} className="w-full py-3 border border-nous-border text-nous-text0 hover:text-nous-subtle font-mono text-[9px] uppercase font-bold tracking-widest hover:border-nous-border transition-all">Close</button>
+ <button onClick={() => setShowBlueprintModal(false)} className="w-full py-3 border border-nous-border text-nous-subtle hover:text-nous-subtle font-mono text-[9px] uppercase font-bold tracking-widest hover:border-nous-border transition-all">Close</button>
  </div>
  </motion.div>
  )}
@@ -982,9 +982,9 @@ export default function DossierView() {
  <div className="flex justify-between items-center border-b border-nous-border pb-4">
  <div className="space-y-1">
  <h3 className="font-serif italic text-2xl text-nous-text">Import from Archival.</h3>
- <p className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-text0">Select shards to manifest in this dossier.</p>
+ <p className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-subtle">Select shards to manifest in this dossier.</p>
  </div>
- <button onClick={() => setShowImportModal(false)}><X size={20} className="text-nous-text0 hover:text-nous-subtle"/></button>
+ <button onClick={() => setShowImportModal(false)}><X size={20} className="text-nous-subtle hover:text-nous-subtle"/></button>
  </div>
  
  <div className="flex-1 overflow-y-auto no-scrollbar min-h-[300px]">
@@ -1002,7 +1002,7 @@ export default function DossierView() {
  <img src={item.content.imageUrl} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all opacity-60 group-hover:opacity-100"/>
  ) : (
  <div className="w-full h-full p-4 flex flex-col justify-center">
- <span className="font-mono text-[8px] uppercase font-bold text-nous-text0 mb-1">{item.type}</span>
+ <span className="font-mono text-[8px] uppercase font-bold text-nous-subtle mb-1">{item.type}</span>
  <p className="font-serif italic text-xs line-clamp-3 text-nous-subtle">"{item.content.prompt || item.content.text || 'Sonic shard'}"</p>
  </div>
  )}
@@ -1012,7 +1012,7 @@ export default function DossierView() {
  </div>
  ))}
  {pocketItems.length === 0 && (
- <div className="col-span-full py-12 text-center opacity-30 font-serif italic text-nous-text0">The Pocket is empty.</div>
+ <div className="col-span-full py-12 text-center opacity-30 font-serif italic text-nous-subtle">The Pocket is empty.</div>
  )}
  </div>
  )}

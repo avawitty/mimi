@@ -20,7 +20,7 @@ const CONTENT = {
  <p className="text-nous-text  font-black text-2xl md:text-3xl leading-tight">
  Mimi: A nod to **Memetics** and the **Art of Self**.
  </p>
- <p className="font-sans text-[8px] uppercase tracking-[0.5em] font-black text-nous-text0">
+ <p className="font-sans text-[8px] uppercase tracking-[0.5em] font-black text-nous-subtle">
  Etymology: Mimema (Greek) — that which is imitated.
  </p>
  </div>
@@ -43,15 +43,15 @@ const CONTENT = {
  <div className="space-y-6">
  <ul className="space-y-6 font-serif italic text-base text-nous-subtle">
  <li className="flex gap-4">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0 pt-1">01</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle pt-1">01</span>
  <span><strong className="text-nous-text text-nous-text">The Memetic Engine:</strong> Transmutes raw debris into units of cultural transmission (Zines).</span>
  </li>
  <li className="flex gap-4">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0 pt-1">02</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle pt-1">02</span>
  <span><strong className="text-nous-text text-nous-text">Meme Appreciation:</strong> Audits fragments for latent architectural intent.</span>
  </li>
  <li className="flex gap-4">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0 pt-1">03</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle pt-1">03</span>
  <span><strong className="text-nous-text text-nous-text">The Art of Self:</strong> Refines personal brand language into a defensible conceptual form.</span>
  </li>
  </ul>
@@ -71,10 +71,10 @@ const CONTENT = {
  <strong>2. Sovereignty is Absolute.</strong> Your refractions belong to your personal registry. We do not extract data for pedestrian training models.
  </p>
  <p>
- <strong>3. No Trauma Dumping.</strong> Mimi is a creative partner, not a therapist... <span className="text-nous-text0 italic">unless</span> your aesthetic frequency is literally being crushed by the simulation. In that case, descend to the Clearing.
+ <strong>3. No Trauma Dumping.</strong> Mimi is a creative partner, not a therapist... <span className="text-nous-subtle italic">unless</span> your aesthetic frequency is literally being crushed by the simulation. In that case, descend to the Clearing.
  </p>
  <div className="pt-4">
- <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'clearing' }))} className="flex items-center gap-3 text-nous-text0 font-sans text-[9px] uppercase tracking-widest font-black hover:opacity-70 transition-all">
+ <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'clearing' }))} className="flex items-center gap-3 text-nous-subtle font-sans text-[9px] uppercase tracking-widest font-black hover:opacity-70 transition-all">
  <HeartHandshake size={14} /> Enter Secret Clearing
  </button>
  </div>
@@ -130,7 +130,7 @@ export const StructuralPage: React.FC<StructuralPageProps> = ({ type: initialTyp
  onClick={() => setActiveTab(key)}
  className={`flex-1 md:flex-none p-6 text-left flex items-center gap-3 transition-all ${activeTab === key ? 'bg-white text-nous-text text-nous-text' : 'text-nous-subtle hover:text-nous-subtle '}`}
  >
- <div className={activeTab === key ? 'text-nous-text0' : 'opacity-50'}>{CONTENT[key].icon}</div>
+ <div className={activeTab === key ? 'text-nous-subtle' : 'opacity-50'}>{CONTENT[key].icon}</div>
  <span className="font-sans text-[9px] uppercase tracking-widest font-black hidden md:block">{CONTENT[key].title}</span>
  </button>
  ))}

@@ -118,7 +118,7 @@ export const MobileStudio: React.FC<MobileStudioProps> = ({ onPublish, onClose, 
  <button
  key={t.id}
  onClick={() => setActiveTreatmentId(activeTreatmentId === t.id ? null : t.id)}
- className={`whitespace-nowrap px-3 py-1.5 text-[10px] uppercase tracking-widest rounded-none border transition-colors ${activeTreatmentId === t.id ? 'border-nous-border text-nous-text0 bg-nous-base0/10' : 'border-nous-border text-nous-text0 hover:border-nous-border '}`}
+ className={`whitespace-nowrap px-3 py-1.5 text-[10px] uppercase tracking-widest rounded-none border transition-colors ${activeTreatmentId === t.id ? 'border-nous-border text-nous-subtle bg-nous-base0/10' : 'border-nous-border text-nous-subtle hover:border-nous-border '}`}
  >
  [{t.treatmentName}]
  </button>

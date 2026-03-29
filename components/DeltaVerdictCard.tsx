@@ -14,7 +14,7 @@ export const DeltaVerdictCard: React.FC<DeltaVerdictCardProps> = ({ verdict, com
 
  // Determine color based on alignment
  const getAlignmentColor = (score: number) => {
- if (score > 0.8) return 'text-nous-text0'; // High alignment
+ if (score > 0.8) return 'text-nous-subtle'; // High alignment
  if (score < 0.3) return 'text-red-500'; // Anomaly / Mutant
  return 'text-amber-500'; // Drift
  };
@@ -78,7 +78,7 @@ export const DeltaVerdictCard: React.FC<DeltaVerdictCardProps> = ({ verdict, com
  
  {/* Divergence Points */}
  <div className="flex flex-col gap-2">
- <span className="font-mono text-[10px] uppercase tracking-widest text-nous-text0">Divergence Points</span>
+ <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle">Divergence Points</span>
  <ul className="flex flex-col gap-2">
  {verdict.divergencePoints.map((point, idx) => (
  <li key={idx} className="flex items-start gap-2 text-xs text-nous-subtle font-sans">
@@ -91,7 +91,7 @@ export const DeltaVerdictCard: React.FC<DeltaVerdictCardProps> = ({ verdict, com
 
  {/* Resonance Analysis */}
  <div className="flex flex-col gap-2">
- <span className="font-mono text-[10px] uppercase tracking-widest text-nous-text0">Resonance Analysis</span>
+ <span className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle">Resonance Analysis</span>
  <p className="text-xs text-nous-subtle font-sans leading-relaxed">
  {verdict.resonanceAnalysis}
  </p>

@@ -117,7 +117,7 @@ export const ScryView: React.FC = () => {
  {/* The Void / Scry Circle */}
  <div className="text-center mb-12">
  <h1 className="font-serif italic text-6xl text-nous-text mb-4">The Scry</h1>
- <p className="font-sans text-nous-text0 uppercase tracking-widest text-xs">Consult the aesthetic oracle.</p>
+ <p className="font-sans text-nous-subtle uppercase tracking-widest text-xs">Consult the aesthetic oracle.</p>
  </div>
  <div className="relative group mt-12">
  <motion.div 
@@ -140,7 +140,7 @@ export const ScryView: React.FC = () => {
  >
  <div className="w-full h-full absolute inset-0 bg animate-spin opacity-20"/>
  <div className="w-[98%] h-[98%] bg-black rounded-none absolute"/>
- <Loader2 className="text-nous-text0 animate-spin relative z-10"size={48} />
+ <Loader2 className="text-nous-subtle animate-spin relative z-10"size={48} />
  </motion.div>
  )}
  </AnimatePresence>
@@ -170,7 +170,7 @@ export const ScryView: React.FC = () => {
  </div>
 
  {/* Subtext */}
- <p className="font-serif italic text-nous-text0 text-xl mt-16 mb-10 text-center max-w-md leading-relaxed">
+ <p className="font-serif italic text-nous-subtle text-xl mt-16 mb-10 text-center max-w-md leading-relaxed">
  Scan the cultural horizon for web signals, generate new artifacts, and consult the Oracle simultaneously.
  </p>
 
@@ -215,7 +215,7 @@ export const ScryView: React.FC = () => {
  className="bg-white p-10 rounded-none border border text-center"
  >
  <div className="flex justify-center mb-6">
- <Sparkles size={24} className="text-nous-text0"/>
+ <Sparkles size={24} className="text-nous-subtle"/>
  </div>
  <p className="font-serif text-2xl leading-relaxed text italic">
 "{scribeReading}"

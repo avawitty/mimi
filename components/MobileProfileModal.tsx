@@ -34,7 +34,7 @@ export const MobileProfileModal: React.FC<Props> = ({ isOpen, onClose, onOpenSet
  >
  <div className="flex justify-between items-center mb-8">
  <h2 className="text-2xl font-serif italic text-nous-text">Profile</h2>
- <button onClick={onClose} className="p-2 text-nous-text0 hover:text-nous-text transition-colors">
+ <button onClick={onClose} className="p-2 text-nous-subtle hover:text-nous-text transition-colors">
  <X size={20} />
  </button>
  </div>
@@ -48,7 +48,7 @@ export const MobileProfileModal: React.FC<Props> = ({ isOpen, onClose, onOpenSet
  </div>
  )}
  <h3 className="text-xl font-medium text-nous-text">{profile?.displayName || 'Anonymous'}</h3>
- <p className="text-sm text-nous-text0 mt-1">{user.email}</p>
+ <p className="text-sm text-nous-subtle mt-1">{user.email}</p>
  
  {profile?.plan && profile.plan !== 'free' && (
  <div className={`mt-4 px-4 py-1.5 rounded-none text-xs font-bold uppercase tracking-widest border ${

@@ -46,7 +46,7 @@ ${auditReport.aestheticDirectives.map(d => `- ${d}`).join('\n')}
  
  <header className="flex justify-between items-center p-8 border-b border-nous-border shrink-0">
  <div className="space-y-2">
- <div className="flex items-center gap-3 text-nous-text0">
+ <div className="flex items-center gap-3 text-nous-subtle">
  <Target size={18} className="animate-pulse"/>
  <span className="font-sans text-[9px] uppercase tracking-[0.4em] font-black italic">Strategic Audit Protocol</span>
  </div>
@@ -55,7 +55,7 @@ ${auditReport.aestheticDirectives.map(d => `- ${d}`).join('\n')}
  <div className="flex items-center gap-4">
  <button 
  onClick={handleCopyManifesto} 
- className="flex items-center gap-2 px-4 py-2 bg-nous-base rounded-none font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0 hover:text-nous-text transition-all"
+ className="flex items-center gap-2 px-4 py-2 bg-nous-base rounded-none font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle hover:text-nous-text transition-all"
  >
  {isCopied ? <CheckCircle2 size={12} /> : <Copy size={12} />}
  {isCopied ? 'Protocol Preserved' : 'Copy Manifesto'}
@@ -82,7 +82,7 @@ ${auditReport.aestheticDirectives.map(d => `- ${d}`).join('\n')}
  {/* STRATEGIC OPPORTUNITY */}
  <section className="md:col-span-7 space-y-8">
  <div className="space-y-3">
- <div className="flex items-center gap-3 text-nous-text0">
+ <div className="flex items-center gap-3 text-nous-subtle">
  <Layers size={14} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Strategic Opportunity</span>
  </div>
@@ -99,7 +99,7 @@ ${auditReport.aestheticDirectives.map(d => `- ${d}`).join('\n')}
  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
  {(auditReport.suggestedTouchpoints || []).map((t, i) => (
  <div key={i} className="p-4 bg-nous-base border border-black/5 /5 rounded-none">
- <p className="font-serif italic text-lg text-nous-text0">{t}</p>
+ <p className="font-serif italic text-lg text-nous-subtle">{t}</p>
  </div>
  ))}
  </div>
@@ -121,7 +121,7 @@ ${auditReport.aestheticDirectives.map(d => `- ${d}`).join('\n')}
  key={i} 
  className="flex items-start gap-4 p-5 bg-white border border-black/5 /5 rounded-none"
  >
- <Check size={14} className="text-nous-text0 mt-1 shrink-0"/>
+ <Check size={14} className="text-nous-subtle mt-1 shrink-0"/>
  <p className="font-serif italic text-base md:text-lg text-nous-subtle leading-tight">{d}</p>
  </motion.div>
  ))}

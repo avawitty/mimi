@@ -85,7 +85,7 @@ export const PatronMintView: React.FC<{ onExit: () => void }> = ({ onExit }) => 
  <div className="flex justify-center mt-6">
  <button 
  onClick={handleCopy}
- className="flex items-center gap-2 px-4 py-2 bg-nous-base rounded-none font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0 hover:text-amber-500 transition-colors"
+ className="flex items-center gap-2 px-4 py-2 bg-nous-base rounded-none font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle hover:text-amber-500 transition-colors"
  >
  {copied ? <Check size={12} /> : <Copy size={12} />}
  {copied ? 'Copied to Clipboard' : 'Copy Key'}
@@ -94,7 +94,7 @@ export const PatronMintView: React.FC<{ onExit: () => void }> = ({ onExit }) => 
  </div>
 
  <div className="space-y-4">
- <p className="font-serif italic text-nous-text0 text-sm">
+ <p className="font-serif italic text-nous-subtle text-sm">
 "This key is your permanent bond to the registry. Enter it in your profile to dissolve the limits."
  </p>
  <button 

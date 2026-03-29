@@ -80,7 +80,7 @@ export const CliqueProtocol: React.FC<{ isOpen: boolean; onClose: () => void }> 
  alert("Your frequency has been preserved to the clipboard.");
  }}>
  <div className="p-3 bg-white rounded-none">
- <Radio size={20} className="text-nous-text0 animate-pulse"/>
+ <Radio size={20} className="text-nous-subtle animate-pulse"/>
  </div>
  <div className="flex flex-col">
  <span className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle font-black">Your Frequency Key</span>
@@ -91,7 +91,7 @@ export const CliqueProtocol: React.FC<{ isOpen: boolean; onClose: () => void }> 
  </div>
 
  <div className="space-y-4">
- <label htmlFor="frequencyKey"className="font-sans text-[9px] uppercase tracking-[0.5em] text-nous-text0 font-black block">Enter Muse Frequency</label>
+ <label htmlFor="frequencyKey"className="font-sans text-[9px] uppercase tracking-[0.5em] text-nous-subtle font-black block">Enter Muse Frequency</label>
  <input 
  id="frequencyKey"
  name="frequencyKey"

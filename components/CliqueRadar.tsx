@@ -102,7 +102,7 @@ export const CliqueRadar: React.FC<{ onSelectZine: (zine: ZineMetadata) => void 
  {siblings.map((sibling, i) => (
  <div key={i} className="border-l border-nous-border pl-8">
  <h4 className="font-serif italic text-3xl text-nous-text text-nous-text mb-4">{sibling.name}</h4>
- <p className="font-sans text-[10px] leading-relaxed text-nous-text0">{sibling.explanation}</p>
+ <p className="font-sans text-[10px] leading-relaxed text-nous-subtle">{sibling.explanation}</p>
  </div>
  ))}
  </div>
@@ -112,7 +112,7 @@ export const CliqueRadar: React.FC<{ onSelectZine: (zine: ZineMetadata) => void 
  <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
  {queue.map((zine, i) => (
  <div key={zine.id} onClick={() => setActiveIndex(zines.indexOf(zine))} className="group cursor-pointer border-l-2 border-stone-50 pl-8 py-4 hover:border-nous-text transition-all">
- <span className="font-sans text-[8px] uppercase tracking-widest text-nous-text0 font-black">@{zine.userHandle}</span>
+ <span className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle font-black">@{zine.userHandle}</span>
  <h3 className="font-serif italic text-2xl text-nous-subtle group-hover:text-nous-text transition-colors">{zine.content?.headlines?.[0] || zine.title ||"Untitled"}</h3>
  </div>
  ))}

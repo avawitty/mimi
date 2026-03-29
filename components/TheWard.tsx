@@ -76,7 +76,7 @@ const DriftMonitor: React.FC<{ zines: ZineMetadata[] }> = ({ zines }) => {
  </button>
  <button 
  onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'scry' }))}
- className="flex items-center gap-2 font-sans text-[10px] uppercase tracking-widest font-bold text-nous-text0 hover:text-nous-subtle transition-colors"
+ className="flex items-center gap-2 font-sans text-[10px] uppercase tracking-widest font-bold text-nous-subtle hover:text-nous-subtle transition-colors"
  >
  Explore New Direction <ArrowRight size={12} />
  </button>
@@ -121,9 +121,9 @@ export const TheWard: React.FC<{ onClose: () => void }> = ({ onClose }) => {
  <div className="flex justify-between items-center mb-8">
  <div className="space-y-1">
  <h2 className="font-serif text-4xl italic tracking-tighter text-nous-text ">The Ward.</h2>
- <p className="font-sans text-[10px] uppercase tracking-widest text-nous-text0">Aesthetic Interrogation Room</p>
+ <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle">Aesthetic Interrogation Room</p>
  </div>
- <button onClick={onClose} className="text-nous-text0 hover:text-nous-text hover:text-nous-text transition-colors">
+ <button onClick={onClose} className="text-nous-subtle hover:text-nous-text hover:text-nous-text transition-colors">
  <X size={24} />
  </button>
  </div>
@@ -139,8 +139,8 @@ export const TheWard: React.FC<{ onClose: () => void }> = ({ onClose }) => {
  {/* Right: Points & Feed */}
  <div className="bg-nous-base border border-nous-border rounded-none p-8 space-y-6 flex flex-col">
  <div className="flex gap-4">
- <button onClick={() => setActiveTab('graph')} className={`font-sans text-[10px] uppercase tracking-widest font-black ${activeTab === 'graph' ? 'text-nous-subtle 0' : 'text-nous-text0'}`}>Graph Points</button>
- <button onClick={() => setActiveTab('notifications')} className={`font-sans text-[10px] uppercase tracking-widest font-black ${activeTab === 'notifications' ? 'text-nous-subtle 0' : 'text-nous-text0'}`}>Feed</button>
+ <button onClick={() => setActiveTab('graph')} className={`font-sans text-[10px] uppercase tracking-widest font-black ${activeTab === 'graph' ? 'text-nous-subtle 0' : 'text-nous-subtle'}`}>Graph Points</button>
+ <button onClick={() => setActiveTab('notifications')} className={`font-sans text-[10px] uppercase tracking-widest font-black ${activeTab === 'notifications' ? 'text-nous-subtle 0' : 'text-nous-subtle'}`}>Feed</button>
  </div>
  
  <div className="flex-1 overflow-y-auto">
@@ -149,7 +149,7 @@ export const TheWard: React.FC<{ onClose: () => void }> = ({ onClose }) => {
  {nodes.map(node => (
  <button key={node.id} onClick={() => navigateToScry(node.label)} className="w-full p-4 bg-white border border-nous-border rounded-none text-left hover:border-nous-border transition-colors">
  <p className="font-sans text-xs text-nous-text">{node.label}</p>
- <p className="font-mono text-[9px] text-nous-text0 uppercase">{node.type}</p>
+ <p className="font-mono text-[9px] text-nous-subtle uppercase">{node.type}</p>
  </button>
  ))}
  </div>
@@ -158,7 +158,7 @@ export const TheWard: React.FC<{ onClose: () => void }> = ({ onClose }) => {
  {notifications.map(n => (
  <div key={n.id} className="p-4 bg-white border border-nous-border rounded-none">
  <p className="font-sans text-xs text-nous-text">{n.message}</p>
- <p className="font-mono text-[9px] text-nous-text0 uppercase">{new Date(n.timestamp).toLocaleString()}</p>
+ <p className="font-mono text-[9px] text-nous-subtle uppercase">{new Date(n.timestamp).toLocaleString()}</p>
  </div>
  ))}
  </div>

@@ -159,15 +159,15 @@ export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBy
  {/* Header */}
  <div className="space-y-2 border-b border-nous-border pb-6">
  <div className="flex justify-between items-center">
- <span className={`font-sans text-[9px] uppercase tracking-[0.4em] font-black ${isDeep ? 'text-amber-500' : 'text-nous-text0'}`}>
+ <span className={`font-sans text-[9px] uppercase tracking-[0.4em] font-black ${isDeep ? 'text-amber-500' : 'text-nous-subtle'}`}>
  {isDeep ? 'DEEP_REFRACTION_PROTOCOL' : 'STANDARD_RENDER'}
  </span>
- <Activity size={12} className={isDeep ? 'text-amber-500 animate-pulse' : 'text-nous-text0'} />
+ <Activity size={12} className={isDeep ? 'text-amber-500 animate-pulse' : 'text-nous-subtle'} />
  </div>
  <h1 className="font-serif text-4xl md:text-5xl italic tracking-tighter leading-none">
  Manifesting.
  </h1>
- {loadingMessage && <p className="font-mono text-[10px] uppercase tracking-widest text-nous-text0">{loadingMessage}</p>}
+ {loadingMessage && <p className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle">{loadingMessage}</p>}
  </div>
 
  {/* Phase Indicator */}
@@ -195,7 +195,7 @@ export const ElevatorLoader: React.FC<ElevatorLoaderProps> = ({ onComplete, onBy
  </div>
 
  {/* Diagnostics Ticker */}
- <div className="p-4 bg-nous-base border border-nous-border rounded-none font-mono text-[9px] text-nous-text0 uppercase tracking-wide flex justify-between items-center">
+ <div className="p-4 bg-nous-base border border-nous-border rounded-none font-mono text-[9px] text-nous-subtle uppercase tracking-wide flex justify-between items-center">
  <span>SYS_DIAG:</span>
  <span className="text-nous-text text-nous-text animate-pulse">{NOUS_DIAGNOSTICS[diagIndex]}</span>
  </div>

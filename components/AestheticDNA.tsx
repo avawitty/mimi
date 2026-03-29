@@ -23,7 +23,7 @@ export const AestheticDNA: React.FC<{
  return (
  <div className="w-full bg-nous-base p-8 border border-nous-border mt-12 relative">
  <div className="flex items-center gap-3 mb-8">
- <Target size={16} className="text-nous-text0"/>
+ <Target size={16} className="text-nous-subtle"/>
  <h3 className="font-sans text-[10px] uppercase tracking-[0.3em] font-black text-nous-text ">
  {title ? `${title} - Aesthetic DNA` : 'Aesthetic DNA'}
  </h3>
@@ -32,7 +32,7 @@ export const AestheticDNA: React.FC<{
  <div className="grid md:grid-cols-1 gap-12">
  {/* Typography */}
  <div className="space-y-4">
- <div className="flex items-center gap-2 text-nous-text0">
+ <div className="flex items-center gap-2 text-nous-subtle">
  <Type size={14} />
  <span className="font-sans text-[8px] uppercase tracking-widest font-black">Typographic Anchors</span>
  </div>
@@ -41,7 +41,7 @@ export const AestheticDNA: React.FC<{
  Tone: <span className="font-bold">{tone}</span>
  </p>
  {typography.length > 0 ? (
- <ul className="list-disc list-inside font-mono text-xs text-nous-text0">
+ <ul className="list-disc list-inside font-mono text-xs text-nous-subtle">
  {typography.slice(0, 3).map((t: any, i: number) => (
  <li key={i}>{typeof t === 'string' ? t : t.motif}</li>
  ))}

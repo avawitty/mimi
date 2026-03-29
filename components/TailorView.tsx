@@ -424,7 +424,7 @@ const CustomInput: React.FC<{ placeholder: string, onAdd: (val: string) => void 
  onChange={(e) => setVal(e.target.value)}
  onKeyDown={handleKeyDown}
  placeholder={placeholder}
- className="bg-transparent border-b border-nous-border py-1 font-serif italic text-sm focus:outline-none focus:border-nous-border dark:focus:border-nous-border w-full placeholder:text-nous-text0"
+ className="bg-transparent border-b border-nous-border py-1 font-serif italic text-sm focus:outline-none focus:border-nous-border dark:focus:border-nous-border w-full placeholder:text-nous-subtle"
  />
  </div>
  );
@@ -457,7 +457,7 @@ const FieldGroup: React.FC<{ label: React.ReactNode; description?: string; child
  <div className="tape-top"></div>
  <div className="space-y-1">
  <label className="font-sans text-[9px] uppercase tracking-[0.4em] font-black text-nous-subtle">{label}</label>
- {description && <p className="font-serif italic text-base text-nous-text0 leading-tight">{description}</p>}
+ {description && <p className="font-serif italic text-base text-nous-subtle leading-tight">{description}</p>}
  </div>
  {children}
  </div>
@@ -1085,7 +1085,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <span className="font-sans text-[8px] uppercase tracking-[0.4em] font-medium italic">Aesthetic Logic Engine v2.0</span>
  </div>
  <h2 className="font-serif text-5xl md:text-7xl italic tracking-tighter text-nous-text text-nous-text leading-none">The Tailor.</h2>
- <p className="font-serif italic text-lg text-nous-text0 max-w-xl">
+ <p className="font-serif italic text-lg text-nous-subtle max-w-xl">
  Define the physics of your world. This logic informs every generation.
  </p>
  </div>
@@ -1214,7 +1214,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </div>
  <div className="flex flex-wrap gap-2">
  {draft.positioningCore.anchors.culturalReferences.map((ref, i) => (
- <span key={i} className="px-2 py-1 border border-nous-border rounded-none font-mono text-[8px] uppercase text-nous-text0">{ref}</span>
+ <span key={i} className="px-2 py-1 border border-nous-border rounded-none font-mono text-[8px] uppercase text-nous-subtle">{ref}</span>
  ))}
  </div>
  
@@ -1270,7 +1270,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <p className="text-3xl"style={{ fontFamily: draft.expressionEngine.typographyIntent.styleDescription || 'serif' }}>
  {draft.expressionEngine.typographyIntent.styleDescription || 'Default Serif'}
  </p>
- <p className="font-serif italic text-sm text-nous-text0">The quick brown fox jumps over the lazy dog.</p>
+ <p className="font-serif italic text-sm text-nous-subtle">The quick brown fox jumps over the lazy dog.</p>
  </div>
  </BlueprintCard>
 
@@ -1349,7 +1349,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <span className="px-3 py-1 bg-nous-base border border-nous-border rounded-none font-sans text-[7px] uppercase font-black">{draft.expressionEngine.narrativeVoice.emotionalTemperature}</span>
  <span className="px-3 py-1 bg-nous-base border border-nous-border rounded-none font-sans text-[7px] uppercase font-black">{draft.expressionEngine.narrativeVoice.structureBias}</span>
  </div>
- <div className="flex gap-4 font-serif italic text-nous-text0 text-xs">
+ <div className="flex gap-4 font-serif italic text-nous-subtle text-xs">
  <GlossaryTooltip 
  term="Lexical Density"
  poeticMeaning="The thickness of the vocabulary, from sparse air to dense earth."
@@ -1416,7 +1416,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-none font-mono text-[8px] uppercase tracking-widest ml-auto">Unaligned</span>
  )}
  </div>
- <p className="font-serif italic text-sm text-nous-text0 leading-relaxed">
+ <p className="font-serif italic text-sm text-nous-subtle leading-relaxed">
  Changes are local until aligned. Committing writes this logic to your active mask.
  </p>
  </div>
@@ -1476,12 +1476,12 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  {/* DYNAMIC FORM FIELDS */}
  {activeStep === 'positioning' && (
  <>
- <p className="font-serif italic text-nous-text0 mb-8">Ground your mask's logic in the physical world.</p>
+ <p className="font-serif italic text-nous-subtle mb-8">Ground your mask's logic in the physical world.</p>
  
  <FieldGroup label="Brand Templates"description="Apply a foundational aesthetic archetype.">
  {Object.entries(CATEGORIZED_VISUAL_PRESETS).map(([category, presetNames]) => (
  <div key={category} className="mb-6">
- <h4 className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-text0 mb-3">{category}</h4>
+ <h4 className="font-sans text-[8px] uppercase tracking-widest font-black text-nous-subtle mb-3">{category}</h4>
  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
  {presetNames.map(name => {
  const p = VISUAL_PRESETS.find(pr => pr.name === name);
@@ -1528,7 +1528,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
 
  {activeStep === 'celestial' && (
  <>
- <p className="font-serif italic text-nous-text0 mb-8">Align your output to cosmic vectors.</p>
+ <p className="font-serif italic text-nous-subtle mb-8">Align your output to cosmic vectors.</p>
  <FieldGroup label="Zodiac Sign">
  <PresetStrip 
  options={ZODIAC_SIGNS} 
@@ -1551,14 +1551,14 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
 
  {activeStep === 'aesthetic' && (
  <>
- <p className="font-serif italic text-nous-text0 mb-8">Define the physics of your visual world.</p>
+ <p className="font-serif italic text-nous-subtle mb-8">Define the physics of your visual world.</p>
  
  <FieldGroup label="Visual Presets"description="Apply a combination of stylistic elements. Use filters to discover specific logic.">
  <div className="flex flex-col md:flex-row gap-2 mb-4">
  <select 
  value={presetFilter.eraBias} 
  onChange={e => setPresetFilter(prev => ({ ...prev, eraBias: e.target.value }))}
- className="flex-1 bg-transparent border-b border-nous-border py-2 font-sans text-[10px] uppercase tracking-widest text-nous-text0 focus:outline-none focus:border-nous-border dark:focus:border-nous-border"
+ className="flex-1 bg-transparent border-b border-nous-border py-2 font-sans text-[10px] uppercase tracking-widest text-nous-subtle focus:outline-none focus:border-nous-border dark:focus:border-nous-border"
  >
  <option value="">All Eras</option>
  {Array.from(new Set(VISUAL_PRESETS.map(p => p.config.positioningCore.aestheticCore.eraBias))).map(era => (
@@ -1568,7 +1568,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <select 
  value={presetFilter.tone} 
  onChange={e => setPresetFilter(prev => ({ ...prev, tone: e.target.value }))}
- className="flex-1 bg-transparent border-b border-nous-border py-2 font-sans text-[10px] uppercase tracking-widest text-nous-text0 focus:outline-none focus:border-nous-border dark:focus:border-nous-border"
+ className="flex-1 bg-transparent border-b border-nous-border py-2 font-sans text-[10px] uppercase tracking-widest text-nous-subtle focus:outline-none focus:border-nous-border dark:focus:border-nous-border"
  >
  <option value="">All Tones</option>
  {Array.from(new Set(VISUAL_PRESETS.map(p => p.config.expressionEngine.narrativeVoice.tone).filter(Boolean))).map(tone => (
@@ -1578,7 +1578,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <select 
  value={presetFilter.strictPalette} 
  onChange={e => setPresetFilter(prev => ({ ...prev, strictPalette: e.target.value }))}
- className="flex-1 bg-transparent border-b border-nous-border py-2 font-sans text-[10px] uppercase tracking-widest text-nous-text0 focus:outline-none focus:border-nous-border dark:focus:border-nous-border"
+ className="flex-1 bg-transparent border-b border-nous-border py-2 font-sans text-[10px] uppercase tracking-widest text-nous-subtle focus:outline-none focus:border-nous-border dark:focus:border-nous-border"
  >
  <option value="">All Palettes</option>
  {Array.from(new Set(VISUAL_PRESETS.map(p => p.config.visual_guidance?.strict_palette?.join(', ')).filter(Boolean))).map(palette => (
@@ -1825,7 +1825,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
 
  {activeStep === 'chromatic' && (
  <>
- <p className="font-serif italic text-nous-text0 mb-8">The color logic of your universe.</p>
+ <p className="font-serif italic text-nous-subtle mb-8">The color logic of your universe.</p>
  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
  {CHROMATIC_PRESETS.map(p => (
  <button key={p.name} onClick={() => applyChromaticPreset(p)} className="p-4 border border-nous-border rounded-none hover:border-nous-border transition-all group flex flex-col items-center gap-3">
@@ -1937,7 +1937,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
 
  {activeStep === 'voice' && (
  <>
- <p className="font-serif italic text-nous-text0 mb-8">How does this mask speak?</p>
+ <p className="font-serif italic text-nous-subtle mb-8">How does this mask speak?</p>
  <FieldGroup 
  label={
  <GlossaryTooltip 
@@ -2132,7 +2132,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
 
  {activeStep === 'vectors' && (
  <>
- <p className="font-serif italic text-nous-text0 mb-8">Where is this taste moving towards?</p>
+ <p className="font-serif italic text-nous-subtle mb-8">Where is this taste moving towards?</p>
  <FieldGroup 
  label={
  <GlossaryTooltip 
@@ -2196,7 +2196,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <>
  <div className="flex flex-col md:flex-row items-start justify-between gap-8 mb-8">
  <div>
- <p className="font-serif italic text-nous-text0">Upload reference images to train the Oracle.</p>
+ <p className="font-serif italic text-nous-subtle">Upload reference images to train the Oracle.</p>
  </div>
  <div className="relative group">
  <input 
@@ -2252,7 +2252,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
 
  {activeStep === 'brand' && (
  <>
- <p className="font-serif italic text-nous-text0 mb-8">Define your visual assets and typographic hierarchy.</p>
+ <p className="font-serif italic text-nous-subtle mb-8">Define your visual assets and typographic hierarchy.</p>
  
  <FieldGroup 
  label={
@@ -2395,7 +2395,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
 
  {activeStep === 'drift' && (
  <>
- <p className="font-serif italic text-nous-text0 mb-8">Monitor and control the aesthetic drift of your persona.</p>
+ <p className="font-serif italic text-nous-subtle mb-8">Monitor and control the aesthetic drift of your persona.</p>
  
  <FieldGroup 
  label={
@@ -2471,7 +2471,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  {profile.tasteProfile.audit_history.slice(-5).reverse().map((event, i) => (
  <div key={i} className="p-4 border border-nous-border rounded-none bg-nous-base /50">
  <div className="flex justify-between items-center mb-2">
- <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-text0">{event.type.replace('_', ' ')}</span>
+ <span className="font-sans text-[9px] uppercase tracking-widest font-black text-nous-subtle">{event.type.replace('_', ' ')}</span>
  <span className="font-mono text-[8px] text-nous-subtle">{new Date(event.timestamp).toLocaleDateString()}</span>
  </div>
  <div className="flex items-center gap-4">
@@ -2491,7 +2491,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
 
  {activeStep === 'settings' && (
  <>
- <p className="font-serif italic text-nous-text0 mb-8">Configure the identity and security protocols for this mask.</p>
+ <p className="font-serif italic text-nous-subtle mb-8">Configure the identity and security protocols for this mask.</p>
  
  <FieldGroup label="Mask Identity">
  <div className="space-y-6">
@@ -2525,12 +2525,12 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  value={aiSignature}
  readOnly
  placeholder="Generate a signature..."
- className="flex-1 bg-nous-base border border-nous-border py-2 px-3 font-mono text-xs text-nous-text0 rounded-none focus:outline-none"
+ className="flex-1 bg-nous-base border border-nous-border py-2 px-3 font-mono text-xs text-nous-subtle rounded-none focus:outline-none"
  />
  <button 
  onClick={generateAiSignature}
  disabled={isGeneratingSignature}
- className="px-4 py-2 bg-nous-base text-nous-text0 rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors flex items-center gap-2"
+ className="px-4 py-2 bg-nous-base text-nous-subtle rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors flex items-center gap-2"
  >
  {isGeneratingSignature ? <Loader2 size={10} className="animate-spin"/> : <Sparkles size={10} />}
  Generate
@@ -2605,7 +2605,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <span className={`font-sans text-[9px] uppercase tracking-widest font-black ${isEnabled ? 'text-nous-text ' : 'text-nous-subtle'}`}>{algo.name}</span>
  {isEnabled && <ShieldCheck size={10} className="text-nous-text"/>}
  </div>
- <p className="font-serif italic text-xs text-nous-text0">{algo.desc}</p>
+ <p className="font-serif italic text-xs text-nous-subtle">{algo.desc}</p>
  </div>
  <button 
  onClick={() => toggleAlgo(algo.id)}
@@ -2643,7 +2643,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </GlossaryTooltip>
  <span className="font-mono text-xs text-nous-text">{draft.algoDials?.webScry || 50}%</span>
  </div>
- <p className="font-serif italic text-xs text-nous-text0 mb-4">0% = Pure internal Tailor logic. 100% = Heavily grounded in current events and search data.</p>
+ <p className="font-serif italic text-xs text-nous-subtle mb-4">0% = Pure internal Tailor logic. 100% = Heavily grounded in current events and search data.</p>
  <SemanticSteps 
  steps={[
  { label: 'INTERNAL', value: 0 },
@@ -2667,7 +2667,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </GlossaryTooltip>
  <span className="font-mono text-xs text-nous-text">{draft.algoDials?.memorySynthesis || 50}%</span>
  </div>
- <p className="font-serif italic text-xs text-nous-text0 mb-4">0% = Isolated artifacts. 100% = Deeply contextualized by past zines and thoughts.</p>
+ <p className="font-serif italic text-xs text-nous-subtle mb-4">0% = Isolated artifacts. 100% = Deeply contextualized by past zines and thoughts.</p>
  <SemanticSteps 
  steps={[
  { label: 'ISOLATED', value: 0 },
@@ -2691,7 +2691,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </GlossaryTooltip>
  <span className="font-mono text-xs text-rose-500">{draft.algoDials?.dissonance || 10}%</span>
  </div>
- <p className="font-serif italic text-xs text-nous-text0 mb-4">Intended for creative exploration. Injects opposing aesthetic concepts to force breakthroughs and mutate safe choices. High dissonance may cause chaotic, unpredictable results.</p>
+ <p className="font-serif italic text-xs text-nous-subtle mb-4">Intended for creative exploration. Injects opposing aesthetic concepts to force breakthroughs and mutate safe choices. High dissonance may cause chaotic, unpredictable results.</p>
  <SemanticSteps 
  steps={[
  { label: 'HARMONY', value: 0 },
@@ -2715,7 +2715,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </GlossaryTooltip>
  <span className="font-mono text-xs text-indigo-500">{draft.algoDials?.binaryToSpectrum || 50}%</span>
  </div>
- <p className="font-serif italic text-xs text-nous-text0 mb-4">0% = Strict adherence to binary categories (e.g., hyper-masculine/feminine). 100% = Fluid, post-binary aesthetic synthesis.</p>
+ <p className="font-serif italic text-xs text-nous-subtle mb-4">0% = Strict adherence to binary categories (e.g., hyper-masculine/feminine). 100% = Fluid, post-binary aesthetic synthesis.</p>
  <SemanticSteps 
  steps={[
  { label: 'BINARY', value: 0 },
@@ -2768,7 +2768,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-none font-mono text-[8px] uppercase tracking-widest ml-auto">Unaligned</span>
  )}
  </div>
- <p className="font-serif italic text-xs text-nous-text0 leading-relaxed">
+ <p className="font-serif italic text-xs text-nous-subtle leading-relaxed">
  Changes are local until aligned. Committing writes this logic to your active mask.
  </p>
  </div>

@@ -57,7 +57,7 @@ export const PsychicDollCommunion: React.FC<PsychicDollCommunionProps> = ({ onCo
  transition={{ duration: 2 }}
  className="text-center space-y-8 z-10"
  >
- <p className="text-nous-text0 font-mono text-xs uppercase tracking-[0.3em]">Layer II</p>
+ <p className="text-nous-subtle font-mono text-xs uppercase tracking-[0.3em]">Layer II</p>
  <h1 className="text-4xl md:text-6xl italic font-light">Welcome to Introverta.</h1>
  <p className="text-nous-subtle font-mono text-sm uppercase tracking-widest">The Sanctuary of Interiority</p>
  </motion.div>
@@ -74,7 +74,7 @@ export const PsychicDollCommunion: React.FC<PsychicDollCommunionProps> = ({ onCo
  >
  <Thimble className="w-32 h-32 text-nous-subtle"/>
  <div className="space-y-6">
- <p className="text-nous-text0 font-mono text-xs uppercase tracking-[0.3em]">The Casting Call</p>
+ <p className="text-nous-subtle font-mono text-xs uppercase tracking-[0.3em]">The Casting Call</p>
  <h2 className="text-3xl italic font-light">What do you see in the mirror?</h2>
  <div className="flex flex-col sm:flex-row gap-4 justify-center">
  <button onClick={() => setStep(2)} className="px-6 py-3 border border-nous-border hover:border-nous-border /50 hover:bg-nous-base0/10 transition-all text-xs font-mono uppercase tracking-widest text-nous-subtle hover:text-nous-subtle">Armor</button>
@@ -95,7 +95,7 @@ export const PsychicDollCommunion: React.FC<PsychicDollCommunionProps> = ({ onCo
  className="flex flex-col items-center justify-center max-w-2xl w-full px-6 text-center space-y-12 z-10"
  >
  <div className="space-y-4">
- <p className="text-nous-text0 font-mono text-xs uppercase tracking-[0.3em]">The Glossary</p>
+ <p className="text-nous-subtle font-mono text-xs uppercase tracking-[0.3em]">The Glossary</p>
  <h2 className="text-3xl md:text-4xl italic font-light leading-relaxed text-balance">
  Name your current interior state. <br/>
  <span className="text-nous-subtle text-xl">Invent a word for the feeling you cannot describe. (e.g.,"Terror-Glow")</span>
@@ -138,7 +138,7 @@ export const PsychicDollCommunion: React.FC<PsychicDollCommunionProps> = ({ onCo
  className="flex flex-col items-center justify-center max-w-2xl w-full px-6 text-center space-y-12 z-10"
  >
  <div className="space-y-4">
- <p className="text-nous-text0 font-mono text-xs uppercase tracking-[0.3em]">The Inventory</p>
+ <p className="text-nous-subtle font-mono text-xs uppercase tracking-[0.3em]">The Inventory</p>
  <h2 className="text-3xl md:text-4xl italic font-light leading-relaxed text-balance">
  Hold the contradiction. <br/>
  <span className="text-nous-subtle text-xl">What two opposing forces are you carrying right now?</span>
@@ -150,14 +150,14 @@ export const PsychicDollCommunion: React.FC<PsychicDollCommunionProps> = ({ onCo
  onClick={() => { setInventory("The Black Card & The Locked Collar"); setStep(4); }}
  className="w-full md:w-1/2 p-8 border border-nous-border hover:border-nous-border/50 hover:bg-nous-base0/10 transition-all flex flex-col gap-4 group"
  >
- <span className="text-xs font-mono uppercase tracking-widest text-nous-text0 group-hover:text-nous-text">Power & Submission</span>
+ <span className="text-xs font-mono uppercase tracking-widest text-nous-subtle group-hover:text-nous-text">Power & Submission</span>
  <span className="text-xl italic">"The Black Card & The Locked Collar"</span>
  </button>
  <button 
  onClick={() => { setInventory("The Patient & The Prophet"); setStep(4); }}
  className="w-full md:w-1/2 p-8 border border-nous-border hover:border-nous-border/50 hover:bg-nous-base0/10 transition-all flex flex-col gap-4 group"
  >
- <span className="text-xs font-mono uppercase tracking-widest text-nous-text0 group-hover:text-nous-text">Diagnosis & Divinity</span>
+ <span className="text-xs font-mono uppercase tracking-widest text-nous-subtle group-hover:text-nous-text">Diagnosis & Divinity</span>
  <span className="text-xl italic">"The Patient & The Prophet"</span>
  </button>
  </div>
@@ -176,8 +176,8 @@ export const PsychicDollCommunion: React.FC<PsychicDollCommunionProps> = ({ onCo
  setTimeout(() => setStep(5), 3000);
  }}
  >
- <p className="text-nous-text0 font-mono text-xs uppercase tracking-[0.3em]">Layer III</p>
- <h1 className="text-4xl md:text-6xl italic font-light text-nous-text0 drop-">Entering Simulacra.</h1>
+ <p className="text-nous-subtle font-mono text-xs uppercase tracking-[0.3em]">Layer III</p>
+ <h1 className="text-4xl md:text-6xl italic font-light text-nous-subtle drop-">Entering Simulacra.</h1>
  <p className="text-nous-subtle/70 font-mono text-sm uppercase tracking-widest">Psychic Awakening Initiated</p>
  </motion.div>
  )}
@@ -192,10 +192,10 @@ export const PsychicDollCommunion: React.FC<PsychicDollCommunionProps> = ({ onCo
  className="flex flex-col items-center justify-center max-w-2xl w-full px-6 text-center space-y-12 z-10"
  >
  <div className="space-y-4">
- <p className="text-nous-text0 font-mono text-xs uppercase tracking-[0.3em]">Daoist Thought Alchemy</p>
+ <p className="text-nous-subtle font-mono text-xs uppercase tracking-[0.3em]">Daoist Thought Alchemy</p>
  <h2 className="text-3xl md:text-4xl italic font-light leading-relaxed text-balance text-nous-text">
  Deposit a raw thought. <br/>
- <span className="text-nous-text0/70 text-xl">Good or bad, the machine does not judge. It only transmutes.</span>
+ <span className="text-nous-subtle/70 text-xl">Good or bad, the machine does not judge. It only transmutes.</span>
  </h2>
  </div>
  
@@ -213,7 +213,7 @@ export const PsychicDollCommunion: React.FC<PsychicDollCommunionProps> = ({ onCo
  <button 
  onClick={handleTransmute}
  disabled={!thought.trim() || isTransmuting}
- className="px-8 py-4 bg-nous-base0/10 text-nous-text0 border border-nous-border/30 hover:bg-nous-base0 hover:text transition-all text-xs font-mono uppercase tracking-widest font-black disabled:opacity-50 disabled:cursor-not-allowed"
+ className="px-8 py-4 bg-nous-base0/10 text-nous-subtle border border-nous-border/30 hover:bg-nous-base0 hover:text transition-all text-xs font-mono uppercase tracking-widest font-black disabled:opacity-50 disabled:cursor-not-allowed"
  >
  Transmute
  </button>
@@ -228,8 +228,8 @@ export const PsychicDollCommunion: React.FC<PsychicDollCommunionProps> = ({ onCo
  exit={{ opacity: 0 }}
  className="flex flex-col items-center justify-center max-w-2xl w-full px-6 text-center space-y-16 z-10"
  >
- <CodeNode className="w-64 h-auto text-nous-text0 opacity-50"/>
- <div className="flex items-center gap-4 text-nous-text0 font-mono text-xs uppercase tracking-widest">
+ <CodeNode className="w-64 h-auto text-nous-subtle opacity-50"/>
+ <div className="flex items-center gap-4 text-nous-subtle font-mono text-xs uppercase tracking-widest">
  <Loader2 className="animate-spin"size={16} />
  <span>Moving from #HEARD to #FEELYA...</span>
  </div>
@@ -244,19 +244,19 @@ export const PsychicDollCommunion: React.FC<PsychicDollCommunionProps> = ({ onCo
  className="flex flex-col items-center justify-center max-w-3xl w-full px-6 text-center space-y-16 z-10"
  >
  <div className="space-y-6">
- <p className="text-nous-text0 font-mono text-xs uppercase tracking-[0.3em]">Paradoxical Insight</p>
+ <p className="text-nous-subtle font-mono text-xs uppercase tracking-[0.3em]">Paradoxical Insight</p>
  <h2 className="text-3xl md:text-5xl italic font-light leading-relaxed text-balance text-nous-text">
 "{insight}"
  </h2>
  </div>
 
  <div className="pt-12 border-t border-nous-border/50 w-full flex flex-col items-center gap-6">
- <p className="text-nous-text0/70 font-mono text-[10px] uppercase tracking-widest max-w-md text-balance">
+ <p className="text-nous-subtle/70 font-mono text-[10px] uppercase tracking-widest max-w-md text-balance">
  The Latent Telemetry node has been unlocked. The psychic doll is now listening to your environment.
  </p>
  <button 
  onClick={onComplete}
- className="px-8 py-4 border border-nous-border text-nous-text0/70 hover:border-nous-border/50 hover:text-nous-subtle transition-all text-xs font-mono uppercase tracking-widest"
+ className="px-8 py-4 border border-nous-border text-nous-subtle/70 hover:border-nous-border/50 hover:text-nous-subtle transition-all text-xs font-mono uppercase tracking-widest"
  >
  Return to the Surface
  </button>

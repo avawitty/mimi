@@ -181,7 +181,7 @@ export const TailorPreview: React.FC<TailorPreviewProps> = ({ draft, activePerso
 
  <div className="absolute bottom-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
  <div className="bg-white/80 /80 backdrop-blur-md px-2 py-1 rounded-none border border-black/5 /5">
- <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-text0">Aesthetic Preview // 1K</span>
+ <span className="font-sans text-[7px] uppercase tracking-widest font-black text-nous-subtle">Aesthetic Preview // 1K</span>
  </div>
  {previewUrl && !isEditing && (
  <button 
@@ -215,7 +215,7 @@ export const TailorPreview: React.FC<TailorPreviewProps> = ({ draft, activePerso
  <button 
  type="button"
  onClick={() => setIsEditing(false)}
- className="p-1.5 text-nous-text0 hover:text-nous-text"
+ className="p-1.5 text-nous-subtle hover:text-nous-text"
  >
  <X size={12} />
  </button>

@@ -217,7 +217,7 @@ export const SlideCanvas: React.FC<SlideCanvasProps> = ({ id, elements, isActive
  onMouseDown={startRotate}
  onTouchStart={startRotate}
  >
- <RotateCw size={10} className="text-nous-text0"/>
+ <RotateCw size={10} className="text-nous-subtle"/>
  </div>
  
  {/* RESIZE HANDLES */}

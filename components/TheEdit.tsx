@@ -155,7 +155,7 @@ export const TheEdit: React.FC = () => {
  <button onClick={() => setViewMode('editorial')} className={`px-4 py-1 rounded-none text-[10px] uppercase tracking-widest flex items-center gap-2 ${viewMode === 'editorial' ? 'bg-white ' : ''}`}><BookOpen size={12} /> Editorial</button>
  <button onClick={() => setViewMode('market')} className={`px-4 py-1 rounded-none text-[10px] uppercase tracking-widest flex items-center gap-2 ${viewMode === 'market' ? 'bg-white ' : ''}`}><LayoutGrid size={12} /> Market</button>
  </div>
- <div className="text-right font-mono text-[10px] uppercase tracking-widest text-nous-text0">
+ <div className="text-right font-mono text-[10px] uppercase tracking-widest text-nous-subtle">
  ISSUE_NO: 402/DAILY<br/>
  Synchronized: {new Date().toLocaleTimeString()}
  </div>
@@ -182,7 +182,7 @@ export const TheEdit: React.FC = () => {
  return (
  <div key={item.productId} className={`${item.placement === 'hero' ? 'col-span-full' : ''}`}>
  <ProductCard product={product} onInteraction={handleInteraction} />
- <p className="font-mono text-[10px] mt-2 text-nous-text0">{item.caption}</p>
+ <p className="font-mono text-[10px] mt-2 text-nous-subtle">{item.caption}</p>
  </div>
  );
  })}
@@ -190,7 +190,7 @@ export const TheEdit: React.FC = () => {
  </div>
  </section>
  ) : (
- <div className="p-12 text-center text-nous-text0 font-mono text-sm">
+ <div className="p-12 text-center text-nous-subtle font-mono text-sm">
  Synchronizing aesthetic vectors...
  </div>
  )}

@@ -19,25 +19,25 @@ export const PublicSharePage: React.FC = () => {
  fetchProfile();
  }, [handle]);
 
- if (loading) return <div className="h-screen flex items-center justify-center font-serif italic text-nous-text0">Manifesting...</div>;
- if (!profile) return <div className="h-screen flex items-center justify-center font-serif italic text-nous-text0">Registry not found.</div>;
+ if (loading) return <div className="h-screen flex items-center justify-center font-serif italic text-nous-subtle">Manifesting...</div>;
+ if (!profile) return <div className="h-screen flex items-center justify-center font-serif italic text-nous-subtle">Registry not found.</div>;
 
  return (
  <div className="min-h-screen bg p-8 md:p-16 flex flex-col items-center">
  <div className="max-w-2xl w-full space-y-8">
  <div className="text-center space-y-2">
  <h1 className="font-header italic text-5xl text-nous-text ">@{profile.handle}</h1>
- <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-nous-text0 font-black">Sovereign Identity</p>
+ <p className="font-sans text-[10px] uppercase tracking-[0.4em] text-nous-subtle font-black">Sovereign Identity</p>
  </div>
  
  <div className="w-full bg-white rounded-none border border-nous-border p-8">
  <h2 className="font-serif italic text-2xl text-nous-text text-nous-text mb-2">Aesthetic Identity</h2>
- <p className="font-sans text-[10px] uppercase tracking-widest text-nous-text0 mb-6">Semantic Baseline</p>
+ <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle mb-6">Semantic Baseline</p>
 
  {profile?.tasteProfile ? (
  <div className="space-y-6">
  <div>
- <h3 className="text-[10px] uppercase tracking-widest font-mono text-nous-text0 mb-3">Dominant Archetypes</h3>
+ <h3 className="text-[10px] uppercase tracking-widest font-mono text-nous-subtle mb-3">Dominant Archetypes</h3>
  <div className="flex flex-wrap gap-2">
  {profile.tasteProfile.dominant_archetypes.map((archetype, i) => (
  <span key={i} className="px-4 py-2 bg-nous-base text-nous-text text-xs font-mono rounded-none border border-nous-border">
@@ -48,7 +48,7 @@ export const PublicSharePage: React.FC = () => {
  </div>
  {profile.tasteProfile.constraints && profile.tasteProfile.constraints.length > 0 && (
  <div>
- <h3 className="text-[10px] uppercase tracking-widest font-mono text-nous-text0 mb-3">Constraints</h3>
+ <h3 className="text-[10px] uppercase tracking-widest font-mono text-nous-subtle mb-3">Constraints</h3>
  <div className="flex flex-wrap gap-2">
  {profile.tasteProfile.constraints.map((constraint, i) => (
  <span key={i} className="px-4 py-2 bg-nous-base /50 text-nous-subtle text-xs font-mono rounded-none border border-nous-border">

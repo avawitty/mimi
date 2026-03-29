@@ -73,13 +73,13 @@ export const CommandDrawer: React.FC<CommandDrawerProps> = ({ isOpen, onClose, c
  <div className="flex gap-2 mb-12">
  <button 
  onClick={() => setActiveTab('image')} 
- className={`px-6 py-2 rounded-none font-sans text-xs uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'image' ? 'bg-white text-nous-text' : 'bg-nous-base text-nous-text0 hover:bg-nous-base'}`}
+ className={`px-6 py-2 rounded-none font-sans text-xs uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'image' ? 'bg-white text-nous-text' : 'bg-nous-base text-nous-subtle hover:bg-nous-base'}`}
  >
  Manifest
  </button>
  <button 
  onClick={() => setActiveTab('search')} 
- className={`px-6 py-2 rounded-none font-sans text-xs uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'search' ? 'bg-white text-nous-text' : 'bg-nous-base text-nous-text0 hover:bg-nous-base'}`}
+ className={`px-6 py-2 rounded-none font-sans text-xs uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'search' ? 'bg-white text-nous-text' : 'bg-nous-base text-nous-subtle hover:bg-nous-base'}`}
  >
  Scry
  </button>
@@ -182,14 +182,14 @@ export const CommandDrawer: React.FC<CommandDrawerProps> = ({ isOpen, onClose, c
  >
  <h3 className="font-medium text-white mb-2 group-hover:text-nous-subtle transition-colors">{res.title || 'Untitled Fragment'}</h3>
  <p className="text-nous-subtle text-sm font-mono">{res.type || 'Fragment'}</p>
- {res.snippet && <p className="text-nous-text0 text-xs mt-4 line-clamp-3">{res.snippet}</p>}
+ {res.snippet && <p className="text-nous-subtle text-xs mt-4 line-clamp-3">{res.snippet}</p>}
  </motion.div>
  ))}
  </div>
  </div>
  )}
  </div>
- <button onClick={onClose} className="absolute top-12 right-12 text-nous-text0 hover:text-nous-text transition-colors">
+ <button onClick={onClose} className="absolute top-12 right-12 text-nous-subtle hover:text-nous-text transition-colors">
  <X size={32} />
  </button>
  </motion.div>

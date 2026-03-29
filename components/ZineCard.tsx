@@ -14,21 +14,21 @@ const TONE_STYLES: Record<string, {
  wrapper: string, border: string, text: string, accent: string, aspect: string, grainOpacity: string, overlayColor: string, dark: any
 }> = {
  'Cinematic Witness': { 
- wrapper: 'bg', border: 'border-nous-border', text: 'text-nous-text', accent: 'text-nous-text0', aspect: 'aspect-video', grainOpacity: 'opacity-[0.08]', overlayColor: 'bg-white/70', 
- dark: { wrapper: 'bg', border: 'border-white/5', text: 'text', accent: 'text-nous-text0', overlayColor: 'bg-nous-base/80' } 
+ wrapper: 'bg', border: 'border-nous-border', text: 'text-nous-text', accent: 'text-nous-subtle', aspect: 'aspect-video', grainOpacity: 'opacity-[0.08]', overlayColor: 'bg-white/70', 
+ dark: { wrapper: 'bg', border: 'border-white/5', text: 'text', accent: 'text-nous-subtle', overlayColor: 'bg-nous-base/80' } 
  },
  'Editorial Stillness': { 
  wrapper: 'bg', border: 'border-nous-border', text: 'text', accent: 'text', aspect: 'aspect-[3/4]', grainOpacity: 'opacity-[0.05]', overlayColor: 'bg/80', 
  dark: { wrapper: 'bg-black', border: 'border-white/10', text: 'text-nous-text', accent: 'text-nous-subtle', overlayColor: 'bg-black/90' } 
  },
  'chic': { 
- wrapper: 'bg', border: 'border-nous-border', text: 'text-nous-text', accent: 'text-nous-text0', aspect: 'aspect-[3/4]', grainOpacity: 'opacity-[0.05]', overlayColor: 'bg/80', 
- dark: { wrapper: 'bg', border: 'border-white/10', text: 'text-nous-text', accent: 'text-nous-text0', overlayColor: 'bg-black/90' } 
+ wrapper: 'bg', border: 'border-nous-border', text: 'text-nous-text', accent: 'text-nous-subtle', aspect: 'aspect-[3/4]', grainOpacity: 'opacity-[0.05]', overlayColor: 'bg/80', 
+ dark: { wrapper: 'bg', border: 'border-white/10', text: 'text-nous-text', accent: 'text-nous-subtle', overlayColor: 'bg-black/90' } 
  },
  // ... (Other tones use defaults or mapped logic) ...
  'default': {
  wrapper: 'bg-white', border: 'border-nous-border', text: 'text-black', accent: 'text-nous-subtle', aspect: 'aspect-[3/4]', grainOpacity: 'opacity-[0.03]', overlayColor: 'bg-white/90',
- dark: { wrapper: 'bg-nous-base', border: 'border-white/10', text: 'text-white', accent: 'text-nous-text0', overlayColor: 'bg-black/80' }
+ dark: { wrapper: 'bg-nous-base', border: 'border-white/10', text: 'text-white', accent: 'text-nous-subtle', overlayColor: 'bg-black/80' }
  }
 };
 

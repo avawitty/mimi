@@ -102,7 +102,7 @@ export const ZineComments: React.FC<{ zineId: string; onClose?: () => void }> = 
  <div className="w-full max-w-2xl mx-auto bg-nous-base border border-nous-border rounded-none overflow-hidden flex flex-col h-[600px] max-h-[80vh]">
  {/* Header */}
  <div className="p-4 border-b border-nous-border flex justify-between items-center bg-nous-base dark:bg">
- <div className="flex items-center gap-2 text-nous-text0">
+ <div className="flex items-center gap-2 text-nous-subtle">
  <MessageSquare size={16} />
  <span className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold">Collaborative Discourse</span>
  </div>
@@ -122,7 +122,7 @@ export const ZineComments: React.FC<{ zineId: string; onClose?: () => void }> = 
  ) : comments.length === 0 ? (
  <div className="flex flex-col items-center justify-center h-full opacity-40 text-center space-y-4">
  <MessageSquare size={32} className="text-nous-subtle"/>
- <p className="font-serif italic text-lg text-nous-text0">{t('empty.comments')}</p>
+ <p className="font-serif italic text-lg text-nous-subtle">{t('empty.comments')}</p>
  </div>
  ) : (
  <AnimatePresence initial={false}>
@@ -134,7 +134,7 @@ export const ZineComments: React.FC<{ zineId: string; onClose?: () => void }> = 
  className="flex gap-4 group"
  >
  <div className="w-8 h-8 rounded-none bg-stone-200 flex items-center justify-center flex-shrink-0">
- <User size={14} className="text-nous-text0"/>
+ <User size={14} className="text-nous-subtle"/>
  </div>
  <div className="flex-1 space-y-1">
  <div className="flex items-baseline gap-2">
@@ -153,7 +153,7 @@ export const ZineComments: React.FC<{ zineId: string; onClose?: () => void }> = 
  {user && user.uid === comment.userId ? (
  confirmDeleteId === comment.id ? (
  <div className="flex items-center gap-2">
- <span className="text-[9px] font-mono uppercase tracking-widest text-nous-text0">Confirm delete?</span>
+ <span className="text-[9px] font-mono uppercase tracking-widest text-nous-subtle">Confirm delete?</span>
  <button onClick={() => handleDelete(comment.id)} className="text-[9px] font-mono uppercase tracking-widest text-red-500 hover:text-red-600 transition-colors">Yes</button>
  <button onClick={() => setConfirmDeleteId(null)} className="text-[9px] font-mono uppercase tracking-widest text-nous-subtle hover:text-nous-subtle transition-colors">No</button>
  </div>
@@ -165,7 +165,7 @@ export const ZineComments: React.FC<{ zineId: string; onClose?: () => void }> = 
  ) : (
  confirmReportId === comment.id ? (
  <div className="flex items-center gap-2">
- <span className="text-[9px] font-mono uppercase tracking-widest text-nous-text0">Confirm report?</span>
+ <span className="text-[9px] font-mono uppercase tracking-widest text-nous-subtle">Confirm report?</span>
  <button onClick={() => handleReport(comment.id)} className="text-[9px] font-mono uppercase tracking-widest text-red-500 hover:text-red-600 transition-colors">Yes</button>
  <button onClick={() => setConfirmReportId(null)} className="text-[9px] font-mono uppercase tracking-widest text-nous-subtle hover:text-nous-subtle transition-colors">No</button>
  </div>
@@ -209,7 +209,7 @@ export const ZineComments: React.FC<{ zineId: string; onClose?: () => void }> = 
  </form>
  ) : (
  <div className="text-center py-4 bg-nous-base dark:bg border border-nous-border rounded-none">
- <p className="font-sans text-[10px] uppercase tracking-widest text-nous-text0">
+ <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle">
  Authentication required to participate in discourse.
  </p>
  </div>

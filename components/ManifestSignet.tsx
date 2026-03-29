@@ -36,7 +36,7 @@ export const ManifestSignet: React.FC<{ isOpen: boolean; onClose: () => void }> 
  </div>
 
  <div className="space-y-6">
- <p className="font-serif italic text-nous-text0 text-sm px-4">
+ <p className="font-serif italic text-nous-subtle text-sm px-4">
 "Scan this signet to manifest Mimi within a sovereign mobile chamber. The Imperial Link is the only immutable path."
  </p>
  

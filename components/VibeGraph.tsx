@@ -278,7 +278,7 @@ export const VibeGraph: React.FC<VibeGraphProps> = ({ onGenerateZine, onNodeSele
  <button
  key={mode}
  onClick={() => setThreadMode(mode)}
- className={`px-3 py-1 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all ${threadMode === mode ? 'bg-nous-base0 text-white' : 'text-nous-text0 hover:text-nous-text '}`}
+ className={`px-3 py-1 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all ${threadMode === mode ? 'bg-nous-base0 text-white' : 'text-nous-subtle hover:text-nous-text '}`}
  >
  {mode}
  </button>
@@ -302,7 +302,7 @@ export const VibeGraph: React.FC<VibeGraphProps> = ({ onGenerateZine, onNodeSele
  {activeThread && (
  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/95 /95 backdrop-blur-xl p-8 rounded-none border border-nous-border/30 max-w-lg w-full space-y-6 z-20">
  <div className="flex items-center justify-between">
- <div className="flex items-center gap-2 text-nous-text0">
+ <div className="flex items-center gap-2 text-nous-subtle">
  <Sparkles size={16} />
  <span className="font-sans text-[10px] uppercase tracking-widest font-black">Semantic Thread</span>
  </div>
@@ -315,7 +315,7 @@ export const VibeGraph: React.FC<VibeGraphProps> = ({ onGenerateZine, onNodeSele
  Weave into Zine
  </button>
  )}
- <button onClick={() => setActiveThread(null)} className="text-nous-text0 hover:text-nous-text hover:text-nous-text transition-colors">
+ <button onClick={() => setActiveThread(null)} className="text-nous-subtle hover:text-nous-text hover:text-nous-text transition-colors">
  <X size={16} />
  </button>
  </div>
@@ -330,7 +330,7 @@ export const VibeGraph: React.FC<VibeGraphProps> = ({ onGenerateZine, onNodeSele
  : 'Artifact';
  return (
  <div key={i} className="flex items-center gap-2 shrink-0">
- <span className={`px-2 py-1 rounded-none text-[8px] uppercase tracking-widest font-black ${p.type === 'theme' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-500' : 'bg-nous-base text-nous-text0 '}`}>
+ <span className={`px-2 py-1 rounded-none text-[8px] uppercase tracking-widest font-black ${p.type === 'theme' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-500' : 'bg-nous-base text-nous-subtle '}`}>
  {nodeLabel}
  </span>
  {i < activeThread.path.length - 1 && <span className="text-nous-subtle">→</span>}
