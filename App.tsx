@@ -61,10 +61,10 @@ const ActionBoard = lazy(() => import('./components/ActionBoard').then(m => ({ d
 
 const MoodboardComposer = lazy(() => import('./components/MoodboardComposer').then(m => ({ default: m.MoodboardComposer })));
 const HelpView = lazy(() => import('./components/HelpView').then(m => ({ default: m.HelpView })));
+const CommunityManifesto = lazy(() => import('./components/CommunityManifesto').then(m => ({ default: m.CommunityManifesto })));
 const RegistryAlert = lazy(() => import('./components/RegistryAlert').then(m => ({ default: m.RegistryAlert })));
 const ImperialPatronageModal = lazy(() => import('./components/ImperialPatronageModal').then(m => ({ default: m.ImperialPatronageModal })));
 const Founding50Tracker = lazy(() => import('./components/Founding50Tracker'));
-const MembershipView = lazy(() => import('./components/MembershipView').then(m => ({ default: m.MembershipView })));
 const CheckoutSuccessView = lazy(() => import('./components/CheckoutSuccessView').then(m => ({ default: m.CheckoutSuccessView })));
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -120,8 +120,7 @@ const NavigationDrawer: React.FC<{
         { mode: 'proscenium', label: 'Proscenium', note: 'Manifested Visions' }
     ]},
     { section: 'System', items: [
-        { mode: 'help', label: 'Codex', note: 'Documentation' },
-        { mode: 'membership', label: 'Membership', note: 'Access & Tiers' }
+        { mode: 'help', label: 'Codex', note: 'Documentation' }
     ]}
   ];
 
@@ -231,6 +230,8 @@ const OfflineBanner: React.FC = () => {
     </AnimatePresence>
   );
 };
+
+import { CreditMeter } from './components/CreditMeter';
 
 export const App: React.FC = () => {
   const { user, profile, keyRing, updateProfile, loading: authLoading, isElevatorLoading, setElevatorLoading, logout, setOracleStatus, systemStatus, activePersona, isDatabaseMissing, isOnboardingComplete, canGenerate, incrementGeneration, recordSession, generationsRemaining, login, completeEmailLogin } = useUser();
@@ -410,28 +411,35 @@ export const App: React.FC = () => {
     };
     const handleShowQuota = () => setShowQuotaShield(true);
     const handleOpenPatronModal = () => setShowPatronModal(true);
+    const handleOpenGateway = () => setShowGateway(true);
 
     window.addEventListener('mimi:change_view', handleChangeView);
     window.addEventListener('mimi:select_zine', handleSelectZine);
     window.addEventListener('mimi:show_quota_shield', handleShowQuota);
     window.addEventListener('mimi:open_patron_modal', handleOpenPatronModal);
+    window.addEventListener('mimi:open_gateway', handleOpenGateway);
     return () => {
       window.removeEventListener('mimi:change_view', handleChangeView);
       window.removeEventListener('mimi:select_zine', handleSelectZine);
       window.removeEventListener('mimi:show_quota_shield', handleShowQuota);
       window.removeEventListener('mimi:open_patron_modal', handleOpenPatronModal);
+      window.removeEventListener('mimi:open_gateway', handleOpenGateway);
     };
   }, []);
 
   const handleGenerateThreadZine = useCallback(async (thread: any) => {
     if (!canGenerate) {
-        setShowPatronModal(true);
+        if (profile?.planStatus === 'ghost') {
+            setShowGateway(true);
+        } else {
+            setShowPatronModal(true);
+        }
         return;
     }
     setAppState(AppState.THINKING);
     setLoadingMessage("Weaving thread into narrative...");
     try {
-      const pages = await generateThreadZineSpine(thread, profile, activePersona?.apiKey);
+      const pages = await generateThreadZineSpine(thread, profile, activePersona?.apiKey, zineOptions);
       const titles = await generateZineTitlesFromThreads([thread], profile, activePersona?.apiKey);
       const title = titles[0] || "Thread Atlas";
       
@@ -461,6 +469,9 @@ export const App: React.FC = () => {
 
       const targetUid = profile?.uid || user?.uid || 'ghost';
       const tone = 'Editorial Stillness'; // Default tone for threads
+      
+      await incrementGeneration(2); // Full zine cost
+      
       const id = await saveZineToProfile(targetUid, profile?.handle || 'Ghost', profile?.photoURL, zineContent, tone, undefined, false, false, false, [], thread.narrative, [], false, undefined, undefined);
       
       setZineMetadata({ 
@@ -482,7 +493,11 @@ export const App: React.FC = () => {
 
   const handleRefine = useCallback(async (text, media, tone, opts) => {
     if (!canGenerate) {
-        setShowPatronModal(true);
+        if (profile?.planStatus === 'ghost') {
+            setShowGateway(true);
+        } else {
+            setShowPatronModal(true);
+        }
         return;
     }
     setIsDeepRefraction(!!opts.deepThinking);
@@ -510,7 +525,11 @@ export const App: React.FC = () => {
         result.content.meta.theme = opts.zineOptions.theme;
       }
 
-      await incrementGeneration();
+      let cost = 2; // Default for full zine
+      if (opts.isLite) cost = 1;
+      if (opts.isHighFidelity || opts.deepThinking) cost = 3;
+
+      await incrementGeneration(cost);
       const targetUid = profile?.uid || user?.uid || 'ghost';
       const id = await saveZineToProfile(targetUid, profile?.handle || 'Ghost', profile?.photoURL, result.content, tone, undefined, opts.deepThinking, opts.isPublic, opts.isLite, media, text, transmissions, opts.isHighFidelity, opts.tags, opts.zineOptions?.selectedTreatmentId);
       setZineMetadata({ 
@@ -676,7 +695,14 @@ export const App: React.FC = () => {
         </div>
         
         <div className="flex gap-2 relative z-10 items-center">
-          <button onClick={() => setViewMode('membership')} className={`p-2 transition-colors ${
+          <CreditMeter />
+          <button onClick={() => {
+            if (profile?.planStatus === 'ghost') {
+              window.dispatchEvent(new CustomEvent('mimi:open_gateway'));
+            } else {
+              window.dispatchEvent(new CustomEvent('mimi:open_patron_modal'));
+            }
+          }} className={`p-2 transition-colors ${
             profile?.plan === 'lab' ? 'text-stone-500 hover:text-stone-400' :
             profile?.plan === 'pro' ? 'text-purple-500 hover:text-purple-400' :
             profile?.plan === 'core' ? 'text-orange-500 hover:text-orange-400' :
@@ -734,8 +760,15 @@ export const App: React.FC = () => {
         <div className="flex items-center justify-between w-full">
           <div className="font-['Cormorant_Garamond',serif] text-3xl font-light text-stone-800 dark:text-stone-200 tracking-wide">Mimi Zine</div>
           <div className="flex items-center gap-2">
+            <CreditMeter />
             <button 
-              onClick={() => setViewMode('membership')} 
+              onClick={() => {
+                if (profile?.planStatus === 'ghost') {
+                  window.dispatchEvent(new CustomEvent('mimi:open_gateway'));
+                } else {
+                  window.dispatchEvent(new CustomEvent('mimi:open_patron_modal'));
+                }
+              }} 
               className={`p-2 transition-opacity hover:opacity-70 ${
                 profile?.plan === 'lab' ? 'text-stone-500' :
                 profile?.plan === 'pro' ? 'text-purple-500' :
@@ -905,7 +938,7 @@ export const App: React.FC = () => {
                           {viewMode === 'the-lens' && <TheLens />}
                           {viewMode === 'notifications' && <NotificationsView />}
                           {viewMode === 'help' && <HelpView />}
-                          {viewMode === 'membership' && <MembershipView />}
+                          {viewMode === 'manifesto' && <CommunityManifesto />}
                           {viewMode === 'checkout-success' && checkoutPlan && (
                             <CheckoutSuccessView 
                               plan={checkoutPlan} 

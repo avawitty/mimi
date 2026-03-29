@@ -79,7 +79,7 @@ interface UserContextType {
   generationsRemaining: number;
   activatePatron: (key: string) => Promise<void>;
   upgradePlan: (plan: 'core' | 'pro' | 'lab', interval?: 'month' | 'year') => Promise<void>;
-  incrementGeneration: () => Promise<void>;
+  incrementGeneration: (cost?: number) => Promise<void>;
   recordSession: () => Promise<void>;
   activeThread: NarrativeThread | null;
   setActiveThread: (thread: NarrativeThread | null) => void;
@@ -423,6 +423,21 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // If cloud data existed, use that.
       if (cloudProfileSnap || cloudPrefsSnap) {
           initialProfile = mergedCloud;
+          
+          // Upgrade ghost trial to full trial if user is no longer anonymous
+          if (!fbUser.isAnonymous && initialProfile.planStatus === 'ghost') {
+              initialProfile.planStatus = 'trial';
+              if (initialProfile.trial) {
+                  initialProfile.trial.grantedCredits = 12;
+                  initialProfile.trial.remainingCredits = 12 - (initialProfile.trial.usedCredits || 0);
+                  initialProfile.trial.endsAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
+                  initialProfile.trial.convertedAt = Date.now();
+              }
+              // Save the upgraded profile to the cloud
+              if (navigator.onLine) {
+                  saveUserProfile(initialProfile).catch(console.error);
+              }
+          }
       } else if (currentLocal) {
           initialProfile = { 
             ...currentLocal, 
@@ -432,12 +447,24 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             photoURL: currentLocal.photoURL || fbUser.photoURL || null,
             subscription
           };
+          
+          // Upgrade ghost trial to full trial if user is no longer anonymous
+          if (!fbUser.isAnonymous && initialProfile.planStatus === 'ghost') {
+              initialProfile.planStatus = 'trial';
+              if (initialProfile.trial) {
+                  initialProfile.trial.grantedCredits = 12;
+                  initialProfile.trial.remainingCredits = 12 - (initialProfile.trial.usedCredits || 0);
+                  initialProfile.trial.endsAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
+                  initialProfile.trial.convertedAt = Date.now();
+              }
+          }
       } else {
           // Brand new user, no local data either
+          const isGhost = fbUser.isAnonymous;
           initialProfile = {
               uid: uid,
-              handle: (fbUser.isAnonymous ? 'Ghost_' : 'Swan_') + uid.slice(-4),
-              isSwan: !fbUser.isAnonymous,
+              handle: (isGhost ? 'Ghost_' : 'Swan_') + uid.slice(-4),
+              isSwan: !isGhost,
               email: fbUser.email,
               photoURL: fbUser.photoURL || null,
               createdAt: Date.now(),
@@ -445,11 +472,39 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
               onboardingComplete: false,
               tasteProfile: { archetype_weights: {}, color_frequency: {} },
               starredZineIds: [],
-              subscription
+              subscription,
+              planStatus: isGhost ? 'ghost' : 'trial',
+              trial: {
+                startedAt: Date.now(),
+                endsAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
+                grantedCredits: isGhost ? 1 : 12,
+                usedCredits: 0,
+                remainingCredits: isGhost ? 1 : 12,
+              },
+              usage: {
+                totalGenerations: 0,
+                tailorRuns: 0,
+                reportRuns: 0,
+                imageRuns: 0,
+              }
           };
       }
 
       const safeProfile = ensurePersonas(initialProfile);
+      
+      // Check for trial expiration
+      if (safeProfile.planStatus === 'trial' && safeProfile.trial) {
+          const isTimeExpired = safeProfile.trial.endsAt ? Date.now() > safeProfile.trial.endsAt : false;
+          const isCreditsExpired = (safeProfile.trial.remainingCredits || 0) <= 0;
+          if (isTimeExpired || isCreditsExpired) {
+              safeProfile.planStatus = 'expired';
+              safeProfile.trial.expiredAt = Date.now();
+              if (navigator.onLine) {
+                  saveUserProfile(safeProfile).catch(console.error);
+              }
+          }
+      }
+
       setProfile(safeProfile);
       setUser({ uid: fbUser.uid, isAnonymous: !!fbUser.isAnonymous, email: fbUser.email });
       setAuthError(null);
@@ -958,8 +1013,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const activePersona = profile?.personas?.find(p => p.id === profile.activePersonaId);
 
-  const canGenerate = hasAccess(profile?.plan, 'core') || profile?.isPatron || (profile?.generationCount || 0) < 5;
-  const generationsRemaining = (hasAccess(profile?.plan, 'core') || profile?.isPatron) ? Infinity : Math.max(0, 5 - (profile?.generationCount || 0));
+  const isPaid = hasAccess(profile?.plan, 'core') || profile?.isPatron;
+  const trialActive = profile?.planStatus === 'trial' && profile?.trial && profile.trial.remainingCredits > 0 && Date.now() < profile.trial.endsAt;
+  const ghostActive = profile?.planStatus === 'ghost' && profile?.trial && profile.trial.remainingCredits > 0;
+  
+  const canGenerate = !!(isPaid || trialActive || ghostActive);
+  const generationsRemaining = isPaid ? Infinity : (profile?.trial?.remainingCredits || 0);
 
   const activatePatron = async (key: string) => {
     if (!profile || !user) return;
@@ -968,7 +1027,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await applyPromoCode(user.uid, key);
       
       // Also update local profile state to reflect the change immediately
-      await updateProfile({ ...profile, plan: 'lab', isPatron: true, patronActivatedAt: Date.now(), patronKey: key });
+      await updateProfile({ ...profile, planStatus: 'lab', plan: 'lab', isPatron: true, patronActivatedAt: Date.now(), patronKey: key });
     } catch (e) {
       console.error("MIMI // Failed to activate patron", e);
       throw e;
@@ -978,17 +1037,40 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const upgradePlan = async (plan: 'core' | 'pro' | 'lab', interval?: 'month' | 'year') => {
     if (!profile) return;
     try {
-      await updateProfile({ ...profile, plan, subscriptionInterval: interval || 'month', subscriptionStatus: 'active' });
+      await updateProfile({ ...profile, planStatus: plan, plan, subscriptionInterval: interval || 'month', subscriptionStatus: 'active' });
     } catch (e) {
       console.error("MIMI // Failed to upgrade plan", e);
       throw e;
     }
   };
 
-  const incrementGeneration = async () => {
+  const incrementGeneration = async (cost: number = 2) => {
     if (!profile) return;
     try {
-      await updateProfile({ ...profile, generationCount: (profile.generationCount || 0) + 1 });
+      const updatedProfile = { ...profile };
+      
+      // Update generation count
+      updatedProfile.generationCount = (profile.generationCount || 0) + 1;
+      
+      // Deduct credits if trial is active
+      if (updatedProfile.trial && updatedProfile.trial.remainingCredits > 0) {
+          updatedProfile.trial.remainingCredits = Math.max(0, updatedProfile.trial.remainingCredits - cost);
+          updatedProfile.trial.usedCredits = (updatedProfile.trial.usedCredits || 0) + cost;
+          
+          if (updatedProfile.trial.remainingCredits === 0 && updatedProfile.planStatus === 'trial') {
+              updatedProfile.planStatus = 'expired';
+              updatedProfile.trial.expiredAt = Date.now();
+          }
+      }
+      
+      // Update usage stats
+      if (!updatedProfile.usage) {
+          updatedProfile.usage = { totalGenerations: 0, tailorRuns: 0, reportRuns: 0, imageRuns: 0 };
+      }
+      updatedProfile.usage.totalGenerations += 1;
+      updatedProfile.usage.lastGenerationAt = Date.now();
+      
+      await updateProfile(updatedProfile);
     } catch (e) {
       console.error("MIMI // Failed to increment generation count", e);
     }

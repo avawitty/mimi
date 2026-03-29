@@ -38,6 +38,7 @@ const MENU_STRUCTURE = [
  { mode: 'proscenium', label: 'Proscenium', note: 'Manifested Visions' }
  ]},
  { section: 'System', items: [
+ { mode: 'manifesto', label: 'Manifesto', note: 'Community & Ethos' },
  { mode: 'help', label: 'Codex', note: 'Documentation' }
  ]}
 ];

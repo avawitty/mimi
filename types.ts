@@ -61,6 +61,7 @@ export interface ZineGenerationOptions {
   tags?: string[];
   customTitle?: string;
   selectedTreatmentId?: string;
+  readingLevel?: 'short' | 'slow';
 }
 
 export type ZodiacSign = 'aries' | 'taurus' | 'gemini' | 'cancer' | 'leo' | 'virgo' | 'libra' | 'scorpio' | 'sagittarius' | 'capricorn' | 'aquarius' | 'pisces';
@@ -900,6 +901,8 @@ export interface SubscriptionData {
   currentPeriodEnd: number;
 }
 
+export type UserPlanStatus = 'ghost' | 'trial' | 'free' | 'core' | 'pro' | 'lab' | 'expired';
+
 export interface UserProfile extends UserPreferences {
   uid: string;
   handle: string;
@@ -922,6 +925,31 @@ export interface UserProfile extends UserPreferences {
   patronActivatedAt?: number;
   patronKey?: string;
   plan?: 'free' | 'core' | 'pro' | 'lab';
+  planStatus?: UserPlanStatus;
+  trial?: {
+    startedAt: number;
+    endsAt: number;
+    grantedCredits: number;
+    usedCredits: number;
+    remainingCredits: number;
+    expiredAt?: number | null;
+    convertedAt?: number | null;
+    source?: 'gateway' | 'invite' | 'manual';
+    bonusCredits?: number;
+  };
+  usage?: {
+    totalGenerations: number;
+    lastGenerationAt?: number;
+    tailorRuns: number;
+    reportRuns: number;
+    imageRuns: number;
+  };
+  featureFlags?: {
+    canComment: boolean;
+    canSubmit: boolean;
+    canGenerateImages: boolean;
+    canUseDeepSearch: boolean;
+  };
   subscriptionInterval?: 'month' | 'year';
   subscriptionStatus?: 'active' | 'inactive' | 'past_due' | 'canceled';
   subscription?: SubscriptionData;

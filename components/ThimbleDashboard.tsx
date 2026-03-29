@@ -847,9 +847,11 @@ export const ThimbleDashboard = () => {
  <Trash2 size={12} />
  </button>
  
- <div className="flex-grow flex items-center justify-center p-8 bg-stone-50/30 dark:bg-stone-950/30 relative">
+ <div className="flex-grow flex flex-col items-center justify-center p-8 bg-stone-50/30 dark:bg-stone-950/30 relative">
  {item.imageUrl && (
- <img src={item.imageUrl} alt={item.title} className="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-40 transition-opacity" referrerPolicy="no-referrer" />
+ <div className="w-full h-48 mb-4 overflow-hidden border border-stone-200 dark:border-stone-800 relative z-10">
+ <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+ </div>
  )}
  <div className="text-center space-y-4 relative z-10">
  <h3 className="font-serif text-2xl italic tracking-tight">{item.title}</h3>

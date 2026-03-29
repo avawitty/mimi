@@ -72,6 +72,7 @@ async function startServer() {
           }
 
           await db.collection("users").doc(userId).set({
+            planStatus: plan,
             plan,
             stripeCustomerId: customerId,
             subscriptionStatus: "active",
@@ -79,6 +80,7 @@ async function startServer() {
           }, { merge: true });
           
           await db.collection("profiles_public").doc(userId).set({
+            planStatus: plan,
             plan,
             subscriptionStatus: "active",
           }, { merge: true });
@@ -120,12 +122,14 @@ async function startServer() {
             }
 
             await db.collection("users").doc(userId).set({
+              planStatus: plan,
               plan,
               subscriptionStatus: "active",
               subscriptionInterval: interval,
             }, { merge: true });
             
             await db.collection("profiles_public").doc(userId).set({
+              planStatus: plan,
               plan,
               subscriptionStatus: "active",
             }, { merge: true });
@@ -225,12 +229,14 @@ async function startServer() {
         
         // Update user profile
         await db.collection("users").doc(userId).set({
+          planStatus: "lab",
           plan: "lab",
           subscriptionStatus: "active",
           subscriptionInterval: "year",
         }, { merge: true });
         
         await db.collection("profiles_public").doc(userId).set({
+          planStatus: "lab",
           plan: "lab",
           subscriptionStatus: "active",
         }, { merge: true });

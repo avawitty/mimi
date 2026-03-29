@@ -1,0 +1,150 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { useUser } from '../contexts/UserContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Battery, BatteryCharging, BatteryFull, BatteryLow, BatteryMedium, Zap, Clock, ShieldCheck } from 'lucide-react';
+
+export const CreditMeter: React.FC = () => {
+    const { profile, canGenerate, generationsRemaining } = useUser();
+    const [isOpen, setIsOpen] = useState(false);
+    const meterRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (meterRef.current && !meterRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    if (!profile) return null;
+
+    const status = profile.planStatus || 'ghost';
+    const isPaid = ['core', 'pro', 'lab'].includes(status);
+    const isGhost = status === 'ghost';
+    const isExpired = status === 'expired';
+    
+    const credits = generationsRemaining();
+    const totalCredits = profile.trial?.grantedCredits || 12;
+    const percentage = Math.max(0, Math.min(100, (credits / totalCredits) * 100));
+
+    let Icon = BatteryMedium;
+    if (isPaid) Icon = Zap;
+    else if (percentage > 75) Icon = BatteryFull;
+    else if (percentage > 25) Icon = BatteryMedium;
+    else if (percentage > 0) Icon = BatteryLow;
+    else Icon = Battery;
+
+    const daysLeft = profile.trial?.endsAt 
+        ? Math.max(0, Math.ceil((profile.trial.endsAt - Date.now()) / (1000 * 60 * 60 * 24)))
+        : 0;
+
+    return (
+        <div className="relative" ref={meterRef}>
+            <button 
+                onClick={() => setIsOpen(!isOpen)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-300 ${
+                    isPaid ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400' :
+                    isExpired ? 'border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400' :
+                    credits <= 2 ? 'border-orange-500/30 bg-orange-500/10 text-orange-600 dark:text-orange-400' :
+                    'border-stone-200 dark:border-stone-800 bg-white/50 dark:bg-stone-900/50 text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800'
+                }`}
+            >
+                <Icon size={14} className={isPaid ? 'text-amber-500' : ''} />
+                <span className="font-mono text-[10px] uppercase tracking-widest font-bold">
+                    {isPaid ? 'Unlimited' : isExpired ? 'Expired' : `${credits} CR`}
+                </span>
+            </button>
+
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-full right-0 mt-2 w-64 bg-white dark:bg-stone-950 border border-stone-200 dark:border-stone-800 shadow-xl z-50 overflow-hidden"
+                    >
+                        <div className="p-4 border-b border-stone-100 dark:border-stone-900 bg-stone-50 dark:bg-stone-900/50">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="font-serif italic text-sm text-stone-900 dark:text-stone-100">
+                                    {isPaid ? 'Patron Status' : isGhost ? 'Ghost Protocol' : 'Trial Access'}
+                                </span>
+                                {isPaid ? <ShieldCheck size={14} className="text-amber-500" /> : <Clock size={14} className="text-stone-400" />}
+                            </div>
+                            
+                            {!isPaid && (
+                                <>
+                                    <div className="flex items-end justify-between mb-1">
+                                        <span className="font-mono text-2xl font-light tracking-tighter text-stone-900 dark:text-white">
+                                            {credits}
+                                        </span>
+                                        <span className="font-sans text-[10px] uppercase tracking-widest text-stone-500 mb-1">
+                                            Credits Remaining
+                                        </span>
+                                    </div>
+                                    <div className="w-full h-1 bg-stone-200 dark:bg-stone-800 rounded-full overflow-hidden">
+                                        <div 
+                                            className={`h-full transition-all duration-500 ${
+                                                credits <= 2 ? 'bg-orange-500' : 'bg-stone-900 dark:bg-stone-100'
+                                            }`}
+                                            style={{ width: `${percentage}%` }}
+                                        />
+                                    </div>
+                                    {!isGhost && !isExpired && (
+                                        <p className="font-sans text-[9px] text-stone-500 mt-2">
+                                            {daysLeft} {daysLeft === 1 ? 'day' : 'days'} remaining in trial.
+                                        </p>
+                                    )}
+                                </>
+                            )}
+                            {isPaid && (
+                                <p className="font-sans text-[10px] text-stone-500">
+                                    Unlimited generations active.
+                                </p>
+                            )}
+                        </div>
+
+                        {!isPaid && (
+                            <div className="p-4 bg-white dark:bg-stone-950">
+                                <h4 className="font-sans text-[9px] uppercase tracking-widest text-stone-400 mb-3">Generation Costs</h4>
+                                <ul className="space-y-2">
+                                    <li className="flex justify-between items-center text-[11px] font-sans">
+                                        <span className="text-stone-600 dark:text-stone-400">Tailor Analysis</span>
+                                        <span className="font-mono text-stone-900 dark:text-stone-100">Free (1x)</span>
+                                    </li>
+                                    <li className="flex justify-between items-center text-[11px] font-sans">
+                                        <span className="text-stone-600 dark:text-stone-400">Light Reading</span>
+                                        <span className="font-mono text-stone-900 dark:text-stone-100">1 CR</span>
+                                    </li>
+                                    <li className="flex justify-between items-center text-[11px] font-sans">
+                                        <span className="text-stone-600 dark:text-stone-400">Full Zine</span>
+                                        <span className="font-mono text-stone-900 dark:text-stone-100">2 CR</span>
+                                    </li>
+                                    <li className="flex justify-between items-center text-[11px] font-sans">
+                                        <span className="text-stone-600 dark:text-stone-400">Deep Research</span>
+                                        <span className="font-mono text-stone-900 dark:text-stone-100">3 CR</span>
+                                    </li>
+                                </ul>
+                                
+                                <button 
+                                    onClick={() => {
+                                        if (isGhost) {
+                                            window.dispatchEvent(new CustomEvent('mimi:open_gateway'));
+                                        } else {
+                                            window.dispatchEvent(new CustomEvent('mimi:open_patron_modal'));
+                                        }
+                                    }}
+                                    className="w-full mt-4 py-2 bg-stone-900 dark:bg-white text-white dark:text-stone-900 font-sans text-[10px] uppercase tracking-widest hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors"
+                                >
+                                    {isGhost ? 'Claim your trial' : 'Upgrade to Patron'}
+                                </button>
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};

@@ -57,7 +57,7 @@ export const applyPromoCode = async (uid: string, code: string) => {
       }, { merge: true });
       
       const profileRef = doc(db, 'profiles_public', uid);
-      await setDoc(profileRef, { plan: 'lab', membershipPlan: 'lab', subscriptionStatus: 'active' }, { merge: true });
+      await setDoc(profileRef, { planStatus: 'lab', plan: 'lab', membershipPlan: 'lab', subscriptionStatus: 'active' }, { merge: true });
       
       const membershipRef = doc(db, 'memberships', uid);
       await setDoc(membershipRef, {

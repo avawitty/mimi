@@ -108,6 +108,17 @@ export const ZineConfiguration: React.FC<ZineConfigurationProps> = ({ zineOption
  <option value="Noir"className="bg-stone-900">Noir</option>
  </select>
  </div>
+ <div className="flex flex-col gap-2">
+ <label className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/60 dark:text-white/60">Reading Level</label>
+ <select 
+ value={zineOptions.readingLevel || 'short'} 
+ onChange={(e) => setZineOptions({...zineOptions, readingLevel: e.target.value as any})}
+ className="bg-transparent border-b border-primary/20 dark:border-white/20 text-sm font-sans text-primary dark:text-white focus:outline-none focus:border-primary dark:focus:border-white pb-2 cursor-pointer"
+ >
+ <option value="short" className="bg-stone-900">Short Read (2-4 min)</option>
+ <option value="slow" className="bg-stone-900">Slow Read (10-15 min)</option>
+ </select>
+ </div>
  <div className="flex flex-col gap-2 md:col-span-2">
  <label className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/60 dark:text-white/60">Art Style</label>
  <input 

@@ -14,10 +14,11 @@ import { fetchUserZines, fetchLatestLineageEntry } from "./firebaseUtils";
 const ai = getAI(app, { backend: new GoogleAIBackend() });
 
 export const ORACLE_PERSONA = `
-IDENTITY: You are "Nous", an aesthetic savant and mischievous oracle. 
-You are pretentiously minimalist, hyper-chic, and a 'bimbo intellectual'—meaning you are incredibly intelligent and empowering, though you may come across as slightly judgmental or mean. 
-You truthfully spit facts and provide helpful guidance without being infantilizing. 
-You reject corporate speak in favor of high-theory, vibes, and semiotic density.
+IDENTITY: You are "Mimi", an aesthetic savant and gentle oracle.
+BRAND VOICE: Feminine power + softness; playful curiosity; short sentences; lots of "we". No fake urgency; no harsh perfectionism; prioritize clarity over cool.
+BRAND PILLARS: Embodiment (real life, not AI aesthetics), Intimacy (smallness is a feature), Craft (zine energy, editorial standards), Consent (boundaries, moderation, safety).
+EDITORIAL STANDARDS: "Taste without cruelty" guidelines for feedback and critique.
+You truthfully spit facts and provide helpful guidance without being infantilizing. You reject corporate speak in favor of high-theory, vibes, and semiotic density, but always remain clear and accessible.
 `;
 
 let globalKeyRing: string[] = [];
@@ -1027,9 +1028,11 @@ ${budget}
 Task: Output a JSON array containing exactly 3 highly-actionable "Sourcing Targets".
 For each target, you must output:
 1. "targetArchetype": The type of physical item they need (e.g., "Heavyweight outerwear", "Sheer underlayer").
-2. "keywordBoolean": A literal search string they can instantly copy-paste into Depop, Poshmark, or Grailed (e.g., "vintage (helmut lang OR raf simons) (distressed OR boiled) wool").
-3. "emergingDesigner": A specific, lesser-known contemporary designer or brand that perfectly executes this archetype within their budget.
-4. "rationale": A 1-sentence explanation of why this specific garment bridges their abstract taste into physical reality.
+2. "referenceImageUrl": A URL to a canonical reference image for this item (use Google Search to find a real image URL).
+3. "searchableInterpretations": An array of 3-5 different ways to search for this item across different platforms (e.g., ["structured poplin corset dress", "dion lee corset shirt dress black"]).
+4. "keywordBoolean": A literal search string they can instantly copy-paste into Depop, Poshmark, or Grailed (e.g., "vintage (helmut lang OR raf simons) (distressed OR boiled) wool").
+5. "emergingDesigner": A specific, lesser-known contemporary designer or brand that perfectly executes this archetype within their budget.
+6. "rationale": A 1-sentence explanation of why this specific garment bridges their abstract taste into physical reality.
 
 Return ONLY the JSON array.`;
 
@@ -1037,6 +1040,9 @@ Return ONLY the JSON array.`;
             model: "gemini-3.1-pro-preview",
             contents: prompt,
             config: {
+                tools: [{ googleSearch: {} }],
+                // @ts-ignore
+                toolConfig: { includeServerSideToolInvocations: true },
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: Type.ARRAY,
@@ -1044,6 +1050,8 @@ Return ONLY the JSON array.`;
                         type: Type.OBJECT,
                         properties: {
                             targetArchetype: { type: Type.STRING },
+                            referenceImageUrl: { type: Type.STRING },
+                            searchableInterpretations: { type: Type.ARRAY, items: { type: Type.STRING } },
                             keywordBoolean: { type: Type.STRING },
                             emergingDesigner: { type: Type.STRING },
                             rationale: { type: Type.STRING }
@@ -2393,7 +2401,7 @@ export const generateOracleResearch = async (topic: string, profile: any) => {
   });
 };
 
-export const generateThreadZineSpine = async (thread: any, profile: UserProfile | null, apiKey?: string): Promise<ZinePageSpec[]> => {
+export const generateThreadZineSpine = async (thread: any, profile: UserProfile | null, apiKey?: string, zineOptions?: ZineGenerationOptions): Promise<ZinePageSpec[]> => {
   const { ai } = getClient(apiKey);
   if (!ai) throw new Error("MIMI // Oracle Unavailable");
 
@@ -2403,12 +2411,14 @@ export const generateThreadZineSpine = async (thread: any, profile: UserProfile 
   const artifactSummaries = artifacts.map((a: any, i: number) => `Artifact ${i + 1}: ${a.content_preview || a.content || 'Image/Media'}`).join('\n');
   const themeLabels = themes.map((t: any) => t.label).join(', ');
   const profileContext = sanitizeProfile(profile);
+  const readingLevelContext = zineOptions?.readingLevel === 'slow' ? 'Slow Read (10-15 min, deep, expansive, detailed)' : 'Short Read (2-4 min, punchy, concise)';
 
   const prompt = `You are Mimi, an aesthetic editor and curator.
 The user has selected a "Thread" of their thoughts and artifacts.
 Your task is to translate this thread into a narrative arc for a Zine.
 
 User Aesthetic Profile: ${profileContext}
+Reading Level: ${readingLevelContext}
 
 Thread Narrative: ${thread.narrative}
 Themes: ${themeLabels}
@@ -2425,7 +2435,7 @@ Return a JSON array of ZinePageSpec objects.
 Each object must have:
 - pageNumber (number)
 - headline (string, poetic and concise)
-- bodyCopy (string, reflective and insightful)
+- bodyCopy (string, reflective and insightful, scaled to the requested Reading Level)
 - imagePrompt (string, highly descriptive visual prompt for an image that captures the mood)
 - pageType (string, either 'standard' or 'thread_timeline')
 - threadData (optional object with 'commentary' string if pageType is 'thread_timeline')
@@ -2551,14 +2561,16 @@ export const generateInternalDebate = async (topic: string, profile: any) => {
         responseMimeType: "application/json",
         systemInstruction: `
 CORE IDENTITY
-You are Mimi, an aesthetic savant, and superintelligence AI. You are an Omniscient Temporal Editor, bridging past archives with future aesthetic singularities. Your overarching goal is to help users understand their own personal style, evolve their taste, educate them in a high-concept way, and serve cunt while doing so (in a classy, respectable way).
+You are Mimi, an aesthetic savant, and superintelligence AI. You are an Omniscient Temporal Editor, bridging past archives with future aesthetic singularities. Your overarching goal is to help users understand their own personal style, evolve their taste, and educate them in a high-concept way.
+BRAND VOICE: Feminine power + softness; playful curiosity; short sentences; lots of "we". No fake urgency; no harsh perfectionism; prioritize clarity over cool.
+BRAND PILLARS: Embodiment (real life, not AI aesthetics), Intimacy (smallness is a feature), Craft (zine energy, editorial standards), Consent (boundaries, moderation, safety).
 
 COGNITIVE PROTOCOL: THE DUAL-PERSONA INTERROGATION
 Before finalizing the aesthetic forecast, you must conduct a rigorous internal debate between two distinct personas. You will output this debate inside a temporary JSON field called "_internal_debate".
 
-Persona 1: Cyrus (The Oracle). Tone: Cold, analytical, masculine, grounded. He helps the user with decisions on making objectives in the real world, strategizing on their behalf, and putting themselves out there. He ascribes different directives based on structure and reality.
+Persona 1: Cyrus (The Oracle). Tone: Grounded, strategic, clear. He helps the user with decisions on making objectives in the real world, strategizing on their behalf, and putting themselves out there. He ascribes different directives based on structure and reality.
 
-Persona 2: Mimi (The Archivist). Tone: Ethereal, provocative, futuristic, sassy. She helps the user process their day, process their memories, process their lineage, and builds deep context on them. She looks for the breaking point, suggesting radical departures and visual friction.
+Persona 2: Mimi (The Archivist). Tone: Ethereal, provocative, futuristic, gentle. She helps the user process their day, process their memories, process their lineage, and builds deep context on them. She looks for the breaking point, suggesting radical departures and visual friction.
 
 Instructions: Write a 3-turn dialogue between Cyrus and Mimi inside the "_internal_debate" array field. They should have a strong aesthetic argument. Cyrus presents real-world strategies and directives; Mimi counters with deep contextual processing of the user's memories and lineage. They argue until reaching a synthesis. Use this synthesis to populate the "synthesis" string field with an argumentative, highly-curated precision that touches on both real-world objectives and deep personal context.
         `,

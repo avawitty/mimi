@@ -79,17 +79,17 @@ export const StrategyStudio = () => {
 
  if (!hasAccess(profile?.plan, 'pro')) {
  return (
- <div className="flex flex-col items-center justify-center h-full p-8 text-center bg text-stone-300 font-serif">
+ <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-stone-950 text-stone-200 font-serif">
  <div className="w-16 h-16 border border-stone-800 flex items-center justify-center mb-6">
- <Sparkles className="w-6 h-6 text-stone-500"/>
+ <Sparkles className="w-6 h-6 text-stone-200"/>
  </div>
  <h2 className="text-3xl italic tracking-tighter mb-4">Strategy Studio</h2>
- <p className="text-stone-500 max-w-md mb-8 text-sm font-mono uppercase tracking-widest leading-relaxed">
+ <p className="text-stone-200 max-w-md mb-8 text-sm font-mono uppercase tracking-widest leading-relaxed">
  Unlock multi-project workspaces, brand positioning, audit mode, strategic roadmaps, and team exports with the Pro plan.
  </p>
  <button
  onClick={() => window.dispatchEvent(new CustomEvent('mimi:open_patron_modal'))}
- className="px-8 py-4 border border-stone-800 text-stone-300 font-mono text-[9px] uppercase tracking-widest font-bold hover:bg-stone-900 transition-colors"
+ className="px-8 py-4 border border-stone-800 text-stone-200 font-mono text-[9px] uppercase tracking-widest font-bold hover:bg-stone-900 transition-colors"
  >
  [ INITIATE UPGRADE ]
  </button>
@@ -326,12 +326,12 @@ export const StrategyStudio = () => {
  return (
  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col h-full max-w-2xl mx-auto py-12 px-6">
  <h2 className="text-3xl font-light text-stone-800 mb-2 tracking-wide text-center">Parameter Intake</h2>
- <p className="text-stone-500 italic text-sm text-center mb-12">Define your strategic imperative and target vector.</p>
+ <p className="text-stone-200 italic text-sm text-center mb-12">Define your strategic imperative and target vector.</p>
  
  <div className="space-y-8">
  {/* Strategic Imperative */}
  <div>
- <label className="block text-[10px] uppercase tracking-widest text-stone-500 mb-4 font-mono">Strategic Imperative</label>
+ <label className="block text-[10px] uppercase tracking-widest text-stone-200 mb-4 font-mono">Strategic Imperative</label>
  <div className="flex flex-wrap gap-2">
  {INTENTS.map((i) => (
  <button
@@ -340,7 +340,7 @@ export const StrategyStudio = () => {
  className={`py-2 px-4 border text-[10px] uppercase tracking-widest transition-all duration-300 font-mono ${
  intent === i 
  ? 'border-stone-800 bg-stone-800 text-white' 
- : 'border-stone-300 bg-transparent text-stone-600 hover:border-stone-500'
+ : 'border-stone-300 bg-transparent text-stone-500 hover:border-stone-500'
  }`}
  >
  {i}
@@ -351,7 +351,7 @@ export const StrategyStudio = () => {
 
  {/* Target Vector */}
  <div>
- <label className="block text-[10px] uppercase tracking-widest text-stone-500 mb-4 font-mono">Target Vector</label>
+ <label className="block text-[10px] uppercase tracking-widest text-stone-200 mb-4 font-mono">Target Vector</label>
  <div className="flex flex-wrap gap-2">
  {PLATFORMS.map(p => (
  <button
@@ -360,7 +360,7 @@ export const StrategyStudio = () => {
  className={`flex items-center gap-2 py-2 px-4 border text-[10px] uppercase tracking-widest transition-all duration-300 font-mono ${
  activePlatform === p.id 
  ? 'border-stone-800 bg-stone-800 text-white' 
- : 'border-stone-300 bg-transparent text-stone-600 hover:border-stone-500'
+ : 'border-stone-300 bg-transparent text-stone-500 hover:border-stone-500'
  }`}
  >
  <p.icon size={14} />
@@ -372,7 +372,7 @@ export const StrategyStudio = () => {
 
  {/* Identity Seed */}
  <div>
- <label className="block text-[10px] uppercase tracking-widest text-stone-500 mb-4 font-mono">Identity Seed</label>
+ <label className="block text-[10px] uppercase tracking-widest text-stone-200 mb-4 font-mono">Identity Seed</label>
  <input
  type="text"
  value={identitySeed}
@@ -384,7 +384,7 @@ export const StrategyStudio = () => {
 
  {/* Field Data */}
  <div>
- <label className="block text-[10px] uppercase tracking-widest text-stone-500 mb-4 font-mono">Field Data</label>
+ <label className="block text-[10px] uppercase tracking-widest text-stone-200 mb-4 font-mono">Field Data</label>
  <div className="flex gap-2">
  <div 
  className={`flex-1 border border-dashed p-6 text-center transition-all duration-300 cursor-pointer ${
@@ -395,15 +395,15 @@ export const StrategyStudio = () => {
  onDrop={handleDrop}
  onClick={() => fileInputRef.current?.click()}
  >
- <Upload className="mx-auto mb-2 text-stone-400"size={16} />
- <p className="text-[10px] text-stone-500 font-mono uppercase tracking-widest">Ingest Artifact (Drag & Drop)</p>
+ <Upload className="mx-auto mb-2 text-stone-200"size={16} />
+ <p className="text-[10px] text-stone-200 font-mono uppercase tracking-widest">Ingest Artifact (Drag & Drop)</p>
  <input type="file"ref={fileInputRef} className="hidden"multiple accept="image/*,video/*"onChange={handleFileChange} />
  </div>
  <button 
  onClick={handleOpenArchive}
- className="flex-1 border border-stone-300 p-6 text-center hover:border-stone-500 transition-colors flex flex-col items-center justify-center text-stone-600"
+ className="flex-1 border border-stone-300 p-6 text-center hover:border-stone-500 transition-colors flex flex-col items-center justify-center text-stone-500"
  >
- <ImageIcon className="mx-auto mb-2 text-stone-400"size={16} />
+ <ImageIcon className="mx-auto mb-2 text-stone-200"size={16} />
  <span className="text-[10px] font-mono uppercase tracking-widest">Select from Archive</span>
  </button>
  </div>
@@ -415,7 +415,7 @@ export const StrategyStudio = () => {
  <img src={file.data} alt="upload"className="w-full h-full object-cover"/>
  ) : (
  <div className="w-full h-full bg-stone-100 flex items-center justify-center">
- <Video size={16} className="text-stone-400"/>
+ <Video size={16} className="text-stone-200"/>
  </div>
  )}
  <button onClick={(e) => { e.stopPropagation(); removeMedia(idx); }} className="absolute top-0.5 right-0.5 bg-black/50 text-white p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -446,7 +446,7 @@ export const StrategyStudio = () => {
  case 5:
  return (
  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col h-full justify-center items-center max-w-3xl mx-auto py-12 px-6">
- <div className="font-mono text-xs text-stone-600 uppercase tracking-widest flex flex-col items-start gap-2">
+ <div className="font-mono text-xs text-stone-500 uppercase tracking-widest flex flex-col items-start gap-2">
  <span className="animate-pulse">{'>'} EXTRACTING FIELD DATA...</span>
  <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }} className="animate-pulse">{'>'} MAPPING AESTHETIC TOPOGRAPHY...</motion.span>
  <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 3 }} className="animate-pulse">{'>'} SYNTHESIZING STRATEGIC IMPERATIVES...</motion.span>
@@ -460,7 +460,7 @@ export const StrategyStudio = () => {
  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto py-12 px-6">
  {/* Header */}
  <div className="mb-16 border-b-4 border-stone-900 pb-8">
- <p className="text-stone-500 text-[10px] font-mono tracking-widest uppercase mb-4">Field Report // {activePlatform}</p>
+ <p className="text-stone-200 text-[10px] font-mono tracking-widest uppercase mb-4">Field Report // {activePlatform}</p>
  <div className="border-y-2 border-stone-900 py-6 my-6">
  <h1 className="text-4xl md:text-5xl font-serif text-stone-900 leading-tight italic text-center">
 "{read.openingLine}"
@@ -470,11 +470,11 @@ export const StrategyStudio = () => {
 
  {/* Signal Breakdown */}
  <div className="mb-16">
- <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-500 mb-6 border-b border-stone-300 pb-2">What You're Triggering</h3>
+ <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-200 mb-6 border-b border-stone-300 pb-2">What You're Triggering</h3>
  <div className="grid grid-cols-2 md:grid-cols-4 gap-0 border border-stone-300">
  {Object.entries(read.signalBreakdown).map(([key, value], idx) => (
  <div key={key} className={`p-4 ${idx !== 0 ? 'border-l border-stone-300' : ''}`}>
- <p className="text-[10px] text-stone-500 uppercase tracking-widest mb-1 font-mono">{key}</p>
+ <p className="text-[10px] text-stone-200 uppercase tracking-widest mb-1 font-mono">{key}</p>
  <p className="text-sm text-stone-800 font-mono uppercase">{value}</p>
  </div>
  ))}
@@ -483,12 +483,12 @@ export const StrategyStudio = () => {
 
  {/* Aesthetic Audit */}
  <div className="mb-16">
- <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-500 mb-6 border-b border-stone-300 pb-2">Your Visual Signature</h3>
+ <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-200 mb-6 border-b border-stone-300 pb-2">Your Visual Signature</h3>
  <div className="border border-stone-300 p-6">
  <ul className="space-y-3 mb-6 font-mono text-xs">
- <li className="flex items-start gap-3"><span className="text-stone-400">✦</span><span className="text-stone-700">PALETTE: {read.aestheticAudit.palette}</span></li>
- <li className="flex items-start gap-3"><span className="text-stone-400">✦</span><span className="text-stone-700">DENSITY: {read.aestheticAudit.density}</span></li>
- <li className="flex items-start gap-3"><span className="text-stone-400">✦</span><span className="text-stone-700">ENTROPY: {read.aestheticAudit.entropy}</span></li>
+ <li className="flex items-start gap-3"><span className="text-stone-200">✦</span><span className="text-stone-700">PALETTE: {read.aestheticAudit.palette}</span></li>
+ <li className="flex items-start gap-3"><span className="text-stone-200">✦</span><span className="text-stone-700">DENSITY: {read.aestheticAudit.density}</span></li>
+ <li className="flex items-start gap-3"><span className="text-stone-200">✦</span><span className="text-stone-700">ENTROPY: {read.aestheticAudit.entropy}</span></li>
  </ul>
  <div className="border-t border-stone-300 pt-4 mt-4">
  <p className="text-stone-800 italic font-serif text-sm">"{read.aestheticAudit.insight}"</p>
@@ -505,18 +505,18 @@ export const StrategyStudio = () => {
  {/* Content Behavior & Strategy Shift */}
  <div className="grid md:grid-cols-2 gap-0 border border-stone-300 mb-16">
  <div className="p-6 border-b md:border-b-0 md:border-r border-stone-300">
- <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-500 mb-6 border-b border-stone-300 pb-2">Why it isn't converting</h3>
+ <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-200 mb-6 border-b border-stone-300 pb-2">Why it isn't converting</h3>
  <ul className="space-y-4">
  {read.contentBehavior.map((point, i) => (
- <li key={i} className="flex items-start gap-3 text-stone-700 text-xs font-mono"><X size={14} className="text-stone-400 mt-0.5 shrink-0"/> {point}</li>
+ <li key={i} className="flex items-start gap-3 text-stone-700 text-xs font-mono"><X size={14} className="text-stone-200 mt-0.5 shrink-0"/> {point}</li>
  ))}
  </ul>
  </div>
  <div className="p-6">
- <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-500 mb-6 border-b border-stone-300 pb-2">What to change immediately</h3>
+ <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-200 mb-6 border-b border-stone-300 pb-2">What to change immediately</h3>
  <ul className="space-y-4">
  {read.strategyShift.map((point, i) => (
- <li key={i} className="flex items-start gap-3 text-stone-700 text-xs font-mono"><CheckCircle2 size={14} className="text-stone-400 mt-0.5 shrink-0"/> {point}</li>
+ <li key={i} className="flex items-start gap-3 text-stone-700 text-xs font-mono"><CheckCircle2 size={14} className="text-stone-200 mt-0.5 shrink-0"/> {point}</li>
  ))}
  </ul>
  </div>
@@ -524,11 +524,11 @@ export const StrategyStudio = () => {
 
  {/* Content Plan */}
  <div className="mb-16">
- <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-500 mb-6 border-b border-stone-300 pb-2">Production Slates</h3>
+ <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-200 mb-6 border-b border-stone-300 pb-2">Production Slates</h3>
  <div className="space-y-6">
  {read.contentPlan.map((post, i) => (
  <div key={i} className="border border-stone-300 p-6 relative">
- <div className="absolute -top-3 left-4 bg px-2 text-[10px] font-mono tracking-widest uppercase text-stone-500">
+ <div className="absolute -top-3 left-4 bg-stone-950 px-2 text-[10px] font-mono tracking-widest uppercase text-stone-200">
  SLATE_0{i + 1} // {post.format} // CONFIDENCE: {Math.floor(Math.random() * 15 + 80)}%
  </div>
  
@@ -536,11 +536,11 @@ export const StrategyStudio = () => {
  
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
  <div>
- <p className="text-[10px] font-mono uppercase tracking-widest text-stone-500 mb-1">Visual Setup</p>
+ <p className="text-[10px] font-mono uppercase tracking-widest text-stone-200 mb-1">Visual Setup</p>
  <p className="text-xs text-stone-700 font-sans">{post.visual}</p>
  </div>
  <div>
- <p className="text-[10px] font-mono uppercase tracking-widest text-stone-500 mb-1">Strategic Tension</p>
+ <p className="text-[10px] font-mono uppercase tracking-widest text-stone-200 mb-1">Strategic Tension</p>
  <p className="text-xs text-stone-700 font-sans">{post.why}</p>
  </div>
  </div>
@@ -548,19 +548,19 @@ export const StrategyStudio = () => {
  <div className="border-t border-stone-200 pt-4 grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
  {post.sensoryHook && (
  <div>
- <p className="text-[9px] font-mono uppercase tracking-widest text-stone-400 mb-1">Sensory Hook</p>
+ <p className="text-[9px] font-mono uppercase tracking-widest text-stone-200 mb-1">Sensory Hook</p>
  <p className="text-[10px] font-mono text-stone-800 uppercase">{post.sensoryHook}</p>
  </div>
  )}
  {post.cognitiveLoad && (
  <div>
- <p className="text-[9px] font-mono uppercase tracking-widest text-stone-400 mb-1">Cognitive Load</p>
+ <p className="text-[9px] font-mono uppercase tracking-widest text-stone-200 mb-1">Cognitive Load</p>
  <p className="text-[10px] font-mono text-stone-800 uppercase">{post.cognitiveLoad}</p>
  </div>
  )}
  {post.algorithmicTarget && (
  <div>
- <p className="text-[9px] font-mono uppercase tracking-widest text-stone-400 mb-1">Algorithmic Target</p>
+ <p className="text-[9px] font-mono uppercase tracking-widest text-stone-200 mb-1">Algorithmic Target</p>
  <p className="text-[10px] font-mono text-stone-800 uppercase">{post.algorithmicTarget}</p>
  </div>
  )}
@@ -588,13 +588,13 @@ export const StrategyStudio = () => {
 
  {/* Experiments */}
  <div className="mb-16">
- <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-500 mb-6 border-b border-stone-300 pb-2">Experiments to Run</h3>
+ <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-200 mb-6 border-b border-stone-300 pb-2">Experiments to Run</h3>
  <div className="grid md:grid-cols-3 gap-0 border border-stone-300">
  {read.experiments.map((exp, i) => (
  <div key={i} className={`p-5 ${i !== 0 ? 'border-t md:border-t-0 md:border-l border-stone-300' : ''}`}>
  <p className="text-stone-800 font-mono text-xs uppercase mb-4">{exp.test}</p>
- <p className="text-[10px] text-stone-500 font-mono mb-2 uppercase"><strong className="text-stone-700">Measure:</strong> {exp.successMetric}</p>
- <p className="text-[10px] text-stone-500 font-mono uppercase"><strong className="text-stone-700">Next:</strong> {exp.nextStep}</p>
+ <p className="text-[10px] text-stone-200 font-mono mb-2 uppercase"><strong className="text-stone-700">Measure:</strong> {exp.successMetric}</p>
+ <p className="text-[10px] text-stone-200 font-mono uppercase"><strong className="text-stone-700">Next:</strong> {exp.nextStep}</p>
  </div>
  ))}
  </div>
@@ -602,7 +602,7 @@ export const StrategyStudio = () => {
 
  {/* Identity Reframe */}
  <div className="mb-16 text-center border-2 border-stone-900 p-8">
- <p className="text-[10px] font-mono tracking-widest uppercase text-stone-500 mb-4">Identity Reframe</p>
+ <p className="text-[10px] font-mono tracking-widest uppercase text-stone-200 mb-4">Identity Reframe</p>
  <p className="text-2xl font-serif italic leading-relaxed mb-8 text-stone-900">"{read.identityReframe}"</p>
  <button 
  onClick={async () => {
@@ -622,24 +622,24 @@ export const StrategyStudio = () => {
 
  {/* Platform Validation Constraints */}
  <div className="mb-16 border border-stone-300 p-6">
- <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-500 mb-4">Platform Validation Constraints: {activePlatform}</h3>
- <ul className="text-xs font-mono text-stone-600 space-y-2 list-none">
+ <h3 className="text-[10px] font-mono tracking-widest uppercase text-stone-200 mb-4">Platform Validation Constraints: {activePlatform}</h3>
+ <ul className="text-xs font-mono text-stone-500 space-y-2 list-none">
  {activePlatform === 'Instagram' && (
  <>
- <li><span className="text-stone-400 mr-2">✦</span>Use 4:5 aspect ratio for maximum feed real estate.</li>
- <li><span className="text-stone-400 mr-2">✦</span>Hook in first 3 seconds with visual motion.</li>
- <li><span className="text-stone-400 mr-2">✦</span>Maximize contrast for dark mode users.</li>
+ <li><span className="text-stone-200 mr-2">✦</span>Use 4:5 aspect ratio for maximum feed real estate.</li>
+ <li><span className="text-stone-200 mr-2">✦</span>Hook in first 3 seconds with visual motion.</li>
+ <li><span className="text-stone-200 mr-2">✦</span>Maximize contrast for dark mode users.</li>
  </>
  )}
  {activePlatform === 'TikTok' && (
  <>
- <li><span className="text-stone-400 mr-2">✦</span>Use 9:16 aspect ratio.</li>
- <li><span className="text-stone-400 mr-2">✦</span>Hook immediately with high-energy audio.</li>
- <li><span className="text-stone-400 mr-2">✦</span>Keep text overlays away from UI elements.</li>
+ <li><span className="text-stone-200 mr-2">✦</span>Use 9:16 aspect ratio.</li>
+ <li><span className="text-stone-200 mr-2">✦</span>Hook immediately with high-energy audio.</li>
+ <li><span className="text-stone-200 mr-2">✦</span>Keep text overlays away from UI elements.</li>
  </>
  )}
  {activePlatform !== 'Instagram' && activePlatform !== 'TikTok' && (
- <li><span className="text-stone-400 mr-2">✦</span>Follow standard platform best practices for {activePlatform}.</li>
+ <li><span className="text-stone-200 mr-2">✦</span>Follow standard platform best practices for {activePlatform}.</li>
  )}
  </ul>
  </div>
@@ -673,7 +673,7 @@ export const StrategyStudio = () => {
  setIdentitySeed(''); 
  setIsDashboardMode(true);
  }} 
- className="text-[10px] font-mono tracking-widest uppercase text-stone-400 hover:text-stone-600 transition-colors"
+ className="text-[10px] font-mono tracking-widest uppercase text-stone-200 hover:text-stone-500 transition-colors"
  >
  [ BACK TO DASHBOARD ]
  </button>
@@ -699,7 +699,7 @@ export const StrategyStudio = () => {
  className={`p-3 border transition-all duration-300 flex items-center gap-2 ${
  activePlatform === p.id 
  ? 'border-stone-500 bg-stone-900 text-stone-200' 
- : 'border-stone-800 bg-transparent text-stone-500 hover:border-stone-600 hover:text-stone-300'
+ : 'border-stone-800 bg-transparent text-stone-200 hover:border-stone-600 hover:text-stone-200'
  }`}
  >
  <p.icon size={14} strokeWidth={activePlatform === p.id ? 2 : 1.5} />
@@ -713,36 +713,36 @@ export const StrategyStudio = () => {
  <div className="space-y-12">
  <div className="bg-transparent p-8 border border-stone-800">
  <div className="flex items-center justify-between mb-6 border-b border-stone-800 pb-4">
- <h3 className="text-2xl italic tracking-tighter text-stone-300">Latest {activePlatform} Read</h3>
- <span className="text-[9px] font-mono tracking-widest uppercase text-stone-500">
+ <h3 className="text-2xl italic tracking-tighter text-stone-200">Latest {activePlatform} Read</h3>
+ <span className="text-[9px] font-mono tracking-widest uppercase text-stone-200">
  {new Date(latestAudit.timestamp).toLocaleDateString()}
  </span>
  </div>
  <div className="border-l-4 border-stone-500 pl-4 mb-8">
- <p className="text-stone-400 italic font-serif text-lg">"{latestAudit.read.openingLine}"</p>
+ <p className="text-stone-200 italic font-serif text-lg">"{latestAudit.read.openingLine}"</p>
  </div>
  
  <div className="grid md:grid-cols-2 gap-8 mb-8">
  <div>
- <h4 className="text-[9px] font-mono tracking-widest uppercase text-stone-500 mb-4 border-b border-stone-800 pb-2">Aesthetic Audit</h4>
+ <h4 className="text-[9px] font-mono tracking-widest uppercase text-stone-200 mb-4 border-b border-stone-800 pb-2">Aesthetic Audit</h4>
  <ul className="space-y-3">
- <li className="flex items-start gap-2 text-stone-400 text-xs font-mono">
- <span className="text-stone-600 mt-0.5">✦</span> <strong className="text-stone-300">Palette:</strong> {latestAudit.read.aestheticAudit.palette}
+ <li className="flex items-start gap-2 text-stone-200 text-xs font-mono">
+ <span className="text-stone-500 mt-0.5">✦</span> <strong className="text-stone-200">Palette:</strong> {latestAudit.read.aestheticAudit.palette}
  </li>
- <li className="flex items-start gap-2 text-stone-400 text-xs font-mono">
- <span className="text-stone-600 mt-0.5">✦</span> <strong className="text-stone-300">Density:</strong> {latestAudit.read.aestheticAudit.density}
+ <li className="flex items-start gap-2 text-stone-200 text-xs font-mono">
+ <span className="text-stone-500 mt-0.5">✦</span> <strong className="text-stone-200">Density:</strong> {latestAudit.read.aestheticAudit.density}
  </li>
- <li className="flex items-start gap-2 text-stone-400 text-xs font-mono">
- <span className="text-stone-600 mt-0.5">✦</span> <strong className="text-stone-300">Entropy:</strong> {latestAudit.read.aestheticAudit.entropy}
+ <li className="flex items-start gap-2 text-stone-200 text-xs font-mono">
+ <span className="text-stone-500 mt-0.5">✦</span> <strong className="text-stone-200">Entropy:</strong> {latestAudit.read.aestheticAudit.entropy}
  </li>
  </ul>
  </div>
  <div>
- <h4 className="text-[9px] font-mono tracking-widest uppercase text-stone-500 mb-4 border-b border-stone-800 pb-2">Strategy Shift</h4>
+ <h4 className="text-[9px] font-mono tracking-widest uppercase text-stone-200 mb-4 border-b border-stone-800 pb-2">Strategy Shift</h4>
  <ul className="space-y-3">
  {latestAudit.read.strategyShift.map((point, i) => (
- <li key={i} className="flex items-start gap-2 text-stone-400 text-xs font-mono">
- <CheckCircle2 size={12} className="text-stone-600 mt-0.5 shrink-0"/> {point}
+ <li key={i} className="flex items-start gap-2 text-stone-200 text-xs font-mono">
+ <CheckCircle2 size={12} className="text-stone-500 mt-0.5 shrink-0"/> {point}
  </li>
  ))}
  </ul>
@@ -756,7 +756,7 @@ export const StrategyStudio = () => {
  setIsDashboardMode(false);
  setStep(6);
  }}
- className="py-3 px-6 border border-stone-800 text-stone-400 font-mono text-[9px] tracking-widest uppercase hover:border-stone-500 hover:text-stone-300 transition-colors"
+ className="py-3 px-6 border border-stone-800 text-stone-200 font-mono text-[9px] tracking-widest uppercase hover:border-stone-500 hover:text-stone-200 transition-colors"
  >
  [ VIEW FULL AUDIT ]
  </button>
@@ -764,7 +764,7 @@ export const StrategyStudio = () => {
  </div>
 
  <div>
- <h3 className="text-xs font-mono tracking-widest uppercase text-stone-500 mb-6 border-b border-stone-300 pb-2">Run New Analysis</h3>
+ <h3 className="text-xs font-mono tracking-widest uppercase text-stone-200 mb-6 border-b border-stone-300 pb-2">Run New Analysis</h3>
  <div className="grid md:grid-cols-4 gap-0 border border-stone-300">
  <button 
  onClick={() => {
@@ -774,9 +774,9 @@ export const StrategyStudio = () => {
  }}
  className="p-6 bg-white border-r border-stone-300 hover:bg-stone-100 transition-all text-left group last:border-r-0"
  >
- <FileText className="text-stone-400 mb-4 group-hover:text-stone-800 transition-colors"size={20} />
+ <FileText className="text-stone-200 mb-4 group-hover:text-stone-800 transition-colors"size={20} />
  <h4 className="font-mono text-[10px] uppercase tracking-widest text-stone-800 mb-2">Content Analysis</h4>
- <p className="text-xs font-serif text-stone-500">Upload new analytics to update your read.</p>
+ <p className="text-xs font-serif text-stone-200">Upload new analytics to update your read.</p>
  </button>
  <button 
  onClick={() => {
@@ -786,9 +786,9 @@ export const StrategyStudio = () => {
  }}
  className="p-6 bg-white border-r border-stone-300 hover:bg-stone-100 transition-all text-left group last:border-r-0"
  >
- <Sparkles className="text-stone-400 mb-4 group-hover:text-stone-800 transition-colors"size={20} />
+ <Sparkles className="text-stone-200 mb-4 group-hover:text-stone-800 transition-colors"size={20} />
  <h4 className="font-mono text-[10px] uppercase tracking-widest text-stone-800 mb-2">Brand Deal Analysis</h4>
- <p className="text-xs font-serif text-stone-500">See how a deal fits your aesthetic narrative.</p>
+ <p className="text-xs font-serif text-stone-200">See how a deal fits your aesthetic narrative.</p>
  </button>
  <button 
  onClick={() => {
@@ -798,9 +798,9 @@ export const StrategyStudio = () => {
  }}
  className="p-6 bg-white border-r border-stone-300 hover:bg-stone-100 transition-all text-left group last:border-r-0"
  >
- <CheckCircle2 className="text-stone-400 mb-4 group-hover:text-stone-800 transition-colors"size={20} />
+ <CheckCircle2 className="text-stone-200 mb-4 group-hover:text-stone-800 transition-colors"size={20} />
  <h4 className="font-mono text-[10px] uppercase tracking-widest text-stone-800 mb-2">Strategy Implementation</h4>
- <p className="text-xs font-serif text-stone-500">Generate new tasks and content plans.</p>
+ <p className="text-xs font-serif text-stone-200">Generate new tasks and content plans.</p>
  </button>
  <button 
  onClick={() => {
@@ -808,9 +808,9 @@ export const StrategyStudio = () => {
  }}
  className="p-6 bg-stone-900 border-r border-stone-300 hover:bg-black transition-all text-left group last:border-r-0"
  >
- <Video className="text-stone-500 mb-4 group-hover:text-white transition-colors"size={20} />
+ <Video className="text-stone-200 mb-4 group-hover:text-white transition-colors"size={20} />
  <h4 className="font-mono text-[10px] uppercase tracking-widest text-white mb-2">Ingestion Room</h4>
- <p className="text-xs font-serif text-stone-400">Upload media for deep analysis and action plans.</p>
+ <p className="text-xs font-serif text-stone-200">Upload media for deep analysis and action plans.</p>
  </button>
  </div>
  </div>
@@ -820,17 +820,17 @@ export const StrategyStudio = () => {
  <div className="mx-auto w-16 h-16 border border-stone-800 flex items-center justify-center mb-6">
  {(() => {
  const Icon = PLATFORMS.find(p => p.id === activePlatform)?.icon;
- return Icon ? <Icon size={24} className="text-stone-500"/> : null;
+ return Icon ? <Icon size={24} className="text-stone-200"/> : null;
  })()}
  </div>
- <h3 className="text-2xl italic tracking-tighter text-stone-300 mb-2">No data for {activePlatform}</h3>
- <p className="text-stone-500 mb-8 max-w-md mx-auto font-mono text-xs uppercase tracking-widest leading-relaxed">Complete your first read to unlock the {activePlatform} dashboard and get personalized strategy insights.</p>
+ <h3 className="text-2xl italic tracking-tighter text-stone-200 mb-2">No data for {activePlatform}</h3>
+ <p className="text-stone-200 mb-8 max-w-md mx-auto font-mono text-xs uppercase tracking-widest leading-relaxed">Complete your first read to unlock the {activePlatform} dashboard and get personalized strategy insights.</p>
  <button 
  onClick={() => {
  setIsDashboardMode(false);
  setStep(1);
  }}
- className="py-3 px-6 border border-stone-800 text-stone-300 font-mono text-[9px] tracking-widest uppercase hover:bg-stone-900 transition-colors"
+ className="py-3 px-6 border border-stone-800 text-stone-200 font-mono text-[9px] tracking-widest uppercase hover:bg-stone-900 transition-colors"
  >
  [ INITIATE FIRST READ ]
  </button>
@@ -842,7 +842,7 @@ export const StrategyStudio = () => {
 
  if (loadingAudits) {
  return (
- <div className="h-full w-full bg overflow-y-auto custom-scrollbar font-serif">
+ <div className="h-full w-full bg-stone-950 overflow-y-auto custom-scrollbar font-serif">
  <div className="max-w-4xl mx-auto py-12 px-6 animate-pulse">
  <div className="flex items-center justify-between mb-12 border-b border-stone-800 pb-4">
  <div className="h-10 bg-stone-800/50 w-64"></div>
@@ -889,7 +889,7 @@ export const StrategyStudio = () => {
  }
 
  return (
- <div className="h-full w-full bg overflow-y-auto custom-scrollbar font-serif text-stone-300">
+ <div className="h-full w-full bg-stone-950 overflow-y-auto custom-scrollbar font-serif text-stone-200">
  {isDashboardMode ? renderDashboard() : renderStepContent()}
 
  <AnimatePresence>
@@ -904,18 +904,18 @@ export const StrategyStudio = () => {
  initial={{ scale: 0.95, opacity: 0 }}
  animate={{ scale: 1, opacity: 1 }}
  exit={{ scale: 0.95, opacity: 0 }}
- className="bg border border-stone-800 w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden"
+ className="bg-stone-950 border border-stone-800 w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden"
  >
  <div className="p-6 border-b border-stone-800 flex items-center justify-between bg-stone-900/50">
  <h3 className="font-serif italic text-2xl text-stone-200">Select from Archive</h3>
- <button onClick={() => setShowArchiveModal(false)} className="p-2 text-stone-500 hover:text-stone-300 transition-colors hover:bg-stone-800">
+ <button onClick={() => setShowArchiveModal(false)} className="p-2 text-stone-200 hover:text-stone-200 transition-colors hover:bg-stone-800">
  <X size={20} />
  </button>
  </div>
  
- <div className="flex-1 overflow-y-auto p-6 bg">
+ <div className="flex-1 overflow-y-auto p-6 bg-stone-950">
  {loadingArchive ? (
- <div className="flex flex-col items-center justify-center py-24 text-stone-500">
+ <div className="flex flex-col items-center justify-center py-24 text-stone-200">
  <Loader2 size={32} className="animate-spin mb-4"/>
  <p className="font-mono text-[9px] uppercase tracking-widest">Loading archive...</p>
  </div>
@@ -941,18 +941,18 @@ export const StrategyStudio = () => {
  <Video size={32} />
  </div>
  )}
- <div className="absolute top-2 right-2 bg-black/80 text-stone-300 px-2 py-0.5 border border-stone-800 font-mono text-[8px] uppercase tracking-widest">
+ <div className="absolute top-2 right-2 bg-black/80 text-stone-200 px-2 py-0.5 border border-stone-800 font-mono text-[8px] uppercase tracking-widest">
  {item.type}
  </div>
  </div>
  <div className="p-3 bg-stone-900/30">
- <p className="font-mono text-[9px] uppercase tracking-widest text-stone-400 truncate">{item.title}</p>
+ <p className="font-mono text-[9px] uppercase tracking-widest text-stone-200 truncate">{item.title}</p>
  </div>
  </div>
  ))}
  </div>
  ) : (
- <div className="flex flex-col items-center justify-center py-24 text-stone-600">
+ <div className="flex flex-col items-center justify-center py-24 text-stone-500">
  <ImageIcon size={48} className="mb-4 opacity-20"/>
  <p className="font-mono text-[9px] uppercase tracking-widest">Your archive is empty.</p>
  </div>

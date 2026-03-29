@@ -9,7 +9,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { DeveloperSettings } from './DeveloperSettings';
 import { SemanticSteps } from './SemanticSteps';
 import { TheWard } from './TheWard';
-import { ImperialPatronageModal } from './ImperialPatronageModal';
 import { ConnectionsManager } from './ConnectionsManager';
 
 const detectIframeContext = (): boolean => {
@@ -59,7 +58,6 @@ export const UserProfileView: React.FC = () => {
 
  const [showWard, setShowWard] = useState(false);
  const [showDevSettings, setShowDevSettings] = useState(false);
- const [showPatronageModal, setShowPatronageModal] = useState(false);
  const [isPatronActive, setIsPatronActive] = useState(false);
 
  const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -251,7 +249,6 @@ export const UserProfileView: React.FC = () => {
  )}
  {showDevSettings && <DeveloperSettings onClose={() => setShowDevSettings(false)} />}
  {showWard && <TheWard onClose={() => setShowWard(false)} />}
- {showPatronageModal && <ImperialPatronageModal isOpen={showPatronageModal} onClose={() => setShowPatronageModal(false)} prefillKey=""/>}
  </AnimatePresence>
 
  <header className="max-w-7xl mx-auto mb-8 flex justify-between items-end">
@@ -589,7 +586,7 @@ export const UserProfileView: React.FC = () => {
  <ExternalLink size={14} /> Manage
  </a>
  {!isPatronActive && (
- <button onClick={() => setShowPatronageModal(true)} className="flex-1 py-4 bg-stone-800 text-white text-[10px] uppercase tracking-widest hover:bg-stone-700 transition-colors rounded-none">
+ <button onClick={() => window.dispatchEvent(new CustomEvent('mimi:open_patron_modal'))} className="flex-1 py-4 bg-stone-800 text-white text-[10px] uppercase tracking-widest hover:bg-stone-700 transition-colors rounded-none">
  Upgrade to Patron
  </button>
  )}

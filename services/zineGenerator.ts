@@ -84,7 +84,7 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
             const profileToUse = opts.bypassTailor ? null : profile;
             const profileContext = sanitizeProfile(profileToUse);
             
-            const zineOptionsContext = zineOptions ? `Zine Style: ${zineOptions.style}, Theme: ${zineOptions.theme}, Content Focus: ${zineOptions.contentFocus}, Art Style: ${zineOptions.artStyle || 'Default'}, Aesthetic Tone: ${zineOptions.aestheticTone || 'Default'}, Goals: ${zineOptions.goals || 'None'}, Custom Title: ${zineOptions.customTitle || 'Generate a title'}` : 'Standard';
+            const zineOptionsContext = zineOptions ? `Zine Style: ${zineOptions.style}, Theme: ${zineOptions.theme}, Content Focus: ${zineOptions.contentFocus}, Art Style: ${zineOptions.artStyle || 'Default'}, Aesthetic Tone: ${zineOptions.aestheticTone || 'Default'}, Goals: ${zineOptions.goals || 'None'}, Custom Title: ${zineOptions.customTitle || 'Generate a title'}, Reading Level: ${zineOptions.readingLevel === 'slow' ? 'Slow Read (10-15 min, deep, expansive, detailed)' : 'Short Read (2-4 min, punchy, concise)'}` : 'Standard';
             const modulationContext = modulateSemioticContext(text, profile, tone);
             
             // Fetch context in parallel

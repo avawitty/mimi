@@ -495,7 +495,7 @@ const BlueprintCard: React.FC<{ label: string; subLabel?: string; onClick: () =>
 // --- MAIN COMPONENT ---
 
 export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?: () => void }> = ({ initialOverrides, onOverridesConsumed }) => {
- const { profile, updateProfile, personas, activePersonaId, switchPersona, updatePersona, user, enabledAlgos, toggleAlgo, deletePersona } = useUser();
+ const { profile, updateProfile, personas, activePersonaId, switchPersona, updatePersona, user, enabledAlgos, toggleAlgo, deletePersona, canGenerate, incrementGeneration } = useUser();
  const activePersona = personas.find(p => p.id === activePersonaId);
  const [draft, setDraft] = useState<TailorLogicDraft | null>(null);
  
@@ -925,11 +925,33 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
 
  const handleScryDirectives = async () => {
  if (!draft) return;
+ 
+ const isFree = (profile?.usage?.tailorRuns || 0) === 0;
+ if (!isFree && !canGenerate) {
+     if (profile?.planStatus === 'ghost') {
+         window.dispatchEvent(new CustomEvent('mimi:open_gateway'));
+     } else {
+         window.dispatchEvent(new CustomEvent('mimi:open_patron_modal'));
+     }
+     return;
+ }
+
  setIsAuditing(true);
  try {
  const res = await analyzeTailorDraft(draft);
  setAuditReport(res);
  setShowAuditOverlay(true); 
+ 
+ if (!isFree) {
+     await incrementGeneration(1); // 1 credit for Tailor analysis
+ }
+ 
+ // Track tailor runs
+ if (profile) {
+     const updatedUsage = { ...(profile.usage || { totalGenerations: 0, tailorRuns: 0, reportRuns: 0, imageRuns: 0 }) };
+     updatedUsage.tailorRuns = (updatedUsage.tailorRuns || 0) + 1;
+     updateProfile({ ...profile, usage: updatedUsage });
+ }
  } catch (e) { 
  window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message:"Oracle obstructed.", type: 'error' } }));
  } finally { setIsAuditing(false); }

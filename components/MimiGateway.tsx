@@ -10,7 +10,7 @@ interface MimiGatewayProps {
 }
 
 export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => {
- const { login, user, signUpWithEmailPassword, signInWithEmailPassword, upgradeGhostAccount } = useUser();
+ const { login, linkAccount, user, signUpWithEmailPassword, signInWithEmailPassword, upgradeGhostAccount } = useUser();
  const [mode, setMode] = useState<'options' | 'email'>('options');
  const [email, setEmail] = useState('');
  const [password, setPassword] = useState('');
@@ -20,7 +20,7 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
 
  const handleGoogleLogin = async () => {
  try {
- await login(true);
+ await linkAccount(true);
  onClose();
  } catch (e: any) {
  setError(e.message ||"Failed to sign in with Google.");
@@ -73,9 +73,13 @@ export const MimiGateway: React.FC<MimiGatewayProps> = ({ isOpen, onClose }) => 
 
  <div className="p-8">
  <div className="text-center mb-8">
- <h2 className="text-h1 text-stone-900 dark:text-white mb-3">Join the Vanguard</h2>
+ <h2 className="text-h1 text-stone-900 dark:text-white mb-3">
+ {user?.isAnonymous ? 'Claim your trial' : 'Join the Vanguard'}
+ </h2>
  <p className="text-body text-stone-500 max-w-[280px] mx-auto">
- A sovereign editorial machine for the aesthetic superintelligence. Translate latent intent into defensible conceptual architecture.
+ {user?.isAnonymous 
+ ? 'You have 12 credits waiting. Enter your email to unlock the full Mimi Zine experience.'
+ : 'A sovereign editorial machine for the aesthetic superintelligence. Translate latent intent into defensible conceptual architecture.'}
  </p>
  </div>
 

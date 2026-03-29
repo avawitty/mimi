@@ -9,7 +9,7 @@ import { ManifestIdentityGate } from './ManifestIdentityGate';
 import { PlanTier } from '../constants';
 
 export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => void; prefillKey?: string; isLimitReached?: boolean }> = ({ isOpen, onClose, prefillKey, isLimitReached }) => {
- const { activatePatron, user } = useUser();
+ const { activatePatron, user, profile } = useUser();
  const [keyInput, setKeyInput] = useState(prefillKey || '');
  const [status, setStatus] = useState<'idle' | 'validating' | 'success' | 'error'>('idle');
  const [isCheckoutLoading, setIsCheckoutLoading] = useState<PlanTier | null>(null);
@@ -117,7 +117,7 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
  <div className="space-y-6 flex-1 flex flex-col justify-center w-full max-w-2xl">
  {isLimitReached && (
  <div className="bg-amber-100 text-amber-800 p-3 rounded-none text-xs font-sans uppercase tracking-widest font-bold">
- Free generation limit reached.
+ {profile?.planStatus === 'expired' ? 'Your trial has concluded. Upgrade to Patron to continue generating.' : 'Credits depleted. Upgrade to Patron to continue.'}
  </div>
  )}
  <p className="font-serif italic text-lg text-stone-600 leading-relaxed px-2">
@@ -140,10 +140,10 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
  <ManifestIdentityGate>
  <button 
  onClick={() => handleSubscribe('core')}
- disabled={!!isCheckoutLoading}
- className="w-full py-3 border border font-sans text-[10px] uppercase tracking-[0.2em] font-bold hover:bg hover:text-white transition-colors flex justify-center items-center gap-2"
+ disabled={!!isCheckoutLoading || profile?.planStatus === 'core'}
+ className={`w-full py-3 border border font-sans text-[10px] uppercase tracking-[0.2em] font-bold transition-colors flex justify-center items-center gap-2 ${profile?.planStatus === 'core' ? 'bg-stone-100 text-stone-400 border-stone-200 cursor-not-allowed' : 'hover:bg hover:text-white'}`}
  >
- {isCheckoutLoading === 'core' ? <Loader2 size={14} className="animate-spin"/> : 'Understand Your Taste'}
+ {isCheckoutLoading === 'core' ? <Loader2 size={14} className="animate-spin"/> : profile?.planStatus === 'core' ? 'Current Plan' : 'Understand Your Taste'}
  </button>
  </ManifestIdentityGate>
  </div>
@@ -164,10 +164,10 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
  <ManifestIdentityGate>
  <button 
  onClick={() => handleSubscribe('pro')}
- disabled={!!isCheckoutLoading}
- className="w-full py-3 bg text-white font-sans text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-stone-800 transition-colors flex justify-center items-center gap-2"
+ disabled={!!isCheckoutLoading || profile?.planStatus === 'pro'}
+ className={`w-full py-3 bg text-white font-sans text-[10px] uppercase tracking-[0.2em] font-bold transition-colors flex justify-center items-center gap-2 ${profile?.planStatus === 'pro' ? 'bg-stone-300 cursor-not-allowed' : 'hover:bg-stone-800'}`}
  >
- {isCheckoutLoading === 'pro' ? <Loader2 size={14} className="animate-spin"/> : 'Apply Your Taste'}
+ {isCheckoutLoading === 'pro' ? <Loader2 size={14} className="animate-spin"/> : profile?.planStatus === 'pro' ? 'Current Plan' : 'Apply Your Taste'}
  </button>
  </ManifestIdentityGate>
  </div>
@@ -187,10 +187,10 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
  <ManifestIdentityGate>
  <button 
  onClick={() => handleSubscribe('lab')}
- disabled={!!isCheckoutLoading}
- className="w-full py-3 border border-stone-600 font-sans text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-white hover:text transition-colors flex justify-center items-center gap-2"
+ disabled={!!isCheckoutLoading || profile?.planStatus === 'lab'}
+ className={`w-full py-3 border border-stone-600 font-sans text-[10px] uppercase tracking-[0.2em] font-bold transition-colors flex justify-center items-center gap-2 ${profile?.planStatus === 'lab' ? 'bg-stone-800 text-stone-500 border-stone-800 cursor-not-allowed' : 'hover:bg-white hover:text'}`}
  >
- {isCheckoutLoading === 'lab' ? <Loader2 size={14} className="animate-spin"/> : 'Shape The System'}
+ {isCheckoutLoading === 'lab' ? <Loader2 size={14} className="animate-spin"/> : profile?.planStatus === 'lab' ? 'Current Plan' : 'Shape The System'}
  </button>
  </ManifestIdentityGate>
  </div>

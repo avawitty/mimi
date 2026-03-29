@@ -34,7 +34,17 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({ currentView,
  return (
  <button
  key={tab.id}
- onClick={() => setViewMode(tab.id)}
+ onClick={() => {
+     if (tab.id === 'membership') {
+         if (profile?.planStatus === 'ghost') {
+             window.dispatchEvent(new CustomEvent('mimi:open_gateway'));
+         } else {
+             window.dispatchEvent(new CustomEvent('mimi:open_patron_modal'));
+         }
+     } else {
+         setViewMode(tab.id);
+     }
+ }}
  className="relative flex flex-col items-center justify-center w-full h-full space-y-1"
  >
  <Icon 
