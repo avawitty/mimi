@@ -6,7 +6,7 @@ import {
  Scissors, Ruler, Radio, Sparkles, Loader2, 
  ShieldCheck, Zap, Wind, Anchor, History,
  Waves, BookOpen, PenTool, Check, ArrowRight, 
- X, BrainCircuit, Save, Orbit, Feather, Activity, Target, Sliders, Layers, Info, Box, Palette, ImageIcon, Type, Plus, Trash2, Maximize2, MoveHorizontal, Mic, ArrowLeft, Heart, User, CheckCircle, Droplet, Hash, ListChecks, Radar, Globe, Instagram, Link, Stars, ExternalLink, ShieldAlert, Quote, FileText, Copy, Terminal, Gauge, Eraser, Binary, Wallet, Smartphone, ChevronRight, Moon, Compass, MapPin, Clock, Calendar, MessageSquare, Upload, Download, DollarSign, Settings, LayoutGrid, Edit3, Key, Cpu
+ X, BrainCircuit, Save, Orbit, Feather, Activity, Target, Sliders, Layers, Info, Box, Palette, ImageIcon, Type, Plus, Trash2, Maximize2, MoveHorizontal, Mic, ArrowLeft, Heart, User, CheckCircle, Droplet, Hash, ListChecks, Radar, Globe, Instagram, Link, Stars, ExternalLink, ShieldAlert, Quote, FileText, Copy, Terminal, Gauge, Eraser, Binary, Wallet, Smartphone, ChevronRight, Moon, Compass, MapPin, Clock, Calendar, MessageSquare, Upload, Download, DollarSign, Settings, LayoutGrid, Edit3, Key, Cpu, Lock, Unlock
 } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { ColorShard, TailorAuditReport, ZodiacSign, TailorLogicDraft } from '../types';
@@ -452,7 +452,7 @@ const PresetStrip: React.FC<{ options: string[], current: string | string[], onS
  </div>
 );
 
-const FieldGroup: React.FC<{ label: React.ReactNode; description?: string; children: React.ReactNode }> = ({ label, description, children }) => (
+const FieldGroup: React.FC<{ label: React.ReactNode; description?: string; children: React.ReactNode; isLocked?: boolean; onLock?: () => void }> = ({ label, description, children, isLocked, onLock }) => (
  <div className="space-y-4 pb-12 border-b border-black/5 /5 last:border-b-0 relative">
  <div className="tape-top"></div>
  <div className="space-y-1">
@@ -500,6 +500,10 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  const [draft, setDraft] = useState<TailorLogicDraft | null>(null);
  
  const [viewMode, setViewMode] = useState<'blueprint' | 'edit'>('blueprint');
+ const [lockedFields, setLockedFields] = useState<Record<string, boolean>>({});
+ const toggleLock = (field: string) => {
+   setLockedFields(prev => ({ ...prev, [field]: !prev[field] }));
+ };
  const [activeStep, setActiveStep] = useState<'positioning' | 'celestial' | 'aesthetic' | 'chromatic' | 'voice' | 'vectors' | 'shards' | 'brand' | 'drift' | 'settings'>('positioning');
  
  const [isSaving, setIsSaving] = useState(false);
