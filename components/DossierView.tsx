@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../contexts/UserContext';
 import { hasAccess } from '../constants';
-import { fetchDossierFolders, fetchDossierArtifacts, createDossierFolder, createDossierArtifactFromImage, createDossierArtifactFromText, updateDossierFolder, fetchPocketItems, deleteDossierArtifact } from '../services/firebase';
+import { fetchDossierFolders, fetchDossierArtifacts, createDossierFolder, createDossierArtifactFromImage, createDossierArtifactFromText, updateDossierFolder, fetchPocketItems, deleteDossierArtifact, updateDossierArtifact } from '../services/firebase';
 import { DossierFolder, DossierArtifact, FruitionTrajectory, Task, UserProfile } from '../types';
 import { Briefcase, Folder, Plus, ChevronRight, FileText, Share2, Layout, ArrowRight, Loader2, X, Archive, Eye, Trash2, Globe, ExternalLink, Upload, ImageIcon, HeartHandshake, FolderOpen, LayoutGrid, FolderPlus, PenTool, Save, Quote, Info, StickyNote, Compass, Map, Terminal, Check, Calendar, AlertTriangle, ListChecks, Sparkles, Clock, Target, CalendarDays, GripVertical, Users, UserPlus, Search, Cpu, Activity, Lock } from 'lucide-react';
 import { LoadingSkeleton } from './LoadingSkeleton';
@@ -223,6 +223,27 @@ export default function DossierView() {
  console.error(e);
  } finally {
  setIsSavingMemo(false);
+ }
+ };
+
+ const handleArtifactDragEnd = async (e: any, info: any, artifact: DossierArtifact) => {
+ const currentX = artifact.layout?.x ?? 0;
+ const currentY = artifact.layout?.y ?? 0;
+ const newX = currentX + info.offset.x;
+ const newY = currentY + info.offset.y;
+ 
+ setArtifacts(prev => prev.map(art => 
+ art.id === artifact.id 
+ ? { ...art, layout: { x: newX, y: newY, zIndex: (art.layout?.zIndex || 0) + 1 } }
+ : art
+ ));
+
+ try {
+ await updateDossierArtifact(artifact.id, {
+ layout: { x: newX, y: newY, zIndex: (artifact.layout?.zIndex || 0) + 1 }
+ });
+ } catch (err) {
+ console.error("Failed to update artifact layout", err);
  }
  };
 
@@ -854,14 +875,19 @@ export default function DossierView() {
  </AnimatePresence>
 
  {/* Artifacts */}
- {artifacts.map((art, index) => (
+ {artifacts.map((art, index) => {
+ const defaultX = 100 + ((index % 4) * 280);
+ const defaultY = 400 + (Math.floor(index / 4) * 280);
+ return (
  <motion.div
  key={art.id}
  drag
  dragMomentum={false}
- initial={{ x: 100 + ((index % 4) * 280), y: 400 + (Math.floor(index / 4) * 280) }}
- className="absolute w-64 cursor-move group z-30"
- style={{ touchAction: 'none' }}
+ initial={{ x: art.layout?.x ?? defaultX, y: art.layout?.y ?? defaultY }}
+ animate={{ x: art.layout?.x ?? defaultX, y: art.layout?.y ?? defaultY }}
+ onDragEnd={(e, info) => handleArtifactDragEnd(e, info, art)}
+ className="absolute w-64 cursor-move group"
+ style={{ touchAction: 'none', zIndex: art.layout?.zIndex || 30 }}
  onPointerDownCapture={(e) => e.stopPropagation()}
  >
  <div className="border border-[#1C1917] bg-white shadow-sm overflow-hidden">
@@ -880,7 +906,8 @@ export default function DossierView() {
  </button>
  </div>
  </motion.div>
- ))}
+ );
+ })}
  </motion.div>
 
  {/* Floating Tool Palette */}
@@ -890,6 +917,9 @@ export default function DossierView() {
  [ REGISTRY ]
  </button>
  )}
+ <button onClick={handleOpenImport} className="font-mono text-[10px] uppercase tracking-widest hover:text-nous-subtle transition-colors">
+ [ IMPORT FROM ARCHIVE ]
+ </button>
  <button onClick={() => fileInputRef.current?.click()} className="font-mono text-[10px] uppercase tracking-widest hover:text-nous-subtle transition-colors">
  [ ADD ARTIFACT ]
  </button>

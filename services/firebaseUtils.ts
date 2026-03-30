@@ -1278,6 +1278,15 @@ export const deleteDossierArtifact = async (artifactId: string) => {
   }
 };
 
+export const updateDossierArtifact = async (artifactId: string, updates: Partial<DossierArtifact>) => {
+  try {
+    const artifactRef = doc(db, "dossier_artifacts", artifactId);
+    await updateDoc(artifactRef, updates);
+  } catch (e: any) {
+    handleFirestoreError(e, OperationType.UPDATE, `dossier_artifacts/${artifactId}`);
+  }
+};
+
 export const fetchDossierArtifacts = async (folderId: string) => {
   const localArtifacts = await getLocalArtifacts(folderId);
   

@@ -4,7 +4,7 @@ import { SovereignIdentityCardView } from './SovereignIdentityCardView';
 import { TasteConstellation } from './TasteConstellation';
 import { useUser } from '../contexts/UserContext';
 import { generateCelestialReading, generateExecutionLayer } from '../services/geminiService';
-import { Sparkles, Loader2, Fingerprint, Activity, BookOpen, Orbit, Waves, Compass } from 'lucide-react';
+import { Sparkles, Loader2, Fingerprint, Activity, BookOpen, Orbit, Waves, Compass, Briefcase } from 'lucide-react';
 import { ExecutionBlock } from './ExecutionBlock';
 import { ExecutionLayer } from '../types';
 

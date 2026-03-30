@@ -876,6 +876,11 @@ export interface DossierArtifact {
   stackIds?: string[]; // NEW: For clustering
   status?: 'active' | 'dormant'; // NEW: For Dormant Vision System
   deltaVerdict?: DeltaVerdict;
+  layout?: {
+    x: number;
+    y: number;
+    zIndex: number;
+  };
 }
 
 export interface SlideBlock {
