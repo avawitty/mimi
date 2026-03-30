@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Sparkles, Activity, ArrowRight, Search, Play, FileText, LayoutTemplate, MessageSquare } from 'lucide-react';
+import { BookOpen, Sparkles, Activity, ArrowRight, Search, Play, FileText, LayoutTemplate, MessageSquare, Loader2 } from 'lucide-react';
+import { askCodex } from '../services/geminiService';
 
 type CodexTab = 'read' | 'use' | 'cases';
 
@@ -188,16 +189,25 @@ const PrincipleCard = ({ principle }: { principle: CodexPrinciple }) => {
   );
 };
 
-export const HelpView: React.FC = () => {
+export const CodexView: React.FC = () => {
   const [askQuery, setAskQuery] = useState('');
   const [askResponse, setAskResponse] = useState<string | null>(null);
+  const [isAsking, setIsAsking] = useState(false);
 
-  const handleAsk = (e: React.FormEvent) => {
+  const handleAsk = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!askQuery.trim()) return;
     
-    // Simulated response grounded in principles
-    setAskResponse("This is failing at Refine. You have raw instinct and promising references, but no hierarchy yet. Consider applying the 'Rewrite as editorial thesis' action.");
+    setIsAsking(true);
+    try {
+      const response = await askCodex(askQuery, { currentStage: 'Refine' });
+      setAskResponse(response);
+    } catch (error) {
+      console.error("Error asking Codex:", error);
+      setAskResponse("The Codex is currently silent. Please try again.");
+    } finally {
+      setIsAsking(false);
+    }
   };
 
   const suggestedQueries = [
@@ -257,8 +267,8 @@ export const HelpView: React.FC = () => {
               placeholder="e.g., What principle am I violating?"
               className="w-full bg-transparent border-b border-nous-border focus:border-nous-text py-2 pl-2 pr-10 font-serif text-lg text-nous-text placeholder:text-nous-subtle/50 outline-none transition-colors"
             />
-            <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 text-nous-subtle hover:text-nous-text transition-colors">
-              <ArrowRight size={18} />
+            <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 text-nous-subtle hover:text-nous-text transition-colors" disabled={isAsking}>
+              {isAsking ? <Loader2 size={18} className="animate-spin" /> : <ArrowRight size={18} />}
             </button>
           </form>
 

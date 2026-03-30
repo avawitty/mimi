@@ -63,7 +63,7 @@ const TheOracle = lazy(() => import('./components/TheOracle').then(m => ({ defau
 const ActionBoard = lazy(() => import('./components/ActionBoard').then(m => ({ default: m.ActionBoard })));
 
 const MoodboardComposer = lazy(() => import('./components/MoodboardComposer').then(m => ({ default: m.MoodboardComposer })));
-const HelpView = lazy(() => import('./components/HelpView').then(m => ({ default: m.HelpView })));
+const CodexView = lazy(() => import('./components/CodexView').then(m => ({ default: m.CodexView })));
 const CommunityManifesto = lazy(() => import('./components/CommunityManifesto').then(m => ({ default: m.CommunityManifesto })));
 const RegistryAlert = lazy(() => import('./components/RegistryAlert').then(m => ({ default: m.RegistryAlert })));
 const ImperialPatronageModal = lazy(() => import('./components/ImperialPatronageModal').then(m => ({ default: m.ImperialPatronageModal })));
@@ -124,7 +124,7 @@ const NavigationDrawer: React.FC<{
  { mode: 'proscenium', label: 'Proscenium', note: 'Manifested Visions' }
  ]},
  { section: 'VI. System', items: [
- { mode: 'help', label: 'Codex', note: 'Documentation' }
+ { mode: 'codex', label: 'Codex', note: 'Documentation' }
  ]}
  ];
 
@@ -637,7 +637,7 @@ export const App: React.FC = () => {
  signature: 'Signature View',
  threads: 'Threads View',
  nebula: 'Floor View',
- help: 'System View',
+ codex: 'System View',
  profile: 'Profile View',
  tailor: 'Tailor View',
  scry: 'Scry View',
@@ -694,10 +694,7 @@ export const App: React.FC = () => {
  
  <AmbientSoundscape enabled={soundEnabled} volume={volume} />
  
- <AnimatePresence>{scribeTab && <TheScribe key={scribeTab} initialTab={scribeTab} onClose={() => setScribeTab(null)} onGenerateZine={(text) => {
- setScribeTab(null);
- handleRefine(text, [], 'oracle', { deepThinking: false, isPublic: false, isLite: false, isHighFidelity: false, tags: [], zineOptions: zineOptions });
- }} />}</AnimatePresence>
+ <AnimatePresence>{scribeTab && <TheScribe key={scribeTab} initialTab={scribeTab as 'mimi' | 'cyrus'} onClose={() => setScribeTab(null)} />}</AnimatePresence>
  <AnimatePresence>{showCaptiveSentinel && <CaptiveSentinel onClose={() => setShowCaptiveSentinel(false)} />}</AnimatePresence>
  
  <MimiGateway isOpen={showGateway} onClose={() => setShowGateway(false)} />
@@ -1002,7 +999,7 @@ export const App: React.FC = () => {
  {viewMode === 'latent-constellation' && <LatentConstellation />}
  {viewMode === 'the-lens' && <TheLens />}
  {viewMode === 'notifications' && <NotificationsView />}
- {viewMode === 'help' && <HelpView />}
+ {viewMode === 'codex' && <CodexView />}
  {viewMode === 'manifesto' && <CommunityManifesto />}
  {viewMode === 'checkout-success' && checkoutPlan && (
  <CheckoutSuccessView 

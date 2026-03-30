@@ -106,7 +106,7 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
         
         // 4. Connect Live Session
         const sessionPromise = ai.live.connect({
-          model: 'gemini-2.5-flash-native-audio-preview-12-2025',
+          model: 'gemini-3.1-flash-live-preview',
           config: {
             responseModalities: [Modality.AUDIO],
             systemInstruction: systemInstruction,

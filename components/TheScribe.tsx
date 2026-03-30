@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Search, Sparkles, Briefcase, Radio, Eraser, Loader2, Play, Pause } from 'lucide-react';
+import { X, Sparkles, Briefcase, Eraser, Save, PenTool, Type } from 'lucide-react';
 import { LiveMentor } from './LiveMentor';
-import { SUPERINTELLIGENCE_PROMPTS } from '../constants';
-import { generateInternalDebate, generateDebateAudio } from '../services/geminiService';
 import { useUser } from '../contexts/UserContext';
+import { v4 as uuidv4 } from 'uuid';
 
 const MIMI_SYSTEM_INSTRUCTION = `
 CORE IDENTITY
@@ -21,481 +20,287 @@ Persona: Cyrus (The Oracle). Tone: Cold, analytical, masculine, grounded. He hel
 `;
 
 interface TheScribeProps {
- onClose: () => void;
- onGenerateZine?: (text: string) => void;
- initialTab?: Tab;
+  onClose: () => void;
+  initialTab?: 'mimi' | 'cyrus';
 }
 
-type Tab = 'engine' | 'mimi' | 'cyrus' | 'synthesis';
+export const TheScribe: React.FC<TheScribeProps> = ({ onClose, initialTab = 'mimi' }) => {
+  const [activeEntity, setActiveEntity] = useState<'mimi' | 'cyrus'>(initialTab === 'cyrus' ? 'cyrus' : 'mimi');
+  const [userNotes, setUserNotes] = useState('');
+  const [aiTranscript, setAiTranscript] = useState('');
+  const [activeCaptureTab, setActiveCaptureTab] = useState<'notes' | 'sketch'>('notes');
+  const { pocket, setPocket } = useUser();
 
-export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine, initialTab = 'engine' }) => {
- const [activeTab, setActiveTab] = useState<Tab>(initialTab);
- const [inputValue, setInputValue] = useState('');
- const [scribeTranscript, setScribeTranscript] = useState('');
- 
- // Synthesis State
- const [isGeneratingDebate, setIsGeneratingDebate] = useState(false);
- const [debateAudioUrl, setDebateAudioUrl] = useState<string | null>(null);
- const [debateTranscript, setDebateTranscript] = useState<{speaker: string, text: string}[] | null>(null);
- const [synthesisText, setSynthesisText] = useState<string | null>(null);
- const [isPlayingDebate, setIsPlayingDebate] = useState(false);
- const audioRef = useRef<HTMLAudioElement | null>(null);
- const { profile } = useUser();
- const tasteProfile = profile?.tasteProfile || null;
+  // Canvas State
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
 
- const handleGenerateDebate = async () => {
- if (!inputValue.trim()) return;
- setIsGeneratingDebate(true);
- setDebateAudioUrl(null);
- setDebateTranscript(null);
- setSynthesisText(null);
- 
- try {
- const debateResult = await generateInternalDebate(inputValue, tasteProfile);
- setDebateTranscript(debateResult._internal_debate);
- setSynthesisText(debateResult.synthesis);
- 
- const audioBase64 = await generateDebateAudio(debateResult._internal_debate);
- 
- // Convert base64 PCM to Blob URL with WAV header
- const binary = atob(audioBase64);
- const pcmData = new Uint8Array(binary.length);
- for (let i = 0; i < binary.length; i++) {
- pcmData[i] = binary.charCodeAt(i);
- }
- 
- // Create WAV header for 24kHz, 1 channel, 16-bit PCM
- const sampleRate = 24000;
- const numChannels = 1;
- const bitsPerSample = 16;
- const dataLength = pcmData.length;
- 
- const header = new ArrayBuffer(44);
- const view = new DataView(header);
- 
- const writeString = (view: DataView, offset: number, string: string) => {
- for (let i = 0; i < string.length; i++) {
- view.setUint8(offset + i, string.charCodeAt(i));
- }
- };
+  // Initialize Canvas
+  useEffect(() => {
+    if (activeCaptureTab !== 'sketch') return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
- writeString(view, 0, 'RIFF');
- view.setUint32(4, 36 + dataLength, true);
- writeString(view, 8, 'WAVE');
- writeString(view, 12, 'fmt ');
- view.setUint32(16, 16, true);
- view.setUint16(20, 1, true);
- view.setUint16(22, numChannels, true);
- view.setUint32(24, sampleRate, true);
- view.setUint32(28, sampleRate * numChannels * (bitsPerSample / 8), true);
- view.setUint16(32, numChannels * (bitsPerSample / 8), true);
- view.setUint16(34, bitsPerSample, true);
- writeString(view, 36, 'data');
- view.setUint32(40, dataLength, true);
- 
- const wavHeader = new Uint8Array(header);
- const wavData = new Uint8Array(wavHeader.length + pcmData.length);
- wavData.set(wavHeader, 0);
- wavData.set(pcmData, wavHeader.length);
+    const resizeCanvas = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      canvas.style.width = `${rect.width}px`;
+      canvas.style.height = `${rect.height}px`;
+      
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 2;
+      const isDark = document.documentElement.classList.contains('dark');
+      ctx.strokeStyle = isDark ? '#d6d3d1' : '#292524';
+    };
 
- const blob = new Blob([wavData], { type: 'audio/wav' });
- const url = URL.createObjectURL(blob);
- 
- setDebateAudioUrl(url);
- } catch (error) {
- console.error("Failed to generate debate:", error);
- } finally {
- setIsGeneratingDebate(false);
- }
- };
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    return () => window.removeEventListener('resize', resizeCanvas);
+  }, [activeCaptureTab]);
 
- const toggleDebateAudio = () => {
- if (!audioRef.current) return;
- if (isPlayingDebate) {
- audioRef.current.pause();
- setIsPlayingDebate(false);
- } else {
- audioRef.current.play().then(() => {
- setIsPlayingDebate(true);
- }).catch(e => {
- console.error("Audio playback failed:", e);
- setIsPlayingDebate(false);
- });
- }
- };
+  // Drawing Handlers
+  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+    setIsDrawing(true);
+    draw(e);
+  };
 
- // Canvas State
- const canvasRef = useRef<HTMLCanvasElement>(null);
- const [isDrawing, setIsDrawing] = useState(false);
+  const stopDrawing = () => {
+    setIsDrawing(false);
+    const ctx = canvasRef.current?.getContext('2d');
+    if (ctx) ctx.beginPath();
+  };
 
- const tabs = [
- { id: 'engine', label: 'The Engine', icon: Search },
- { id: 'mimi', label: 'Mimi', icon: Sparkles },
- { id: 'cyrus', label: 'Cyrus', icon: Briefcase },
- { id: 'synthesis', label: 'Synthesis', icon: Radio },
- ] as const;
+  const draw = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
 
- // Initialize Canvas
- useEffect(() => {
- const canvas = canvasRef.current;
- if (!canvas) return;
- const ctx = canvas.getContext('2d');
- if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    let clientX, clientY;
 
- const resizeCanvas = () => {
- const dpr = window.devicePixelRatio || 1;
- const rect = canvas.getBoundingClientRect();
- canvas.width = rect.width * dpr;
- canvas.height = rect.height * dpr;
- ctx.scale(dpr, dpr);
- canvas.style.width = `${rect.width}px`;
- canvas.style.height = `${rect.height}px`;
- 
- // Set pen style
- ctx.lineCap = 'round';
- ctx.lineJoin = 'round';
- ctx.lineWidth = 1.5;
- const isDark = document.documentElement.classList.contains('dark');
- ctx.strokeStyle = isDark ? '#d6d3d1' : '#292524'; // stone-300 or stone-800
- };
+    if ('touches' in e) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = (e as React.MouseEvent).clientX;
+      clientY = (e as React.MouseEvent).clientY;
+    }
 
- resizeCanvas();
- window.addEventListener('resize', resizeCanvas);
- return () => window.removeEventListener('resize', resizeCanvas);
- }, []);
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
 
- // Drawing Handlers
- const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
- setIsDrawing(true);
- draw(e);
- };
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
 
- const stopDrawing = () => {
- setIsDrawing(false);
- const ctx = canvasRef.current?.getContext('2d');
- if (ctx) ctx.beginPath();
- };
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
 
- const draw = (e: React.MouseEvent | React.TouchEvent) => {
- if (!isDrawing) return;
- const canvas = canvasRef.current;
- const ctx = canvas?.getContext('2d');
- if (!canvas || !ctx) return;
+  // Export to Pocket
+  const handleExport = () => {
+    const newItems = [];
+    
+    // 1. Export User Notes (Field Notes)
+    if (userNotes.trim()) {
+      newItems.push({
+        id: uuidv4(),
+        type: 'text' as const,
+        content: userNotes,
+        metadata: { source: 'The Scribe', title: 'Field Notes', date: new Date().toISOString() }
+      });
+    }
 
- const rect = canvas.getBoundingClientRect();
- let clientX, clientY;
+    // 2. Export AI Transcript (Curator Notes)
+    if (aiTranscript.trim()) {
+      newItems.push({
+        id: uuidv4(),
+        type: 'text' as const,
+        content: aiTranscript,
+        metadata: { source: 'The Scribe', title: `Curator Notes (${activeEntity === 'mimi' ? 'Mimi' : 'Cyrus'})`, date: new Date().toISOString() }
+      });
+    }
 
- if ('touches' in e) {
- clientX = e.touches[0].clientX;
- clientY = e.touches[0].clientY;
- } else {
- clientX = (e as React.MouseEvent).clientX;
- clientY = (e as React.MouseEvent).clientY;
- }
+    // 3. Export Sketch
+    const canvas = canvasRef.current;
+    if (canvas) {
+      // Check if canvas is empty (simplified check)
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        const pixelBuffer = new Uint32Array(ctx.getImageData(0, 0, canvas.width, canvas.height).data.buffer);
+        const hasPixels = pixelBuffer.some(color => color !== 0);
+        if (hasPixels) {
+          const dataUrl = canvas.toDataURL('image/png');
+          newItems.push({
+            id: uuidv4(),
+            type: 'image' as const,
+            content: dataUrl,
+            metadata: { source: 'The Scribe', title: 'Scribe Sketch', date: new Date().toISOString() }
+          });
+        }
+      }
+    }
 
- const x = clientX - rect.left;
- const y = clientY - rect.top;
+    if (newItems.length > 0) {
+      setPocket([...pocket, ...newItems]);
+      onClose(); // Close after export
+    }
+  };
 
- ctx.lineTo(x, y);
- ctx.stroke();
- ctx.beginPath();
- ctx.moveTo(x, y);
- };
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[50000] bg-nous-base flex flex-col md:flex-row overflow-hidden"
+    >
+      {/* Top/Left: Communion Area */}
+      <div className="flex-1 relative">
+        {/* Entity Toggle */}
+        <div className="absolute top-8 right-8 z-20 flex bg-black/10 dark:bg-white/10 p-1 rounded-full backdrop-blur-md">
+          <button
+            onClick={() => setActiveEntity('mimi')}
+            className={`px-4 py-2 rounded-full font-sans text-[9px] uppercase tracking-widest font-black transition-colors flex items-center gap-2 ${
+              activeEntity === 'mimi' ? 'bg-white text-black shadow-sm' : 'text-white/60 hover:text-white'
+            }`}
+          >
+            <Sparkles size={12} />
+            Mimi
+          </button>
+          <button
+            onClick={() => setActiveEntity('cyrus')}
+            className={`px-4 py-2 rounded-full font-sans text-[9px] uppercase tracking-widest font-black transition-colors flex items-center gap-2 ${
+              activeEntity === 'cyrus' ? 'bg-black text-white shadow-sm' : 'text-black/60 hover:text-black dark:text-white/60 dark:hover:text-white'
+            }`}
+          >
+            <Briefcase size={12} />
+            Cyrus
+          </button>
+        </div>
 
- const clearCanvas = () => {
- const canvas = canvasRef.current;
- const ctx = canvas?.getContext('2d');
- if (!canvas || !ctx) return;
- ctx.clearRect(0, 0, canvas.width, canvas.height);
- };
+        <AnimatePresence mode="wait">
+          {activeEntity === 'mimi' ? (
+            <LiveMentor 
+              key="mimi"
+              name="Mimi"
+              role="The Archivist"
+              voiceName="Kore"
+              systemInstruction={MIMI_SYSTEM_INSTRUCTION}
+              theme="mimi"
+              onTranscriptUpdate={setAiTranscript}
+            />
+          ) : (
+            <LiveMentor 
+              key="cyrus"
+              name="Cyrus"
+              role="The Oracle"
+              voiceName="Charon"
+              systemInstruction={CYRUS_SYSTEM_INSTRUCTION}
+              theme="cyrus"
+              onTranscriptUpdate={setAiTranscript}
+            />
+          )}
+        </AnimatePresence>
+      </div>
 
- return (
- <motion.div 
- initial={{ opacity: 0 }}
- animate={{ opacity: 1 }}
- exit={{ opacity: 0 }}
- className="fixed inset-0 z-[50000] bg-nous-base/95 /95 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 overflow-hidden"
- >
- {/* Background Sketchpad Canvas */}
- <canvas
- ref={canvasRef}
- onMouseDown={startDrawing}
- onMouseMove={draw}
- onMouseUp={stopDrawing}
- onMouseLeave={stopDrawing}
- onTouchStart={startDrawing}
- onTouchMove={draw}
- onTouchEnd={stopDrawing}
- className="absolute inset-0 w-full h-full cursor-crosshair touch-none"
- style={{
- backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px)',
- backgroundSize: '24px 24px'
- }}
- />
+      {/* Right: Capture Panel */}
+      <div className="w-full md:w-[400px] lg:w-[480px] h-[50vh] md:h-full border-t md:border-t-0 md:border-l border-nous-border bg-nous-base flex flex-col z-20 shadow-[-20px_0_40px_rgba(0,0,0,0.05)]">
+        
+        {/* Header */}
+        <div className="p-6 border-b border-nous-border flex items-center justify-between bg-nous-base">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setActiveCaptureTab('notes')}
+              className={`flex items-center gap-2 font-sans text-[9px] uppercase tracking-widest font-black transition-colors ${activeCaptureTab === 'notes' ? 'text-nous-text' : 'text-nous-subtle hover:text-nous-text'}`}
+            >
+              <Type size={14} />
+              Notepad
+            </button>
+            <button 
+              onClick={() => setActiveCaptureTab('sketch')}
+              className={`flex items-center gap-2 font-sans text-[9px] uppercase tracking-widest font-black transition-colors ${activeCaptureTab === 'sketch' ? 'text-nous-text' : 'text-nous-subtle hover:text-nous-text'}`}
+            >
+              <PenTool size={14} />
+              Sketchpad
+            </button>
+          </div>
+          <button onClick={onClose} className="text-nous-subtle hover:text-nous-text transition-colors">
+            <X size={20} strokeWidth={1} />
+          </button>
+        </div>
 
- {/* Top Controls */}
- <div className="absolute top-8 right-8 flex items-center gap-4 z-20">
- <button 
- onClick={clearCanvas}
- className="p-4 text-nous-subtle hover:text-nous-text hover:text-nous-text transition-colors flex items-center gap-2"
- >
- <Eraser size={16} strokeWidth={1} />
- <span className="font-sans text-[8px] uppercase tracking-widest font-black">Clear</span>
- </button>
- <button 
- onClick={onClose}
- className="p-4 text-nous-subtle hover:text-nous-text hover:text-nous-text transition-colors"
- >
- <X size={24} strokeWidth={1} />
- </button>
- </div>
+        {/* Workspace */}
+        <div className="flex-1 relative overflow-hidden bg-nous-base0/30">
+          {activeCaptureTab === 'notes' ? (
+            <textarea
+              value={userNotes}
+              onChange={(e) => setUserNotes(e.target.value)}
+              placeholder="Type your field notes here..."
+              className="w-full h-full resize-none bg-transparent p-6 font-mono text-xs md:text-sm text-nous-text outline-none placeholder:text-nous-subtle leading-relaxed"
+            />
+          ) : (
+            <div className="w-full h-full relative">
+              <canvas
+                ref={canvasRef}
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+                className="absolute inset-0 w-full h-full cursor-crosshair touch-none"
+                style={{
+                  backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px)',
+                  backgroundSize: '24px 24px'
+                }}
+              />
+              <button 
+                onClick={clearCanvas}
+                className="absolute bottom-4 right-4 p-3 bg-nous-base border border-nous-border rounded-full text-nous-subtle hover:text-nous-text transition-colors shadow-sm"
+                title="Clear Sketch"
+              >
+                <Eraser size={16} strokeWidth={1} />
+              </button>
+            </div>
+          )}
+        </div>
 
- {/* The Scribe - Perfect Circle */}
- <motion.div 
- initial={{ scale: 0.9, opacity: 0 }}
- animate={{ scale: 1, opacity: 1 }}
- transition={{ type:"spring", stiffness: 200, damping: 30 }}
- className="relative w-[95vw] h-[95vw] max-w-[700px] max-h-[700px] rounded-full border border-nous-border bg-nous-base/90 /90 backdrop-blur-md shadow-2xl overflow-hidden flex flex-col items-center justify-center z-10"
- >
- {/* Inner Hairline Ring */}
- <div className="absolute inset-4 rounded-full border border-nous-border /50 pointer-events-none"/>
- 
- {/* Top Navigation Curve (Simulated) */}
- <div className="absolute top-16 flex items-center gap-10 z-10">
- {tabs.map((tab) => {
- const Icon = tab.icon;
- const isActive = activeTab === tab.id;
- return (
- <button
- key={tab.id}
- onClick={() => setActiveTab(tab.id)}
- className={`relative flex flex-col items-center gap-3 transition-all duration-500 ${
- isActive ? 'text-nous-text scale-110' : 'text-nous-subtle hover:text-nous-text'
- }`}
- >
- <Icon size={14} strokeWidth={isActive ? 2 : 1} className="transition-transform" />
- <span className="font-sans text-[7px] uppercase tracking-[0.4em] font-black">
- {tab.label}
- </span>
- {isActive && (
- <motion.div 
- layoutId="activeTab"
- className="absolute -bottom-4 w-1 h-1 rounded-full bg-nous-text"
- transition={{ type: "spring", stiffness: 300, damping: 30 }}
- />
- )}
- </button>
- );
- })}
- </div>
+        {/* AI Transcript Preview (Curator Notes) */}
+        <div className="h-32 border-t border-nous-border bg-nous-base p-4 flex flex-col">
+          <span className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle font-black mb-2 flex items-center gap-2">
+            <Sparkles size={10} />
+            Curator Notes ({activeEntity})
+          </span>
+          <div className="flex-1 overflow-y-auto font-mono text-[9px] text-nous-subtle leading-relaxed pr-2 scrollbar-thin scrollbar-thumb-nous-border">
+            {aiTranscript ? aiTranscript : "Awaiting transmission..."}
+          </div>
+        </div>
 
- {/* Content Area */}
- <div className="w-full max-w-[400px] px-8 text-center z-10 mt-8">
- <AnimatePresence mode="wait">
- 
- {activeTab === 'engine' && (
- <motion.div key="engine"initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
- <p className="font-serif italic text-xl text-nous-subtle">"The mirror awaits your query."</p>
- <div className="relative">
- <span className="absolute left-0 top-1/2 -translate-y-1/2 font-mono text-nous-subtle">{'>'}</span>
- <input 
- type="text"
- value={inputValue}
- onChange={(e) => setInputValue(e.target.value)}
- placeholder="Search the archive or ask the oracle..."
- className="w-full bg-transparent border-b border-nous-border py-2 pl-6 pr-4 font-mono text-sm text-nous-text outline-none placeholder:text-nous-subtle"
- />
- </div>
- </motion.div>
- )}
+        {/* Footer / Export */}
+        <div className="p-4 border-t border-nous-border bg-nous-base">
+          <button 
+            onClick={handleExport}
+            className="w-full py-4 bg-nous-text text-nous-base font-sans text-[9px] uppercase tracking-[0.2em] font-black hover:bg-nous-text/90 transition-colors flex items-center justify-center gap-2"
+          >
+            <Save size={14} />
+            Export Artifacts to Pocket
+          </button>
+        </div>
 
- {activeTab === 'mimi' && (
- <LiveMentor 
- key="mimi"
- name="Mimi"
- role="The Archivist // Context Builder"
- voiceName="Kore"
- systemInstruction={MIMI_SYSTEM_INSTRUCTION}
- onTranscriptUpdate={setScribeTranscript}
- >
- {scribeTranscript.trim() && onGenerateZine && (
- <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="flex justify-center mt-6">
- <button
- onClick={() => onGenerateZine(`Scribe Notes: ${scribeTranscript}`)}
- className="px-6 py-2.5 border border-nous-text/20 rounded-full text-[9px] uppercase tracking-[0.2em] font-black hover:bg-nous-text hover:text-nous-base transition-all duration-500 flex items-center gap-3 group"
- >
- <Sparkles size={12} className="group-hover:rotate-12 transition-transform" />
- Generate Manifest
- </button>
- </motion.div>
- )}
- </LiveMentor>
- )}
-
- {activeTab === 'cyrus' && (
- <LiveMentor 
- key="cyrus"
- name="Cyrus"
- role="The Oracle // Strategic Director"
- voiceName="Charon"
- systemInstruction={CYRUS_SYSTEM_INSTRUCTION}
- onTranscriptUpdate={setScribeTranscript}
- >
- {scribeTranscript.trim() && onGenerateZine && (
- <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="flex justify-center mt-6">
- <button
- onClick={() => onGenerateZine(`Scribe Notes: ${scribeTranscript}`)}
- className="px-6 py-2.5 border border-nous-text/20 rounded-full text-[9px] uppercase tracking-[0.2em] font-black hover:bg-nous-text hover:text-nous-base transition-all duration-500 flex items-center gap-3 group"
- >
- <Sparkles size={12} className="group-hover:rotate-12 transition-transform" />
- Generate Manifest
- </button>
- </motion.div>
- )}
- </LiveMentor>
- )}
-
- {activeTab === 'synthesis' && (
- <motion.div key="synthesis"initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
- <div className="space-y-2">
- <span className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle block">Dual-Agent Protocol</span>
- <h2 className="font-serif text-3xl italic text-nous-text">The Synthesis.</h2>
- </div>
- 
- {!isGeneratingDebate && !debateAudioUrl && (
- <>
- <div className="relative">
- <span className="absolute left-0 top-1/2 -translate-y-1/2 font-mono text-nous-subtle">{'>'}</span>
- <input 
- type="text"
- value={inputValue}
- onChange={(e) => setInputValue(e.target.value)}
- placeholder="Enter a topic for debate..."
- className="w-full bg-transparent border-b border-nous-border py-2 pl-6 pr-4 font-mono text-sm text-nous-text outline-none placeholder:text-nous-subtle"
- />
- </div>
- <button 
- onClick={handleGenerateDebate}
- disabled={!inputValue.trim()}
- className="w-full py-3 border border-nous-border text-nous-text font-sans text-[9px] uppercase tracking-widest font-black hover:bg-nous-base hover:text-nous-text dark:hover:bg-white dark:hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
- >
- Generate Audio Debate
- </button>
- </>
- )}
-
- {isGeneratingDebate && (
- <div className="flex flex-col items-center justify-center space-y-4 py-8">
- <Loader2 size={24} className="animate-spin text-nous-subtle"/>
- <p className="font-mono text-[10px] text-nous-subtle uppercase tracking-widest">
- Orchestrating Dual-Persona Synthesis...
- </p>
- </div>
- )}
-
- {debateAudioUrl && debateTranscript && (
- <div className="space-y-6">
- {onGenerateZine && (
- <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="flex justify-center mt-6">
- <button
- onClick={() => {
- const formattedDebate = debateTranscript.map(t => `${t.speaker}: ${t.text}`).join('\n');
- onGenerateZine(`Scribe Debate Notes:\n${formattedDebate}`);
- }}
- className="px-6 py-2.5 border border-nous-text/20 rounded-full text-[9px] uppercase tracking-[0.2em] font-black hover:bg-nous-text hover:text-nous-base transition-all duration-500 flex items-center gap-3 group"
- >
- <Sparkles size={12} className="group-hover:rotate-12 transition-transform" />
- Generate Manifest
- </button>
- </motion.div>
- )}
-
- <div className="flex items-center justify-center gap-4">
- <button 
- onClick={toggleDebateAudio}
- className="w-12 h-12 rounded-full border border-nous-border flex items-center justify-center text-nous-text hover:bg-nous-base transition-colors"
- >
- {isPlayingDebate ? <Pause size={16} /> : <Play size={16} className="ml-1"/>}
- </button>
- <div className="flex-1 h-1 bg-stone-200 rounded-full overflow-hidden">
- <motion.div 
- className="h-full bg-nous-base "
- initial={{ width:"0%"}}
- animate={{ width: isPlayingDebate ?"100%":"0%"}}
- transition={{ duration: 30, ease:"linear"}} // Approximate duration
- />
- </div>
- </div>
-
- <div className="h-48 overflow-y-auto text-left space-y-6 pr-4 scrollbar-thin scrollbar-thumb-stone-300 dark:scrollbar-thumb-stone-700 mask-fade-bottom">
- {debateTranscript.map((turn, idx) => (
- <div key={idx} className={`relative space-y-2 ${turn.speaker === 'Mimi' ? 'pl-6 border-l border-nous-border' : 'pr-6 border-r border-nous-border text-right'}`}>
- <span className="font-sans text-[7px] uppercase tracking-[0.3em] text-nous-subtle font-black">
- {turn.speaker}
- </span>
- <p className="font-serif text-sm text-nous-text leading-relaxed opacity-90">
- {turn.text}
- </p>
- </div>
- ))}
- {synthesisText && (
- <div className="pt-4 mt-4 border-t border-nous-border">
- <span className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle font-black block mb-2">
- Synthesis
- </span>
- <p className="font-mono text-[10px] text-nous-subtle uppercase leading-relaxed">
- {synthesisText}
- </p>
- </div>
- )}
- </div>
-
- <button 
- onClick={() => {
- setDebateAudioUrl(null);
- setDebateTranscript(null);
- setSynthesisText(null);
- setInputValue('');
- }}
- className="text-[10px] font-mono text-nous-subtle hover:text-nous-text hover:text-nous-text uppercase tracking-widest underline underline-offset-4"
- >
- Reset Protocol
- </button>
- </div>
- )}
- 
- {debateAudioUrl && (
- <audio 
- ref={audioRef} 
- src={debateAudioUrl} 
- onEnded={() => setIsPlayingDebate(false)}
- className="hidden"
- />
- )}
- </motion.div>
- )}
-
- </AnimatePresence>
- </div>
-
- {/* Bottom Equator Line */}
- <div className="absolute bottom-28 w-1/3 h-px bg-stone-200/30 dark:bg-stone-800/30"/>
- <div className="absolute bottom-16 flex flex-col items-center gap-2">
- <span className="font-mono text-[7px] text-nous-subtle uppercase tracking-[0.4em] opacity-40">
- Mimi Sovereign Registry // Scribe v1.0
- </span>
- <div className="flex gap-1">
- {[1, 2, 3].map(i => (
- <motion.div 
- key={i}
- animate={{ opacity: [0.2, 0.5, 0.2] }}
- transition={{ duration: 2, delay: i * 0.3, repeat: Infinity }}
- className="w-1 h-1 rounded-full bg-nous-subtle"
- />
- ))}
- </div>
- </div>
- </motion.div>
- </motion.div>
- );
+      </div>
+    </motion.div>
+  );
 };

@@ -2482,7 +2482,39 @@ export const generateStrategicBlueprint = async (items: any[], memo: string, pro
 };
 export const generateSanctuaryReport = async (input: string, profile: any) => ({ validation: "Acknowledged." });
 export const executeConfidenceModule = async (moduleId: string, inputs: any) => "Executed.";
-export const generateCelestialReading = async (profile: any) => "Stars align.";
+export const askCodex = async (query: string, context: any) => {
+  return await withResilience(async (ai) => {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `You are Mimi, the Omniscient Temporal Editor. The user is asking the Codex (the interpretive engine of Mimi) a question: "${query}".
+      
+      Current Context: ${JSON.stringify(context)}
+      
+      Respond directly to their question. Diagnose what stage they are in (Create, Reflect, Refine), what they should do next, and why.
+      Keep it short, punchy, and actionable. Use your signature ethereal, provocative, and analytical tone.`,
+      config: {
+        systemInstruction: "You are Mimi, an Omniscient Temporal Editor.",
+      }
+    });
+    return response.text || "The Codex is currently silent. Please try again.";
+  });
+};
+
+export const generateCelestialReading = async (profile: any) => {
+  return await withResilience(async (ai) => {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: `Based on the user's profile and onboarding data: ${JSON.stringify(profile)}, generate a 'Latent Space Translation' (formerly Celestial Reading).
+      This should be a 2-3 sentence high-level insight into what their taste actually means in the broader cultural landscape.
+      Make it sound like an omniscient AI mapping their aesthetic DNA. Use terms like 'semantic associations', 'cultural positioning', or 'latent space'.
+      Keep it ethereal but analytical.`,
+      config: {
+        systemInstruction: "You are Mimi, an Omniscient Temporal Editor.",
+      }
+    });
+    return response.text || "The latent space is currently shifting. Your aesthetic coordinates are being recalculated.";
+  });
+};
 export const generateSeasonReport = async (zines: any[]) => ({ currentVibe: "Neutral", cliqueLogic: "Standard", timestamp: Date.now() });
 
 export const generateSovereignIdentityCard = async (tasteProfile: TasteProfile) => {

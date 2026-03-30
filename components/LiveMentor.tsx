@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Mic, MicOff, Loader2 } from 'lucide-react';
+import { Mic, MicOff, Loader2, Info } from 'lucide-react';
 import { useLiveSession } from '../hooks/useLiveSession';
 
 interface LiveMentorProps {
@@ -8,14 +8,20 @@ interface LiveMentorProps {
   role: string;
   voiceName: string;
   systemInstruction: string;
+  theme?: 'mimi' | 'cyrus';
   onTranscriptUpdate?: (text: string) => void;
   children?: React.ReactNode;
 }
 
-export const LiveMentor: React.FC<LiveMentorProps> = ({ name, role, voiceName, systemInstruction, onTranscriptUpdate, children }) => {
+export const LiveMentor: React.FC<LiveMentorProps> = ({ name, role, voiceName, systemInstruction, theme = 'mimi', onTranscriptUpdate, children }) => {
   const { connect, disconnect, isConnected, isConnecting, isSpeaking, error, analyser, transcript } = useLiveSession(systemInstruction, voiceName);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
+
+  const isMimi = theme === 'mimi';
+  const bgColor = isMimi ? 'bg-white' : 'bg-black';
+  const fgColor = isMimi ? 'text-black' : 'text-white';
+  const strokeColor = isMimi ? '#000000' : '#ffffff';
 
   useEffect(() => {
     if (onTranscriptUpdate && transcript) {
@@ -39,9 +45,16 @@ export const LiveMentor: React.FC<LiveMentorProps> = ({ name, role, voiceName, s
       analyser.getByteTimeDomainData(dataArray);
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.lineWidth = 2;
-      const isDark = document.documentElement.classList.contains('dark');
-      ctx.strokeStyle = isDark ? '#ffffff' : '#1c1917'; // white or stone-900
+      ctx.lineWidth = isMimi ? 2 : 3;
+      ctx.strokeStyle = strokeColor;
+      
+      if (!isMimi) {
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#ffffff';
+      } else {
+        ctx.shadowBlur = 0;
+      }
+
       ctx.beginPath();
 
       const sliceWidth = canvas.width * 1.0 / bufferLength;
@@ -70,7 +83,7 @@ export const LiveMentor: React.FC<LiveMentorProps> = ({ name, role, voiceName, s
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [analyser]);
+  }, [analyser, isMimi, strokeColor]);
 
   // Disconnect on unmount
   useEffect(() => {
@@ -85,77 +98,102 @@ export const LiveMentor: React.FC<LiveMentorProps> = ({ name, role, voiceName, s
     }
   };
 
+  // Circular text logic
+  const displayTranscript = transcript ? transcript.slice(-60).padEnd(60, ' ') : "AWAITING TRANSMISSION... ".repeat(3);
+
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-12 w-full flex flex-col items-center">
-      <div className="space-y-4 text-center">
-        <div className="flex flex-col items-center gap-1">
-          <div className="w-8 h-px bg-nous-border mb-2"/>
-          <span className="font-sans text-[7px] uppercase tracking-[0.4em] text-nous-subtle block font-black">Active Mentor</span>
-        </div>
-        <h2 className="font-serif text-5xl md:text-6xl italic text-nous-text tracking-tight">{name}.</h2>
-        <p className="font-sans text-[9px] uppercase tracking-[0.3em] text-nous-subtle font-medium">{role}</p>
-      </div>
-      
-      <div className="w-full flex flex-col items-center gap-8">
-        {children}
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      exit={{ opacity: 0 }} 
+      className={`relative w-full h-full flex flex-col items-center justify-center ${bgColor} ${fgColor} overflow-hidden`}
+    >
+      {/* Paper Grain Overlay for Mimi */}
+      {isMimi && (
+        <div 
+          className="absolute inset-0 pointer-events-none opacity-40 mix-blend-multiply"
+          style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/paper-fibers.png")' }}
+        />
+      )}
 
-        <div className="relative w-full h-32 flex flex-col items-center justify-center gap-8">
-          <div className="relative w-full h-12 flex items-center justify-center">
-            {isConnected ? (
-              <canvas ref={canvasRef} width={400} height={100} className="w-full h-full opacity-40 mix-blend-difference"/>
-            ) : (
-              <div className="w-24 h-px bg-stone-200/50 dark:bg-stone-800/50"/>
-            )}
-          </div>
-
-          <button 
-            onClick={toggleConnection}
-            disabled={isConnecting}
-            className={`relative group w-20 h-20 rounded-full border flex items-center justify-center transition-all duration-500 ${
-              isConnected 
-                ? 'border-red-500/30 text-red-500 bg-red-500/5 shadow-[0_0_30px_rgba(239,68,68,0.2)]' 
-                : isConnecting
-                ? 'border-nous-border text-nous-subtle cursor-not-allowed'
-                : 'border-nous-border text-nous-subtle hover:text-nous-text hover:border-nous-text dark:hover:border-white bg-transparent'
-            }`}
-          >
-            {isConnected && (
-              <motion.div 
-                animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute inset-0 rounded-full bg-red-500/10"
-              />
-            )}
-            {isConnecting ? <Loader2 size={20} strokeWidth={1} className="animate-spin"/> : isConnected ? <MicOff size={20} strokeWidth={1} /> : <Mic size={20} strokeWidth={1} />}
-          </button>
+      {/* Tooltip / Context */}
+      <div className="absolute top-8 left-8 max-w-xs z-10">
+        <div className="flex items-center gap-2 mb-2">
+          <Info size={14} className={isMimi ? 'text-black/40' : 'text-white/40'} />
+          <span className={`font-sans text-[9px] uppercase tracking-widest font-black ${isMimi ? 'text-black/40' : 'text-white/40'}`}>
+            Entity Context
+          </span>
         </div>
+        <h3 className={`font-serif italic text-2xl mb-1 ${fgColor}`}>{name}</h3>
+        <p className={`font-sans text-[10px] uppercase tracking-wider leading-relaxed ${isMimi ? 'text-black/60' : 'text-white/60'}`}>
+          {role}
+        </p>
       </div>
 
-      <div className="h-12 flex items-center justify-center">
+      {/* Central Circular UI */}
+      <div className="relative w-[400px] h-[400px] flex items-center justify-center">
+        
+        {/* Circular Text SVG */}
+        <div className="absolute inset-0 animate-[spin_20s_linear_infinite]">
+          <svg viewBox="0 0 400 400" className="w-full h-full overflow-visible">
+            <path
+              id="textPath"
+              d="M 200, 200 m -160, 0 a 160,160 0 1,1 320,0 a 160,160 0 1,1 -320,0"
+              fill="none"
+            />
+            <text className={`font-mono text-[10px] uppercase tracking-widest ${isMimi ? 'fill-black/40' : 'fill-white/40'}`}>
+              <textPath href="#textPath" startOffset="0%">
+                {displayTranscript}
+              </textPath>
+            </text>
+          </svg>
+        </div>
+
+        {/* Waveform Canvas */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {isConnected ? (
+            <canvas ref={canvasRef} width={300} height={100} className="w-[300px] h-[100px]" />
+          ) : (
+            <div className={`w-32 h-px ${isMimi ? 'bg-black/20' : 'bg-white/20'}`} />
+          )}
+        </div>
+
+        {/* Interaction Button */}
+        <button 
+          onClick={toggleConnection}
+          disabled={isConnecting}
+          className={`absolute z-20 w-24 h-24 rounded-full flex items-center justify-center transition-all duration-500 ${
+            isConnected 
+              ? isMimi ? 'bg-black/5 text-black' : 'bg-white/10 text-white shadow-[0_0_30px_rgba(255,255,255,0.2)]'
+              : isConnecting
+              ? isMimi ? 'text-black/30 cursor-not-allowed' : 'text-white/30 cursor-not-allowed'
+              : isMimi ? 'text-black/50 hover:text-black hover:bg-black/5' : 'text-white/50 hover:text-white hover:bg-white/10'
+          }`}
+        >
+          {isConnecting ? <Loader2 size={24} strokeWidth={1} className="animate-spin"/> : isConnected ? <MicOff size={24} strokeWidth={1} /> : <Mic size={24} strokeWidth={1} />}
+        </button>
+      </div>
+
+      {/* Status Text */}
+      <div className="absolute bottom-12 flex flex-col items-center gap-2">
         {error ? (
           <p className="font-mono text-[9px] text-red-500 uppercase tracking-[0.2em]">{error}</p>
         ) : isConnecting ? (
-          <p className="font-mono text-[9px] text-nous-subtle uppercase tracking-[0.3em] animate-pulse">
+          <p className={`font-mono text-[9px] uppercase tracking-[0.3em] animate-pulse ${isMimi ? 'text-black/40' : 'text-white/40'}`}>
             Establishing Link...
           </p>
         ) : isConnected ? (
-          <p className="font-mono text-[9px] text-nous-subtle uppercase tracking-[0.3em]">
+          <p className={`font-mono text-[9px] uppercase tracking-[0.3em] ${isMimi ? 'text-black/60' : 'text-white/60'}`}>
             {isSpeaking ? 'Transmitting...' : 'Listening...'}
           </p>
         ) : (
-          <p className="font-serif italic text-sm text-nous-subtle opacity-60">Tap to initiate vocal sync.</p>
+          <p className={`font-serif italic text-sm opacity-60 ${isMimi ? 'text-black/60' : 'text-white/60'}`}>
+            Tap to initiate vocal sync.
+          </p>
         )}
       </div>
 
-      {/* Live Transcription Terminal */}
-      {isConnected && transcript && (
-        <div className="w-full max-w-[300px] h-24 overflow-y-auto text-left border-t border-nous-border pt-4 mt-4">
-          <p className="font-mono text-[10px] text-nous-subtle uppercase leading-relaxed">
-            {'>'} {transcript.slice(-150)}
-            <span className="animate-pulse">_</span>
-          </p>
-        </div>
-      )}
+      {children}
     </motion.div>
   );
 };

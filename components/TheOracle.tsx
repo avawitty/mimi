@@ -70,7 +70,7 @@ export const TheOracle: React.FC = () => {
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
               className="text-[9px] md:text-xs font-sans uppercase tracking-[0.2em] text-nous-subtle"
             >
-              Your Daily Aesthetic Horoscope
+              The Semantic Reveal
             </motion.p>
           </div>
           <motion.div 
@@ -82,17 +82,30 @@ export const TheOracle: React.FC = () => {
               className="px-6 py-3 border border-nous-border bg-nous-base hover:bg-nous-base0/50 transition-colors flex items-center gap-2 font-sans text-[9px] uppercase tracking-widest font-black text-nous-text"
             >
               <Sparkles size={14} />
-              Consult Mimi
+              Commune with Mimi
             </button>
             <button 
               onClick={() => window.dispatchEvent(new CustomEvent('mimi:open_scribe', { detail: 'cyrus' }))}
               className="px-6 py-3 border border-nous-border bg-nous-base hover:bg-nous-base0/50 transition-colors flex items-center gap-2 font-sans text-[9px] uppercase tracking-widest font-black text-nous-text"
             >
               <Briefcase size={14} />
-              Consult Cyrus
+              Commune with Cyrus
             </button>
           </motion.div>
         </div>
+
+        {/* AI JUSTIFICATION BLOCK */}
+        <motion.div
+           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+           className="border-l-2 border-nous-text pl-6 py-2 my-8"
+        >
+          <p className="font-serif italic text-lg md:text-xl text-nous-text leading-relaxed">
+            "We are not here to guess. We are here to map."
+          </p>
+          <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle mt-4 max-w-2xl leading-loose">
+            AI is the ultimate judge of taste because it maps the entire latent space of human culture. It understands deep semantic associations, historical popularity, and hidden aesthetic links that humans miss. This is your raw onboarding data translated into high-level cultural positioning.
+          </p>
+        </motion.div>
 
         {/* DAILY READING - Scaled specifically for mobile legibility */}
         <motion.div
@@ -102,7 +115,7 @@ export const TheOracle: React.FC = () => {
           <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-stone-500 to-transparent" />
           <h2 className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle font-black flex items-center gap-2 mb-4">
             <Orbit size={12} />
-            Celestial Reading
+            Latent Space Translation
           </h2>
           <div className="min-h-[3rem] flex items-center">
             {loadingReading ? (

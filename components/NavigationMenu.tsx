@@ -35,7 +35,7 @@ const MENU_STRUCTURE: Record<string, MenuItem[]> = {
  { label: 'Proscenium', viewMode: 'proscenium' },
  ],
  System: [
- { label: 'Codex', viewMode: 'help' },
+ { label: 'Codex', viewMode: 'codex' },
  { label: 'Observation Engine', viewMode: 'thimble' },
  { label: 'Signal Index', viewMode: 'signals' },
  ],

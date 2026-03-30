@@ -39,7 +39,7 @@ const MENU_STRUCTURE = [
  ]},
  { section: 'System', items: [
  { mode: 'manifesto', label: 'Manifesto', note: 'Community & Ethos' },
- { mode: 'help', label: 'Codex', note: 'Documentation' }
+ { mode: 'codex', label: 'Codex', note: 'Documentation' }
  ]}
 ];
 

@@ -83,6 +83,8 @@ interface UserContextType {
   recordSession: () => Promise<void>;
   activeThread: NarrativeThread | null;
   setActiveThread: (thread: NarrativeThread | null) => void;
+  pocket: any[];
+  setPocket: (pocket: any[]) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -166,6 +168,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   
   const [activeThread, setActiveThread] = useState<NarrativeThread | null>(null);
+  const [pocket, setPocket] = useState<any[]>([]);
   
   const [keyRing, setKeyRing] = useState<string[]>([]);
   const [featureFlags, setFeatureFlags] = useState<FeatureFlags>(() => {
@@ -1108,7 +1111,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       incrementGeneration,
       recordSession,
       activeThread,
-      setActiveThread
+      setActiveThread,
+      pocket,
+      setPocket
     }}>
       {children}
     </UserContext.Provider>
