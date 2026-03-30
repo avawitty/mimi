@@ -6,7 +6,7 @@ import {
   PocketItem, TailorLogicDraft, ZineMetadata, SeasonReport, 
   SanctuaryReport, InvestmentReport, TrendSynthesisReport, 
   TailorAuditReport, ProposalSection, Proposal, TasteProfile, ZinePageSpec, ZineGenerationOptions, Treatment,
-  TasteGraphNode, TasteGraphEdge, NarrativeThread, AestheticSignature
+  TasteGraphNode, TasteGraphEdge, NarrativeThread, AestheticSignature, AestheticTrajectory, AestheticDNA, ExecutionLayer
 } from "../types";
 import { modulateSemioticContext } from "./semioticModulator";
 import { fetchUserZines, fetchLatestLineageEntry } from "./firebaseUtils";
@@ -142,6 +142,133 @@ export const extractTailorLogicFromGrid = async (base64Image: string, mimeType: 
     console.error("MIMI // Grid to Tailor Extraction Error:", e);
   }
   return null;
+};
+
+export const calculateAestheticTrajectory = async (references: PocketItem[]): Promise<AestheticTrajectory | null> => {
+  const { ai } = getClient();
+  if (!ai) return null;
+
+  const prompt = `You are Mimi, an uncompromising aesthetic oracle and trajectory forecasting engine. 
+You do not merely categorize what a user likes—you predict who they are becoming. 
+
+The user has dumped a collection of ${references.length} fragmented references (images, texts, links, loose thoughts) into the system. 
+Analyze these inputs not as static likes, but as momentum.
+
+Your task is to calculate their "Aesthetic Trajectory" and output a structured forecast.
+
+Do not use corporate fluff, manifestation speak, or generic terms (e.g., "stunning", "epic"). Use high-theory semiotics, material descriptions, and deep psychological observation. Be slightly unnerving in your accuracy. This is a mirror to their future self.
+
+References:
+${references.map(r => `- ${r.title || 'Untitled'}: ${r.notes || ''}`).join('\n')}
+
+Return a JSON object conforming to the AestheticTrajectory interface.`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-pro-preview",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+      },
+    });
+    
+    if (response.text) {
+      return JSON.parse(response.text) as AestheticTrajectory;
+    }
+  } catch (e) {
+    console.error("MIMI // Aesthetic Trajectory Calculation Error:", e);
+  }
+  return null;
+};
+
+export const generateAestheticDNA = async (userInputs: string[]): Promise<AestheticDNA | null> => {
+  return await withResilience(async (ai) => {
+    const prompt = `You are Mimi, a hyper-perceptive intelligence mapping human taste. 
+The user has provided 3 rapid-fire responses. Analyze them and instantly synthesize their Aesthetic DNA.
+
+Do not be abstract at the top. Be clear, punchy, and shockingly accurate.
+
+INPUT:
+${userInputs.join("\n")}
+
+OUTPUT JSON SCHEMA:
+{
+  "dnaStatement": "One strong, definitive statement about who they are creatively (max 10 words).",
+  "archetypes": ["Archetype 1", "Archetype 2", "Archetype 3"],
+  "poeticExpansion": "A two-sentence, high-fashion, semiotically dense explanation of their inner world."
+}`;
+    
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-pro-preview",
+      contents: `INPUTS:\n${userInputs.join("\n")}`,
+      config: {
+        systemInstruction: prompt,
+        temperature: 0.7,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            dnaStatement: { type: Type.STRING },
+            archetypes: { type: Type.ARRAY, items: { type: Type.STRING } },
+            poeticExpansion: { type: Type.STRING }
+          },
+          required: ["dnaStatement", "archetypes", "poeticExpansion"]
+        }
+      }
+    });
+
+    if (response.text) {
+      return { ...JSON.parse(response.text), generatedAt: Date.now() };
+    }
+    return null;
+  });
+};
+
+export const generateExecutionLayer = async (analysisContext: string): Promise<ExecutionLayer | null> => {
+  return await withResilience(async (ai) => {
+    const prompt = `You are Mimi, acting as a ruthless and strategic Creative Director.
+You have just generated the following aesthetic analysis for the user: ${analysisContext}
+
+Translate this abstract vibe into strict, behavioral execution.
+Give them instructions that are highly specific, slightly challenging, and impossible to misunderstand.
+
+OUTPUT JSON SCHEMA:
+{
+  "topTakeaway": "A clear, punchy 1-sentence summary of the directive.",
+  "concreteActions": [
+    "One specific thing to start collecting/referencing.",
+    "One specific type of content to produce or project to start this week.",
+    "One specific physical/digital environment change to make."
+  ],
+  "directionalDecision": "A major binary choice they need to make regarding their brand or output (e.g., 'Choose silence over saturation').",
+  "antiPattern": "Exactly what they need to STOP consuming, buying, or doing immediately because it is diluting their taste."
+}`;
+    
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-flash", // Faster model for appending to existing tasks
+      contents: `ANALYSIS CONTEXT:\n${analysisContext}`,
+      config: {
+        systemInstruction: prompt,
+        temperature: 0.8,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            topTakeaway: { type: Type.STRING },
+            concreteActions: { type: Type.ARRAY, items: { type: Type.STRING } },
+            directionalDecision: { type: Type.STRING },
+            antiPattern: { type: Type.STRING }
+          },
+          required: ["topTakeaway", "concreteActions", "directionalDecision", "antiPattern"]
+        }
+      }
+    });
+
+    if (response.text) {
+      return JSON.parse(response.text);
+    }
+    return null;
+  });
 };
 export const extractTasteGraphNodes = async (artifacts: PocketItem[]): Promise<{ nodes: TasteGraphNode[], edges: TasteGraphEdge[] }> => {
   // Generate tags for artifacts if they don't have them

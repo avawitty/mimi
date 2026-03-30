@@ -459,6 +459,7 @@ export interface ZineMetadata {
   tags?: string[];
   treatmentId?: string;
   folderId?: string; // NEW: For organizing zines into folders
+  executionLayer?: ExecutionLayer; // NEW
 }
 
 export interface SemioticSignal {
@@ -515,12 +516,37 @@ export interface SovereignIdentityCard {
   generatedAt: number;
 }
 
+export interface AestheticTrajectory {
+  trajectoryId: string;
+  userMomentum: string;
+  predictedAestheticShift: string;
+  psychologicalObservation: string;
+  trajectoryLabel: 'aligned' | 'adjacent' | 'divergent' | 'latent';
+  confidence: number;
+  timestamp: number;
+}
+
+export interface AestheticDNA {
+  dnaStatement: string;
+  archetypes: string[];
+  poeticExpansion: string;
+  generatedAt: number;
+}
+
+export interface ExecutionLayer {
+  topTakeaway: string;
+  concreteActions: string[];
+  directionalDecision: string;
+  antiPattern: string;
+}
+
 export interface TasteProfile {
   archetype_weights: Record<string, number>;
   color_frequency: Record<string, number>;
   audit_history?: DriftEvent[];
   semantic_signature?: string;
   aestheticSignature?: AestheticSignature; // NEW
+  aestheticTrajectory?: AestheticTrajectory; // NEW
   dominant_archetypes?: TypographicArchetype[];
   inspirations?: string;
   sovereignIdentity?: SovereignIdentityCard; // NEW
@@ -920,6 +946,7 @@ export interface UserProfile extends UserPreferences {
   onboardingComplete?: boolean;
   syncedUsers?: string[];
   tasteVector?: Record<string, number>;
+  aestheticDNA?: AestheticDNA; // NEW
   // Patron & Retention Tracking
   isPatron?: boolean;
   patronActivatedAt?: number;
