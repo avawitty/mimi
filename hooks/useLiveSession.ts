@@ -69,8 +69,10 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
         try { analyserRef.current.disconnect(); } catch(e) {}
         analyserRef.current = null;
       }
-      // Note: Gemini SDK doesn't expose an explicit .close() on the session object easily in this version, 
-      // but stopping the stream effectively ends interaction.
+      
+      if (sessionRef.current && typeof sessionRef.current.close === 'function') {
+        try { sessionRef.current.close(); } catch(e) {}
+      }
       sessionRef.current = null;
       setIsConnected(false);
       setIsConnecting(false);
@@ -81,12 +83,17 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
   }, []);
 
   const disconnect = useCallback(() => {
+    (connect as any).currentAttempt = null;
     cleanup();
   }, [cleanup]);
 
     const connect = useCallback(async (retries = 3) => {
     setError(null);
     setIsConnecting(true);
+    
+    // Create a flag to track if this connection attempt is still valid
+    const currentAttempt = Date.now();
+    (connect as any).currentAttempt = currentAttempt;
     
     for (let i = 0; i < retries; i++) {
       try {
@@ -145,12 +152,17 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
           },
           callbacks: {
             onopen: async () => {
+              if ((connect as any).currentAttempt !== currentAttempt) return;
               setIsConnected(true);
               setIsConnecting(false);
               
               // Start Mic Stream
               try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                if ((connect as any).currentAttempt !== currentAttempt) {
+                  stream.getTracks().forEach(t => t.stop());
+                  return;
+                }
                 streamRef.current = stream;
                 
                 if (!inputContextRef.current) return;
@@ -162,6 +174,7 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
                 processorRef.current = processor;
                 
                 processor.onaudioprocess = (e) => {
+                  if ((connect as any).currentAttempt !== currentAttempt) return;
                   const inputData = e.inputBuffer.getChannelData(0);
                   const pcmData = floatTo16BitPCM(inputData);
                   const uint8Buffer = new Uint8Array(pcmData.buffer);
@@ -169,12 +182,13 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
                   // Convert to base64 manually to avoid dependency issues
                   let binary = '';
                   const len = uint8Buffer.byteLength;
-                  for (let i = 0; i < len; i++) {
-                    binary += String.fromCharCode(uint8Buffer[i]);
+                  for (let j = 0; j < len; j++) {
+                    binary += String.fromCharCode(uint8Buffer[j]);
                   }
                   const base64 = btoa(binary);
   
                   sessionPromise.then(session => {
+                    if ((connect as any).currentAttempt !== currentAttempt) return;
                     return session.sendRealtimeInput({
                       audio: {
                         mimeType: 'audio/pcm;rate=16000',
@@ -202,6 +216,7 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
               }
             },
             onmessage: async (msg: LiveServerMessage) => {
+              if ((connect as any).currentAttempt !== currentAttempt) return;
               try {
                 // Handle Transcriptions
                 if (msg.serverContent?.modelTurn?.parts) {
@@ -221,6 +236,7 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
                         try {
                           const response = await onToolCall(call.name, call.args);
                           sessionPromise.then(session => {
+                            if ((connect as any).currentAttempt !== currentAttempt) return;
                             session.sendToolResponse({
                               functionResponses: [{
                                 id: call.id,
@@ -232,6 +248,7 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
                         } catch (e) {
                           console.error("MIMI // Tool call failed:", e);
                           sessionPromise.then(session => {
+                            if ((connect as any).currentAttempt !== currentAttempt) return;
                             session.sendToolResponse({
                               functionResponses: [{
                                 id: call.id,
@@ -256,8 +273,8 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
                   const dataInt16 = new Int16Array(bytes.buffer);
                   const audioBuffer = audioContextRef.current.createBuffer(1, dataInt16.length, 24000);
                   const channelData = audioBuffer.getChannelData(0);
-                  for (let i = 0; i < dataInt16.length; i++) {
-                    channelData[i] = dataInt16[i] / 32768.0;
+                  for (let j = 0; j < dataInt16.length; j++) {
+                    channelData[j] = dataInt16[j] / 32768.0;
                   }
     
                   const source = audioContextRef.current.createBufferSource();
@@ -297,13 +314,17 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
               }
             },
             onclose: () => {
+              if ((connect as any).currentAttempt !== currentAttempt) return;
               setIsConnected(false);
               cleanup();
             },
             onerror: (e: any) => {
+              if ((connect as any).currentAttempt !== currentAttempt) return;
               const errMsg = e?.message || String(e);
               if (errMsg.includes('Deadline expired')) {
                 console.warn("MIMI // Live Session ended (timeout).");
+              } else if (errMsg.includes('aborted')) {
+                console.warn("MIMI // Live Session aborted.");
               } else {
                 console.error("Live Session Error", e);
                 setError("Connection severed by server.");
@@ -314,9 +335,17 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
           }
         });
         
-        sessionRef.current = await sessionPromise;
+        const session = await sessionPromise;
+        if ((connect as any).currentAttempt !== currentAttempt) {
+          if (typeof session.close === 'function') {
+            try { session.close(); } catch(e) {}
+          }
+          return;
+        }
+        sessionRef.current = session;
         return; // Success
       } catch (e: any) {
+        if ((connect as any).currentAttempt !== currentAttempt) return;
         console.error(`Connection Attempt ${i + 1} Failed`, e);
         cleanup(); // Ensure clean state before retry
         
@@ -328,7 +357,7 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
         }
       }
     }
-  }, [systemInstruction, cleanup, disconnect]);
+  }, [systemInstruction, cleanup, disconnect, voiceName, onToolCall]);
 
   const sendVideoFrame = useCallback((base64Image: string) => {
     if (sessionRef.current) {
@@ -349,8 +378,11 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
   }, []);
 
   useEffect(() => {
-    return () => cleanup();
-  }, []);
+    return () => {
+      (connect as any).currentAttempt = null;
+      cleanup();
+    };
+  }, [cleanup, connect]);
 
   return { connect, disconnect, isConnected, isConnecting, isSpeaking, volume, error, sendVideoFrame, analyser: analyserRef.current, transcript };
 };
