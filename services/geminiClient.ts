@@ -82,14 +82,49 @@ export async function withResilience<T>(
       error.message?.includes('503') ||
       error.message?.includes('high demand') ||
       error.error?.message?.includes('high demand') ||
-      error.status === 500 ||
-      error.code === 500;
-
-    if (isQuotaError && retries > 0) {
-      console.warn(`MIMI // Gemini Resilience: Retrying in ${delay}ms... (${retries} retries left)`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-      return withResilience(operation, apiKeyOverride, retries - 1, delay * 2, [...attemptedKeys, keyUsed]);
+      error.status === 403 ||
+      error.message?.includes('403') ||
+      error.message?.includes('PERMISSION_DENIED');
+    
+    if (retries > 0 && isQuotaError) {
+      const jitter = Math.random() * 1000;
+      const nextDelay = delay + jitter;
+      
+      console.warn(`MIMI // Oracle: Quota hit on key ...${keyUsed.slice(-4)}. Retrying in ${nextDelay.toFixed(0)}ms... (${retries} attempts left)`);
+      
+      await new Promise(resolve => setTimeout(resolve, nextDelay));
+      
+      // Rotate key on quota error if possible
+      const nextAttempted = [...attemptedKeys, keyUsed];
+      return withResilience(operation, apiKeyOverride, retries - 1, delay * 2, nextAttempted);
     }
+    
+    if (isQuotaError) {
+      window.dispatchEvent(new CustomEvent('mimi:key_void'));
+      window.dispatchEvent(new CustomEvent('mimi:show_quota_shield'));
+      const quotaError = new Error("Oracle overloaded. The frequency is too high for the current registry. Please add more keys to your Key Ring or wait for the frequency to stabilize.") as any;
+      quotaError.code = 'QUOTA_EXCEEDED';
+      console.error("MIMI // Oracle: Quota Exceeded. Key:", keyUsed, "Error:", error);
+      throw quotaError;
+    }
+    
+    if (error.status === 403 || error.message?.includes('403') || error.message?.includes('PERMISSION_DENIED')) {
+      window.dispatchEvent(new CustomEvent('mimi:key_void'));
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+          detail: { 
+              message: "Oracle connection failed: Invalid API Key. Please select a valid key.", 
+              type: 'error' 
+          } 
+      }));
+      throw new Error("MIMI // Oracle: Invalid API Key. Please select a valid key.");
+    }
+    
+    if (error.status === 400 && error.message?.includes('token count exceeds')) {
+      console.error("MIMI // Oracle: Token limit exceeded. The input is too large for the model's context window.");
+      throw new Error("MIMI // Oracle: Input too large. Please reduce the amount of content or artifacts provided.");
+    }
+    
+    console.error("MIMI // Oracle Error (Attempted Key: ...", keyUsed.slice(-4), "):", error);
     throw error;
   }
 }

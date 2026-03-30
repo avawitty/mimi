@@ -1,7 +1,7 @@
 
 import { setPersistence, browserLocalPersistence, onAuthStateChanged, User } from "firebase/auth";
 import { auth, db, storage } from "./firebaseInit";
-import { PocketItem, Stack } from "../types";
+import { PocketItem, Stack, UserProfile } from "../types";
 import { logFirestoreError, handleFirestoreError, OperationType } from "./firebaseUtils";
 
 export { auth, db, storage };
@@ -126,6 +126,21 @@ export const saveStack = async (stack: Stack) => {
         await setDoc(doc(db, "stacks", stack.id), stack);
     } catch (e: any) {
         handleFirestoreError(e, OperationType.WRITE, `stacks/${stack.id}`);
+    }
+};
+
+export const fetchProfileByHandle = async (handle: string): Promise<UserProfile | null> => {
+    try {
+        const { collection, query, where, getDocs } = await import('firebase/firestore');
+        const q = query(collection(db, "users"), where("handle", "==", handle));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+            return snap.docs[0].data() as UserProfile;
+        }
+        return null;
+    } catch (e: any) {
+        handleFirestoreError(e, OperationType.GET, "users");
+        return null;
     }
 };
 
