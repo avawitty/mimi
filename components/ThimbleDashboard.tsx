@@ -407,6 +407,12 @@ export const ThimbleDashboard = () => {
  >
  <Scale size={16} /> Fiscal Audit
  </button>
+ <button 
+ onClick={() => setActiveTab('try-on')}
+ className={`w-full flex items-center gap-3 px-4 py-3 border text-[10px] uppercase tracking-widest font-semibold transition-all ${activeTab === 'try-on' ? 'bg-white border-nous-border opacity-100' : 'bg-transparent border-transparent hover:border-nous-border opacity-60 hover:opacity-100 hover:bg-white/50 /50'}`}
+ >
+ <ShoppingBag size={16} /> Try On
+ </button>
  </nav>
 
  {activeTab === 'boards' && (
@@ -888,6 +894,9 @@ export const ThimbleDashboard = () => {
  )
  )}
 
+ {activeTab === 'try-on' && (
+ <TryOnTool />
+ )}
  {activeTab === 'audit' && (
  <div className="max-w-3xl mx-auto space-y-12">
  <div className="space-y-6">
