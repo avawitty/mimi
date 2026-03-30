@@ -470,6 +470,22 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
                 ];
             }
             
+            try {
+                const { generateExecutionLayer } = await import("./geminiService");
+                const analysisContext = JSON.stringify({
+                    title: content.title,
+                    oracular_mirror: content.oracular_mirror,
+                    poetic_provocation: content.poetic_provocation,
+                    pages: content.pages
+                });
+                const executionLayer = await generateExecutionLayer(analysisContext);
+                if (executionLayer) {
+                    content.executionLayer = executionLayer;
+                }
+            } catch (e) {
+                console.warn("MIMI // Failed to generate execution layer", e);
+            }
+            
             return { content };
         });
     } catch (error) {

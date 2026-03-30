@@ -4,6 +4,7 @@ import { ThimbleDashboard } from './components/ThimbleDashboard';
 import { CommandDrawer } from './components/CommandDrawer';
 import { ThimbleIndex } from './components/ThimbleIndex';
 import { PublicSharePage } from './components/PublicSharePage';
+import { PublicDnaBadge } from './components/PublicDnaBadge';
 import { StackView } from './components/StackView';
 import { AppState, ToneTag, ZineMetadata, DriftEvent, MediaFile, ZineContent } from './types';
 import { t } from './lib/i18n';
@@ -47,6 +48,8 @@ const PatronMintView = lazy(() => import('./components/PatronMintView').then(m =
 import { MimiGateway } from './components/MimiGateway';
 import { ProfileHoverCard } from './components/ProfileHoverCard';
 import { AuthAction } from './components/AuthAction';
+
+import { AestheticOnboarding } from './components/AestheticOnboarding';
 
 const DossierView = lazy(() => import('./components/DossierView'));
 const StrategyStudio = lazy(() => import('./components/StrategyStudio').then(m => ({ default: m.StrategyStudio })));
@@ -577,6 +580,11 @@ export const App: React.FC = () => {
  return <PublicSharePage />;
  }
 
+ if (window.location.pathname.startsWith('/u/') && window.location.pathname.endsWith('/dna')) {
+ const handle = window.location.pathname.split('/u/')[1].split('/dna')[0];
+ return <PublicDnaBadge handle={handle} />;
+ }
+
  if (window.location.pathname.startsWith('/stacks/')) {
  const stackId = window.location.pathname.split('/stacks/')[1];
  return <StackView stackId={stackId} />;
@@ -602,6 +610,10 @@ export const App: React.FC = () => {
 
  if (isPatronMint) {
  return <PatronMintView onExit={() => setIsPatronMint(false)} />;
+ }
+
+ if (user && profile && !isOnboardingComplete) {
+  return <AestheticOnboarding />;
  }
 
  const viewModeTitles: Record<string, string> = {

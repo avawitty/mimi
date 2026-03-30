@@ -3,12 +3,15 @@ import { motion } from 'framer-motion';
 import { SovereignIdentityCardView } from './SovereignIdentityCardView';
 import { TasteConstellation } from './TasteConstellation';
 import { useUser } from '../contexts/UserContext';
-import { generateCelestialReading } from '../services/geminiService';
+import { generateCelestialReading, generateExecutionLayer } from '../services/geminiService';
 import { Sparkles, Loader2, Fingerprint, Activity, BookOpen, Orbit, Waves, Compass } from 'lucide-react';
+import { ExecutionBlock } from './ExecutionBlock';
+import { ExecutionLayer } from '../types';
 
 export const TheOracle: React.FC = () => {
   const { profile, activePersona } = useUser();
   const [reading, setReading] = useState<string | null>(null);
+  const [executionLayer, setExecutionLayer] = useState<ExecutionLayer | null>(null);
   const [loadingReading, setLoadingReading] = useState(false);
 
   // 1. Fetching the Live Reading on Component Mount
@@ -16,7 +19,15 @@ export const TheOracle: React.FC = () => {
     if (profile && !reading) {
       setLoadingReading(true);
       generateCelestialReading(profile)
-        .then(res => setReading(res))
+        .then(async (res) => {
+          setReading(res);
+          try {
+            const el = await generateExecutionLayer(res);
+            setExecutionLayer(el);
+          } catch (e) {
+            console.error("Execution Layer Error:", e);
+          }
+        })
         .catch(e => console.error("Oracle Error:", e))
         .finally(() => setLoadingReading(false));
     }
@@ -79,9 +90,16 @@ export const TheOracle: React.FC = () => {
                 Channeling Frequency...
               </div>
             ) : (
-              <p className="font-serif italic text-lg md:text-2xl text-nous-text leading-relaxed">
-                "{reading || "The stars remain quiet tonight."}"
-              </p>
+              <div className="space-y-8 w-full">
+                <p className="font-serif italic text-lg md:text-2xl text-nous-text leading-relaxed">
+                  "{reading || "The stars remain quiet tonight."}"
+                </p>
+                {executionLayer && (
+                  <div className="pt-8 border-t border-white/10">
+                    <ExecutionBlock layer={executionLayer} />
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </motion.div>

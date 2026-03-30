@@ -245,7 +245,7 @@ OUTPUT JSON SCHEMA:
 }`;
     
     const response = await ai.models.generateContent({
-      model: "gemini-3.1-flash", // Faster model for appending to existing tasks
+      model: "gemini-3-flash-preview", // Faster model for appending to existing tasks
       contents: `ANALYSIS CONTEXT:\n${analysisContext}`,
       config: {
         systemInstruction: prompt,

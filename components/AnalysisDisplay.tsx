@@ -7,6 +7,7 @@ import { ZineMetadata, PocketItem, LineageEntry } from '../types';
 import { generateAudio, animateShardWithVeo, transcribeAudio } from '../services/geminiService';
 import { subscribeToPocketItems, fetchLineageEntry, saveNarrativeThread, saveTask } from '../services/firebaseUtils';
 import { Loader2, X, Volume2, Orbit, Eye, Target, Layers, Moon, Sparkles, Terminal, Quote, ArrowDown, Grid3X3, Printer, Bookmark, Check, Play, Pause, ExternalLink, Download, Share2, Star, FileText, Map, Compass, Zap, RefreshCw, PenTool, Save, Mic, Square, AlertCircle, StickyNote, History, MessageSquareQuote, Radar, Maximize2, Activity, Archive, FolderPlus, Compass as RoadmapIcon, Stars as CelestialIcon, ArrowRight, CornerDownRight, Image as ImageIcon, Film, MousePointer2, Briefcase, BookOpen, ChevronDown, Hash, Search, Menu, Plus, Radio, Heart, MessageSquare } from 'lucide-react';
+import { ExecutionBlock } from './ExecutionBlock';
 import { VisualLanguageReflection } from './VisualLanguageReflection';
 import { Visualizer } from './Visualizer';
 import { ExportChamber } from './ExportChamber';
@@ -1070,6 +1071,15 @@ export const AnalysisDisplay: React.FC<{
  </div>
  </div>
  </section>
+
+ {/* 10.5 EXECUTION LAYER */}
+ {metadata.executionLayer && (
+ <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-nous-base text-nous-text print:min-h-0 print:py-12">
+ <div className="w-full px-6 md:px-24">
+ <ExecutionBlock layer={metadata.executionLayer} />
+ </div>
+ </section>
+ )}
 
  {/* 11. PROVOCATION + CONTINUUM */}
  <footer className="min-h-[100dvh] flex flex-col items-center justify-center p-12 snap-start print:hidden text-center space-y-16">

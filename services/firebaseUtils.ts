@@ -996,6 +996,41 @@ export const fetchZineById = async (id: string) => {
     } catch (e) { return null; }
 };
 
+export const getProfileByHandle = async (handle: string): Promise<UserProfile | null> => {
+  try {
+    const q = query(collection(db, 'users'), where('handle', '==', handle), limit(1));
+    const snapshot = await getDocs(q);
+    if (!snapshot.empty) {
+      return snapshot.docs[0].data() as UserProfile;
+    }
+    return null;
+  } catch (error) {
+    console.error("MIMI // Error fetching profile by handle:", error);
+    return null;
+  }
+};
+
+export const getArchetypeClusterAlignment = async (archetype: string): Promise<UserProfile[]> => {
+  try {
+    // This requires a complex query or just fetching all and filtering if array-contains isn't exact.
+    // For now, we'll fetch a limited set of users and filter client-side or use a simple query if possible.
+    // Assuming aestheticDNA.archetypes is an array of strings.
+    const q = query(collection(db, 'users'), limit(50));
+    const snapshot = await getDocs(q);
+    const users: UserProfile[] = [];
+    snapshot.forEach(doc => {
+      const data = doc.data() as UserProfile;
+      if (data.aestheticDNA?.archetypes?.includes(archetype)) {
+        users.push(data);
+      }
+    });
+    return users;
+  } catch (error) {
+    console.error("MIMI // Error fetching archetype cluster:", error);
+    return [];
+  }
+};
+
 export const createDossierFolder = async (uid: string, name: string): Promise<string> => {
   const id = `folder_${Date.now()}`;
   const folder: DossierFolder = { id, userId: uid, name, createdAt: Date.now(), collaborators: [] };

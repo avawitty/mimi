@@ -10,6 +10,8 @@ import { searchGrounding } from '../services/searchService';
 import { analyzeCollectionIntent, scryTrendSynthesis, generateInvestmentStrategy, compressImage, applyAestheticRefraction, analyzeImageAesthetic, analyzeAestheticDelta } from '../services/geminiService';
 import { Loader2, Trash2, Sparkles, RefreshCw, X, CheckCircle2, Filter, Search, Link as LinkIcon, Anchor, Info, Compass, ShieldCheck, Target, ChevronRight, Binary, Orbit, Zap, Activity, Fingerprint, Waves, Play, Pause, Volume2, Shield, Plus, Layers, PenTool, Layout, Save, Wand2, Pencil, FolderPlus, FolderOpen, ArrowLeft, Copy, Check, Send, Radio, Briefcase, Eye, EyeOff, Globe2, Radar, ExternalLink, ImageIcon, Wallet, ScrollText, DollarSign, PieChart, Coins, AlertTriangle, LayoutGrid, Upload, FileText, Share2, Wand } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BatchLinkDrop } from './BatchLinkDrop';
+import { WeeklyDriftReport } from './WeeklyDriftReport';
 import { DeltaVerdictCard } from './DeltaVerdictCard';
 
 // --- SUB-COMPONENTS ---
@@ -502,6 +504,8 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  // Modals
  const [showInjectModal, setShowInjectModal] = useState(false);
  const [showFolderModal, setShowFolderModal] = useState(false);
+ const [showBatchDrop, setShowBatchDrop] = useState(false);
+ const [showDriftReport, setShowDriftReport] = useState(false);
  const [newFolderName, setNewFolderName] = useState('');
  const [activeShard, setActiveShard] = useState<PocketItem | null>(null);
  
@@ -817,6 +821,18 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  {/* Right: Actions */}
  <div className="flex items-center gap-4">
  <button 
+ onClick={() => setShowBatchDrop(true)}
+ className="flex items-center gap-2 px-4 py-2 bg-nous-base text-nous-text border border-nous-border rounded-none font-sans text-[9px] uppercase tracking-widest font-black hover:bg-nous-base0 hover:text-white transition-all"
+ >
+ <LinkIcon size={12} /> Batch Drop
+ </button>
+ <button 
+ onClick={() => setShowDriftReport(true)}
+ className="flex items-center gap-2 px-4 py-2 bg-nous-base text-nous-text border border-nous-border rounded-none font-sans text-[9px] uppercase tracking-widest font-black hover:bg-nous-base0 hover:text-white transition-all"
+ >
+ <Compass size={12} /> Drift Report
+ </button>
+ <button 
  onClick={() => setShowInjectModal(true)}
  className="flex items-center gap-2 px-4 py-2 bg-nous-base0 text-white rounded-none font-sans text-[9px] uppercase tracking-widest font-black hover:bg-stone-600 transition-all"
  >
@@ -853,6 +869,20 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  </div>
  </div>
  </div>
+ )}
+ </AnimatePresence>
+
+ <AnimatePresence>
+ {showBatchDrop && (
+  <div className="fixed inset-0 z-[9000] flex items-start justify-center pt-24 bg-nous-base/90 backdrop-blur-xl overflow-y-auto">
+   <BatchLinkDrop onClose={() => setShowBatchDrop(false)} />
+  </div>
+ )}
+ </AnimatePresence>
+
+ <AnimatePresence>
+ {showDriftReport && (
+  <WeeklyDriftReport items={items} onClose={() => setShowDriftReport(false)} />
  )}
  </AnimatePresence>
 
