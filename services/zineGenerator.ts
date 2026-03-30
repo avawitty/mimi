@@ -1,6 +1,6 @@
 import { Part, Type, ThinkingLevel } from "@google/genai";
 import { ToneTag, ZineGenerationOptions, UserProfile } from "../types";
-import { withResilience } from "./geminiClient";
+import { withResilience, tryModels } from "./geminiClient";
 import { modulateSemioticContext } from "./semioticModulator";
 import { triggerAlert } from "./errorHandling";
 import { fetchUserZines, fetchLatestLineageEntry } from "./firebaseUtils";
@@ -41,7 +41,18 @@ export const createZine = async (text: string, media: any[], tone: ToneTag, prof
             const generatedTags = await generateTagsFromMedia(text, media);
             zineOptions.tags = generatedTags;
         }
-        return await withResilience(async (ai) => {
+        const isLite = !!opts.isLite;
+        const useDeep = !!opts.deepThinking && !isLite;
+        const useSearch = !!opts.useSearch;
+        const useMaps = !!opts.useMaps;
+        const isTaskMode = !!opts.taskMode;
+
+        const models = [
+            isLite ? 'gemini-3.1-flash-lite-preview' : (useDeep ? 'gemini-3.1-pro-preview' : 'gemini-3-flash-preview'),
+            'gemini-3-flash-preview'
+        ];
+
+        return await tryModels(models, async (ai, model) => {
             // Fetch fragments from stacks if provided
             const stackFragments = stackIds && stackIds.length > 0
                 ? await Promise.all(stackIds.map(async (stackId) => ({
@@ -64,21 +75,6 @@ export const createZine = async (text: string, media: any[], tone: ToneTag, prof
                     componentContext = `\nSAVED COMPONENTS (Use these as primary visual references):
 ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.url}`).join('\n')}`;
                 }
-            }
-
-            const isLite = !!opts.isLite;
-            const useDeep = !!opts.deepThinking && !isLite;
-            const useSearch = !!opts.useSearch;
-            const useMaps = !!opts.useMaps;
-            const isTaskMode = !!opts.taskMode;
-
-            let model = 'gemini-3-flash-preview';
-            if (isLite) {
-                model = 'gemini-3.1-flash-lite-preview';
-            } else if (useDeep) {
-                model = 'gemini-3.1-pro-preview';
-            } else if (useMaps) {
-                model = 'gemini-3-flash-preview';
             }
 
             const profileToUse = opts.bypassTailor ? null : profile;

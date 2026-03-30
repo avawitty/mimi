@@ -128,3 +128,20 @@ export async function withResilience<T>(
     throw error;
   }
 }
+
+export async function tryModels<T>(
+    models: string[],
+    operation: (ai: GoogleGenAI, model: string) => Promise<T>,
+    apiKeyOverride?: string
+): Promise<T> {
+    for (let i = 0; i < models.length; i++) {
+        const model = models[i];
+        try {
+            return await withResilience(async (ai) => await operation(ai, model), apiKeyOverride);
+        } catch (error) {
+            console.warn(`MIMI // Model fallback: ${model} failed (${i + 1}/${models.length}), trying next...`);
+            if (i === models.length - 1) throw error;
+        }
+    }
+    throw new Error("All models failed.");
+}
