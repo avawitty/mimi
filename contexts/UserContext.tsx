@@ -686,6 +686,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [reconcileProfile, speedGhostEntrance]);
 
   const updateProfile = async (newProfile: UserProfile) => {
+    console.info("MIMI // updateProfile called:", newProfile.uid, "User:", user?.uid);
     try {
       const currentUid = user?.uid || newProfile.uid;
       const updated = { ...newProfile, uid: currentUid, lastActive: Date.now() };
@@ -694,7 +695,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(updated);
       await saveProfileLocally(updated);
       
-      if (navigator.onLine && user && !currentUid.startsWith('local_')) {
+      console.info("MIMI // updateProfile: navigator.onLine:", navigator.onLine, "user:", !!user, "currentUid:", currentUid);
+      if (navigator.onLine && user && currentUid && !currentUid.startsWith('local_')) {
         // Split data into Identity (Public) and Preferences (Private)
         const { tailorDraft, personas, activePersonaId, starredZineIds, lastAuditReport, ...identity } = updated;
         const preferences: UserPreferences = {

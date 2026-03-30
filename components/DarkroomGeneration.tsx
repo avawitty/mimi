@@ -295,7 +295,7 @@ export const DarkroomGeneration: React.FC = () => {
  <div>
  <span className="text/40 block mb-1">Palette</span>
  <div className="flex gap-1">
- {analysisData.palette.map((color: string, i: number) => (
+ {analysisData.palette?.map((color: string, i: number) => (
  <div key={i} className="w-4 h-4 border border/20"style={{ backgroundColor: color }} />
  ))}
  </div>

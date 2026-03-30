@@ -19,6 +19,7 @@ export const ZineFolders: React.FC<ZineFoldersProps> = ({ onSelectZine }) => {
  const [zines, setZines] = useState<ZineMetadata[]>([]);
  const [loading, setLoading] = useState(true);
  const [activeFolder, setActiveFolder] = useState<string | null>(null);
+ const [isSidebarOpen, setIsSidebarOpen] = useState(true);
  
  // Modal states
  const [showCreateModal, setShowCreateModal] = useState(false);

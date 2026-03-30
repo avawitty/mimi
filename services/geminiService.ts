@@ -440,6 +440,35 @@ export const generateSemioticSignals = async (profile: UserProfile | null) => {
 
         
 
+export const analyzeTryOn = async (modelBase64: string, itemBase64: string, mimeType: string) => {
+    return await withResilience(async (ai) => {
+        const response = await ai.models.generateContent({
+            model: 'gemini-3.1-pro-preview',
+            contents: {
+                parts: [
+                    {
+                        inlineData: {
+                            data: modelBase64.split(',')[1] || modelBase64,
+                            mimeType: mimeType
+                        }
+                    },
+                    {
+                        inlineData: {
+                            data: itemBase64.split(',')[1] || itemBase64,
+                            mimeType: mimeType
+                        }
+                    },
+                    { text: "Analyze this model and clothing item as a high-fashion stylist and technical designer. Provide a JSON response with the following keys: 'silhouette_bias' (critique of how the item fits the model's silhouette), 'color_theory' (critique of color harmony), 'mask_data' (a description of where the item would sit on the model for a try-on), and 'stylist_note' (a poetic critique and styling advice)." }
+                ]
+            },
+            config: {
+                responseMimeType: "application/json",
+            }
+        });
+        return JSON.parse(response.text || '{}');
+    });
+};
+
 export const analyzeVideo = async (base64Video: string, mimeType: string, profile: any) => {
   const { ai } = getClient();
   try {
