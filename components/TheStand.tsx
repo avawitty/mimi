@@ -62,7 +62,7 @@ export const TheStand: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> 
  }, [zines, filter, searchQuery]);
 
  return (
- <div className="flex-1 w-full h-full flex flex-col bg dark:bg transition-colors duration-1000 relative overflow-hidden">
+ <div className="flex-1 w-full h-full flex flex-col bg-nous-base dark:bg-nous-base transition-colors duration-1000 relative overflow-hidden">
  
  {/* GLOBAL TICKER */}
  <div className="w-full h-8 bg-nous-text text-nous-base flex items-center overflow-hidden border-b border-black/5 shrink-0 z-20">

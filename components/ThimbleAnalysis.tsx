@@ -23,15 +23,15 @@ export const ThimbleAnalysis: React.FC<Props> = ({ artifactVector, userVector, t
  }, [artifactVector, userVector]);
 
  return (
- <div className="p-6 border border bg text font-sans">
- <div className="flex justify-between items-baseline mb-6 border-b border pb-4">
+ <div className="p-6 border-nous-border border bg-nous-base text-nous-text font-sans">
+ <div className="flex justify-between items-baseline mb-6 border-b border-nous-border pb-4">
  <h3 className="font-serif text-2xl italic">Thimble Analysis</h3>
  <span className="archival-stamp text-[10px] tracking-widest uppercase">{trajectoryLabel} // { (similarityScore * 100).toFixed(0) }%</span>
  </div>
  
  {/* Thumbnail Placeholder */}
  {thumbnailUrl && (
- <div className="mb-6 aspect-video border border bg-white flex items-center justify-center">
+ <div className="mb-6 aspect-video border-nous-border border bg-white flex items-center justify-center">
  <img src={thumbnailUrl} alt="Artifact"className="max-h-full object-contain"/>
  </div>
  )}
@@ -56,7 +56,7 @@ export const ThimbleAnalysis: React.FC<Props> = ({ artifactVector, userVector, t
  </div>
 
  {/* Analysis Points */}
- <div className="space-y-4 text-sm font-serif italic text">
+ <div className="space-y-4 text-sm font-serif italic text-nous-text">
  <p className="leading-relaxed">{interpretation}</p>
  <ul className="list-disc list-inside space-y-1 text-xs font-sans uppercase tracking-widest opacity-70">
  <li>Fits the capsule core</li>
@@ -66,7 +66,7 @@ export const ThimbleAnalysis: React.FC<Props> = ({ artifactVector, userVector, t
 
  <button 
  onClick={onSave}
- className="mt-8 w-full py-3 bg text text-[10px] uppercase tracking-[0.2em] hover:bg-black transition-colors"
+ className="mt-8 w-full py-3 bg-nous-base text-nous-text text-[10px] uppercase tracking-[0.2em] hover:bg-nous-base transition-colors"
  >
  Save to Constellation
  </button>

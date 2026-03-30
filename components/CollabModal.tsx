@@ -23,7 +23,7 @@ export const CollabModal: React.FC<CollabModalProps> = ({
  if (!isOpen) return null;
  return (
  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[7000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
- <div className="bg p-8 rounded-none max-w-lg w-full space-y-6 border border-nous-border">
+ <div className="bg-nous-base p-8 rounded-none max-w-lg w-full space-y-6 border border-nous-border">
  <div className="flex justify-between items-center border-b border-nous-border pb-4">
  <h3 className="font-serif italic text-2xl text-nous-text">Manage Collaborators.</h3>
  <button onClick={onClose}><X size={20} className="text-nous-subtle hover:text-nous-subtle"/></button>

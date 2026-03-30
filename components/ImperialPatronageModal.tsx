@@ -102,12 +102,12 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
 
  {/* BRANDING */}
  <div className="space-y-4 w-full border-b border/10 pb-8">
- <div className="flex justify-center text opacity-80">
+ <div className="flex justify-center text-nous-text opacity-80">
  <Crown size={32} strokeWidth={1} />
  </div>
  <div className="space-y-1">
  <h3 className="font-mono text-[10px] uppercase tracking-[0.4em] text-nous-subtle">Maison Mimi Archival</h3>
- <h2 className="font-serif text-5xl italic text tracking-tighter leading-none">
+ <h2 className="font-serif text-5xl italic text-nous-text tracking-tighter leading-none">
  The Sovereign Key.
  </h2>
  </div>
@@ -141,7 +141,7 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
  <button 
  onClick={() => handleSubscribe('core')}
  disabled={!!isCheckoutLoading || profile?.planStatus === 'core'}
- className={`w-full py-3 border border font-sans text-[10px] uppercase tracking-[0.2em] font-bold transition-colors flex justify-center items-center gap-2 ${profile?.planStatus === 'core' ? 'bg-nous-base text-nous-subtle border-nous-border cursor-not-allowed' : 'hover:bg hover:text-nous-text'}`}
+ className={`w-full py-3 border border-nous-border font-sans text-[10px] uppercase tracking-[0.2em] font-bold transition-colors flex justify-center items-center gap-2 ${profile?.planStatus === 'core' ? 'bg-nous-base text-nous-subtle border-nous-border cursor-not-allowed' : 'hover:bg-nous-base hover:text-nous-text'}`}
  >
  {isCheckoutLoading === 'core' ? <Loader2 size={14} className="animate-spin"/> : profile?.planStatus === 'core' ? 'Current Plan' : 'Understand Your Taste'}
  </button>
@@ -150,7 +150,7 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
 
  {/* PRO TIER */}
  <div className="border-2 border p-6 flex flex-col bg-white relative transform md:-translate-y-4">
- <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg text-white text-[9px] font-mono uppercase tracking-widest px-3 py-1">Most Popular</div>
+ <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-nous-base text-white text-[9px] font-mono uppercase tracking-widest px-3 py-1">Most Popular</div>
  <h3 className="font-serif italic text-2xl text">Pro</h3>
  <div className="font-mono text-[10px] uppercase tracking-widest text-nous-subtle mb-4">Strategist</div>
  <div className="text-3xl font-light tracking-tighter mb-6">$35<span className="text-sm text-nous-subtle">/mo</span></div>
@@ -205,13 +205,13 @@ export const ImperialPatronageModal: React.FC<{ isOpen: boolean; onClose: () => 
  value={keyInput}
  onChange={(e) => setKeyInput(e.target.value)}
  placeholder="ENTER_ACCESS_CODE"
- className="w-full bg/5 border-b border/20 py-3 text-center font-mono text-xs uppercase tracking-[0.3em] text focus:outline-none focus:border transition-colors placeholder:text/30"
+ className="w-full bg-nous-base/5 border-b border-nous-border/20 py-3 text-center font-mono text-xs uppercase tracking-[0.3em] text-nous-text focus:outline-none focus:border-nous-border transition-colors placeholder:text-nous-text/30"
  />
  </div>
  <button 
  onClick={handleValidate}
  disabled={status === 'validating' || !keyInput}
- className={`w-full mt-4 py-3 border border rounded-none font-sans text-[9px] uppercase tracking-[0.3em] font-black transition-all flex items-center justify-center gap-3 relative overflow-hidden group ${status === 'success' ? 'bg text-white' : 'hover:bg hover:text-nous-text text'}`}
+ className={`w-full mt-4 py-3 border border-nous-border rounded-none font-sans text-[9px] uppercase tracking-[0.3em] font-black transition-all flex items-center justify-center gap-3 relative overflow-hidden group ${status === 'success' ? 'bg-nous-base text-white' : 'hover:bg-nous-base hover:text-nous-text text-nous-text'}`}
  >
  {status === 'validating' ? <Loader2 size={12} className="animate-spin"/> : status === 'success' ? <Check size={12} /> : <Fingerprint size={12} />}
  <span>{status === 'validating' ? 'Verifying...' : status === 'success' ? 'Access Granted' : status === 'error' ? 'Invalid Key' : 'Acquire Access'}</span>

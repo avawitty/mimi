@@ -935,7 +935,19 @@ export const Pocket: React.FC<{ onSelectZine: (zine: ZineMetadata) => void }> = 
  )}
  </AnimatePresence>
 
- <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8 md:gap-10">
+ {(!filteredItems || filteredItems.length === 0) && (
+    <div className="py-32 flex flex-col items-center justify-center gap-6 opacity-30">
+      <h2 className="font-serif italic text-4xl text-nous-text">The Pocket is Void</h2>
+      <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle">Inject your first fragment to begin.</p>
+      <button 
+        onClick={() => setShowInjectModal(true)}
+        className="px-8 py-4 bg-nous-base text-nous-text font-sans text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-nous-base transition-colors"
+      >
+        Inject First Fragment
+      </button>
+    </div>
+  )}
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8 md:gap-10">
  {filteredItems?.map(item => (
  <motion.div key={item.id} layout onClick={() => handleItemClick(item)} className={`group relative bg-white border p-1 rounded-none flex flex-col transition-all cursor-pointer ${isSelectionMode && selectedIds.has(item.id) ? 'border-nous-border ring-2 ring-stone-500/20' : 'border-nous-border '}`}>
  <div className="relative aspect-[3/4] bg-nous-base overflow-hidden">

@@ -14,7 +14,7 @@ export const NotificationsPanel: React.FC = () => {
  }, [user]);
 
  return (
- <div className="notifications-panel p-4 bg border border-nous-border">
+ <div className="notifications-panel p-4 bg-nous-base border border-nous-border">
  <h2 className="font-mono text-[9px] uppercase tracking-widest font-bold text-nous-subtle mb-4">Notifications</h2>
  {notifications.length === 0 ? (
  <p className="font-serif italic text-sm text-nous-subtle">No new notifications.</p>

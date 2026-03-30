@@ -25,10 +25,15 @@ export const TheOracle: React.FC = () => {
   // 2. Ensuring the user has generated an identity first
   if (!profile?.tasteProfile?.sovereignIdentity) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-nous-subtle h-full space-y-4">
-        <Sparkles size={24} className="opacity-50" />
-        <p className="font-serif italic text-lg">The Oracle requires a Sovereign Identity Card to read your aesthetic horoscope.</p>
-        <p className="font-sans text-[10px] uppercase tracking-widest text-white/40">Synthesize more fragments to generate.</p>
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center h-full space-y-6 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]">
+        <h2 className="font-serif italic text-4xl text-nous-text">The Oracle Slumbers.</h2>
+        <p className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle">Awaiting Sovereign Identity</p>
+        <button 
+          onClick={() => window.dispatchEvent(new CustomEvent('mimi:change_view', { detail: 'studio' }))}
+          className="px-8 py-4 bg-nous-base text-nous-text font-sans text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-nous-base transition-colors"
+        >
+          Synthesize Fragments
+        </button>
       </div>
     );
   }
