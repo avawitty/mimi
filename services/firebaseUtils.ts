@@ -1183,7 +1183,7 @@ export const fetchDossierFolders = async (uid: string) => {
   }
 };
 
-export const createDossierArtifactFromImage = async (uid: string, folderId: string, title: string, imageUrl: string) => {
+export const createDossierArtifactFromImage = async (uid: string, folderId: string, title: string, imageUrl: string, layout?: MoodboardLayout) => {
   if (!uid || uid === 'ghost' || !isFullyAuthenticated()) return '';
   const id = `artifact_${Date.now()}`;
   
@@ -1205,7 +1205,8 @@ export const createDossierArtifactFromImage = async (uid: string, folderId: stri
     id, userId: uid, folderId, type: 'moodboard', title, createdAt: Date.now(),
     elements: [{ id: 'el_0', type: 'image', content: finalImageUrl }],
     tags, // Add tags
-    status: 'active'
+    status: 'active',
+    ...(layout ? { layout } : {})
   };
   
   await saveArtifactLocally(artifact);
@@ -1243,7 +1244,7 @@ export const createDossierArtifactFromStrategy = async (uid: string, folderId: s
   return id;
 };
 
-export const createDossierArtifactFromText = async (uid: string, folderId: string, title: string, text: string) => {
+export const createDossierArtifactFromText = async (uid: string, folderId: string, title: string, text: string, layout?: MoodboardLayout) => {
   if (!uid || uid === 'ghost' || !isFullyAuthenticated()) return '';
   const id = `artifact_${Date.now()}`;
   
@@ -1255,7 +1256,8 @@ export const createDossierArtifactFromText = async (uid: string, folderId: strin
     id, userId: uid, folderId, type: 'brief', title, createdAt: Date.now(),
     elements: [{ id: 'el_0', type: 'text', content: text }],
     tags, // Add tags
-    status: 'active'
+    status: 'active',
+    ...(layout ? { layout } : {})
   };
   
   await saveArtifactLocally(artifact);

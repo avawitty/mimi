@@ -863,6 +863,15 @@ export interface DossierElement {
   };
 }
 
+export type MoodboardLayout = {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  zIndex: number;
+  rotation?: number;
+};
+
 export interface DossierArtifact {
   id: string;
   userId: string;
@@ -876,10 +885,13 @@ export interface DossierArtifact {
   stackIds?: string[]; // NEW: For clustering
   status?: 'active' | 'dormant'; // NEW: For Dormant Vision System
   deltaVerdict?: DeltaVerdict;
-  layout?: {
-    x: number;
-    y: number;
-    zIndex: number;
+  layout?: MoodboardLayout;
+  imageUrl?: string;
+  sourceUrl?: string;
+  kind?: "upload" | "archive" | "generated";
+  preview?: {
+    dominantColor?: string;
+    aspectRatio?: number;
   };
 }
 

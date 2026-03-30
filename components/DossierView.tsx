@@ -103,12 +103,14 @@ export default function DossierView() {
  setFolderMemo(activeFolder.notes || '');
  setTasks(activeFolder.tasks || []);
  loadCollaboratorProfiles(activeFolder.collaborators || []);
+ fetchPocketItems(user?.uid || 'ghost').then(items => setPocketItems(items || [])).catch(console.error);
  }
  else {
  setArtifacts([]);
  setFolderMemo('');
  setTasks([]);
  setCollabProfiles([]);
+ setPocketItems([]);
  }
  }, [activeFolder]);
 
@@ -227,8 +229,12 @@ export default function DossierView() {
  };
 
  const handleArtifactDragEnd = async (e: any, info: any, artifact: DossierArtifact) => {
- const currentX = artifact.layout?.x ?? 0;
- const currentY = artifact.layout?.y ?? 0;
+ const index = artifacts.findIndex(a => a.id === artifact.id);
+ const defaultX = 100 + ((index % 4) * 280);
+ const defaultY = 400 + (Math.floor(index / 4) * 280);
+ 
+ const currentX = artifact.layout?.x ?? defaultX;
+ const currentY = artifact.layout?.y ?? defaultY;
  const newX = currentX + info.offset.x;
  const newY = currentY + info.offset.y;
  
@@ -260,7 +266,14 @@ export default function DossierView() {
  reader.onerror = reject;
  reader.readAsDataURL(file);
  });
- await createDossierArtifactFromImage(user?.uid || 'ghost', activeFolder.id, file.name, base64 as string);
+ const layout = {
+ x: 100 + (((artifacts.length + i) % 4) * 280),
+ y: 400 + (Math.floor((artifacts.length + i) / 4) * 280),
+ w: 256,
+ h: 256,
+ zIndex: 30 + artifacts.length + i
+ };
+ await createDossierArtifactFromImage(user?.uid || 'ghost', activeFolder.id, file.name, base64 as string, layout);
  }
  await loadArtifacts(activeFolder.id);
  } catch (err) {
@@ -275,7 +288,14 @@ export default function DossierView() {
  setIsSavingNote(true);
  try {
  const title = noteTitle.trim() ||"Semiotic Fragment";
- await createDossierArtifactFromText(user?.uid || 'ghost', activeFolder.id, title, noteContent);
+ const layout = {
+ x: 100 + ((artifacts.length % 4) * 280),
+ y: 400 + (Math.floor(artifacts.length / 4) * 280),
+ w: 256,
+ h: 256,
+ zIndex: 30 + artifacts.length
+ };
+ await createDossierArtifactFromText(user?.uid || 'ghost', activeFolder.id, title, noteContent, layout);
  setNoteTitle('');
  setNoteContent('');
  setShowNoteModal(false);
@@ -522,11 +542,18 @@ export default function DossierView() {
  const handleImportItem = async (item: any) => {
  if (!activeFolder) return;
  try {
+ const layout = {
+ x: 100 + ((artifacts.length % 4) * 280),
+ y: 400 + (Math.floor(artifacts.length / 4) * 280),
+ w: 256,
+ h: 256,
+ zIndex: 30 + artifacts.length
+ };
  if (item.type === 'image' || item.type === 'zine_card') {
- await createDossierArtifactFromImage(user?.uid || 'ghost', activeFolder.id, item.content.prompt || item.content.title || 'Imported Shard', item.content.imageUrl);
+ await createDossierArtifactFromImage(user?.uid || 'ghost', activeFolder.id, item.content.prompt || item.content.title || 'Imported Shard', item.content.imageUrl, layout);
  } else if (item.type === 'voicenote' || item.type === 'audio') {
  // For now, we'll just treat audio as a text artifact with the URL or similar if we don't have a specific audio artifact type yet
- await createDossierArtifactFromText(user?.uid || 'ghost', activeFolder.id, item.content.prompt || 'Sonic Shard', `Audio Source: ${item.content.audioUrl}`);
+ await createDossierArtifactFromText(user?.uid || 'ghost', activeFolder.id, item.content.prompt || 'Sonic Shard', `Audio Source: ${item.content.audioUrl}`, layout);
  }
  await loadArtifacts(activeFolder.id);
  window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message:"Shard Imported.", icon: <Check size={14} /> } }));
@@ -909,6 +936,38 @@ export default function DossierView() {
  );
  })}
  </motion.div>
+
+ {/* Pocket Strip */}
+ {pocketItems.length > 0 && (
+ <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-40 w-full max-w-4xl px-8 print:hidden">
+ <div className="bg-white/80 backdrop-blur-md border border-[#1C1917] p-4 shadow-lg flex items-center gap-4 overflow-x-auto no-scrollbar">
+ <div className="flex-shrink-0 flex items-center gap-2 pr-4 border-r border-[#1C1917]/20">
+ <Archive size={14} className="text-[#1C1917]" />
+ <span className="font-mono text-[10px] uppercase tracking-widest font-bold text-[#1C1917]">Pocket</span>
+ </div>
+ {pocketItems.slice(0, 10).map(item => (
+ <button 
+ key={item.id}
+ onClick={() => handleImportItem(item)}
+ className="flex-shrink-0 w-16 h-16 border border-[#1C1917]/20 hover:border-[#1C1917] overflow-hidden group relative transition-colors bg-nous-base"
+ >
+ {item.type === 'image' || item.type === 'zine_card' ? (
+ <img src={item.content.imageUrl} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" />
+ ) : (
+ <div className="w-full h-full flex items-center justify-center p-1">
+ <span className="font-serif italic text-[8px] text-[#1C1917] line-clamp-3 text-left leading-tight">
+ "{item.content.prompt || item.content.title || item.content.omenText || 'Text'}"
+ </span>
+ </div>
+ )}
+ <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+ <Plus size={12} className="text-white" />
+ </div>
+ </button>
+ ))}
+ </div>
+ </div>
+ )}
 
  {/* Floating Tool Palette */}
  <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-[#1C1917] text-[#F2F0E9] px-6 py-3 shadow-2xl print:hidden">
