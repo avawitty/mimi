@@ -8,6 +8,7 @@ import { handleFirestoreError, logFirestoreError, OperationType } from '../servi
 import { ZineMetadata, VibeNote } from '../types';
 import { subscribeToFollowing, Connection } from '../services/connections';
 import { PublicProfileModal } from './PublicProfileModal';
+import { SovereignIdentityCard } from './SovereignIdentityCard';
 
 interface Transmission {
  id: string;

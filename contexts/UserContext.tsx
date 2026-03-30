@@ -477,9 +477,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
               trial: {
                 startedAt: Date.now(),
                 endsAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
-                grantedCredits: isGhost ? 1 : 12,
+                grantedCredits: isGhost ? 4 : 12,
                 usedCredits: 0,
-                remainingCredits: isGhost ? 1 : 12,
+                remainingCredits: isGhost ? 4 : 12,
               },
               usage: {
                 totalGenerations: 0,
