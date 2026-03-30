@@ -1,37 +1,16 @@
 const fs = require('fs');
-const path = require('path');
+const file = 'components/InputStudio.tsx';
+let content = fs.readFileSync(file, 'utf8');
 
-const filePath = path.join(__dirname, 'components', 'StrategyStudio.tsx');
-let content = fs.readFileSync(filePath, 'utf8');
+const submitReplace = `  {/* Submit Button */}
+  <div className="fixed bottom-28 right-8 md:right-12 z-50">
+    <button onClick={() => setShowConfirmation(true)} className="bg-primary text-nous-base px-6 py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-nous-text transition-colors shadow-lg flex items-center gap-2 border border-nous-border">
+      Submit to Issue <ArrowUpRight size={14} />
+    </button>
+  </div>
+  </div>
+  </motion.div>`;
 
-const replacements = {
-  'bg-stone-950': 'bg-nous-base',
-  'text-stone-200': 'text-nous-text',
-  'text-stone-800': 'text-nous-text',
-  'text-stone-900': 'text-nous-text',
-  'text-stone-500': 'text-nous-subtle',
-  'text-stone-700': 'text-nous-subtle',
-  'border-stone-800': 'border-nous-border',
-  'border-stone-300': 'border-nous-border',
-  'border-stone-500': 'border-nous-border',
-  'border-stone-900': 'border-nous-border',
-  'bg-stone-900': 'bg-nous-base',
-  'bg-stone-800': 'bg-nous-base',
-  'bg-stone-100': 'bg-nous-base',
-  'hover:bg-stone-900': 'hover:bg-nous-base',
-  'hover:bg-stone-800': 'hover:bg-nous-base',
-  'hover:bg-stone-100': 'hover:bg-nous-base',
-  'hover:border-stone-500': 'hover:border-nous-border',
-  'hover:border-stone-600': 'hover:border-nous-border',
-  'hover:text-stone-500': 'hover:text-nous-subtle',
-  'hover:text-stone-800': 'hover:text-nous-text',
-  'hover:text-stone-200': 'hover:text-nous-text',
-  'hover:text-white': 'hover:text-nous-text',
-};
+content = content.replace(/\{\/\* Submit Button \*\/\}\s*<button onClick=\{\(\) => setShowConfirmation\(true\)\} className="text-\[10px\] uppercase tracking-\[0\.2em\] border-b border-primary\/20 \/20 hover:border-primary dark:hover:border-white transition-colors text-primary text-nous-text mb-4">\s*→ SUBMIT TO ISSUE\s*<\/button>\s*<\/div>\s*<\/motion\.div>/, submitReplace);
 
-for (const [key, value] of Object.entries(replacements)) {
-  content = content.split(key).join(value);
-}
-
-fs.writeFileSync(filePath, content);
-console.log('Done');
+fs.writeFileSync(file, content);

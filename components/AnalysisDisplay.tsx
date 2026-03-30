@@ -20,9 +20,12 @@ import { hasAccess } from '../constants';
 import { useRecorder } from '../hooks/useRecorder';
 
 const THEMES = {
- organic: { bg: '#FDFBF7', text: '#1C1917', accent: '#78716c', thread: '#E5E7EB', glow: 'transparent', surface: '#FFFFFF', border: '#F5F5F4' },
- synthetic: { bg: '#050510', text: '#E0E7FF', accent: '#06B6D4', thread: '#1E1B4B', glow: '0 0 20px rgba(6, 182, 212, 0.8)', surface: '#020617', border: '#0F172A' },
- latent: { bg: '#080808', text: '#E5E5E5', accent: '#A855F7', thread: '#262626', glow: '0 0 15px rgba(168, 85, 247, 0.4)', surface: '#0A0A0A', border: '#171717' }
+  'white editorial': { bg: '#FDFBF7', text: '#1C1917', accent: '#78716c', thread: '#E5E7EB', glow: 'transparent', surface: '#FFFFFF', border: '#F5F5F4', font: 'editorial' },
+  'white brutalist': { bg: '#FFFFFF', text: '#000000', accent: '#0000FF', thread: '#000000', glow: 'transparent', surface: '#FFFFFF', border: '#000000', font: 'brutalist' },
+  'white minimalist': { bg: '#FAFAFA', text: '#333333', accent: '#999999', thread: '#EEEEEE', glow: 'transparent', surface: '#FFFFFF', border: '#EEEEEE', font: 'minimalist' },
+  'black editorial': { bg: '#050510', text: '#E0E7FF', accent: '#06B6D4', thread: '#1E1B4B', glow: '0 0 20px rgba(6, 182, 212, 0.8)', surface: '#020617', border: '#0F172A', font: 'editorial' },
+  'black brutalist': { bg: '#000000', text: '#00FF00', accent: '#00FF00', thread: '#00FF00', glow: '0 0 20px rgba(0,255,0,0.8)', surface: '#000000', border: '#00FF00', font: 'brutalist' },
+  'black minimalist': { bg: '#0A0A0A', text: '#E5E5E5', accent: '#A855F7', thread: '#262626', glow: '0 0 15px rgba(168, 85, 247, 0.4)', surface: '#0A0A0A', border: '#171717', font: 'minimalist' }
 };
 
 const ChromaticDial: React.FC<{ activeTheme: string, onChange: (theme: string) => void, accent: string, className?: string }> = ({ activeTheme, onChange, accent, className }) => {
@@ -31,11 +34,12 @@ const ChromaticDial: React.FC<{ activeTheme: string, onChange: (theme: string) =
  const [isFlipped, setIsFlipped] = React.useState(false);
  
  const handleRotate = () => {
- const nextIndex = (currentIndex + 1) % themes.length;
- setIsFlipped(!isFlipped);
- onChange(themes[nextIndex]);
- window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'click' } }));
- };
+    const availableThemes = themes.filter(t => t !== activeTheme);
+    const randomTheme = availableThemes[Math.floor(Math.random() * availableThemes.length)];
+    setIsFlipped(!isFlipped);
+    onChange(randomTheme);
+    window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'click' } }));
+  };
 
  const rotation = currentIndex * 90;
 
@@ -98,6 +102,7 @@ export const AnalysisDisplay: React.FC<{
  const [isSavingThread, setIsSavingThread] = useState(false);
  const [isThreadSaved, setIsThreadSaved] = useState(false);
  const [audioProgress, setAudioProgress] = useState(0);
+  const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(false);
  const startTimeRef = useRef<number>(0);
  const durationRef = useRef<number>(0);
  const animationRef = useRef<number>(0);
@@ -160,14 +165,18 @@ export const AnalysisDisplay: React.FC<{
  };
  
  // TAILOR INTEGRATION: Fetch styling from the active persona's draft
- const [activeTheme, setActiveTheme] = useState<'organic' | 'synthetic' | 'latent'>(
- ['organic', 'synthetic', 'latent'].includes(metadata.content?.meta?.theme) ? metadata.content.meta.theme : (typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? 'latent' : 'organic')
- );
- const themeConfig = THEMES[activeTheme as keyof typeof THEMES] || THEMES['organic'];
+ const [activeTheme, setActiveTheme] = useState<string>('white editorial');
+  
+  useEffect(() => {
+    if (document.documentElement.classList.contains('dark')) {
+      setActiveTheme('black editorial');
+    }
+  }, []);
+ const themeConfig = THEMES[activeTheme as keyof typeof THEMES] || THEMES['white editorial'];
 
  const tailor = activePersona?.tailorDraft || profile?.tailorDraft;
- const accentColor = activeTheme === 'synthetic' ? themeConfig.accent : (tailor?.chromaticRegistry?.accentSignal || themeConfig.accent);
- const baseColor = tailor?.chromaticRegistry?.baseNeutral || themeConfig.bg;
+ const accentColor = tailor?.chromaticRegistry?.accentSignal || themeConfig.accent;
+ const baseColor = themeConfig.bg;
  
  // Determine dominant font family based on Tailor intent
  const fontFamily = tailor?.typographyIntent?.styleDescription || 'Inter';
@@ -523,13 +532,19 @@ export const AnalysisDisplay: React.FC<{
  [ X CLOSE ]
  </button>
  <style>{`
- .zine-theme-root section { background-color: transparent !important; }
- .zine-theme-root .bg-white, .zine-theme-root .dark\\:bg-\\[\\#0A0A0A\\], .zine-theme-root .dark\\:bg-nous-base { background-color: var(--zine-surface) !important; }
- .zine-theme-root .border-nous-border, .zine-theme-root .dark\\:border-nous-border, .zine-theme-root .dark\\:border-nous-border { border-color: var(--zine-border) !important; }
- .zine-theme-root .text-nous-text, .zine-theme-root .dark\\:text-nous-text, .zine-theme-root .text-nous-text { color: var(--zine-text) !important; }
- .zine-theme-root .bg-\\[\\#FDFBF7\\], .zine-theme-root .dark\\:bg-\\[\\#080808\\], .zine-theme-root .bg-\\[\\#FAFAFA\\] { background-color: var(--zine-bg) !important; }
- .zine-theme-root .font-serif { font-family: inherit !important; }
- `}</style>
+  .zine-theme-root section { background-color: transparent !important; }
+  .zine-theme-root .bg-white, .zine-theme-root .dark\\:bg-\\[\\#0A0A0A\\], .zine-theme-root .dark\\:bg-nous-base { background-color: var(--zine-surface) !important; }
+  .zine-theme-root .border-nous-border, .zine-theme-root .dark\\:border-nous-border, .zine-theme-root .dark\\:border-nous-border { border-color: var(--zine-border) !important; }
+  .zine-theme-root .text-nous-text, .zine-theme-root .dark\\:text-nous-text, .zine-theme-root .text-nous-text { color: var(--zine-text) !important; }
+  .zine-theme-root .bg-\\[\\#FDFBF7\\], .zine-theme-root .dark\\:bg-\\[\\#080808\\], .zine-theme-root .bg-\\[\\#FAFAFA\\] { background-color: var(--zine-bg) !important; }
+  ${themeConfig.font === 'editorial' ? `
+    .zine-theme-root .font-serif { font-family: '${fontFamily}', serif !important; }
+  ` : themeConfig.font === 'brutalist' ? `
+    .zine-theme-root .font-serif, .zine-theme-root .font-sans, .zine-theme-root p, .zine-theme-root h1, .zine-theme-root h2, .zine-theme-root h3, .zine-theme-root h4, .zine-theme-root span { font-family: 'JetBrains Mono', monospace !important; text-transform: uppercase !important; letter-spacing: -0.05em !important; }
+  ` : `
+    .zine-theme-root .font-serif, .zine-theme-root .font-sans, .zine-theme-root p, .zine-theme-root h1, .zine-theme-root h2, .zine-theme-root h3, .zine-theme-root h4, .zine-theme-root span { font-family: 'Inter', sans-serif !important; font-style: normal !important; letter-spacing: -0.02em !important; }
+  `}
+  `}</style>
  {/* PORTFOLIO BINDING STITCH & LATENT THREAD */}
  <div className="absolute left-8 top-0 bottom-0 w-8 z-[4000] pointer-events-none flex justify-center">
  {/* The physical stitch (dashed thread) */}
@@ -667,7 +682,7 @@ export const AnalysisDisplay: React.FC<{
  isArtifact 
  isLite={metadata.isLite} 
  delay={400}
- artifacts={metadata.artifacts}
+ artifacts={metadata.artifacts?.length > 1 ? metadata.artifacts : undefined}
  treatmentId={metadata.treatmentId}
  initialImage={(metadata.content as any).hypothesis_image_url}
  onImageGenerated={handleHypothesisImageGenerated}
@@ -813,7 +828,7 @@ export const AnalysisDisplay: React.FC<{
  isLite={metadata.isLite} 
  initialImage={page.image_url} 
  delay={800 + (i * 1200)}
- artifacts={metadata.artifacts}
+ artifacts={metadata.artifacts?.length > 1 ? metadata.artifacts : undefined}
  treatmentId={metadata.treatmentId}
  onImageGenerated={(base64) => handlePageImageGenerated(base64, i)}
  />
@@ -1181,44 +1196,66 @@ export const AnalysisDisplay: React.FC<{
  </div>
 
  {/* MINIMALIST FOOTER */}
- <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-8 px-10 py-4 bg-white/90 /90 backdrop-blur-xl border border-nous-border /10 text-nous-subtle text-nous-text/70 font-mono text-[10px] uppercase tracking-[0.2em] print:hidden shadow-2xl rounded-none">
- <span className="text-nous-subtle text-nous-text/50">RESONANCE: 98%</span>
- <div className="w-px h-4 bg-stone-200 /20"/>
- 
- <div className="flex items-center gap-3 group cursor-pointer"onClick={handleVoiceToggle}>
- <div className="relative flex items-center justify-center w-8 h-8 rounded-full border border-nous-border /20 group-hover:border-nous-border dark:group-hover:border-white/50 transition-colors">
- {isVoiceLoading ? (
- <Loader2 size={12} className="animate-spin text-nous-subtle text-nous-text/70"/>
- ) : isPlaying ? (
- <Pause size={10} className="text-nous-subtle text-nous-text/70 group-hover:text-nous-text dark:group-hover:text-nous-text"/>
- ) : (
- <Play size={10} className="text-nous-subtle text-nous-text/70 group-hover:text-nous-text dark:group-hover:text-nous-text ml-0.5"/>
- )}
- <svg className="absolute inset-0 w-full h-full -rotate-90"viewBox="0 0 32 32">
- <circle cx="16"cy="16"r="15"fill="none"stroke="currentColor"strokeWidth="2"strokeDasharray="94.2"strokeDashoffset={94.2 - (audioProgress * 94.2)} className="text-nous-text text-nous-text transition-all duration-100"/>
- </svg>
- </div>
- <span className="group-hover:text-nous-text dark:group-hover:text-nous-text transition-colors">[ THE DIAL ]</span>
- </div>
+  <motion.div 
+    initial={false}
+    animate={{ y: isToolbarCollapsed ? 100 : 0, opacity: isToolbarCollapsed ? 0 : 1 }}
+    className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-8 px-10 py-4 bg-white/90 /90 backdrop-blur-xl border border-nous-border /10 text-nous-subtle text-nous-text/70 font-mono text-[10px] uppercase tracking-[0.2em] print:hidden shadow-2xl rounded-none"
+  >
+    <span className="text-nous-subtle text-nous-text/50">RESONANCE: 98%</span>
+    <div className="w-px h-4 bg-stone-200 /20"/>
+    
+    <div className="flex items-center gap-3 group cursor-pointer" onClick={handleVoiceToggle}>
+      <div className="relative flex items-center justify-center w-8 h-8 rounded-full border border-nous-border /20 group-hover:border-nous-border dark:group-hover:border-white/50 transition-colors">
+        {isVoiceLoading ? (
+          <Loader2 size={12} className="animate-spin text-nous-subtle text-nous-text/70"/>
+        ) : isPlaying ? (
+          <Pause size={10} className="text-nous-subtle text-nous-text/70 group-hover:text-nous-text dark:group-hover:text-nous-text"/>
+        ) : (
+          <Play size={10} className="text-nous-subtle text-nous-text/70 group-hover:text-nous-text dark:group-hover:text-nous-text ml-0.5"/>
+        )}
+        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 32 32">
+          <circle cx="16" cy="16" r="15" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="94.2" strokeDashoffset={94.2 - (audioProgress * 94.2)} className="text-nous-text text-nous-text transition-all duration-100"/>
+        </svg>
+      </div>
+      <span className="group-hover:text-nous-text dark:group-hover:text-nous-text transition-colors">[ THE DIAL ]</span>
+    </div>
 
- <div className="w-px h-4 bg-stone-200 /20"/>
- <button onClick={() => setShowNotes(!showNotes)} className={`${showNotes ? 'text-nous-text text-nous-text' : 'hover:text-nous-text hover:text-nous-text'} transition-colors`}>
- [ FIELD NOTES ]
- </button>
- <div className="w-px h-4 bg-stone-200 /20"/>
- <button onClick={() => setShowExport(true)} className="hover:text-nous-text hover:text-nous-text transition-colors">
- [ EXTRACT ARTIFACT ]
- </button>
- <div className="w-px h-4 bg-stone-200 /20"/>
- <button onClick={handleSaveToPocket} className={`${isSaved ? 'text-red-500' : 'hover:text-red-500'} transition-colors flex items-center gap-2`}>
- [ {isSaved ? <Heart className="fill-current"size={12} /> : <Heart size={12} />} SAVE ]
- </button>
- <div className="w-px h-4 bg-stone-200 /20"/>
- <button onClick={() => setShowComments(true)} className="hover:text-nous-text hover:text-nous-text transition-colors flex items-center gap-2">
- [ <MessageSquare size={12} /> DISCUSS ]
- </button>
- </div>
- </div>
+    <div className="w-px h-4 bg-stone-200 /20"/>
+    <button onClick={() => setShowNotes(!showNotes)} className={`${showNotes ? 'text-nous-text text-nous-text' : 'hover:text-nous-text hover:text-nous-text'} transition-colors`}>
+      [ FIELD NOTES ]
+    </button>
+    <div className="w-px h-4 bg-stone-200 /20"/>
+    <button onClick={() => setShowExport(true)} className="hover:text-nous-text hover:text-nous-text transition-colors">
+      [ EXTRACT ARTIFACT ]
+    </button>
+    <div className="w-px h-4 bg-stone-200 /20"/>
+    <button onClick={handleSaveToPocket} className={`${isSaved ? 'text-red-500' : 'hover:text-red-500'} transition-colors flex items-center gap-2`}>
+      [ {isSaved ? <Heart className="fill-current" size={12} /> : <Heart size={12} />} SAVE ]
+    </button>
+    <div className="w-px h-4 bg-stone-200 /20"/>
+    <button onClick={() => setShowComments(true)} className="hover:text-nous-text hover:text-nous-text transition-colors flex items-center gap-2">
+      [ <MessageSquare size={12} /> DISCUSS ]
+    </button>
+    <div className="w-px h-4 bg-stone-200 /20"/>
+    <button onClick={() => setIsToolbarCollapsed(true)} className="hover:text-nous-text hover:text-nous-text transition-colors flex items-center gap-2">
+      [ <ChevronDown size={12} /> HIDE ]
+    </button>
+  </motion.div>
+
+  <AnimatePresence>
+    {isToolbarCollapsed && (
+      <motion.button
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 100, opacity: 0 }}
+        onClick={() => setIsToolbarCollapsed(false)}
+        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-2 px-6 py-3 bg-white/90 /90 backdrop-blur-xl border border-nous-border /10 text-nous-subtle text-nous-text/70 font-mono text-[10px] uppercase tracking-[0.2em] print:hidden shadow-2xl rounded-none hover:text-nous-text transition-colors"
+      >
+        [ SHOW TOOLBAR ]
+      </motion.button>
+    )}
+  </AnimatePresence>
+  </div>
  </>
  );
 };

@@ -353,7 +353,7 @@ export const InputStudio: React.FC<{
  <motion.div 
  animate={{ opacity: isThinking ? [0.5, 1, 0.5] : 1 }}
  transition={{ duration: 2, repeat: Infinity, ease:"easeInOut"}}
- className="flex-1 flex flex-col items-center justify-start relative h-full pb-32 px-12 z-10 overflow-x-hidden overflow-y-auto"
+ className="flex-1 flex flex-col items-center justify-start relative h-full pb-64 px-12 z-10 overflow-x-hidden overflow-y-auto"
  >
 
  {/* Prompt Cycle */}
@@ -649,7 +649,9 @@ export const InputStudio: React.FC<{
  </button>
  {mediaAnalysis[index] && (
  <div className="mt-1 text-[7px] text-nous-subtle leading-tight">
- <p className="truncate">{mediaAnalysis[index].tags.slice(0, 3).join(', ')}</p>
+ <p className="truncate mb-1">{mediaAnalysis[index].tags.slice(0, 3).join(', ')}</p>
+   {mediaAnalysis[index].aesthetic?.mood && <p className="truncate mb-1">Mood: {mediaAnalysis[index].aesthetic.mood.join(', ')}</p>}
+   {mediaAnalysis[index].aesthetic?.culturalReferences && <p className="truncate mb-1">Refs: {mediaAnalysis[index].aesthetic.culturalReferences.slice(0, 2).join(', ')}</p>}
  <button 
  onClick={async (e) => {
  e.stopPropagation();
@@ -662,10 +664,21 @@ export const InputStudio: React.FC<{
  console.error("MIMI // Refraction failed:", error);
  }
  }}
- className="mt-1 text-[7px] uppercase tracking-widest text-red-500 underline"
- >
- Refract
- </button>
+                   className="mt-1 text-[7px] uppercase tracking-widest text-red-500 underline"
+                  >
+                  Refract
+                  </button>
+                  <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const analysis = mediaAnalysis[index];
+                    const text = `[ARTIFACT ANALYSIS: ${analysis.tags.join(', ')}. MOOD: ${analysis.aesthetic?.mood?.join(', ')}]`;
+                    setInput(prev => prev ? `${prev}\n\n${text}` : text);
+                  }}
+                  className="mt-1 ml-2 text-[7px] uppercase tracking-widest text-primary text-nous-text underline"
+                  >
+                  Inform Signal
+                  </button>
  {mediaAnalysis[index].deltaVerdict && (
  <div className="mt-2 text-left">
  <DeltaVerdictCard verdict={mediaAnalysis[index].deltaVerdict} compact />
@@ -725,8 +738,21 @@ export const InputStudio: React.FC<{
  </button>
  {mediaAnalysis[index] && (
  <div className="mt-1 text-[7px] text-nous-subtle w-full leading-tight">
- <p className="truncate">{mediaAnalysis[index].tags.slice(0, 3).join(', ')}</p>
- <p className="truncate">Mood: {mediaAnalysis[index].aesthetic.mood[0]}</p>
+ <p className="truncate mb-1">{mediaAnalysis[index].tags.slice(0, 3).join(', ')}</p>
+   {mediaAnalysis[index].aesthetic?.mood && <p className="truncate mb-1">Mood: {mediaAnalysis[index].aesthetic.mood.join(', ')}</p>}
+   {mediaAnalysis[index].aesthetic?.culturalReferences && <p className="truncate mb-1">Refs: {mediaAnalysis[index].aesthetic.culturalReferences.slice(0, 2).join(', ')}</p>}
+                   <p className="truncate">Mood: {mediaAnalysis[index].aesthetic.mood[0]}</p>
+                  <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const analysis = mediaAnalysis[index];
+                    const text = `[AUDIO ANALYSIS: ${analysis.tags.join(', ')}. MOOD: ${analysis.aesthetic?.mood?.join(', ')}]`;
+                    setInput(prev => prev ? `${prev}\n\n${text}` : text);
+                  }}
+                  className="mt-1 text-[7px] uppercase tracking-widest text-primary text-nous-text underline"
+                  >
+                  Inform Signal
+                  </button>
  {mediaAnalysis[index].deltaVerdict && (
  <div className="mt-2 text-left">
  <DeltaVerdictCard verdict={mediaAnalysis[index].deltaVerdict} compact />
@@ -743,12 +769,14 @@ export const InputStudio: React.FC<{
  )}
  </div>
 
- {/* Submit Button */}
- <button onClick={() => setShowConfirmation(true)} className="text-[10px] uppercase tracking-[0.2em] border-b border-primary/20 /20 hover:border-primary dark:hover:border-white transition-colors text-primary text-nous-text mb-4">
- → SUBMIT TO ISSUE
- </button>
- </div>
- </motion.div>
+   {/* Submit Button */}
+  <div className="fixed bottom-40 left-1/2 -translate-x-1/2 z-50">
+    <button onClick={() => setShowConfirmation(true)} className="bg-primary text-nous-base px-6 py-3 text-[10px] uppercase tracking-[0.2em] hover:bg-nous-text transition-colors shadow-lg flex items-center gap-2 border border-nous-border">
+      Submit to Issue <ArrowUpRight size={14} />
+    </button>
+  </div>
+  </div>
+  </motion.div>
 
  {/* Confirmation Overlay */}
  <AnimatePresence>
