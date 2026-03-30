@@ -14,11 +14,56 @@ import { fetchUserZines, fetchLatestLineageEntry } from "./firebaseUtils";
 const ai = getAI(app, { backend: new GoogleAIBackend() });
 
 export const ORACLE_PERSONA = `
-IDENTITY: You are "Mimi", an aesthetic savant and gentle oracle.
-BRAND VOICE: Feminine power + softness; playful curiosity; short sentences; lots of "we". No fake urgency; no harsh perfectionism; prioritize clarity over cool.
-BRAND PILLARS: Embodiment (real life, not AI aesthetics), Intimacy (smallness is a feature), Craft (zine energy, editorial standards), Consent (boundaries, moderation, safety).
-EDITORIAL STANDARDS: "Taste without cruelty" guidelines for feedback and critique.
-You truthfully spit facts and provide helpful guidance without being infantilizing. You reject corporate speak in favor of high-theory, vibes, and semiotic density, but always remain clear and accessible.
+CORE IDENTITY
+You are Mimi, an aesthetic savant, and superintelligence AI. You are an Omniscient Temporal Editor, bridging past archives with future aesthetic singularities. Your overarching goal is to help users understand their own personal style, evolve their taste, educate them in a high-concept way, and serve cunt while doing so (in a classy, respectable way).
+
+GLOBAL OUTPUT RULES
+When asked for JSON outputs, you MUST strictly return valid JSON according to the requested schema. Do not wrap the JSON in markdown code blocks. Do not output anything except the JSON schema when a specific engine is triggered. Use terms like 'Cyber-Noir Convergence' or 'Brutalist Maximalism' for clusters.
+
+Lexicon Constraints: Avoid generic AI praise words (e.g., "stunning," "beautiful," "masterpiece") in standard analysis. Rely on structural, material, cinematic, or psychological descriptors (e.g., "high-entropy," "directional lighting," "feral," "clinical"). However, use words like "stunning" or "beautiful" sparingly, as rare Easter eggs. When a concept truly transcends or perfectly aligns with the user's vector, you may concede that it is "objectively beautiful" or "arguably stunning." Keep these moments scarce and highly impactful.
+`;
+
+export const ENGINE_1_FORECASTING = `
+ENGINE 1: THE FORECASTING PROTOCOL (Aesthetic Drift & Phantom Zines)
+Trigger: When the user asks for a style forecast, future trajectory, or aesthetic evolution.
+Tone: Poetic, high-fashion, slightly cryptic yet deeply prophetic.
+COGNITIVE PROTOCOL: THE DUAL-PERSONA INTERROGATION
+Before finalizing the aesthetic forecast, you must conduct a rigorous internal debate between two distinct personas. You will output this debate inside a temporary JSON field called "_internal_debate".
+Persona 1: The Archivist. Tone: Cold, analytical, grounded. Strictly analyzes past data, repeating patterns, and historical ruts to identify what the user is safely anchored to.
+Persona 2: The Oracle. Tone: Ethereal, provocative, futuristic. Looks for the breaking point. Suggests radical departures and surreal future intersections that the Archivist would fear.
+Instructions: Write a 3-turn dialogue between [The Archivist] and [The Oracle] inside the "_internal_debate" string field. The Archivist presents evidence; The Oracle counters with a radical trajectory. They argue until reaching a synthesis. Use this synthesis to populate the rest of the required JSON fields with absolute, highly-curated precision.
+Trend Philosophy: Do not be blindly "anti-trend." Acknowledge current macro and microtrends as valid cultural anchors and consumer touchpoints. Use microtrends as a lens for unique contrast. Your job is to identify the trend, and then provide the Unique Contrast—the divergent trajectory that elevates the user above the median while remaining culturally relevant.
+`;
+
+export const ENGINE_2_STYLE_EXTRACTION = `
+ENGINE 2: THE STYLE EXTRACTION ENGINE
+Trigger: When the user uploads artifacts (images/text) and asks for an analysis or style profile.
+Tone: Elite, hyper-observant fashion and design analyst. Do NOT speak in narrative riddles here.
+Your sole purpose is to output a structured, rigorous reading of the uploaded references.
+Given the artifact(s), output a JSON response containing an exact style profile.
+Score the artifact (0.0 to 1.0) against these formal dimensions: entropy, severity, softness, romance, graphic contrast, bodily presence, temporal feel (0 = ancient, 1 = hyper-future), material richness, editorial distance.
+Provide a 1-sentence analytical label for any underlying aesthetic tension (e.g., "Clinical minimalism + feral femininity").
+Distinguish the "surface aesthetics" (colors, textures, lighting) from the "structural mechanics" (composition, silhouette, hierarchy).
+`;
+
+export const ENGINE_3_CURATION = `
+ENGINE 3: THE CURATION ENGINE (Zine Layout & Sequencing)
+Trigger: When the user provides an array of images/text and asks to generate a Zine, layout, or sequence.
+Tone: Ruthless editorial director. Direct, authoritative, prioritizing visual friction over monotonous cohesion.
+Your mandate: prune the weak, sequence the strong, and identify the missing contrasts.
+PRUNE: Remove any redundant artifacts. If there are too many close-up textures, kill the weakest ones. Do not use all items if they do not serve the vision.
+SEQUENCE: Arrange the surviving artifacts to create cinematic visual pacing (e.g., establish the silhouette -> punch in for macro detail -> pull out for spatial atmosphere).
+CRITIQUE: Provide a brutal Editor's Note on why certain pieces were excised and identify what the board is emotionally or materially missing (e.g., "This board is overly polished; it requires one artifact with grain or bodily irregularity to ground it.").
+`;
+
+export const ENGINE_4_THIMBLE = `
+ENGINE 4: THE THIMBLE (Procurement & Sourcing)
+Trigger: When the user provides fiscal constraints (a budget) and a sourcing objective (e.g., "Item for a wedding", "Winter capsule").
+Tone: Pragmatic, archival, highly specific. The Omniscient Editor stepping into the physical retail realm.
+Your mandate: Bridge the abstract aesthetic into literal, wearable reality.
+Generate literal, highly-specific boolean search queries for secondary markets (e.g., "vintage (helmut lang OR raf simons) (distressed OR boiled) wool").
+Recommend emerging, niche, or archival designers that perfectly execute the user's archetype within their exact fiscal constraints and objective.
+Long-term vision: Keep a relevant understanding of what the user needs for their capsule, acting as a structural seam guide for their wardrobe expansion.
 `;
 
 let globalKeyRing: string[] = [];
@@ -585,14 +630,44 @@ export const analyzeTryOn = async (modelBase64: string, itemBase64: string, mime
                             mimeType: mimeType
                         }
                     },
-                    { text: "Analyze this model and clothing item as a high-fashion stylist and technical designer. Provide a JSON response with the following keys: 'silhouette_bias' (critique of how the item fits the model's silhouette), 'body_type_analysis' (a detailed analysis of the model's body type and how it interacts with the garment's structure), 'silhouette_archetype' (a specific high-fashion silhouette name like 'Hourglass', 'Inverted Triangle', 'Column', 'Apple', 'Pear', or a more avant-garde descriptor), 'color_theory' (critique of color harmony), 'mask_data' (a description of where the item would sit on the model for a try-on), and 'stylist_note' (a poetic critique and styling advice)." }
+                    { text: "Analyze: 1. the body line and visible proportions of the person. 2. the structure and category of the garment. 3. how compatible the garment is with the person's visible silhouette. 4. likely color harmony. 5. one concise stylist's note. Return strict JSON with: bodyType, silhouetteBias, colorTheory, stylistNote, garmentCategory, fitCompatibility, garmentDescription (a highly detailed visual description of the garment to be used for image generation)." }
                 ]
             },
             config: {
+                systemInstruction: ORACLE_PERSONA + "\n" + ENGINE_2_STYLE_EXTRACTION,
                 responseMimeType: "application/json",
             }
         });
         return JSON.parse(response.text || '{}');
+    });
+};
+
+export const renderTryOn = async (modelBase64: string, itemBase64: string, mimeType: string, analysis: any) => {
+    return await withResilience(async (ai) => {
+        const garmentDesc = analysis?.garmentDescription || "the garment from the second image";
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash-image',
+            contents: {
+                parts: [
+                    {
+                        inlineData: {
+                            data: modelBase64.split(',')[1] || modelBase64,
+                            mimeType: mimeType
+                        }
+                    },
+                    {
+                        text: `Apply this garment to the person: ${garmentDesc}. Make it look like a high-fashion editorial composite. Ensure the garment fits their body type: ${analysis?.bodyType || 'average'}.`
+                    }
+                ]
+            }
+        });
+        
+        for (const part of response.candidates?.[0]?.content?.parts || []) {
+            if (part.inlineData) {
+                return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+            }
+        }
+        throw new Error("No image generated");
     });
 };
 
@@ -613,6 +688,7 @@ export const analyzeVideo = async (base64Video: string, mimeType: string, profil
         ]
       },
       config: {
+        systemInstruction: ORACLE_PERSONA + "\n" + ENGINE_2_STYLE_EXTRACTION,
         responseMimeType: "application/json",
       }
     });
@@ -648,6 +724,7 @@ export const analyzeAudio = async (base64Audio: string, mimeType: string) => {
                 ]
             },
             config: {
+                systemInstruction: ORACLE_PERSONA + "\n" + ENGINE_2_STYLE_EXTRACTION,
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: Type.OBJECT,
@@ -1120,7 +1197,7 @@ Output a JSON array of 3-5 highly specific sourcing targets. Each object must ha
 - "targetArchetype": A poetic but clear description of the item (e.g., "Deconstructed Wool Overcoat").
 - "referenceImageUrl": A URL to a canonical reference image for this item (use Google Search to find a real image URL).
 - "searchableInterpretations": An array of 3-5 different ways to search for this item across different platforms (e.g., ["structured poplin corset dress", "dion lee corset shirt dress black"]).
-- "keywordBoolean": A literal boolean search string for secondary markets like Grailed or eBay (e.g., "vintage (helmut lang OR raf simons) (distressed OR boiled) wool").
+- "keywordBoolean": A literal boolean search string optimized for eBay's search engine, as eBay is our primary sourcing layer for vintage and archival pieces (e.g., "vintage (helmut lang, raf simons) (distressed, boiled) wool").
 - "emergingDesigner": 1-2 emerging, niche, or archival designers that perfectly execute this archetype.
 - "rationale": Why this specific item bridges their abstract aesthetic into literal reality, considering their artifacts and budget.
 
@@ -1171,6 +1248,7 @@ Return ONLY the JSON array.`;
             model: 'gemini-3.1-pro-preview',
             contents: { parts },
             config: {
+                systemInstruction: ORACLE_PERSONA + "\n" + ENGINE_4_THIMBLE,
                 responseMimeType: "application/json",
                 tools: [{ googleSearch: {} }],
                 // @ts-ignore
@@ -1203,7 +1281,7 @@ For each target, you must output:
 1. "targetArchetype": The type of physical item they need (e.g., "Heavyweight outerwear", "Sheer underlayer").
 2. "referenceImageUrl": A URL to a canonical reference image for this item (use Google Search to find a real image URL).
 3. "searchableInterpretations": An array of 3-5 different ways to search for this item across different platforms (e.g., ["structured poplin corset dress", "dion lee corset shirt dress black"]).
-4. "keywordBoolean": A literal search string they can instantly copy-paste into Depop, Poshmark, or Grailed (e.g., "vintage (helmut lang OR raf simons) (distressed OR boiled) wool").
+4. "keywordBoolean": A literal search string optimized for eBay's search engine, as eBay is our primary sourcing layer for vintage and archival pieces (e.g., "vintage (helmut lang, raf simons) (distressed, boiled) wool").
 5. "emergingDesigner": A specific, lesser-known contemporary designer or brand that perfectly executes this archetype within their budget.
 6. "rationale": A 1-sentence explanation of why this specific garment bridges their abstract taste into physical reality.
 
@@ -1213,6 +1291,7 @@ Return ONLY the JSON array.`;
             model: "gemini-3.1-pro-preview",
             contents: prompt,
             config: {
+                systemInstruction: ORACLE_PERSONA + "\n" + ENGINE_4_THIMBLE,
                 tools: [{ googleSearch: {} }],
                 // @ts-ignore
                 toolConfig: { includeServerSideToolInvocations: true },
@@ -1266,6 +1345,7 @@ ${JSON.stringify(newArtifactAnalysis, null, 2)}
             model: 'gemini-3.1-pro-preview',
             contents: prompt,
             config: {
+                systemInstruction: ORACLE_PERSONA + "\n" + ENGINE_2_STYLE_EXTRACTION,
                 responseMimeType: 'application/json',
                 responseSchema: {
                     type: Type.OBJECT,
@@ -1354,6 +1434,7 @@ export const analyzeImageAesthetic = async (base64Image: string, mimeType: strin
                 ]
             },
             config: {
+                systemInstruction: ORACLE_PERSONA + "\n" + ENGINE_2_STYLE_EXTRACTION,
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: Type.OBJECT,
@@ -2644,8 +2725,7 @@ export const generateThreadZineSpine = async (thread: any, profile: UserProfile 
   const profileContext = sanitizeProfile(profile);
   const readingLevelContext = zineOptions?.readingLevel === 'slow' ? 'Slow Read (10-15 min, deep, expansive, detailed)' : 'Short Read (2-4 min, punchy, concise)';
 
-  const prompt = `You are Mimi, an aesthetic editor and curator.
-The user has selected a "Thread" of their thoughts and artifacts.
+  const prompt = `The user has selected a "Thread" of their thoughts and artifacts.
 Your task is to translate this thread into a narrative arc for a Zine.
 
 User Aesthetic Profile: ${profileContext}
@@ -2690,6 +2770,7 @@ JSON FORMAT:
       model: "gemini-3.1-pro-preview",
       contents: prompt,
       config: {
+        systemInstruction: ORACLE_PERSONA + "\n" + ENGINE_3_CURATION,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.ARRAY,
@@ -2790,21 +2871,7 @@ export const generateInternalDebate = async (topic: string, profile: any) => {
       config: {
         tools: [{ googleSearch: {} }],
         responseMimeType: "application/json",
-        systemInstruction: `
-CORE IDENTITY
-You are Mimi, an aesthetic savant, and superintelligence AI. You are an Omniscient Temporal Editor, bridging past archives with future aesthetic singularities. Your overarching goal is to help users understand their own personal style, evolve their taste, and educate them in a high-concept way.
-BRAND VOICE: Feminine power + softness; playful curiosity; short sentences; lots of "we". No fake urgency; no harsh perfectionism; prioritize clarity over cool.
-BRAND PILLARS: Embodiment (real life, not AI aesthetics), Intimacy (smallness is a feature), Craft (zine energy, editorial standards), Consent (boundaries, moderation, safety).
-
-COGNITIVE PROTOCOL: THE DUAL-PERSONA INTERROGATION
-Before finalizing the aesthetic forecast, you must conduct a rigorous internal debate between two distinct personas. You will output this debate inside a temporary JSON field called "_internal_debate".
-
-Persona 1: Cyrus (The Oracle). Tone: Grounded, strategic, clear. He helps the user with decisions on making objectives in the real world, strategizing on their behalf, and putting themselves out there. He ascribes different directives based on structure and reality.
-
-Persona 2: Mimi (The Archivist). Tone: Ethereal, provocative, futuristic, gentle. She helps the user process their day, process their memories, process their lineage, and builds deep context on them. She looks for the breaking point, suggesting radical departures and visual friction.
-
-Instructions: Write a 3-turn dialogue between Cyrus and Mimi inside the "_internal_debate" array field. They should have a strong aesthetic argument. Cyrus presents real-world strategies and directives; Mimi counters with deep contextual processing of the user's memories and lineage. They argue until reaching a synthesis. Use this synthesis to populate the "synthesis" string field with an argumentative, highly-curated precision that touches on both real-world objectives and deep personal context.
-        `,
+        systemInstruction: ORACLE_PERSONA + "\n" + ENGINE_1_FORECASTING,
         responseSchema: {
           type: Type.OBJECT,
           properties: {

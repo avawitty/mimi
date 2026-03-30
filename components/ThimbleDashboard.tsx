@@ -327,10 +327,13 @@ export const ThimbleDashboard = () => {
  setTimeout(() => setCopiedIndex(null), 2000);
  };
 
- const openSearch = (query: string, platform: string = 'grailed') => {
+ const openSearch = (query: string, platform: string = 'ebay') => {
  let url = '';
  const encodedQuery = encodeURIComponent(query);
  switch (platform) {
+ case 'ebay':
+ url = `https://www.ebay.com/sch/i.html?_nkw=${encodedQuery}`;
+ break;
  case 'grailed':
  url = `https://www.grailed.com/shop?query=${encodedQuery}`;
  break;
@@ -350,7 +353,7 @@ export const ThimbleDashboard = () => {
  url = `https://www.depop.com/search/?q=${encodedQuery}`;
  break;
  default:
- url = `https://www.grailed.com/shop?query=${encodedQuery}`;
+ url = `https://www.ebay.com/sch/i.html?_nkw=${encodedQuery}`;
  }
  window.open(url, '_blank');
  };
@@ -515,7 +518,7 @@ export const ThimbleDashboard = () => {
  <div className="flex gap-2">
  <input 
  className="flex-grow bg-white/50 /50 border border-nous-border px-4 py-2 text-xs focus:ring-0 focus:border-nous-border outline-none font-sans"
- placeholder="e.g., Grailed, SSENSE"
+ placeholder="e.g., eBay, Grailed"
  value={linkInput}
  onChange={e => setLinkInput(e.target.value)}
  onKeyDown={e => e.key === 'Enter' && handleAddLink()}
@@ -657,7 +660,7 @@ export const ThimbleDashboard = () => {
  <div>
  <h4 className="text-[10px] uppercase tracking-widest font-semibold font-sans opacity-70 mb-2">Search Platforms</h4>
  <div className="flex flex-wrap gap-2 mb-4">
- {['grailed', 'ssense', 'crossroads', 'therealreal', 'vestiaire', 'depop'].map(platform => (
+ {['ebay', 'grailed', 'ssense', 'crossroads', 'therealreal', 'vestiaire', 'depop'].map(platform => (
  <button 
  key={platform}
  onClick={() => openSearch(target.keywordBoolean, platform)}
@@ -698,7 +701,7 @@ export const ThimbleDashboard = () => {
  const newItem = {
  boardId: selectedBoardIdForTarget,
  userId: user.uid,
- url: `https://www.grailed.com/shop?query=${encodeURIComponent(target.keywordBoolean || '')}`,
+ url: `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(target.keywordBoolean || '')}`,
  title: target.targetArchetype || 'Untitled',
  price: 'TBD',
  imageUrl: target.referenceImageUrl || '',

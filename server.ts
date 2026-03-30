@@ -260,6 +260,38 @@ async function startServer() {
     }
   });
 
+  app.get("/api/metadata", async (req, res) => {
+    try {
+      const url = req.query.url as string;
+      if (!url) {
+        return res.status(400).json({ error: "URL is required" });
+      }
+
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      });
+      
+      if (!response.ok) {
+        return res.status(response.status).json({ error: "Failed to fetch URL" });
+      }
+
+      const html = await response.text();
+      const cheerio = await import('cheerio');
+      const $ = cheerio.load(html);
+
+      const title = $('meta[property="og:title"]').attr('content') || $('title').text() || '';
+      const description = $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content') || '';
+      const image = $('meta[property="og:image"]').attr('content') || $('meta[name="twitter:image"]').attr('content') || '';
+
+      res.json({ title, description, image, url });
+    } catch (error: any) {
+      console.error("MIMI // Metadata Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Vite middleware for development
   const distPath = path.join(process.cwd(), 'dist');
   

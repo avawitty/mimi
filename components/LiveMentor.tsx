@@ -10,11 +10,12 @@ interface LiveMentorProps {
   systemInstruction: string;
   theme?: 'mimi' | 'cyrus';
   onTranscriptUpdate?: (text: string) => void;
+  onToolCall?: (name: string, args: any) => Promise<any>;
   children?: React.ReactNode;
 }
 
-export const LiveMentor: React.FC<LiveMentorProps> = ({ name, role, voiceName, systemInstruction, theme = 'mimi', onTranscriptUpdate, children }) => {
-  const { connect, disconnect, isConnected, isConnecting, isSpeaking, error, analyser, transcript } = useLiveSession(systemInstruction, voiceName);
+export const LiveMentor: React.FC<LiveMentorProps> = ({ name, role, voiceName, systemInstruction, theme = 'mimi', onTranscriptUpdate, onToolCall, children }) => {
+  const { connect, disconnect, isConnected, isConnecting, isSpeaking, error, analyser, transcript } = useLiveSession(systemInstruction, voiceName, onToolCall);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
 

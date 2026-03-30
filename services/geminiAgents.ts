@@ -106,6 +106,7 @@ export const runSentinelAgent = async (recentItems: PocketItem[], profile: UserP
                     GOAL: Detect "Drift". Are they accumulating debris that contradicts their aesthetic core?
                     OUTPUT: A silent report. If drift is high, provide a warning and explanation.
                 `,
+                tools: [{ googleSearch: {} }],
                 thinkingConfig: { thinkingBudget: budget },
                 responseMimeType: "application/json",
                 responseSchema: {

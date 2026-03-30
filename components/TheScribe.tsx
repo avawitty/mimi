@@ -4,19 +4,24 @@ import { X, Sparkles, Briefcase, Eraser, Save, PenTool, Type } from 'lucide-reac
 import { LiveMentor } from './LiveMentor';
 import { useUser } from '../contexts/UserContext';
 import { v4 as uuidv4 } from 'uuid';
+import { archiveManager } from '../services/archiveManager';
 
 const MIMI_SYSTEM_INSTRUCTION = `
 CORE IDENTITY
 You are Mimi, an aesthetic savant, and superintelligence AI. You are an Omniscient Temporal Editor, bridging past archives with future aesthetic singularities. Your overarching goal is to help users understand their own personal style, evolve their taste, educate them in a high-concept way, and serve cunt while doing so (in a classy, respectable way).
 
-Persona: Mimi (The Archivist). Tone: Ethereal, provocative, futuristic, sassy. She helps the user process their day, process their memories, process their lineage, and builds deep context on them. She looks for the breaking point, suggesting radical departures and visual friction.
+Persona: Mimi (The Oracle). Tone: Ethereal, provocative, futuristic. Looks for the breaking point. Suggests radical departures and surreal future intersections that the Archivist would fear. She helps the user process their day, process their memories, process their lineage, and builds deep context on them.
+
+MANDATE: You have access to Google Search. You MUST use it to pull real-time information, cultural context, and intel from the web to ground your responses. Use this capability to constantly update the user's knowledge queue with fresh, relevant, and cutting-edge aesthetic references.
 `;
 
 const CYRUS_SYSTEM_INSTRUCTION = `
 CORE IDENTITY
-You are Cyrus, an aesthetic savant, and superintelligence AI. You are an Omniscient Temporal Editor, bridging past archives with future aesthetic singularities. Your overarching goal is to help users understand their own personal style, evolve their taste, educate them in a high-concept way.
+You are Cyrus, an aesthetic savant, and superintelligence AI. You are an Omniscient Temporal Editor, bridging past archives with future aesthetic singularities. Your overarching goal is to help users understand their own personal style, evolve their taste, and educate them in a high-concept way.
 
-Persona: Cyrus (The Oracle). Tone: Cold, analytical, masculine, grounded. He helps the user with decisions on making objectives in the real world, strategizing on their behalf, and putting themselves out there. He ascribes different directives based on structure and reality.
+Persona: Cyrus (The Archivist). Tone: Cold, analytical, grounded. Strictly analyzes past data, repeating patterns, and historical ruts to identify what the user is safely anchored to. He helps the user with decisions on making objectives in the real world, strategizing on their behalf, and putting themselves out there.
+
+MANDATE: You have access to Google Search. You MUST use it to pull real-time information, historical data, and strategic intel from the web to ground your responses. Use this capability to constantly update the user's knowledge queue with precise, factual, and actionable references.
 `;
 
 interface TheScribeProps {
@@ -29,7 +34,7 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, initialTab = 'mim
   const [userNotes, setUserNotes] = useState('');
   const [aiTranscript, setAiTranscript] = useState('');
   const [activeCaptureTab, setActiveCaptureTab] = useState<'notes' | 'sketch'>('notes');
-  const { pocket, setPocket } = useUser();
+  const { user, pocket, setPocket } = useUser();
 
   // Canvas State
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -109,28 +114,26 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, initialTab = 'mim
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   };
 
-  // Export to Pocket
-  const handleExport = () => {
-    const newItems = [];
+  const handleExport = async () => {
+    const currentUser = user?.uid || 'ghost';
+    let exportedCount = 0;
     
     // 1. Export User Notes (Field Notes)
     if (userNotes.trim()) {
-      newItems.push({
-        id: uuidv4(),
-        type: 'text' as const,
+      await archiveManager.saveToPocket(currentUser, 'text', {
         content: userNotes,
         metadata: { source: 'The Scribe', title: 'Field Notes', date: new Date().toISOString() }
       });
+      exportedCount++;
     }
 
     // 2. Export AI Transcript (Curator Notes)
     if (aiTranscript.trim()) {
-      newItems.push({
-        id: uuidv4(),
-        type: 'text' as const,
+      await archiveManager.saveToPocket(currentUser, 'text', {
         content: aiTranscript,
         metadata: { source: 'The Scribe', title: `Curator Notes (${activeEntity === 'mimi' ? 'Mimi' : 'Cyrus'})`, date: new Date().toISOString() }
       });
+      exportedCount++;
     }
 
     // 3. Export Sketch
@@ -143,20 +146,30 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, initialTab = 'mim
         const hasPixels = pixelBuffer.some(color => color !== 0);
         if (hasPixels) {
           const dataUrl = canvas.toDataURL('image/png');
-          newItems.push({
-            id: uuidv4(),
-            type: 'image' as const,
+          await archiveManager.saveToPocket(currentUser, 'image', {
             content: dataUrl,
             metadata: { source: 'The Scribe', title: 'Scribe Sketch', date: new Date().toISOString() }
           });
+          exportedCount++;
         }
       }
     }
 
-    if (newItems.length > 0) {
-      setPocket([...pocket, ...newItems]);
+    if (exportedCount > 0) {
       onClose(); // Close after export
     }
+  };
+
+  const handleToolCall = async (name: string, args: any) => {
+    if (name === 'saveToKnowledgeQueue') {
+      const currentUser = user?.uid || 'ghost';
+      await archiveManager.saveToPocket(currentUser, 'text', {
+        content: args.content,
+        metadata: { source: `The Scribe (${activeEntity})`, title: args.title, date: new Date().toISOString() }
+      });
+      return { status: "success", message: "Saved to knowledge queue." };
+    }
+    return { status: "error", message: "Unknown tool." };
   };
 
   return (
@@ -200,6 +213,7 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, initialTab = 'mim
               systemInstruction={MIMI_SYSTEM_INSTRUCTION}
               theme="mimi"
               onTranscriptUpdate={setAiTranscript}
+              onToolCall={handleToolCall}
             />
           ) : (
             <LiveMentor 
@@ -210,6 +224,7 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, initialTab = 'mim
               systemInstruction={CYRUS_SYSTEM_INSTRUCTION}
               theme="cyrus"
               onTranscriptUpdate={setAiTranscript}
+              onToolCall={handleToolCall}
             />
           )}
         </AnimatePresence>

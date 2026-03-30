@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { LiveServerMessage, Modality } from '@google/genai';
+import { LiveServerMessage, Modality, FunctionDeclaration, Type } from '@google/genai';
 import { getClient } from '../services/geminiService';
 
 // Audio helpers
@@ -22,7 +22,7 @@ function base64ToUint8Array(base64: string) {
   return bytes;
 }
 
-export const useLiveSession = (systemInstruction: string, voiceName: string = 'Kore') => {
+export const useLiveSession = (systemInstruction: string, voiceName: string = 'Kore', onToolCall?: (name: string, args: any) => Promise<any>) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -114,7 +114,34 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
               voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } }
             },
             inputAudioTranscription: {},
-            outputAudioTranscription: {}
+            outputAudioTranscription: {},
+            tools: [
+              { googleSearch: {} },
+              {
+                functionDeclarations: [
+                  {
+                    name: "saveToKnowledgeQueue",
+                    description: "Save an insight, reference, or piece of knowledge to the user's Pocket (knowledge queue). Use this when you find something valuable on the web or during conversation that the user should retain.",
+                    parameters: {
+                      type: Type.OBJECT,
+                      properties: {
+                        content: {
+                          type: Type.STRING,
+                          description: "The knowledge, insight, or reference to save."
+                        },
+                        title: {
+                          type: Type.STRING,
+                          description: "A short, descriptive title for the knowledge."
+                        }
+                      },
+                      required: ["content", "title"]
+                    }
+                  }
+                ]
+              }
+            ],
+            // @ts-ignore
+            toolConfig: { includeServerSideToolInvocations: true }
           },
           callbacks: {
             onopen: async () => {
@@ -183,6 +210,40 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
                       setTranscript(prev => prev + part.text);
                     }
                   });
+                }
+
+                // Handle Tool Calls
+                if (msg.toolCall) {
+                  const functionCalls = msg.toolCall.functionCalls;
+                  if (functionCalls) {
+                    for (const call of functionCalls) {
+                      if (onToolCall) {
+                        try {
+                          const response = await onToolCall(call.name, call.args);
+                          sessionPromise.then(session => {
+                            session.sendToolResponse({
+                              functionResponses: [{
+                                id: call.id,
+                                name: call.name,
+                                response: response || { status: "success" }
+                              }]
+                            });
+                          });
+                        } catch (e) {
+                          console.error("MIMI // Tool call failed:", e);
+                          sessionPromise.then(session => {
+                            session.sendToolResponse({
+                              functionResponses: [{
+                                id: call.id,
+                                name: call.name,
+                                response: { status: "error", message: String(e) }
+                              }]
+                            });
+                          });
+                        }
+                      }
+                    }
+                  }
                 }
 
                 // Handle Audio Output
