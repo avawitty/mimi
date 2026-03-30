@@ -94,35 +94,36 @@ const NavigationDrawer: React.FC<{
  const handleNav = (mode: string) => { setViewMode(mode); onClose(); };
  
  const menuItems = [
- { section: 'Studio', items: [
- { mode: 'studio', label: 'Work Table', note: 'The Artifact Engine' },
- { mode: 'thimble', label: 'The Thimble', note: 'Procurement & Sourcing' },
- { mode: 'loom', label: 'The Loom', note: 'Platform Strategy' },
- { mode: 'action-board', label: 'Action Board', note: 'Strategic Imperatives' },
- { mode: 'tailor', label: 'Tailor Tools', note: 'Materiality & Layout' },
- { mode: 'dossier', label: 'Presets', note: 'Historical Templates' }
- ]},
- { section: 'Signature', items: [
- { mode: 'signature', label: 'Dashboard', note: 'Identity & Analysis' },
- { mode: 'ward', label: 'The Ward', note: 'Calibration Ritual' },
- { mode: 'profile', label: 'Profile', note: 'Settings & Keys' }
- ]},
- { section: 'Archive', items: [
- { mode: 'archival', label: 'Library', note: 'Creative Memory' },
- { mode: 'the-lens', label: 'The Lens', note: 'Spatial Aesthetic Capture' },
+ { section: 'I. Create', items: [
+ { mode: 'studio', label: 'Worktable', note: 'The Generative Field' },
+ { mode: 'dossier', label: 'Presets', note: 'Historical Templates' },
  { mode: 'darkroom', label: 'Darkroom', note: 'Unprocessed Fragments' }
  ]},
- { section: 'Threads', items: [
- { mode: 'threads', label: 'Narrative Pathing', note: 'Semantic Paths' },
- { mode: 'scry', label: 'Trace & Scry', note: 'Aesthetic Drift Prediction' },
- { mode: 'latent-constellation', label: 'Latent Constellation', note: 'Aesthetic Networking' }
+ { section: 'II. Reflect', items: [
+ { mode: 'oracle', label: 'Oracle', note: 'The Interpretive Chamber' },
+ { mode: 'scribe', label: 'The Scribe', note: 'Deep Consultation' },
+ { mode: 'thimble', label: 'The Thimble', note: 'Procurement & Sourcing' },
+ { mode: 'archival', label: 'Archive', note: 'Creative Memory' },
+ { mode: 'threads', label: 'Threads', note: 'Narrative Pathing' },
+ { mode: 'latent-constellation', label: 'Constellation', note: 'Aesthetic Networking' }
  ]},
- { section: 'Floor', items: [
- { mode: 'nebula', label: 'Resonance Feed', note: 'The Stand' },
- { mode: 'press', label: 'The Edit', note: 'Cultural Intelligence' },
+ { section: 'III. Refine', items: [
+ { mode: 'tailor', label: 'Tailor Tools', note: 'Materiality & Layout' },
+ { mode: 'loom', label: 'The Loom', note: 'Platform Strategy' },
+ { mode: 'action-board', label: 'Action Board', note: 'Strategic Imperatives' },
+ { mode: 'press', label: 'The Edit', note: 'Cultural Intelligence' }
+ ]},
+ { section: 'IV. Signature', items: [
+ { mode: 'signature', label: 'Dashboard', note: 'Identity & Analysis' },
+ { mode: 'ward', label: 'The Ward', note: 'Calibration Ritual' },
+ { mode: 'profile', label: 'Profile', note: 'Settings & Keys' },
+ { mode: 'taste-graph', label: 'Taste Graph', note: 'Aesthetic Embeddings' }
+ ]},
+ { section: 'V. Observe', items: [
+ { mode: 'nebula', label: 'Feed', note: 'The Stand' },
  { mode: 'proscenium', label: 'Proscenium', note: 'Manifested Visions' }
  ]},
- { section: 'System', items: [
+ { section: 'VI. System', items: [
  { mode: 'help', label: 'Codex', note: 'Documentation' }
  ]}
  ];
@@ -150,17 +151,17 @@ const NavigationDrawer: React.FC<{
  {section.section}
  </span>
  </div>
- <div className="flex flex-col gap-5 pl-4">
+ <div className="flex flex-col gap-2 pl-2">
  {section.items.map((item) => (
  <button 
  key={item.mode} 
  onClick={() => handleNav(item.mode)} 
- className="w-full text-left group flex flex-col gap-0.5"
+ className={`w-full text-left group flex flex-col gap-0.5 px-4 py-2.5 rounded-full transition-all duration-300 ${viewMode === item.mode ? 'bg-[#E4E3E0] text-[#141414]' : 'hover:bg-nous-base0/30'}`}
  >
- <div className={`font-serif italic text-xl transition-all duration-300 ${viewMode === item.mode ? 'text-nous-subtle' : 'text-nous-subtle group-hover:text-nous-text'}`}>
+ <div className={`font-serif italic text-xl transition-all duration-300 ${viewMode === item.mode ? 'text-[#141414]' : 'text-nous-subtle group-hover:text-nous-text'}`}>
  {item.label}
  </div>
- <div className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle group-hover:text-nous-subtle transition-colors">
+ <div className={`font-sans text-[8px] uppercase tracking-widest transition-colors ${viewMode === item.mode ? 'text-[#141414]/70' : 'text-nous-subtle group-hover:text-nous-subtle'}`}>
  {item.note}
  </div>
  </button>
@@ -273,7 +274,7 @@ export const App: React.FC = () => {
  });
  const [showProfileHover, setShowProfileHover] = useState(false);
  const [showIntro, setShowIntro] = useState(true);
- const [showScribe, setShowScribe] = useState(false);
+ const [scribeTab, setScribeTab] = useState<'engine' | 'mimi' | 'cyrus' | 'synthesis' | null>(null);
  const profileButtonRef = useRef<HTMLDivElement>(null);
  const [proposalContext, setProposalContext] = useState<any>(null);
  const [soundEnabled, setSoundEnabled] = useState(() => {
@@ -387,6 +388,11 @@ export const App: React.FC = () => {
  }
  return;
  }
+ if (e.detail === 'scribe') {
+ window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'click' } }));
+ setScribeTab('mimi');
+ return;
+ }
  if (e.detail) { 
  window.dispatchEvent(new CustomEvent('mimi:sound', { detail: { type: 'click' } }));
  setViewMode(e.detail); setZineMetadata(null); setAppState(AppState.IDLE);
@@ -415,18 +421,27 @@ export const App: React.FC = () => {
  const handleShowQuota = () => setShowQuotaShield(true);
  const handleOpenPatronModal = () => setShowPatronModal(true);
  const handleOpenGateway = () => setShowGateway(true);
+ const handleOpenScribe = (e: any) => {
+ if (e.detail) {
+ setScribeTab(e.detail);
+ } else {
+ setScribeTab('mimi');
+ }
+ };
 
  window.addEventListener('mimi:change_view', handleChangeView);
  window.addEventListener('mimi:select_zine', handleSelectZine);
  window.addEventListener('mimi:show_quota_shield', handleShowQuota);
  window.addEventListener('mimi:open_patron_modal', handleOpenPatronModal);
  window.addEventListener('mimi:open_gateway', handleOpenGateway);
+ window.addEventListener('mimi:open_scribe', handleOpenScribe);
  return () => {
  window.removeEventListener('mimi:change_view', handleChangeView);
  window.removeEventListener('mimi:select_zine', handleSelectZine);
  window.removeEventListener('mimi:show_quota_shield', handleShowQuota);
  window.removeEventListener('mimi:open_patron_modal', handleOpenPatronModal);
  window.removeEventListener('mimi:open_gateway', handleOpenGateway);
+ window.removeEventListener('mimi:open_scribe', handleOpenScribe);
  };
  }, []);
 
@@ -639,9 +654,37 @@ export const App: React.FC = () => {
  'latent-constellation': 'Latent Constellation',
  'the-lens': 'The Lens',
  'notifications': 'Registry Updates',
+ 'oracle': 'The Oracle',
+ 'scribe': 'The Scribe',
+ 'action-board': 'Action Board',
+ 'loom': 'The Loom',
  };
 
  const currentTitle = viewModeTitles[viewMode] || 'Studio View';
+
+ const getChamber = (mode: string) => {
+ if (['studio', 'dossier', 'darkroom'].includes(mode)) return 'create';
+ if (['oracle', 'scribe', 'thimble', 'archival', 'threads', 'latent-constellation', 'the-lens'].includes(mode)) return 'reflect';
+ if (['tailor', 'loom', 'action-board', 'press'].includes(mode)) return 'refine';
+ if (['signature', 'ward', 'profile', 'taste-graph'].includes(mode)) return 'signature';
+ if (['nebula', 'proscenium'].includes(mode)) return 'observe';
+ return 'system';
+ };
+
+ const chamber = getChamber(viewMode);
+
+ const ChamberOverlay = ({ chamber }: { chamber: string }) => {
+ if (chamber === 'reflect') {
+ return <div className="absolute inset-0 pointer-events-none opacity-[0.05] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] z-0 mix-blend-overlay" />;
+ }
+ if (chamber === 'refine') {
+ return <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] z-0 mix-blend-overlay" />;
+ }
+ if (chamber === 'signature') {
+ return <div className="absolute inset-0 pointer-events-none opacity-[0.04] bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')] z-0 mix-blend-overlay" />;
+ }
+ return null;
+ };
 
  return (
  <div className="h-full w-full bg-nous-base text-nous-text transition-colors duration-500 flex flex-col relative overflow-hidden">
@@ -651,8 +694,8 @@ export const App: React.FC = () => {
  
  <AmbientSoundscape enabled={soundEnabled} volume={volume} />
  
- <AnimatePresence>{showScribe && <TheScribe onClose={() => setShowScribe(false)} onGenerateZine={(text) => {
- setShowScribe(false);
+ <AnimatePresence>{scribeTab && <TheScribe key={scribeTab} initialTab={scribeTab} onClose={() => setScribeTab(null)} onGenerateZine={(text) => {
+ setScribeTab(null);
  handleRefine(text, [], 'oracle', { deepThinking: false, isPublic: false, isLite: false, isHighFidelity: false, tags: [], zineOptions: zineOptions });
  }} />}</AnimatePresence>
  <AnimatePresence>{showCaptiveSentinel && <CaptiveSentinel onClose={() => setShowCaptiveSentinel(false)} />}</AnimatePresence>
@@ -684,7 +727,7 @@ export const App: React.FC = () => {
  
  {/* Header */}
  {appState !== AppState.REVEALED && (
- <header className="hidden md:flex canvas-texture border-b border-nous-border bg-nous-base-background-dark sticky top-0 z-[20] w-full px-8 py-4 items-center justify-between relative">
+ <header className="hidden md:flex canvas-texture border-b border-nous-border bg-nous-base sticky top-0 z-[20] w-full px-8 py-4 items-center justify-between relative">
  {/* Texture Overlay */}
  <div className="absolute inset-0 pointer-events-none opacity-[0.15] bg-[url('https://www.transparenttextures.com/patterns/noise.png')] z-0 mix-blend-overlay"/>
 
@@ -722,8 +765,13 @@ export const App: React.FC = () => {
  }`}>
  <ShieldCheck size={16} />
  </button>
- <button onClick={() => setShowScribe(true)} className="p-2 text-nous-subtle hover:text-nous-text transition-colors">
- <Radio size={16} />
+ <button onClick={() => setScribeTab('mimi')} className="p-2 text-nous-subtle hover:text-nous-text transition-colors flex items-center gap-1.5" title="Mimi (The Archivist)">
+ <Sparkles size={16} />
+ <span className="font-sans text-[9px] uppercase tracking-widest font-bold hidden lg:block">Mimi</span>
+ </button>
+ <button onClick={() => setScribeTab('cyrus')} className="p-2 text-nous-subtle hover:text-nous-text transition-colors flex items-center gap-1.5" title="Cyrus (The Oracle)">
+ <Briefcase size={16} />
+ <span className="font-sans text-[9px] uppercase tracking-widest font-bold hidden lg:block">Cyrus</span>
  </button>
  <button onClick={toggleMode} className="p-2 text-nous-subtle hover:text-nous-text transition-colors">
  {currentPalette?.isDark ? <Sun size={16} /> : <Moon size={16} />}
@@ -770,6 +818,12 @@ export const App: React.FC = () => {
  <div className="font-['Cormorant_Garamond',serif] text-3xl font-light text-nous-text tracking-wide">Mimi Zine</div>
  <div className="flex items-center gap-2">
  <CreditMeter />
+ <button onClick={() => setScribeTab('mimi')} className="p-2 text-nous-subtle hover:text-nous-text transition-opacity">
+ <Sparkles size={24} strokeWidth={1.25} />
+ </button>
+ <button onClick={() => setScribeTab('cyrus')} className="p-2 text-nous-subtle hover:text-nous-text transition-opacity">
+ <Briefcase size={24} strokeWidth={1.25} />
+ </button>
  <button 
  onClick={() => {
  if (profile?.planStatus === 'ghost') {
@@ -844,17 +898,19 @@ export const App: React.FC = () => {
  )}
 
  {/* Main Content Area */}
- <main className="flex-1 flex flex-col relative overflow-y-auto bg-nous-base-background-dark">
+ <main className="flex-1 flex flex-col relative overflow-y-auto bg-nous-base">
  <CommandDrawer isOpen={commandDrawerOpen} onClose={() => setCommandDrawerOpen(false)} />
  
  <AnimatePresence mode="wait">
  <motion.div 
  key={viewMode} 
  className="flex-1 w-full h-full relative"
- initial={{ opacity: 0, y: 5, filter: 'blur(2px)' }} 
- animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} 
- transition={{ duration: 0.6, ease:"easeOut"}}
+ initial={{ opacity: 0, scale: 0.98, filter: 'blur(4px)' }} 
+ animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }} 
+ exit={{ opacity: 0, scale: 1.02, filter: 'blur(4px)' }}
+ transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
  >
+ <ChamberOverlay chamber={chamber} />
  <AnimatePresence>
  {appState === AppState.THINKING && (
  <ElevatorLoader 

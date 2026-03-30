@@ -189,6 +189,7 @@ export interface TailorLogicDraft {
       materiality: string[];
       eraBias: string;
       presentation?: string; // Feminine, Masculine, Androgynous, or custom
+      bodyType?: string; // e.g. 'Hourglass', 'Athletic', 'Petite'
       density: number;  // 1–10
       entropy: number;  // 1–10
       tags: string[];

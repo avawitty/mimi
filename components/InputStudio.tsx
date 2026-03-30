@@ -649,9 +649,9 @@ export const InputStudio: React.FC<{
  </button>
  {mediaAnalysis[index] && (
  <div className="mt-1 text-[7px] text-nous-subtle leading-tight">
- <p className="truncate mb-1">{mediaAnalysis[index].tags.slice(0, 3).join(', ')}</p>
-   {mediaAnalysis[index].aesthetic?.mood && <p className="truncate mb-1">Mood: {mediaAnalysis[index].aesthetic.mood.join(', ')}</p>}
-   {mediaAnalysis[index].aesthetic?.culturalReferences && <p className="truncate mb-1">Refs: {mediaAnalysis[index].aesthetic.culturalReferences.slice(0, 2).join(', ')}</p>}
+ <p className="truncate mb-1">{(mediaAnalysis[index].tags || []).slice(0, 3).join(', ')}</p>
+   {mediaAnalysis[index].aesthetic?.mood && <p className="truncate mb-1">Mood: {mediaAnalysis[index].aesthetic.mood?.join(', ')}</p>}
+   {mediaAnalysis[index].aesthetic?.culturalReferences && <p className="truncate mb-1">Refs: {mediaAnalysis[index].aesthetic.culturalReferences?.slice(0, 2).join(', ')}</p>}
  <button 
  onClick={async (e) => {
  e.stopPropagation();
@@ -672,7 +672,7 @@ export const InputStudio: React.FC<{
                   onClick={(e) => {
                     e.stopPropagation();
                     const analysis = mediaAnalysis[index];
-                    const text = `[ARTIFACT ANALYSIS: ${analysis.tags.join(', ')}. MOOD: ${analysis.aesthetic?.mood?.join(', ')}]`;
+                    const text = `[ARTIFACT ANALYSIS: ${(analysis.tags || []).join(', ')}. MOOD: ${analysis.aesthetic?.mood?.join(', ') || 'N/A'}]`;
                     setInput(prev => prev ? `${prev}\n\n${text}` : text);
                   }}
                   className="mt-1 ml-2 text-[7px] uppercase tracking-widest text-primary text-nous-text underline"
@@ -738,15 +738,15 @@ export const InputStudio: React.FC<{
  </button>
  {mediaAnalysis[index] && (
  <div className="mt-1 text-[7px] text-nous-subtle w-full leading-tight">
- <p className="truncate mb-1">{mediaAnalysis[index].tags.slice(0, 3).join(', ')}</p>
-   {mediaAnalysis[index].aesthetic?.mood && <p className="truncate mb-1">Mood: {mediaAnalysis[index].aesthetic.mood.join(', ')}</p>}
-   {mediaAnalysis[index].aesthetic?.culturalReferences && <p className="truncate mb-1">Refs: {mediaAnalysis[index].aesthetic.culturalReferences.slice(0, 2).join(', ')}</p>}
-                   <p className="truncate">Mood: {mediaAnalysis[index].aesthetic.mood[0]}</p>
+ <p className="truncate mb-1">{(mediaAnalysis[index].tags || []).slice(0, 3).join(', ')}</p>
+   {mediaAnalysis[index].aesthetic?.mood && <p className="truncate mb-1">Mood: {mediaAnalysis[index].aesthetic.mood?.join(', ')}</p>}
+   {mediaAnalysis[index].aesthetic?.culturalReferences && <p className="truncate mb-1">Refs: {mediaAnalysis[index].aesthetic.culturalReferences?.slice(0, 2).join(', ')}</p>}
+                   <p className="truncate">Mood: {mediaAnalysis[index].aesthetic.mood?.[0] || 'N/A'}</p>
                   <button 
                   onClick={(e) => {
                     e.stopPropagation();
                     const analysis = mediaAnalysis[index];
-                    const text = `[AUDIO ANALYSIS: ${analysis.tags.join(', ')}. MOOD: ${analysis.aesthetic?.mood?.join(', ')}]`;
+                    const text = `[AUDIO ANALYSIS: ${(analysis.tags || []).join(', ')}. MOOD: ${analysis.aesthetic?.mood?.join(', ') || 'N/A'}]`;
                     setInput(prev => prev ? `${prev}\n\n${text}` : text);
                   }}
                   className="mt-1 text-[7px] uppercase tracking-widest text-primary text-nous-text underline"

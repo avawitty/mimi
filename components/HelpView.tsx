@@ -1,490 +1,557 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Sparkles, Scissors, ShieldCheck, Camera, FlaskConical, Archive, Compass, LayoutGrid, Briefcase, Activity, Paperclip, Mic, Zap, BrainCircuit, Globe, MapPin, Wand2, Eraser, Target, ListChecks } from 'lucide-react';
-import { Diagnostics } from './Diagnostics';
-import { FeatureChecklist } from './FeatureChecklist';
+import { BookOpen } from 'lucide-react';
+import Markdown from 'react-markdown';
+
+const codexContent = `
+# The Codex
+
+**Vol. 01 — Architecture of the Sovereign System**
+
+---
+
+## 00. Premise
+
+Mimi is not a generic content tool.
+
+It is a system for **sovereign curation**: a structured environment for gathering, interpreting, refining, and extending aesthetic intelligence.
+
+Most software organizes itself by feature. Mimi does not.
+
+Mimi is organized by **cognitive sequence**: the order in which a person naturally moves when turning instinct into form.
+
+That sequence is:
+
+**Create → Reflect → Refine**
+
+This is not only an interface decision. It is a philosophical one.
+
+The system is designed around the belief that:
+
+* raw expression should exist before it is judged
+* interpretation should occur before strategy
+* refinement should emerge from awareness, not from panic or trend-chasing
+
+In this sense, Mimi is both a tool and a method.
+
+It supports:
+
+* personal curation
+* visual authorship
+* aesthetic memory
+* strategic procurement
+* cultural positioning
+
+The machine does not replace taste.
+It helps structure the user’s relationship to it.
+
+---
+
+## 01. Why the System Is Ordered This Way
+
+The architecture of Mimi is intentionally divided into six chambers:
+
+1. **Create**
+2. **Reflect**
+3. **Refine**
+4. **Signature**
+5. **Observe**
+6. **System**
+
+This order is functional.
+
+It is based on the idea that users do not think in menus.
+They think in phases.
+
+A person begins by making or collecting something.
+Then they try to understand what it means.
+Then they decide what to do with it.
+
+That is the primary loop.
+
+The remaining chambers support that loop:
+
+* **Signature** holds the persistent identity layer beneath all activity
+* **Observe** turns the system outward toward culture, products, and signals
+* **System** documents and governs the architecture itself
+
+This structure reduces cognitive friction while preserving Mimi’s conceptual depth.
+
+Rather than asking the user to decode categories, the system follows the way aesthetic reasoning actually unfolds.
+
+---
+
+## 02. The Six Chambers
+
+### I. Create
+
+*The generative field*
+
+Create is the chamber of raw assembly.
+
+This is where instinct is allowed to appear before it is evaluated.
+
+The purpose of Create is not perfection.
+It is capture.
+
+Fragments, uploads, notes, references, prompts, image experiments, and unfinished gestures belong here.
+
+This chamber should feel permissive, tactile, and materially close to the user’s mind.
+
+**Includes:**
+* Worktable
+* Media Upload
+* Voice Capture
+* Presets
+* Darkroom
+* Prompt utilities
+
+**Function:**
+* gather source material
+* begin composition
+* externalize taste without interruption
+* create artifacts before analysis begins
+
+**Principle:**
+Creation must happen before interpretation, or the system becomes performative too early.
+
+---
+
+### II. Reflect
+
+*The interpretive chamber*
+
+Reflect is where Mimi becomes legible.
+
+This chamber is not about making more.
+It is about seeing more clearly.
+
+Reflect houses the parts of the system that examine:
+
+* signal
+* repetition
+* contradiction
+* motif
+* drift
+* relationship
+* latent pattern
+
+This is the most oracular chamber in the system.
+
+It is where the user enters analysis, not for judgment, but for articulation.
+
+**Includes:**
+* Thimble
+* Archive
+* Threads
+* Constellation
+* Oracle
+
+**Function:**
+* interpret aesthetic signal
+* surface relationships across saved material
+* identify narrative pathways and drift
+* convert instinct into insight
+
+**Principle:**
+Reflection is the bridge between expression and strategy.
+
+---
+
+### III. Refine
+
+*The strategic layer*
+
+Refine is where interpretation becomes direction.
+
+Once signal has been recognized, the user can act with more precision.
+
+This chamber is for adjustment, planning, selection, and execution.
+
+It is less ceremonial than Reflect and more exacting in tone.
+
+**Includes:**
+* Tailor Tools
+* Loom
+* Action Board
+* Edit
+
+**Function:**
+* align outputs with declared identity
+* generate direction from observed pattern
+* organize strategic action
+* support procurement, sourcing, selection, and curation decisions
+
+**Principle:**
+Taste becomes useful when it can move into action.
+
+---
+
+### IV. Signature
+
+*The identity substrate*
+
+Signature is not a temporary mode.
+It is the persistent layer that sits beneath all others.
+
+This chamber stores and stabilizes the user’s aesthetic baseline:
+
+* genome
+* preferences
+* calibration
+* drift thresholds
+* profile logic
+
+It is the continuity layer of the system.
+
+**Includes:**
+* Dashboard
+* Ward
+* Profile
+* Taste Graph / identity diagnostics
+
+**Function:**
+* maintain user continuity across sessions
+* compare present outputs against long-term pattern
+* detect drift, evolution, and consistency
+* provide a stable framework for personalization
+
+**Principle:**
+A sovereign system must remember the user across time.
+
+---
+
+### V. Observe
+
+*The external field*
+
+Observe is where Mimi turns outward.
+
+It exists because curation does not happen in isolation.
+Taste is personal, but it is also relational, cultural, and market-facing.
+
+This chamber tracks the world beyond the self:
+
+* resonance
+* products
+* trend vectors
+* editorial positioning
+* outward projection
+
+**Includes:**
+* Feed
+* Proscenium
+* outward-facing cultural and product intelligence layers
+
+**Function:**
+* connect inner aesthetic logic to external culture
+* contextualize procurement and product discovery
+* position the user relative to broader movements
+* create a bridge between archive, recommendation, and market signal
+
+**Principle:**
+Taste is not only what you love.
+It is also how you locate yourself in the field.
+
+---
+
+### VI. System
+
+*The underlying registry*
+
+System is the chamber of documentation, logic, and protocol.
+
+It explains how Mimi works and records what governs the machine.
+
+This chamber should feel clean, restrained, and infrastructural.
+
+**Includes:**
+* Codex
+* diagnostics
+* protocols
+* documentation
+* architecture notes
+
+**Function:**
+* document the system clearly
+* provide support for internal logic and future expansion
+* preserve structural clarity as the platform grows
+
+**Principle:**
+A sovereign tool must be able to explain itself.
+
+---
+
+## 03. The Core Cognitive Loop
+
+The primary operating loop of Mimi is:
+
+**Create → Reflect → Refine**
+
+This loop was chosen because it matches a natural process of aesthetic cognition:
+
+* first, something is made or gathered
+* then, it is interpreted
+* then, it is shaped into decision
+
+This loop is useful because it avoids two common failures:
+
+**Failure 1: premature strategy**
+Users often try to optimize before they have enough material.
+
+**Failure 2: endless reflection**
+Users can get trapped in interpretation without converting insight into action.
+
+The Mimi loop prevents both by giving each phase a clear place and purpose.
+
+This structure is intentionally ambiguous enough to feel intuitive, while still being rigorous enough to guide behavior.
+
+It is not merely poetic.
+
+It is operational.
+
+---
+
+## 04. Mimi and Cyrus
+
+Mimi and Cyrus exist in **two forms** within the system.
+
+### A. Header Presence
+Mimi and Cyrus remain available in the header for immediacy, accessibility, and lightweight consultation.
+
+This supports:
+* quick check-ins
+* ambient companionship
+* fast idea capture
+* mobile or in-between moments
+* conversational continuity across the app
+
+This layer is intentionally friction-light.
+It allows the system to remain close at hand.
+
+### B. Oracle Chamber
+Mimi and Cyrus also appear in a dedicated chamber within Reflect: **Oracle**.
+
+This is the deeper interpretive context.
+
+Here, the interaction is more intentional and more aligned with the ceremonial logic of the product. The user is not simply opening a helper. They are entering a chamber of interpretation.
+
+This dual placement is deliberate.
+
+The header preserves utility.
+The Oracle preserves ritual.
+
+Together they allow Mimi to be both:
+* a living companion layer
+* and a destination for deeper analysis
+
+---
+
+## 05. On Sovereignty and UX
+
+Mimi’s interface is designed around a simple premise:
+
+**the user should never feel fully overruled by the machine**
+
+That means each chamber serves a different balance of agency.
+
+### In Create
+the user leads completely
+
+### In Reflect
+the machine articulates what it sees
+
+### In Refine
+the user reclaims direction with more precision
+
+This creates a sovereignty loop:
+* expression
+* awareness
+* authorship
+
+The machine is not framed as absolute authority.
+It is framed as a structured interpretive instrument.
+
+That distinction matters.
+
+Without it, the system becomes decorative automation.
+With it, the system becomes a meaningful tool for self-governance.
+
+---
+
+## 06. Procurement, Curation, and Strategic Use
+
+Mimi is not only for introspection.
+
+Its architecture supports real outcomes.
+
+### Create supports procurement indirectly
+by allowing the user to gather references, artifacts, moods, and source material before committing to a direction.
+
+### Reflect supports procurement analytically
+by clarifying what the user is actually selecting for:
+* silhouette
+* density
+* emotional tone
+* motif
+* use-case
+* contradiction
+* category logic
+
+### Refine supports procurement directly
+by converting those patterns into:
+* sourcing criteria
+* selection logic
+* recommendation structure
+* product edits
+* strategic buying and curation choices
+
+### Observe supports procurement contextually
+by linking personal taste to real-time cultural movement, product ecosystems, and external opportunity.
+
+This means Mimi is not just “about aesthetics.”
+It is a system for making aesthetic decisions more coherent.
+
+---
+
+## 07. Interaction Temperatures
+
+Each chamber should maintain a distinct interaction temperature.
+
+### Create
+quiet, permissive, sparse, tactile
+
+### Reflect
+poetic, ceremonial, interpretive, uncanny
+
+### Refine
+precise, structured, editorial, strategic
+
+### Signature
+stable, diagnostic, intimate
+
+### Observe
+outward, cultural, comparative
+
+### System
+restrained, technical, sovereign
+
+This prevents tonal flattening.
+
+Not every part of the system should feel equally mystical.
+
+The oracular tone is strongest where interpretation is happening.
+Elsewhere, the interface should support the task at hand.
+
+This preserves impact and reduces fatigue.
+
+---
+
+## 08. Motion, Transition, and Atmosphere
+
+Mimi should not rely only on static hierarchy.
+Its transitions should reinforce the chamber logic.
+
+Movement between sections can help communicate cognitive shift.
+
+Examples:
+* entering Reflect may feel slower, darker, more suspended
+* entering Refine may feel cleaner, sharper, more resolved
+* entering Create may feel softer and more immediate
+
+These transitions should not be ornamental only.
+They should help the user feel the difference between:
+* making
+* interpreting
+* deciding
+
+A quote screen, interstitial phrase, or editorial transition panel may be used where it deepens atmosphere without interrupting workflow.
+
+Motion should function as orientation, not decoration.
+
+---
+
+## 09. Supporting Documentation Standard
+
+The Codex must do more than sound beautiful.
+
+It must document:
+* why each chamber exists
+* what belongs in it
+* what it does
+* how it supports the user journey
+* how it contributes to curation, procurement, and strategy
+* how the machine’s tone changes by context
+
+This is necessary because Mimi is not a simple utility.
+
+Its architecture carries meaning.
+
+The Codex therefore serves as:
+* product philosophy
+* onboarding reference
+* internal system map
+* future design guide
+
+---
+
+## 10. Closing Principle
+
+Mimi is a sovereign registry for aesthetic intelligence.
+
+It does not exist to tell the user who they are.
+
+It exists to help the user:
+* gather what matters
+* recognize pattern
+* refine with intention
+* move through culture more consciously
+
+The system is not ordered by features.
+
+It is ordered by the transformation it is trying to support.
+
+**Create. Reflect. Refine.**
+Then remember.
+Then observe.
+Then document.
+
+That is the architecture.
+
+---
+
+**End of Codex**
+`;
 
 export const HelpView: React.FC = () => {
- return (
- <div className="flex-1 w-full h-full overflow-y-auto no-scrollbar bg dark:bg text dark:text transition-all duration-1000">
- <div className="max-w-7xl mx-auto px-6 md:px-16 pt-24 pb-32">
- 
- {/* Hero Section */}
- <header className="relative mb-32">
- <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 /10"/>
- <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
- <div className="md:col-span-3">
- <div className="flex items-center gap-3 text-nous-subtle mb-4">
- <BookOpen size={16} />
- <span className="font-sans text-[9px] uppercase tracking-[0.2em] font-bold">System Documentation</span>
- </div>
- <p className="font-sans text-xs uppercase tracking-widest text-nous-subtle">
- Vol. 01 / Architecture
- </p>
- </div>
- <div className="md:col-span-9">
- <h1 className="font-serif text-6xl md:text-8xl lg:text-9xl font-light tracking-tighter leading-[0.85] mb-8">
- The <span className="italic">Codex.</span>
- </h1>
- <p className="font-serif text-2xl md:text-3xl text-nous-subtle max-w-3xl leading-snug">
- A comprehensive guide to Mimi Zine: an engine for aesthetic superintelligence and sovereign curation.
- </p>
- </div>
- </div>
- </header>
+  return (
+    <div className="flex-1 overflow-y-auto bg-nous-base text-nous-text p-8 md:p-16">
+      <div className="max-w-3xl mx-auto">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-12 flex items-center gap-4 border-b border-nous-border pb-8"
+        >
+          <BookOpen size={32} className="text-nous-subtle" />
+          <div>
+            <h1 className="font-serif italic text-4xl text-nous-text">The Codex</h1>
+            <p className="font-sans text-[10px] uppercase tracking-[0.2em] text-nous-subtle mt-2">
+              System Documentation & Philosophy
+            </p>
+          </div>
+        </motion.div>
 
- {/* Core Philosophy */}
- <section className="mb-32 relative">
- <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 /10"/>
- <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
- <div className="md:col-span-3">
- <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-nous-subtle">01. Core Philosophy</h2>
- </div>
- <div className="md:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-12">
- <p className="font-serif text-xl leading-relaxed text-nous-subtle">
- Mimi is not a mere content generator; it is a <span className="italic">Sovereign Registry</span> for your aesthetic identity. It operates on the principle that true style is not adopted, but synthesized through rigorous curation and algorithmic reflection.
- </p>
- <p className="font-serif text-xl leading-relaxed text-nous-subtle">
- By feeding the engine your raw thoughts, visual fragments, and cultural obsessions, Mimi acts as a mirror, refracting your inputs into polished, editorial manifests. Over time, the system learns your unique visual language, helping you govern your aesthetic drift.
- </p>
- </div>
- </div>
- </section>
-
- {/* The 5 Pillars */}
- <section className="mb-32 relative">
- <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 /10"/>
- <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
- <div className="md:col-span-3">
- <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-nous-subtle">02. The Five Pillars</h2>
- </div>
- <div className="md:col-span-9">
- <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
- 
- <div className="group">
- <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 /5">
- <Sparkles size={18} className="text-nous-subtle group-hover:text-nous-text transition-colors"/>
- <h3 className="font-serif text-3xl italic tracking-tight">1. Studio</h3>
- </div>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed">
- <span className="font-bold text-nous-text">The Artifact Engine.</span> Where you act. The primary workspace for assembling artifacts, adjusting materiality via Tailor Tools, and utilizing historical presets.
- </p>
- </div>
-
- <div className="group">
- <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 /5">
- <ShieldCheck size={18} className="text-nous-subtle group-hover:text-indigo-500 transition-colors"/>
- <h3 className="font-serif text-3xl italic tracking-tight">2. Signature</h3>
- </div>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed">
- <span className="font-bold text-nous-text">The Identity Dashboard.</span> Where you define who you are. The analytical backbone providing your Aesthetic Genome, Taste Graph, and the Calibration Ritual (The Ward).
- </p>
- </div>
-
- <div className="group">
- <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 /5">
- <Archive size={18} className="text-nous-subtle group-hover:text-amber-500 transition-colors"/>
- <h3 className="font-serif text-3xl italic tracking-tight">3. Archive</h3>
- </div>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed">
- <span className="font-bold text-nous-text">The Creative Memory.</span> Where you remember. A living map of your raw fragments, indexed by motif, including the Temporal Nebula and the Darkroom for unprocessed thoughts.
- </p>
- </div>
-
- <div className="group">
- <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 /5">
- <Compass size={18} className="text-nous-subtle group-hover:text-rose-500 transition-colors"/>
- <h3 className="font-serif text-3xl italic tracking-tight">4. Threads</h3>
- </div>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed">
- <span className="font-bold text-nous-text">The Narrative Engine.</span> Where you connect. Visualizes semantic paths through your history (Biographical, Influence, Emotional) and predicts aesthetic drift via Trace & Scry.
- </p>
- </div>
-
- <div className="group">
- <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 /5">
- <LayoutGrid size={18} className="text-nous-subtle group-hover:text-cyan-500 transition-colors"/>
- <h3 className="font-serif text-3xl italic tracking-tight">5. Floor</h3>
- </div>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed">
- <span className="font-bold text-nous-text">The Cultural Intelligence Layer.</span> Where you observe. The external view connecting you to the wider world via the Resonance Feed and Trend Trajectories.
- </p>
- </div>
-
- </div>
- </div>
- </div>
- </section>
-
- {/* The Studio Toolbar */}
- <section className="mb-32 relative">
- <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 /10"/>
- <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
- <div className="md:col-span-3">
- <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-nous-subtle">03. The Studio Toolbar</h2>
- </div>
- <div className="md:col-span-9">
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
- 
- <div className="group">
- <div className="flex items-center gap-3 mb-3">
- <Paperclip size={16} className="text-nous-subtle group-hover:text-nous-text dark:group-hover:text-nous-text transition-colors"/>
- <h3 className="font-serif text-xl italic tracking-tight">Upload Media</h3>
- </div>
- <p className="font-sans text-xs text-nous-subtle leading-relaxed">
- Attach images, videos, or audio fragments to your zine. The engine will analyze these artifacts and weave their aesthetic DNA into the final manifest.
- </p>
- </div>
-
- <div className="group">
- <div className="flex items-center gap-3 mb-3">
- <Mic size={16} className="text-nous-subtle group-hover:text-red-500 transition-colors"/>
- <h3 className="font-serif text-xl italic tracking-tight">Voice Transcription</h3>
- </div>
- <p className="font-sans text-xs text-nous-subtle leading-relaxed">
- Speak your thoughts directly into the engine. Perfect for capturing raw, unfiltered streams of consciousness before they dissipate.
- </p>
- </div>
-
- <div className="group">
- <div className="flex items-center gap-3 mb-3">
- <Zap size={16} className="text-nous-subtle group-hover:text-yellow-500 transition-colors"/>
- <h3 className="font-serif text-xl italic tracking-tight">Lite Mode</h3>
- </div>
- <p className="font-sans text-xs text-nous-subtle leading-relaxed">
- Lightning-fast generations using the Flash Lite model. Ideal for quick thoughts, rapid iteration, and capturing fleeting aesthetic impulses.
- </p>
- </div>
-
- <div className="group">
- <div className="flex items-center gap-3 mb-3">
- <BrainCircuit size={16} className="text-nous-subtle group-hover:text-purple-500 transition-colors"/>
- <h3 className="font-serif text-xl italic tracking-tight">Deep Thinking</h3>
- </div>
- <p className="font-sans text-xs text-nous-subtle leading-relaxed">
- Engages the Pro model with high-level reasoning. Produces deep, semiotic explorations and complex, long-form zines with profound structural rigor.
- </p>
- </div>
-
- <div className="group">
- <div className="flex items-center gap-3 mb-3">
- <Globe size={16} className="text-nous-subtle group-hover:text-blue-500 transition-colors"/>
- <h3 className="font-serif text-xl italic tracking-tight">Search Grounding</h3>
- </div>
- <p className="font-sans text-xs text-nous-subtle leading-relaxed">
- Anchors your zines with relevant, real-time search data from the web. Ensures your aesthetic musings are connected to current cultural events.
- </p>
- </div>
-
- <div className="group">
- <div className="flex items-center gap-3 mb-3">
- <MapPin size={16} className="text-nous-subtle group-hover:text-orange-500 transition-colors"/>
- <h3 className="font-serif text-xl italic tracking-tight">Maps Grounding</h3>
- </div>
- <p className="font-sans text-xs text-nous-subtle leading-relaxed">
- Integrates location-based intelligence and spatial context. Perfect for psychogeographic explorations and architectural critiques.
- </p>
- </div>
-
- <div className="group">
- <div className="flex items-center gap-3 mb-3">
- <Sparkles size={16} className="text-nous-subtle group-hover:text-nous-text transition-colors"/>
- <h3 className="font-serif text-xl italic tracking-tight">Task Intelligence</h3>
- </div>
- <p className="font-sans text-xs text-nous-subtle leading-relaxed">
- Instructs Mimi to perform specific, high-precision tasks (e.g., analysis, identification) rather than open-ended generation, while maintaining her persona.
- </p>
- </div>
-
- <div className="group">
- <div className="flex items-center gap-3 mb-3">
- <Wand2 size={16} className="text-nous-subtle group-hover:text-red-500 transition-colors"/>
- <h3 className="font-serif text-xl italic tracking-tight">Prompt Engine</h3>
- </div>
- <p className="font-sans text-xs text-nous-subtle leading-relaxed">
- Generates random, thought-provoking prompts to break creative block and push your aesthetic boundaries into uncharted territory.
- </p>
- </div>
-
- <div className="group">
- <div className="flex items-center gap-3 mb-3">
- <Eraser size={16} className="text-nous-subtle group-hover:text-nous-text dark:group-hover:text-nous-text transition-colors"/>
- <h3 className="font-serif text-xl italic tracking-tight">Clear Input</h3>
- </div>
- <p className="font-sans text-xs text-nous-subtle leading-relaxed">
- Wipes the slate clean. A necessary destruction before new creation.
- </p>
- </div>
-
- </div>
- </div>
- </div>
- </section>
-
- {/* Deep Systems */}
- <section className="mb-32 relative">
- <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 /10"/>
- <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
- <div className="md:col-span-3">
- <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-nous-subtle">04. Deep Systems</h2>
- </div>
- <div className="md:col-span-9">
- <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-16">
- 
- <div className="group">
- <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 /5">
- <Briefcase size={18} className="text-nous-subtle group-hover:text-nous-subtle transition-colors"/>
- <h3 className="font-serif text-3xl italic tracking-tight">Projects</h3>
- </div>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed">
- Organize your manifests into strategic folders within the Archive. Generate <span className="text-nous-text font-medium">Strategic Memos</span> to synthesize the contents of a folder into actionable creative direction.
- </p>
- </div>
-
- <div className="group">
- <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 /5">
- <Compass size={18} className="text-nous-subtle group-hover:text-nous-subtle transition-colors"/>
- <h3 className="font-serif text-3xl italic tracking-tight">Scry</h3>
- </div>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed">
- Located in Threads. Query your archive using natural language. The Oracle will synthesize an answer based entirely on your past manifests and curated knowledge.
- </p>
- </div>
-
- <div className="group">
- <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 /5">
- <ShieldCheck size={18} className="text-nous-subtle group-hover:text-nous-subtle transition-colors"/>
- <h3 className="font-serif text-3xl italic tracking-tight">The Ward</h3>
- </div>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed">
- The autonomous governance module within your Signature. <span className="text-nous-text font-medium">Curator</span> analyzes your actual output, while <span className="text-nous-text font-medium">Sentinel</span> compares it against your Tailor settings to detect"Aesthetic Drift".
- </p>
- </div>
-
- <div className="group">
- <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 /5">
- <FlaskConical size={18} className="text-nous-subtle group-hover:text-nous-subtle transition-colors"/>
- <h3 className="font-serif text-3xl italic tracking-tight">Darkroom</h3>
- </div>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed">
- An experimental space in the Archive for visual synthesis. Combine multiple image shards to generate entirely new, cohesive visual concepts based on your archive's DNA.
- </p>
- </div>
-
- <div className="group">
- <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 /5">
- <Target size={18} className="text-nous-subtle group-hover:text-nous-subtle transition-colors"/>
- <h3 className="font-serif text-3xl italic tracking-tight">The Loom</h3>
- </div>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed">
- <span className="text-nous-text font-medium">Platform Strategy.</span> A multi-step diagnostic ritual that analyzes your intent, platform dynamics (Instagram, TikTok, YouTube, Substack, Facebook), and aesthetic identity to generate actionable, platform-specific content strategies.
- </p>
- </div>
-
- <div className="group">
- <div className="flex items-center gap-4 mb-4 pb-4 border-b border-black/5 /5">
- <ListChecks size={18} className="text-nous-subtle group-hover:text-nous-subtle transition-colors"/>
- <h3 className="font-serif text-3xl italic tracking-tight">Action Board</h3>
- </div>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed">
- <span className="text-nous-text font-medium">Strategic Imperatives.</span> A centralized hub for managing tasks exported from The Loom or created manually. Organize your content creation workflow with list and timeline views.
- </p>
- </div>
-
- </div>
- </div>
- </div>
- </section>
-
- {/* The Synthesis Pipeline */}
- <section className="mb-32 relative">
- <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 /10"/>
- <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
- <div className="md:col-span-3">
- <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-nous-subtle">05. The Synthesis Pipeline</h2>
- </div>
- <div className="md:col-span-9 space-y-12">
- 
- <div className="relative pl-8 md:pl-12">
- <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-nous-base0/30"/>
- <h4 className="font-serif italic text-2xl text-nous-text mb-3">The Holding Bay</h4>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed max-w-2xl">
- During synthesis, the user is placed in an immersive"Holding Bay". This is not a loading screen; it is a transitional space designed to bypass digital"brain rot"and prepare the user for the incoming aesthetic revelation. The bay displays cryptic, thematic messages reflecting the computational rigor of the generation process.
- </p>
- </div>
-
- <div className="relative pl-8 md:pl-12">
- <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-indigo-500/30"/>
- <h4 className="font-serif italic text-2xl text-nous-text mb-3">Automated Navigation</h4>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed max-w-2xl">
- Upon completion of the synthesis, the system automatically transitions the user from the Holding Bay directly into the generated Zine. This seamless flow eliminates unnecessary friction and maintains the immersive experience.
- </p>
- </div>
-
- <div className="relative pl-8 md:pl-12">
- <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-amber-500/30"/>
- <h4 className="font-serif italic text-2xl text-nous-text mb-3">The Omni-Bar</h4>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed max-w-2xl">
- Within the Zine presentation (AnalysisDisplay), all actions are centralized into a unified, fixed"Omni-Bar"at the bottom of the screen. This glassmorphic pill contains minimalist icons for Export, Save, Broadcast, Voice Transmission, Motion Refraction, and Continuum, decluttering the interface and focusing attention on the generated artifact.
- </p>
- </div>
-
- </div>
- </div>
- </section>
-
- {/* Advanced Protocols */}
- <section className="mb-32 relative">
- <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 /10"/>
- <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
- <div className="md:col-span-3">
- <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-nous-subtle">06. Advanced Protocols</h2>
- </div>
- <div className="md:col-span-9 space-y-12">
- 
- <div className="relative pl-8 md:pl-12">
- <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-nous-base0/30"/>
- <h4 className="font-serif italic text-2xl text-nous-text mb-3">Deep Refraction</h4>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed max-w-2xl">
- When enabled in the Studio, the engine spends significantly more time analyzing your input against your Signature profile. It produces highly structured, multi-section editorial layouts with profound semiotic depth. Use this for major conceptual pieces.
- </p>
- </div>
-
- <div className="relative pl-8 md:pl-12">
- <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-amber-500/30"/>
- <div className="flex items-center gap-3 mb-3">
- <h4 className="font-serif italic text-2xl text-nous-text">Cultural Grounding</h4>
- <span className="px-2 py-0.5 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-[9px] font-mono uppercase tracking-widest">High-Fidelity</span>
- </div>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed max-w-2xl">
- A sovereign capability unlocked via the High-Fidelity (Couture) Engine. By enabling the globe icon in the Studio, the engine queries the live internet to anchor your generations in current cultural contexts. This ensures your output isn't just aesthetically pleasing, but deeply relevant to contemporary events, emerging subcultures, and real-time data touchpoints.
- </p>
- </div>
-
- <div className="relative pl-8 md:pl-12">
- <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-indigo-500/30"/>
- <h4 className="font-serif italic text-2xl text-nous-text mb-3">Voice Consultation</h4>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed max-w-2xl">
- Available within The Ward (Signature). Initiate a live, real-time voice session with the system's persona. It will interrogate your aesthetic choices and discuss your recent drift in a highly editorial, conversational format.
- </p>
- </div>
-
- </div>
- </div>
- </section>
-
- {/* Platform Strategies */}
- <section className="mb-32 relative">
- <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 /10"/>
- <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
- <div className="md:col-span-3">
- <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-nous-subtle">07. Platform Strategies</h2>
- </div>
- <div className="md:col-span-9 space-y-12">
- 
- <div className="relative pl-8 md:pl-12">
- <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-pink-500/30"/>
- <h4 className="font-serif italic text-2xl text-nous-text mb-3">Instagram</h4>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed max-w-2xl">
- Focuses on visual cohesion, grid aesthetics, and narrative storytelling through Stories and Reels. Emphasizes high-quality imagery, consistent color palettes, and community engagement via DMs and comments.
- </p>
- </div>
-
- <div className="relative pl-8 md:pl-12">
- <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-cyan-500/30"/>
- <h4 className="font-serif italic text-2xl text-nous-text mb-3">TikTok</h4>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed max-w-2xl">
- Prioritizes short-form video, retention loops, and rewatchability. Strategies revolve around trend participation, authentic"lo-fi"aesthetics, strong hooks within the first 3 seconds, and sound-driven content.
- </p>
- </div>
-
- <div className="relative pl-8 md:pl-12">
- <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-red-500/30"/>
- <h4 className="font-serif italic text-2xl text-nous-text mb-3">YouTube</h4>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed max-w-2xl">
- Centers on long-form value, click-through rate (CTR) optimization, and session time maximization. Requires effective thumbnail/title pairing, structured storytelling, and high-fidelity production value.
- </p>
- </div>
-
- <div className="relative pl-8 md:pl-12">
- <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-orange-500/30"/>
- <h4 className="font-serif italic text-2xl text-nous-text mb-3">Substack</h4>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed max-w-2xl">
- Built for deep-dive written content, intellectual exploration, and direct audience monetization. Emphasizes distinct editorial voice, consistent publishing schedules, and community building through comments and chat.
- </p>
- </div>
-
- <div className="relative pl-8 md:pl-12">
- <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-blue-500/30"/>
- <h4 className="font-serif italic text-2xl text-nous-text mb-3">Facebook</h4>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed max-w-2xl">
- Focuses on community building, consistent brand identity, and strategic use of formats (Reels, Stories, Feed). Leverages Groups for deep engagement and targeted advertising for reach.
- </p>
- </div>
-
- </div>
- </div>
- </section>
-
- {/* The Taste Graph */}
- <section className="mb-32 relative">
- <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 /10"/>
- <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
- <div className="md:col-span-3">
- <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-nous-subtle">08. The Taste Graph</h2>
- </div>
- <div className="md:col-span-9 space-y-12">
- 
- <div className="relative pl-8 md:pl-12">
- <div className="absolute left-0 top-2 bottom-0 w-[1px] bg-nous-base0/30"/>
- <div className="flex items-center gap-3 mb-3">
- <h4 className="font-serif italic text-2xl text-nous-text">Aesthetic Embeddings</h4>
- <span className="px-2 py-0.5 border border-nous-border/30 text-nous-subtle text-[9px] font-mono uppercase tracking-widest">Infrastructure</span>
- </div>
- <p className="font-sans text-sm text-nous-subtle leading-relaxed max-w-2xl">
- Every interaction you have with Mimi—fragments saved, references input, visual styles liked—is converted into structured data via semantic embeddings. Over time, the system learns your <span className="text-nous-text font-medium">Aesthetic Profile</span> as an evolving vector, enabling deep personalization, trend detection, and creative matching across all pillars.
- </p>
- </div>
-
- </div>
- </div>
- </section>
-
- {/* Game Plan */}
- <section className="mb-32 relative">
- <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 /10"/>
- <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
- <div className="md:col-span-3">
- <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-nous-subtle">09. Game Plan</h2>
- </div>
- <div className="md:col-span-9">
- <p className="font-serif text-xl leading-relaxed text-nous-subtle mb-8">
- Our current development focus is on refining"The Edit"page, ensuring seamless integration of real product data, and preparing for future ad-targeting concepts.
- </p>
- <FeatureChecklist />
- <ul className="font-sans text-sm text-nous-subtle leading-relaxed space-y-4 mt-8">
- <li><span className="font-bold text-nous-text">1. Affiliate Link Integration:</span> Implement logic to display and handle affiliate links within product cards in the"Market"view.</li>
- <li><span className="font-bold text-nous-text">2. Synthesis Element Refinement:</span> Enhance the"Synthesis_Portal"for dynamic, visually integrated content.</li>
- <li><span className="font-bold text-nous-text">3. Ad Integration Strategy:</span> Connect the"Sponsored Aesthetic Cluster"placeholder to a backend service for ad selection based on user taste vectors.</li>
- </ul>
- </div>
- </div>
- </section>
-
- {/* System Status */}
- <section className="relative">
- <div className="absolute top-0 left-0 w-full h-[1px] bg-black/10 /10"/>
- <div className="pt-8 grid grid-cols-1 md:grid-cols-12 gap-8">
- <div className="md:col-span-3">
- <h2 className="font-sans text-[10px] uppercase tracking-[0.2em] font-bold text-nous-subtle">10. System Status</h2>
- </div>
- <div className="md:col-span-9">
- <Diagnostics />
- </div>
- </div>
- </section>
-
- </div>
- </div>
- );
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="prose prose-invert prose-p:font-serif prose-p:text-lg prose-p:leading-relaxed prose-p:text-nous-subtle prose-headings:font-sans prose-headings:uppercase prose-headings:tracking-widest prose-headings:text-nous-text prose-a:text-nous-text prose-li:font-serif prose-li:text-nous-subtle prose-strong:text-nous-text max-w-none"
+        >
+          <div className="markdown-body">
+            <Markdown>{codexContent}</Markdown>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
 };

@@ -38,6 +38,12 @@ export const ThimbleDashboard = () => {
  const { profile, user } = useUser();
  const [activeTab, setActiveTab] = useState<'sourcing' | 'boards' | 'audit' | 'try-on'>('sourcing');
  
+ const triggerAlert = (type: 'error' | 'announcement' | 'success', message: string) => {
+  window.dispatchEvent(new CustomEvent('mimi:registry_alert', {
+   detail: { type, message }
+  }));
+ };
+
  // Sourcing State
  const [budget, setBudget] = useState('');
  const [objective, setObjective] = useState('');
@@ -187,8 +193,10 @@ export const ThimbleDashboard = () => {
  boardItems.map(i => ({ url: i.url, title: i.title, price: i.price, notes: i.notes }))
  );
  setBoardAuditResult(result);
+ triggerAlert('success', 'Board audit completed successfully.');
  } catch (error) {
  console.error("Board audit failed:", error);
+ triggerAlert('error', 'Failed to audit board. Please try again.');
  } finally {
  setIsAuditingBoard(false);
  }
@@ -229,6 +237,7 @@ export const ThimbleDashboard = () => {
  setMediaFiles(prev => [...prev, ...newMedia]);
  } catch (error) {
  console.error("Error reading files:", error);
+ triggerAlert('error', 'Failed to process files. Please try again.');
  }
  }
  };
@@ -281,8 +290,10 @@ export const ThimbleDashboard = () => {
  mediaFiles
  );
  setTargets(results);
+ triggerAlert('success', 'Procurement targets generated successfully.');
  } catch (error) {
  console.error("Procurement failed:", error);
+ triggerAlert('error', 'Failed to generate procurement targets.');
  } finally {
  setIsProcuring(false);
  }
@@ -301,8 +312,10 @@ export const ThimbleDashboard = () => {
  auditBudget
  );
  setAuditResult(result);
+ triggerAlert('success', 'Fiscal audit completed successfully.');
  } catch (error) {
  console.error("Audit failed:", error);
+ triggerAlert('error', 'Failed to complete fiscal audit.');
  } finally {
  setIsAuditing(false);
  }

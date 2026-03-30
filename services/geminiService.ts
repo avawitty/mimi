@@ -189,7 +189,7 @@ The user has provided 3 rapid-fire responses. Analyze them and instantly synthes
 Do not be abstract at the top. Be clear, punchy, and shockingly accurate.
 
 INPUT:
-${userInputs.join("\n")}
+${(userInputs || []).join("\n")}
 
 OUTPUT JSON SCHEMA:
 {
@@ -200,7 +200,7 @@ OUTPUT JSON SCHEMA:
     
     const response = await ai.models.generateContent({
       model: "gemini-3.1-pro-preview",
-      contents: `INPUTS:\n${userInputs.join("\n")}`,
+      contents: `INPUTS:\n${(userInputs || []).join("\n")}`,
       config: {
         systemInstruction: prompt,
         temperature: 0.7,
@@ -585,7 +585,7 @@ export const analyzeTryOn = async (modelBase64: string, itemBase64: string, mime
                             mimeType: mimeType
                         }
                     },
-                    { text: "Analyze this model and clothing item as a high-fashion stylist and technical designer. Provide a JSON response with the following keys: 'silhouette_bias' (critique of how the item fits the model's silhouette), 'color_theory' (critique of color harmony), 'mask_data' (a description of where the item would sit on the model for a try-on), and 'stylist_note' (a poetic critique and styling advice)." }
+                    { text: "Analyze this model and clothing item as a high-fashion stylist and technical designer. Provide a JSON response with the following keys: 'silhouette_bias' (critique of how the item fits the model's silhouette), 'body_type_analysis' (a detailed analysis of the model's body type and how it interacts with the garment's structure), 'silhouette_archetype' (a specific high-fashion silhouette name like 'Hourglass', 'Inverted Triangle', 'Column', 'Apple', 'Pear', or a more avant-garde descriptor), 'color_theory' (critique of color harmony), 'mask_data' (a description of where the item would sit on the model for a try-on), and 'stylist_note' (a poetic critique and styling advice)." }
                 ]
             },
             config: {
@@ -1130,8 +1130,31 @@ Return ONLY the JSON array.`;
 
         for (const media of mediaFiles) {
             if (media.type === 'image' && media.data) {
-                const base64Data = media.data.split(',')[1];
-                if (base64Data) {
+                let base64Data = media.data.includes(',') ? media.data.split(',')[1] : media.data;
+                let isUrl = base64Data.startsWith('http');
+                
+                if (isUrl) {
+                    try {
+                        const response = await fetch(base64Data);
+                        if (response.ok) {
+                            const blob = await response.blob();
+                            base64Data = await new Promise<string>((resolve, reject) => {
+                                const reader = new FileReader();
+                                reader.onloadend = () => resolve(reader.result as string);
+                                reader.onerror = reject;
+                                reader.readAsDataURL(blob);
+                            });
+                            base64Data = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
+                            isUrl = false;
+                        }
+                    } catch (e) {
+                        console.warn("Failed to fetch media URL for procurement:", e);
+                    }
+                }
+
+                if (isUrl) {
+                    parts.push({ text: `[Reference Media URL: ${media.data}]` });
+                } else if (base64Data) {
                     parts.push({
                         inlineData: {
                             data: base64Data,
@@ -1786,12 +1809,38 @@ export const generateTagsFromMedia = async (content?: string, mediaItems: any[] 
 
     for (const m of mediaItems) {
       if ((m.type === 'image' || m.type === 'video') && m.data) {
-        parts.push({
-          inlineData: {
-            data: m.data.split(',')[1] || m.data,
-            mimeType: m.mimeType || (m.type === 'video' ? 'video/mp4' : 'image/png')
-          }
-        });
+        let base64Data = m.data.includes(',') ? m.data.split(',')[1] : m.data;
+        let isUrl = base64Data.startsWith('http');
+        
+        if (isUrl) {
+            try {
+                const response = await fetch(base64Data);
+                if (response.ok) {
+                    const blob = await response.blob();
+                    base64Data = await new Promise<string>((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result as string);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(blob);
+                    });
+                    base64Data = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
+                    isUrl = false;
+                }
+            } catch (e) {
+                console.warn("Failed to fetch media URL for tagging:", e);
+            }
+        }
+
+        if (isUrl) {
+            parts.push({ text: `[Reference Media URL: ${m.data}]` });
+        } else if (base64Data) {
+            parts.push({
+              inlineData: {
+                data: base64Data,
+                mimeType: m.mimeType || (m.type === 'video' ? 'video/mp4' : 'image/png')
+              }
+            });
+        }
       }
     }
 
@@ -1854,7 +1903,7 @@ export const refineProposalSection = async (
 ): Promise<ProposalSection> => {
   return await withResilience(async (ai) => {
     const profileStr = sanitizeProfile(context.userProfile);
-    const artifactsStr = context.artifacts.join('\n');
+    const artifactsStr = (context.artifacts || []).join('\n');
     
     const prompt = `
       TASK: Refine this proposal section based on the user instruction.
@@ -2832,17 +2881,47 @@ export const generatePlatformStrategy = async (
     
     // Add media files
     for (const file of mediaFiles) {
+      let base64Data = file.base64;
+      let isUrl = base64Data.startsWith('http');
+      
+      if (isUrl) {
+        try {
+          // Try to fetch the URL and convert to base64
+          const response = await fetch(base64Data);
+          if (response.ok) {
+            const blob = await response.blob();
+            base64Data = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(blob);
+            });
+            isUrl = false; // Successfully converted to base64
+          }
+        } catch (e) {
+          console.warn("Failed to fetch media URL for strategy generation:", e);
+        }
+      }
+
+      if (isUrl) {
+        // If it's still a URL (fetch failed), we can't pass it as inlineData. We'll add it as text context.
+        parts.push({
+          text: `[Reference Media URL: ${file.base64}]`
+        });
+        continue;
+      }
+
       if (file.type.startsWith('image/')) {
         parts.push({
           inlineData: {
-            data: file.base64.split(',')[1] || file.base64,
+            data: base64Data.split(',')[1] || base64Data,
             mimeType: file.type
           }
         });
       } else if (file.type.startsWith('video/')) {
         parts.push({
           inlineData: {
-            data: file.base64.split(',')[1] || file.base64,
+            data: base64Data.split(',')[1] || base64Data,
             mimeType: file.type
           }
         });
@@ -3035,7 +3114,7 @@ export async function generateSignatureImage(signature: AestheticSignature): Pro
     Primary Axis: ${signature.primaryAxis}, 
     Secondary Axis: ${signature.secondaryAxis}, 
     Core Trait: ${signature.coreTrait || 'Evolving'}, 
-    Motifs: ${signature.motifs.join(', ')}.
+    Motifs: ${(signature.motifs || []).join(', ')}.
     Ethereal, digital, and evocative of the signature's mood.`;
 
     let apiKeyToUse = import.meta.env.VITE_GEMINI_API_KEY;

@@ -23,12 +23,13 @@ Persona: Cyrus (The Oracle). Tone: Cold, analytical, masculine, grounded. He hel
 interface TheScribeProps {
  onClose: () => void;
  onGenerateZine?: (text: string) => void;
+ initialTab?: Tab;
 }
 
 type Tab = 'engine' | 'mimi' | 'cyrus' | 'synthesis';
 
-export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine }) => {
- const [activeTab, setActiveTab] = useState<Tab>('engine');
+export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine, initialTab = 'engine' }) => {
+ const [activeTab, setActiveTab] = useState<Tab>(initialTab);
  const [inputValue, setInputValue] = useState('');
  const [scribeTranscript, setScribeTranscript] = useState('');
  
@@ -260,7 +261,7 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  <div className="absolute inset-4 rounded-full border border-nous-border /50 pointer-events-none"/>
  
  {/* Top Navigation Curve (Simulated) */}
- <div className="absolute top-12 flex items-center gap-6 z-10">
+ <div className="absolute top-16 flex items-center gap-10 z-10">
  {tabs.map((tab) => {
  const Icon = tab.icon;
  const isActive = activeTab === tab.id;
@@ -268,14 +269,21 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  <button
  key={tab.id}
  onClick={() => setActiveTab(tab.id)}
- className={`flex flex-col items-center gap-2 transition-all ${
- isActive ? 'text-nous-text ' : 'text-nous-subtle hover:text-nous-subtle '
+ className={`relative flex flex-col items-center gap-3 transition-all duration-500 ${
+ isActive ? 'text-nous-text scale-110' : 'text-nous-subtle hover:text-nous-text'
  }`}
  >
- <Icon size={14} strokeWidth={isActive ? 2 : 1} />
- <span className="font-sans text-[8px] uppercase tracking-[0.3em] font-black">
+ <Icon size={14} strokeWidth={isActive ? 2 : 1} className="transition-transform" />
+ <span className="font-sans text-[7px] uppercase tracking-[0.4em] font-black">
  {tab.label}
  </span>
+ {isActive && (
+ <motion.div 
+ layoutId="activeTab"
+ className="absolute -bottom-4 w-1 h-1 rounded-full bg-nous-text"
+ transition={{ type: "spring", stiffness: 300, damping: 30 }}
+ />
+ )}
  </button>
  );
  })}
@@ -295,7 +303,7 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  value={inputValue}
  onChange={(e) => setInputValue(e.target.value)}
  placeholder="Search the archive or ask the oracle..."
- className="w-full bg-transparent border-b border-nous-border py-2 pl-6 pr-4 font-mono text-sm text-nous-text text-nous-text outline-none placeholder:text-nous-subtle"
+ className="w-full bg-transparent border-b border-nous-border py-2 pl-6 pr-4 font-mono text-sm text-nous-text outline-none placeholder:text-nous-subtle"
  />
  </div>
  </motion.div>
@@ -311,13 +319,13 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  onTranscriptUpdate={setScribeTranscript}
  >
  {scribeTranscript.trim() && onGenerateZine && (
- <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-center mt-4">
+ <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="flex justify-center mt-6">
  <button
  onClick={() => onGenerateZine(`Scribe Notes: ${scribeTranscript}`)}
- className="px-4 py-2 border border-nous-border rounded-full text-[10px] uppercase tracking-widest hover:bg-nous-base transition-colors flex items-center gap-2"
+ className="px-6 py-2.5 border border-nous-text/20 rounded-full text-[9px] uppercase tracking-[0.2em] font-black hover:bg-nous-text hover:text-nous-base transition-all duration-500 flex items-center gap-3 group"
  >
- <Sparkles size={12} />
- Generate Manifest from Notes
+ <Sparkles size={12} className="group-hover:rotate-12 transition-transform" />
+ Generate Manifest
  </button>
  </motion.div>
  )}
@@ -334,13 +342,13 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  onTranscriptUpdate={setScribeTranscript}
  >
  {scribeTranscript.trim() && onGenerateZine && (
- <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-center mt-4">
+ <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="flex justify-center mt-6">
  <button
  onClick={() => onGenerateZine(`Scribe Notes: ${scribeTranscript}`)}
- className="px-4 py-2 border border-nous-border rounded-full text-[10px] uppercase tracking-widest hover:bg-nous-base transition-colors flex items-center gap-2"
+ className="px-6 py-2.5 border border-nous-text/20 rounded-full text-[9px] uppercase tracking-[0.2em] font-black hover:bg-nous-text hover:text-nous-base transition-all duration-500 flex items-center gap-3 group"
  >
- <Sparkles size={12} />
- Generate Manifest from Notes
+ <Sparkles size={12} className="group-hover:rotate-12 transition-transform" />
+ Generate Manifest
  </button>
  </motion.div>
  )}
@@ -351,7 +359,7 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  <motion.div key="synthesis"initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
  <div className="space-y-2">
  <span className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle block">Dual-Agent Protocol</span>
- <h2 className="font-serif text-3xl italic text-nous-text text-nous-text">The Synthesis.</h2>
+ <h2 className="font-serif text-3xl italic text-nous-text">The Synthesis.</h2>
  </div>
  
  {!isGeneratingDebate && !debateAudioUrl && (
@@ -363,13 +371,13 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  value={inputValue}
  onChange={(e) => setInputValue(e.target.value)}
  placeholder="Enter a topic for debate..."
- className="w-full bg-transparent border-b border-nous-border py-2 pl-6 pr-4 font-mono text-sm text-nous-text text-nous-text outline-none placeholder:text-nous-subtle"
+ className="w-full bg-transparent border-b border-nous-border py-2 pl-6 pr-4 font-mono text-sm text-nous-text outline-none placeholder:text-nous-subtle"
  />
  </div>
  <button 
  onClick={handleGenerateDebate}
  disabled={!inputValue.trim()}
- className="w-full py-3 border border-nous-border  text-nous-text text-nous-text font-sans text-[9px] uppercase tracking-widest font-black hover:bg-nous-base hover:text-nous-text dark:hover:bg-white dark:hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+ className="w-full py-3 border border-nous-border text-nous-text font-sans text-[9px] uppercase tracking-widest font-black hover:bg-nous-base hover:text-nous-text dark:hover:bg-white dark:hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
  >
  Generate Audio Debate
  </button>
@@ -388,16 +396,16 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  {debateAudioUrl && debateTranscript && (
  <div className="space-y-6">
  {onGenerateZine && (
- <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-center mt-4">
+ <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="flex justify-center mt-6">
  <button
  onClick={() => {
  const formattedDebate = debateTranscript.map(t => `${t.speaker}: ${t.text}`).join('\n');
  onGenerateZine(`Scribe Debate Notes:\n${formattedDebate}`);
  }}
- className="px-4 py-2 border border-nous-border rounded-full text-[10px] uppercase tracking-widest hover:bg-nous-base transition-colors flex items-center gap-2"
+ className="px-6 py-2.5 border border-nous-text/20 rounded-full text-[9px] uppercase tracking-[0.2em] font-black hover:bg-nous-text hover:text-nous-base transition-all duration-500 flex items-center gap-3 group"
  >
- <Sparkles size={12} />
- Generate Manifest from Notes
+ <Sparkles size={12} className="group-hover:rotate-12 transition-transform" />
+ Generate Manifest
  </button>
  </motion.div>
  )}
@@ -405,7 +413,7 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  <div className="flex items-center justify-center gap-4">
  <button 
  onClick={toggleDebateAudio}
- className="w-12 h-12 rounded-full border border-nous-border  flex items-center justify-center text-nous-text text-nous-text hover:bg-nous-base transition-colors"
+ className="w-12 h-12 rounded-full border border-nous-border flex items-center justify-center text-nous-text hover:bg-nous-base transition-colors"
  >
  {isPlayingDebate ? <Pause size={16} /> : <Play size={16} className="ml-1"/>}
  </button>
@@ -419,13 +427,13 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  </div>
  </div>
 
- <div className="h-48 overflow-y-auto text-left space-y-4 pr-2 scrollbar-thin scrollbar-thumb-stone-300 dark:scrollbar-thumb-stone-700">
+ <div className="h-48 overflow-y-auto text-left space-y-6 pr-4 scrollbar-thin scrollbar-thumb-stone-300 dark:scrollbar-thumb-stone-700 mask-fade-bottom">
  {debateTranscript.map((turn, idx) => (
- <div key={idx} className={`space-y-1 ${turn.speaker === 'Mimi' ? 'pl-4 border-l-2 border-nous-border ' : 'pr-4 border-r-2 border-nous-border text-right'}`}>
- <span className="font-sans text-[8px] uppercase tracking-widest text-nous-subtle font-black">
+ <div key={idx} className={`relative space-y-2 ${turn.speaker === 'Mimi' ? 'pl-6 border-l border-nous-border' : 'pr-6 border-r border-nous-border text-right'}`}>
+ <span className="font-sans text-[7px] uppercase tracking-[0.3em] text-nous-subtle font-black">
  {turn.speaker}
  </span>
- <p className="font-serif text-sm text-nous-text leading-relaxed">
+ <p className="font-serif text-sm text-nous-text leading-relaxed opacity-90">
  {turn.text}
  </p>
  </div>
@@ -471,10 +479,22 @@ export const TheScribe: React.FC<TheScribeProps> = ({ onClose, onGenerateZine })
  </div>
 
  {/* Bottom Equator Line */}
- <div className="absolute bottom-24 w-1/2 h-px bg-stone-200"/>
- <span className="absolute bottom-16 font-mono text-[8px] text-nous-subtle uppercase tracking-widest">
+ <div className="absolute bottom-28 w-1/3 h-px bg-stone-200/30 dark:bg-stone-800/30"/>
+ <div className="absolute bottom-16 flex flex-col items-center gap-2">
+ <span className="font-mono text-[7px] text-nous-subtle uppercase tracking-[0.4em] opacity-40">
  Mimi Sovereign Registry // Scribe v1.0
  </span>
+ <div className="flex gap-1">
+ {[1, 2, 3].map(i => (
+ <motion.div 
+ key={i}
+ animate={{ opacity: [0.2, 0.5, 0.2] }}
+ transition={{ duration: 2, delay: i * 0.3, repeat: Infinity }}
+ className="w-1 h-1 rounded-full bg-nous-subtle"
+ />
+ ))}
+ </div>
+ </div>
  </motion.div>
  </motion.div>
  );

@@ -37,6 +37,7 @@ const SILHOUETTE_OPTIONS = ['Architectural', 'Oversized', 'Fluid', 'Minimal', 'S
 const TEXTURE_OPTIONS = ['Raw Silk', 'Cold Concrete', 'Brushed Aluminum', 'Matte Ceramic', 'Heavy Wool', 'Distressed Leather', 'Paper Grain', 'Latex', 'Velvet', 'Glass'];
 const ERA_OPTIONS = ['90s Minimal', 'Y2K Cyber', '80s Power', 'Retro-Futurist', 'Post-Digital', 'Old Money Noir', 'Industrial', 'Romantic Goth', 'Bauhaus'];
 const PRESENTATION_OPTIONS = ['Feminine', 'Masculine', 'Androgynous', 'Fluid', 'Neutral', 'Intersex'];
+const BODY_TYPE_OPTIONS = ['Hourglass', 'Athletic', 'Petite', 'Tall', 'Curvy', 'Inverted Triangle', 'Column', 'Apple', 'Pear', 'Plus Size'];
 const VOICE_REGISTERS = ['EDITORIAL', 'DIARY', 'MANIFESTO', 'ARCHIVE', 'TECHNICAL', 'POETIC', 'JOURNAL', 'BRIEF', 'NOIR', 'HIGH-FASHION', 'CYNICAL', 'OPTIMISTIC', 'MYSTERIOUS', 'AUTHORITATIVE'];
 const SENTENCE_STRUCTURES = ['CONCISE', 'FLOWING', 'CONTINUOUS', 'FRAGMENTED', 'STACCATO', 'ACADEMIC', 'MINIMAL', 'VERBOSE'];
 const EMOTIONAL_TEMPERATURES = ['DETACHED', 'CLINICAL', 'RESTRAINED', 'OBSERVATIONAL', 'INTIMATE', 'VISCERAL', 'WARM', 'PASSIONATE', 'COLD'];
@@ -498,6 +499,28 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  const { profile, updateProfile, personas, activePersonaId, switchPersona, updatePersona, user, enabledAlgos, toggleAlgo, deletePersona, canGenerate, incrementGeneration } = useUser();
  const activePersona = personas.find(p => p.id === activePersonaId);
  const [draft, setDraft] = useState<TailorLogicDraft | null>(null);
+ const [history, setHistory] = useState<TailorLogicDraft[]>([]);
+
+ const pushToHistory = useCallback(() => {
+   if (!draft) return;
+   setHistory(prev => {
+     const lastState = prev[prev.length - 1];
+     if (lastState && JSON.stringify(lastState) === JSON.stringify(draft)) {
+       return prev;
+     }
+     const newHistory = [...prev, JSON.parse(JSON.stringify(draft))];
+     if (newHistory.length > 30) return newHistory.slice(1);
+     return newHistory;
+   });
+ }, [draft]);
+
+ const undo = useCallback(() => {
+   if (history.length === 0) return;
+   const lastState = history[history.length - 1];
+   setHistory(prev => prev.slice(0, -1));
+   setDraft(lastState);
+   window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message: "Action Undone", icon: <History size={14} /> } }));
+ }, [history]);
  
  const [viewMode, setViewMode] = useState<'blueprint' | 'edit'>('blueprint');
  const [lockedFields, setLockedFields] = useState<Record<string, boolean>>({});
@@ -512,33 +535,33 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  const [showAuditOverlay, setShowAuditOverlay] = useState(false);
  const [presetFilter, setPresetFilter] = useState({ eraBias: '', tone: '', strictPalette: '' });
  
- // --- AUTO-SAVE LOGIC ---
- const saveDraftToLocalStorage = useCallback((draftToSave: TailorLogicDraft) => {
- if (!activePersonaId) return;
- setIsSaving(true);
- localStorage.setItem(`mimi_tailor_draft_${activePersonaId}`, JSON.stringify(draftToSave));
- setTimeout(() => setIsSaving(false), 1000);
- }, [activePersonaId]);
+  // --- AUTO-SAVE LOGIC ---
+  const saveDraftToLocalStorage = useCallback((draftToSave: TailorLogicDraft) => {
+    if (!activePersonaId) return;
+    setIsSaving(true);
+    localStorage.setItem(`mimi_tailor_draft_${activePersonaId}`, JSON.stringify(draftToSave));
+    setTimeout(() => setIsSaving(false), 1000);
+  }, [activePersonaId]);
 
- // Auto-save interval
- useEffect(() => {
- if (!draft) return;
- const interval = setInterval(() => {
- saveDraftToLocalStorage(draft);
- }, 30000);
- return () => clearInterval(interval);
- }, [draft, saveDraftToLocalStorage]);
+  // Auto-save on change (debounced)
+  useEffect(() => {
+    if (!draft) return;
+    const timer = setTimeout(() => {
+      saveDraftToLocalStorage(draft);
+    }, 2000); // Save after 2 seconds of inactivity
+    return () => clearTimeout(timer);
+  }, [draft, saveDraftToLocalStorage]);
 
- // Save on navigate away
- useEffect(() => {
- const handleBeforeUnload = () => {
- if (draft) saveDraftToLocalStorage(draft);
- };
- window.addEventListener('beforeunload', handleBeforeUnload);
- return () => window.removeEventListener('beforeunload', handleBeforeUnload);
- }, [draft, saveDraftToLocalStorage]);
- 
- // --- END AUTO-SAVE LOGIC ---
+  // Save on navigate away
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (draft) saveDraftToLocalStorage(draft);
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [draft, saveDraftToLocalStorage]);
+  
+  // --- END AUTO-SAVE LOGIC ---
 
  // Font Engine State
  const [customFontInput, setCustomFontInput] = useState('');
@@ -577,6 +600,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  const logic = await extractTailorLogicFromGrid(base64Image, file.type);
  
  if (logic) {
+ pushToHistory();
  setDraft({ ...logic, draftStatus: 'provisional' });
  window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message:"Grid Aesthetic Extracted.", icon: <Sparkles size={14} /> } }));
  } else {
@@ -599,11 +623,12 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  const { ai } = getClient();
  const response = await ai.models.generateContent({
  model: 'gemini-3-flash-preview',
- contents: `Generate a short, unique, poetic AI signature (max 5 words) for a persona named"${activePersona.name}"with the following aesthetic core: ${draft.positioningCore.aestheticCore.eraBias}, ${draft.positioningCore.aestheticCore.silhouettes.join(', ')}. It should sound like a cryptographic hash but made of words.`,
+ contents: `Generate a short, unique, poetic AI signature (max 5 words) for a persona named"${activePersona.name}"with the following aesthetic core: ${draft.positioningCore.aestheticCore.eraBias}, ${(draft.positioningCore.aestheticCore.silhouettes || []).join(', ')}. It should sound like a cryptographic hash but made of words.`,
  config: { temperature: 0.9 }
  });
  const sig = response.text?.trim() || 'SIG_UNKNOWN';
  setAiSignature(sig);
+ pushToHistory();
  setDraft(prev => prev ? { ...prev, aiSignature: sig } : null);
  window.dispatchEvent(new CustomEvent('mimi:registry_alert', { detail: { message:"Signature Generated.", icon: <Sparkles size={14} /> } }));
  } catch (e) {
@@ -614,94 +639,96 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  }
  };
 
- useEffect(() => {
- // Defensive Initialization: Ensure draft structure is complete
- const localDraft = activePersonaId ? localStorage.getItem(`mimi_tailor_draft_${activePersonaId}`) : null;
- let source;
- if (localDraft) {
- try {
- source = JSON.parse(localDraft);
- } catch (e) {
- source = activePersona?.tailorDraft || profile?.tailorDraft || DEFAULT_DRAFT_FALLBACK;
- }
- } else {
- source = activePersona?.tailorDraft || profile?.tailorDraft || DEFAULT_DRAFT_FALLBACK;
- }
- 
- const safeSource = source || {};
- const mergedDraft = {
- ...DEFAULT_DRAFT_FALLBACK,
- ...safeSource,
- positioningCore: { 
- ...DEFAULT_DRAFT_FALLBACK.positioningCore, 
- ...(safeSource.positioningCore || {}),
- anchors: {
- ...DEFAULT_DRAFT_FALLBACK.positioningCore.anchors,
- ...(safeSource.positioningCore?.anchors || {}),
- culturalReferences: safeSource.positioningCore?.anchors?.culturalReferences || [],
- ideologicalBias: safeSource.positioningCore?.anchors?.ideologicalBias || [],
- culturalSynthesis: safeSource.positioningCore?.anchors?.culturalSynthesis || [],
- trendClusters: safeSource.positioningCore?.anchors?.trendClusters || []
- },
- aestheticCore: {
- ...DEFAULT_DRAFT_FALLBACK.positioningCore.aestheticCore,
- ...(safeSource.positioningCore?.aestheticCore || {}),
- silhouettes: safeSource.positioningCore?.aestheticCore?.silhouettes || [],
- materiality: safeSource.positioningCore?.aestheticCore?.materiality || [],
- tags: safeSource.positioningCore?.aestheticCore?.tags || []
- },
- exclusionPrinciples: safeSource.positioningCore?.exclusionPrinciples || []
- },
- expressionEngine: { 
- ...DEFAULT_DRAFT_FALLBACK.expressionEngine, 
- ...(safeSource.expressionEngine || {}),
- brandIdentity: {
- ...DEFAULT_DRAFT_FALLBACK.expressionEngine.brandIdentity,
- ...(safeSource.expressionEngine?.brandIdentity || safeSource.brandIdentity || {}),
- palette: safeSource.expressionEngine?.brandIdentity?.palette || safeSource.brandIdentity?.palette || ['#000000', '#FFFFFF']
- },
- chromaticRegistry: {
- ...DEFAULT_DRAFT_FALLBACK.expressionEngine.chromaticRegistry,
- ...(safeSource.expressionEngine?.chromaticRegistry || {}),
- primaryPalette: safeSource.expressionEngine?.chromaticRegistry?.primaryPalette || []
- },
- typographyIntent: {
- ...DEFAULT_DRAFT_FALLBACK.expressionEngine.typographyIntent,
- ...(safeSource.expressionEngine?.typographyIntent || {})
- },
- narrativeVoice: {
- ...DEFAULT_DRAFT_FALLBACK.expressionEngine.narrativeVoice,
- ...(safeSource.expressionEngine?.narrativeVoice || {})
- }
- },
- strategicVectors: { 
- ...DEFAULT_DRAFT_FALLBACK.strategicVectors, 
- ...(safeSource.strategicVectors || {}),
- desireVectors: {
- ...DEFAULT_DRAFT_FALLBACK.strategicVectors.desireVectors,
- ...(safeSource.strategicVectors?.desireVectors || {}),
- deepen: safeSource.strategicVectors?.desireVectors?.deepen || [],
- reduce: safeSource.strategicVectors?.desireVectors?.reduce || [],
- experiment: safeSource.strategicVectors?.desireVectors?.experiment || [],
- refuse: safeSource.strategicVectors?.desireVectors?.refuse || []
- },
- saturationAwareness: {
- ...DEFAULT_DRAFT_FALLBACK.strategicVectors.saturationAwareness,
- ...(safeSource.strategicVectors?.saturationAwareness || {}),
- oversaturatedClusters: safeSource.strategicVectors?.saturationAwareness?.oversaturatedClusters || [],
- fragileDifferentiators: safeSource.strategicVectors?.saturationAwareness?.fragileDifferentiators || []
- }
- },
- diagnostics: { ...DEFAULT_DRAFT_FALLBACK.diagnostics, ...(safeSource.diagnostics || {}) },
- strategicSummary: { ...DEFAULT_DRAFT_FALLBACK.strategicSummary, ...(safeSource.strategicSummary || {}) },
- celestialCalibration: { ...DEFAULT_DRAFT_FALLBACK.celestialCalibration, ...(safeSource.celestialCalibration || {}) }
- };
- setDraft(mergedDraft);
- 
- setPersonaName(activePersona?.name || '');
- setPersonaKey(activePersona?.apiKey || '');
- setAiSignature(mergedDraft.aiSignature || '');
- }, [activePersonaId, profile?.tailorDraft, activePersona]);
+  useEffect(() => {
+    if (!activePersonaId || !activePersona) return;
+
+    // Defensive Initialization: Ensure draft structure is complete
+    const localDraft = localStorage.getItem(`mimi_tailor_draft_${activePersonaId}`);
+    let source;
+    if (localDraft) {
+      try {
+        source = JSON.parse(localDraft);
+      } catch (e) {
+        source = activePersona?.tailorDraft || profile?.tailorDraft || DEFAULT_DRAFT_FALLBACK;
+      }
+    } else {
+      source = activePersona?.tailorDraft || profile?.tailorDraft || DEFAULT_DRAFT_FALLBACK;
+    }
+    
+    const safeSource = source || {};
+    const mergedDraft = {
+      ...DEFAULT_DRAFT_FALLBACK,
+      ...safeSource,
+      positioningCore: { 
+        ...DEFAULT_DRAFT_FALLBACK.positioningCore, 
+        ...(safeSource.positioningCore || {}),
+        anchors: {
+          ...DEFAULT_DRAFT_FALLBACK.positioningCore.anchors,
+          ...(safeSource.positioningCore?.anchors || {}),
+          culturalReferences: safeSource.positioningCore?.anchors?.culturalReferences || [],
+          ideologicalBias: safeSource.positioningCore?.anchors?.ideologicalBias || [],
+          culturalSynthesis: safeSource.positioningCore?.anchors?.culturalSynthesis || [],
+          trendClusters: safeSource.positioningCore?.anchors?.trendClusters || []
+        },
+        aestheticCore: {
+          ...DEFAULT_DRAFT_FALLBACK.positioningCore.aestheticCore,
+          ...(safeSource.positioningCore?.aestheticCore || {}),
+          silhouettes: safeSource.positioningCore?.aestheticCore?.silhouettes || [],
+          materiality: safeSource.positioningCore?.aestheticCore?.materiality || [],
+          tags: safeSource.positioningCore?.aestheticCore?.tags || []
+        },
+        exclusionPrinciples: safeSource.positioningCore?.exclusionPrinciples || []
+      },
+      expressionEngine: { 
+        ...DEFAULT_DRAFT_FALLBACK.expressionEngine, 
+        ...(safeSource.expressionEngine || {}),
+        brandIdentity: {
+          ...DEFAULT_DRAFT_FALLBACK.expressionEngine.brandIdentity,
+          ...(safeSource.expressionEngine?.brandIdentity || safeSource.brandIdentity || {}),
+          palette: safeSource.expressionEngine?.brandIdentity?.palette || safeSource.brandIdentity?.palette || ['#000000', '#FFFFFF']
+        },
+        chromaticRegistry: {
+          ...DEFAULT_DRAFT_FALLBACK.expressionEngine.chromaticRegistry,
+          ...(safeSource.expressionEngine?.chromaticRegistry || {}),
+          primaryPalette: safeSource.expressionEngine?.chromaticRegistry?.primaryPalette || []
+        },
+        typographyIntent: {
+          ...DEFAULT_DRAFT_FALLBACK.expressionEngine.typographyIntent,
+          ...(safeSource.expressionEngine?.typographyIntent || {})
+        },
+        narrativeVoice: {
+          ...DEFAULT_DRAFT_FALLBACK.expressionEngine.narrativeVoice,
+          ...(safeSource.expressionEngine?.narrativeVoice || {})
+        }
+      },
+      strategicVectors: { 
+        ...DEFAULT_DRAFT_FALLBACK.strategicVectors, 
+        ...(safeSource.strategicVectors || {}),
+        desireVectors: {
+          ...DEFAULT_DRAFT_FALLBACK.strategicVectors.desireVectors,
+          ...(safeSource.strategicVectors?.desireVectors || {}),
+          deepen: safeSource.strategicVectors?.desireVectors?.deepen || [],
+          reduce: safeSource.strategicVectors?.desireVectors?.reduce || [],
+          experiment: safeSource.strategicVectors?.desireVectors?.experiment || [],
+          refuse: safeSource.strategicVectors?.desireVectors?.refuse || []
+        },
+        saturationAwareness: {
+          ...DEFAULT_DRAFT_FALLBACK.strategicVectors.saturationAwareness,
+          ...(safeSource.strategicVectors?.saturationAwareness || {}),
+          oversaturatedClusters: safeSource.strategicVectors?.saturationAwareness?.oversaturatedClusters || [],
+          fragileDifferentiators: safeSource.strategicVectors?.saturationAwareness?.fragileDifferentiators || []
+        }
+      },
+      diagnostics: { ...DEFAULT_DRAFT_FALLBACK.diagnostics, ...(safeSource.diagnostics || {}) },
+      strategicSummary: { ...DEFAULT_DRAFT_FALLBACK.strategicSummary, ...(safeSource.strategicSummary || {}) },
+      celestialCalibration: { ...DEFAULT_DRAFT_FALLBACK.celestialCalibration, ...(safeSource.celestialCalibration || {}) }
+    };
+    setDraft(mergedDraft);
+    
+    setPersonaName(activePersona?.name || '');
+    setPersonaKey(activePersona?.apiKey || '');
+    setAiSignature(mergedDraft.aiSignature || '');
+  }, [activePersonaId, activePersona]);
 
  useEffect(() => {
  if (draft?.expressionEngine?.typographyIntent?.styleDescription) {
@@ -774,22 +801,39 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  }
  }, [initialOverrides]);
 
- const updateDraft = (patch: any) => { if (draft) setDraft(prev => ({ ...prev!, ...patch, draftStatus: 'provisional' })); };
+ const updateDraft = (patch: any) => { 
+   if (draft) {
+     pushToHistory();
+     setDraft(prev => ({ ...prev!, ...patch, draftStatus: 'provisional' })); 
+   }
+ };
  
  const updatePositioning = (field: string, val: any) => {
- if (draft) setDraft(prev => prev ? ({ ...prev, draftStatus: 'provisional', positioningCore: { ...prev.positioningCore, [field]: val } }) : null);
+   if (draft) {
+     pushToHistory();
+     setDraft(prev => prev ? ({ ...prev, draftStatus: 'provisional', positioningCore: { ...prev.positioningCore, [field]: val } }) : null);
+   }
  };
  
  const updateExpression = (field: string, val: any) => {
- if (draft) setDraft(prev => prev ? ({ ...prev, draftStatus: 'provisional', expressionEngine: { ...prev.expressionEngine, [field]: val } }) : null);
+   if (draft) {
+     pushToHistory();
+     setDraft(prev => prev ? ({ ...prev, draftStatus: 'provisional', expressionEngine: { ...prev.expressionEngine, [field]: val } }) : null);
+   }
  };
  
  const updateAesthetic = (field: string, val: any) => {
- if (draft) setDraft(prev => prev ? ({ ...prev, draftStatus: 'provisional', expressionEngine: { ...prev.expressionEngine, [field]: val } }) : null);
+   if (draft) {
+     pushToHistory();
+     setDraft(prev => prev ? ({ ...prev, draftStatus: 'provisional', expressionEngine: { ...prev.expressionEngine, [field]: val } }) : null);
+   }
  };
 
  const updateStrategic = (field: string, val: any) => {
- if (draft) setDraft(prev => prev ? ({ ...prev, draftStatus: 'provisional', strategicVectors: { ...prev.strategicVectors, [field]: val } }) : null);
+   if (draft) {
+     pushToHistory();
+     setDraft(prev => prev ? ({ ...prev, draftStatus: 'provisional', strategicVectors: { ...prev.strategicVectors, [field]: val } }) : null);
+   }
  };
 
  const updateAnchor = (field: string, val: string) => { 
@@ -1120,6 +1164,16 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <LayoutGrid size={12} /> Return to Blueprint
  </button>
  )}
+
+ {history.length > 0 && (
+ <button 
+ onClick={undo}
+ className="flex items-center gap-2 px-4 py-2 bg-nous-base text-nous-subtle rounded-none font-sans text-[8px] uppercase tracking-widest font-black hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+ title="Undo last action"
+ >
+ <History size={12} /> Undo
+ </button>
+ )}
  
  <button 
  onClick={async () => {
@@ -1171,6 +1225,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  try {
  const json = JSON.parse(event.target?.result as string);
  if (json && typeof json === 'object' && 'positioningCore' in json) {
+ pushToHistory();
  setDraft({ ...(json as TailorLogicDraft), draftStatus: 'provisional' });
  window.dispatchEvent(new CustomEvent('mimi:registry_alert', {
  detail: { message: 'Tailor Logic imported successfully.', type: 'success' }
@@ -1283,7 +1338,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  <div className="grid grid-cols-2 gap-8">
  <div className="space-y-2">
  <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">Silhouette</span>
- <p className="font-serif italic text-xl">{draft.positioningCore.aestheticCore.silhouettes.join(', ') ||"Undefined"}</p>
+ <p className="font-serif italic text-xl">{(draft.positioningCore.aestheticCore.silhouettes || []).join(', ') || "Undefined"}</p>
  </div>
  <div className="space-y-2">
  <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">Era Focus</span>
@@ -1490,7 +1545,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  {presetNames.map(name => {
  const p = VISUAL_PRESETS.find(pr => pr.name === name);
  if (!p) return null;
- const isActive = draft.positioningCore.aestheticCore.silhouettes.join(',') === p.config.positioningCore.aestheticCore.silhouettes.join(',') && 
+ const isActive = (draft.positioningCore.aestheticCore.silhouettes || []).join(',') === (p.config.positioningCore.aestheticCore.silhouettes || []).join(',') && 
  draft.positioningCore.aestheticCore.eraBias === p.config.positioningCore.aestheticCore.eraBias;
  return (
  <button 
@@ -1606,7 +1661,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  if (presetFilter.strictPalette && p.config.visual_guidance?.strict_palette?.join(', ') !== presetFilter.strictPalette) return false;
  return true;
  }).map(p => {
- const isSelected = draft?.positioningCore.aestheticCore.silhouettes.join(',') === p.config.positioningCore.aestheticCore.silhouettes.join(',') &&
+ const isSelected = (draft?.positioningCore.aestheticCore.silhouettes || []).join(',') === (p.config.positioningCore.aestheticCore.silhouettes || []).join(',') &&
  draft?.positioningCore.aestheticCore.eraBias === p.config.positioningCore.aestheticCore.eraBias;
  return (
  <button key={p.name} onClick={() => applyVisualPreset(p)} className={`p-4 border rounded-none transition-all group flex flex-col items-center gap-3 relative ${isSelected ? 'border-nous-border bg-nous-base ' : 'border-nous-border hover:border-nous-border '}`}>

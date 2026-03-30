@@ -37,9 +37,9 @@ export const modulateSemioticContext = (
     // We create a "Modulation Matrix" instruction for the AI
     return `
     SEMIOTIC MODULATION MATRIX:
-    - Primary Archetypes: ${archetypes.join(', ')}
-    - Interest Nodes: ${interests.join(', ')}
-    - Scry Directives (Aesthetic Rules): ${scryDirectives.join('; ')}
+    - Primary Archetypes: ${archetypes?.join(', ') || 'N/A'}
+    - Interest Nodes: ${interests?.join(', ') || 'N/A'}
+    - Scry Directives (Aesthetic Rules): ${scryDirectives?.join('; ') || 'N/A'}
     - Desire Vectors: Deepen ${desireVectors?.deepen?.join(', ') || 'N/A'}, Reduce ${desireVectors?.reduce?.join(', ') || 'N/A'}
     - Applied Tone: ${tone || 'Standard'}
     - Input Frequency: "${input.slice(0, 100)}..."

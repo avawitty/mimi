@@ -57,20 +57,41 @@ export const TheOracle: React.FC = () => {
       <div className="p-4 md:p-8 pt-8 md:pt-12 space-y-10 max-w-5xl mx-auto w-full">
         
         {/* HEADER */}
-        <div className="text-center md:text-left">
-          <motion.h1 
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="text-3xl md:text-5xl font-serif italic text-nous-text mb-2 md:mb-4 flex items-center justify-center md:justify-start gap-4"
+        <div className="text-center md:text-left flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <motion.h1 
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              className="text-3xl md:text-5xl font-serif italic text-nous-text mb-2 md:mb-4 flex items-center justify-center md:justify-start gap-4"
+            >
+              <Sparkles size={28} className="text-nous-subtle hidden md:block" />
+              The Oracle
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+              className="text-[9px] md:text-xs font-sans uppercase tracking-[0.2em] text-nous-subtle"
+            >
+              Your Daily Aesthetic Horoscope
+            </motion.p>
+          </div>
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            className="flex items-center justify-center gap-4"
           >
-            <Sparkles size={28} className="text-nous-subtle hidden md:block" />
-            The Oracle
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="text-[9px] md:text-xs font-sans uppercase tracking-[0.2em] text-nous-subtle"
-          >
-            Your Daily Aesthetic Horoscope
-          </motion.p>
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent('mimi:open_scribe', { detail: 'mimi' }))}
+              className="px-6 py-3 border border-nous-border bg-nous-base hover:bg-nous-base0/50 transition-colors flex items-center gap-2 font-sans text-[9px] uppercase tracking-widest font-black text-nous-text"
+            >
+              <Sparkles size={14} />
+              Consult Mimi
+            </button>
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent('mimi:open_scribe', { detail: 'cyrus' }))}
+              className="px-6 py-3 border border-nous-border bg-nous-base hover:bg-nous-base0/50 transition-colors flex items-center gap-2 font-sans text-[9px] uppercase tracking-widest font-black text-nous-text"
+            >
+              <Briefcase size={14} />
+              Consult Cyrus
+            </button>
+          </motion.div>
         </div>
 
         {/* DAILY READING - Scaled specifically for mobile legibility */}

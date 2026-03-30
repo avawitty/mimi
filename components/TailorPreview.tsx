@@ -25,49 +25,63 @@ export const TailorPreview: React.FC<TailorPreviewProps> = ({ draft, activePerso
  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
  const lastGeneratedDraft = useRef<string>('');
 
- const generatePreview = async (force = false, customPrompt?: string) => {
- const currentDraftString = JSON.stringify({
- eraBias: draft.positioningCore.aestheticCore.eraBias,
- presentation: draft.positioningCore.aestheticCore.presentation,
- silhouettes: draft.positioningCore.aestheticCore.silhouettes,
- materiality: draft.positioningCore.aestheticCore.materiality,
- chromatic: draft.expressionEngine.chromaticRegistry,
- customPrompt
- });
+  const generatePreview = async (force = false, customPrompt?: string) => {
+    // Use visionEdit state if customPrompt is not provided (for the debounced auto-refresh)
+    const effectiveCustomPrompt = customPrompt !== undefined ? customPrompt : visionEdit;
 
- if (!force && currentDraftString === lastGeneratedDraft.current) return;
+    const currentDraftString = JSON.stringify({
+      eraBias: draft.positioningCore.aestheticCore.eraBias,
+      presentation: draft.positioningCore.aestheticCore.presentation,
+      silhouettes: draft.positioningCore.aestheticCore.silhouettes,
+      materiality: draft.positioningCore.aestheticCore.materiality,
+      chromatic: draft.expressionEngine.chromaticRegistry,
+      culturalReferences: draft.positioningCore.anchors.culturalReferences,
+      ideologicalBias: draft.positioningCore.anchors.ideologicalBias,
+      authorityClaim: draft.positioningCore.authorityClaim,
+      narrativeVoice: draft.expressionEngine.narrativeVoice,
+      customPrompt: effectiveCustomPrompt
+    });
 
- setIsLoading(true);
- setError(null);
- lastGeneratedDraft.current = currentDraftString;
+    if (!force && currentDraftString === lastGeneratedDraft.current) return;
 
- try {
- const presentationStr = draft.positioningCore.aestheticCore.presentation ? ` Form & Presentation: ${draft.positioningCore.aestheticCore.presentation}.` : '';
- let prompt = `A high-end editorial fashion photograph, centered composition, sharp focus, professional lighting, representing the aesthetic DNA: ${draft.positioningCore.aestheticCore.eraBias}.${presentationStr} silhouettes: ${draft.positioningCore.aestheticCore.silhouettes.join(', ')}, materiality: ${draft.positioningCore.aestheticCore.materiality.join(', ')}.`;
- 
- if (customPrompt) {
- prompt += ` Additional vision guidance: ${customPrompt}`;
- }
- 
- // We pass a mock profile object that generateZineImage expects
- const mockProfile = { tailorDraft: draft };
- 
- const url = await generateZineImage(
- prompt, 
- '3:4', 
- '1K', 
- mockProfile, 
- true, // isLite
- apiKey
- );
- 
- setPreviewUrl(url);
- } catch (err: any) {
- handleError(err,"Failed to manifest preview.");
- } finally {
- setIsLoading(false);
- }
- };
+    setIsLoading(true);
+    setError(null);
+    lastGeneratedDraft.current = currentDraftString;
+
+    try {
+      const presentationStr = draft.positioningCore.aestheticCore.presentation ? ` Form & Presentation: ${draft.positioningCore.aestheticCore.presentation}.` : '';
+      const silhouettesStr = (draft.positioningCore.aestheticCore.silhouettes || []).length > 0 ? ` silhouettes: ${draft.positioningCore.aestheticCore.silhouettes.join(', ')}.` : '';
+      const materialityStr = (draft.positioningCore.aestheticCore.materiality || []).length > 0 ? ` materiality: ${draft.positioningCore.aestheticCore.materiality.join(', ')}.` : '';
+      const anchorsStr = (draft.positioningCore.anchors.culturalReferences || []).length > 0 ? ` cultural anchors: ${draft.positioningCore.anchors.culturalReferences.join(', ')}.` : '';
+      const ideologyStr = (draft.positioningCore.anchors.ideologicalBias || []).length > 0 ? ` ideological bias: ${draft.positioningCore.anchors.ideologicalBias.join(', ')}.` : '';
+      const chromaticStr = ` chromatic logic: base ${draft.expressionEngine.chromaticRegistry.baseNeutral}, accent ${draft.expressionEngine.chromaticRegistry.accentSignal}, palette: ${draft.expressionEngine.chromaticRegistry.primaryPalette.map(p => p.name).join(', ')}.`;
+      const voiceStr = ` narrative tone: ${draft.expressionEngine.narrativeVoice.emotionalTemperature} and ${draft.expressionEngine.narrativeVoice.structureBias}.`;
+      
+      let prompt = `A high-end editorial fashion photograph, centered composition, sharp focus, professional lighting, representing the aesthetic DNA: ${draft.positioningCore.aestheticCore.eraBias}.${presentationStr}${silhouettesStr}${materialityStr}${anchorsStr}${ideologyStr}${chromaticStr}${voiceStr} Authority claim: ${draft.positioningCore.authorityClaim}.`;
+      
+      if (effectiveCustomPrompt) {
+        prompt += ` Additional vision guidance: ${effectiveCustomPrompt}`;
+      }
+      
+      // We pass a mock profile object that generateZineImage expects
+      const mockProfile = { tailorDraft: draft };
+      
+      const url = await generateZineImage(
+        prompt, 
+        '3:4', 
+        '1K', 
+        mockProfile, 
+        true, // isLite
+        apiKey
+      );
+      
+      setPreviewUrl(url);
+    } catch (err: any) {
+      handleError(err, "Failed to manifest preview.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
  const [isSaved, setIsSaved] = useState(false);
 
@@ -96,17 +110,17 @@ export const TailorPreview: React.FC<TailorPreviewProps> = ({ draft, activePerso
  setIsEditing(false);
  };
 
- useEffect(() => {
- if (debounceTimer.current) clearTimeout(debounceTimer.current);
- 
- debounceTimer.current = setTimeout(() => {
- generatePreview();
- }, 3000); // 3 second debounce
+  useEffect(() => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    
+    debounceTimer.current = setTimeout(() => {
+      generatePreview();
+    }, 3000); // 3 second debounce
 
- return () => {
- if (debounceTimer.current) clearTimeout(debounceTimer.current);
- };
- }, [draft]);
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, [draft, visionEdit]);
 
  const PreviewContent = (
  <>
