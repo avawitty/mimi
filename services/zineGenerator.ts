@@ -471,7 +471,7 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
             }
             
             try {
-                const { generateExecutionLayer } = await import("./geminiService");
+                const { generateExecutionLayer, generateGeoBlock } = await import("./geminiService");
                 const analysisContext = JSON.stringify({
                     title: content.title,
                     oracular_mirror: content.oracular_mirror,
@@ -482,8 +482,20 @@ ${validComponents.map(c => `- ${c.title || 'Component'}: ${c.url || c.content?.u
                 if (executionLayer) {
                     content.executionLayer = executionLayer;
                 }
+
+                if (zineOptions?.includeGeoBlock) {
+                    const geoBlock = await generateGeoBlock(analysisContext);
+                    if (geoBlock) {
+                        content.geoBlock = geoBlock;
+                        // Also save it to the user's archive if profile is available
+                        if (profile?.uid) {
+                            const { archiveManager } = await import("./archiveManager");
+                            await archiveManager.saveGeoBlock(profile.uid, geoBlock);
+                        }
+                    }
+                }
             } catch (e) {
-                console.warn("MIMI // Failed to generate execution layer", e);
+                console.warn("MIMI // Failed to generate execution layer or GEO block", e);
             }
             
             return { content };

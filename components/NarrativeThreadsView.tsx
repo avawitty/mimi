@@ -6,7 +6,7 @@ import { fetchUserZines } from '../services/firebaseUtils';
 import { ZineMetadata } from '../types';
 import { useSonicResonance } from '../hooks/useSonicResonance';
 import { ZineCoverCard } from './ZineCoverCard';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Layers } from 'lucide-react';
 
 interface LoomNode extends d3.SimulationNodeDatum {
  id: string;
@@ -33,6 +33,8 @@ export const NarrativeThreadsView: React.FC = () => {
  const [renderLinks, setRenderLinks] = useState<LoomLink[]>([]);
  
  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+ const [geoBlock, setGeoBlock] = useState<any | null>(null);
+ const [isExtracting, setIsExtracting] = useState(false);
  const containerRef = useRef<HTMLDivElement>(null);
  const { playDrone, playChime } = useSonicResonance();
 
@@ -251,14 +253,99 @@ export const NarrativeThreadsView: React.FC = () => {
  </p>
  </div>
  <button 
- onClick={() => setSelectedNode(null)}
+ onClick={() => {
+ setSelectedNode(null);
+ setGeoBlock(null);
+ }}
  className="p-2 border border-nous-border hover:bg-nous-base text-nous-subtle hover:text-nous-subtle transition-colors"
  >
  <X size={20} />
  </button>
  </div>
  
+ <div className="p-4 border-b border-nous-border bg-nous-base0/5">
+ <button 
+ onClick={async () => {
+ if (isExtracting) return;
+ setIsExtracting(true);
+ const { generateGeoBlock } = await import('../services/geminiService');
+ const content = filteredZines.map(z => z.content.oracular_mirror).join('\n\n');
+ window.dispatchEvent(new CustomEvent('mimi:registry_alert', {
+ detail: { message: "Extracting structure...", type: 'info' }
+ }));
+ try {
+ const extracted = await generateGeoBlock(content);
+ if (extracted) {
+ setGeoBlock(extracted);
+ window.dispatchEvent(new CustomEvent('mimi:registry_alert', {
+ detail: {
+ message: `GEO Extracted: ${extracted.concepts.length} concepts, ${extracted.frameworks.length} frameworks.`,
+ type: 'success'
+ }
+ }));
+ }
+ } catch (e) {
+ window.dispatchEvent(new CustomEvent('mimi:registry_alert', {
+ detail: { message: "Failed to extract structure.", type: 'error' }
+ }));
+ } finally {
+ setIsExtracting(false);
+ }
+ }}
+ disabled={isExtracting}
+ className="w-full py-3 border border-primary text-primary hover:bg-primary hover:text-nous-base font-sans text-[10px] uppercase tracking-widest transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+ >
+ {isExtracting ? <Loader2 size={14} className="animate-spin" /> : <Layers size={14} />}
+ {isExtracting ? 'Extracting...' : 'Extract Structure (GEO)'}
+ </button>
+ </div>
+
  <div className="flex-1 overflow-y-auto p-8 space-y-8">
+ {geoBlock && (
+ <div className="space-y-6 mb-8 pb-8 border-b border-nous-border">
+ <h4 className="font-sans text-[10px] uppercase tracking-widest text-primary">Structured Output</h4>
+ 
+ {geoBlock.concepts && geoBlock.concepts.length > 0 && (
+ <div className="space-y-4">
+ <h5 className="font-serif italic text-sm text-nous-subtle">Concepts</h5>
+ {geoBlock.concepts.map((concept: any, i: number) => (
+ <div key={i} className="bg-nous-base0/5 p-4 border border-nous-border">
+ <span className="font-bold text-nous-text block mb-1">{concept.name}</span>
+ <span className="font-mono text-[10px] text-nous-subtle">{concept.description}</span>
+ </div>
+ ))}
+ </div>
+ )}
+
+ {geoBlock.frameworks && geoBlock.frameworks.length > 0 && (
+ <div className="space-y-4">
+ <h5 className="font-serif italic text-sm text-nous-subtle">Frameworks</h5>
+ {geoBlock.frameworks.map((fw: any, i: number) => (
+ <div key={i} className="bg-nous-base0/5 p-4 border border-nous-border">
+ <span className="font-bold text-nous-text block mb-2">{fw.title}</span>
+ <ul className="list-disc list-inside font-mono text-[10px] text-nous-subtle space-y-1">
+ {fw.steps.map((step: string, j: number) => (
+ <li key={j}>{step}</li>
+ ))}
+ </ul>
+ </div>
+ ))}
+ </div>
+ )}
+ 
+ {geoBlock.citableLines && geoBlock.citableLines.length > 0 && (
+ <div className="space-y-4">
+ <h5 className="font-serif italic text-sm text-nous-subtle">Citable Lines</h5>
+ {geoBlock.citableLines.map((line: string, i: number) => (
+ <blockquote key={i} className="border-l-2 border-primary pl-3 py-1 font-serif italic text-xs text-nous-text">
+ "{line}"
+ </blockquote>
+ ))}
+ </div>
+ )}
+ </div>
+ )}
+
  {filteredZines.map(zine => (
  <div key={zine.id} className="w-full">
  <ZineCoverCard zine={zine} onClick={() => {}} />

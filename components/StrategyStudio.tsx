@@ -47,6 +47,7 @@ export const StrategyStudio = () => {
  const [strategyOutput, setStrategyOutput] = useState<StrategyAudit | null>(null);
  const [isSaving, setIsSaving] = useState(false);
  const [isExporting, setIsExporting] = useState(false);
+ const [isExtracting, setIsExtracting] = useState(false);
  const fileInputRef = useRef<HTMLInputElement>(null);
 
  const [showArchiveModal, setShowArchiveModal] = useState(false);
@@ -272,6 +273,29 @@ export const StrategyStudio = () => {
  alert("Failed to export audit.");
  } finally {
  setIsSaving(false);
+ }
+ };
+
+ const handleExtractStructure = async () => {
+ if (!strategyOutput || !user) return;
+ setIsExtracting(true);
+ try {
+ const { generateGeoBlock } = await import('../services/geminiService');
+ const { archiveManager } = await import('../services/archiveManager');
+ 
+ const contentToExtract = JSON.stringify(strategyOutput.read);
+ const geoBlock = await generateGeoBlock(contentToExtract);
+ 
+ if (geoBlock) {
+ await archiveManager.saveGeoBlock(user.uid, geoBlock);
+ } else {
+ throw new Error("Failed to generate GEO block");
+ }
+ } catch (error) {
+ console.error("Failed to extract structure:", error);
+ alert("Failed to extract structure.");
+ } finally {
+ setIsExtracting(false);
  }
  };
 
@@ -653,6 +677,14 @@ export const StrategyStudio = () => {
  >
  {isSaving ? <Loader2 size={14} className="animate-spin"/> : <Save size={14} />}
  [ EXPORT TO DOSSIER ]
+ </button>
+ <button 
+ onClick={handleExtractStructure}
+ disabled={isExtracting}
+ className="py-3 px-6 border border-nous-border text-nous-text font-mono text-[10px] tracking-widest uppercase hover:bg-nous-base transition-colors flex items-center justify-center gap-2"
+ >
+ {isExtracting ? <Loader2 size={14} className="animate-spin"/> : <Sparkles size={14} />}
+ [ EXTRACT STRUCTURE ]
  </button>
  <button 
  onClick={handleExportTasks}

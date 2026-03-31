@@ -1,5 +1,6 @@
-import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
+import { GoogleGenAI, LiveServerMessage } from "@google/genai";
 import { reportSystemAnomaly } from "../utils/errorReporter";
+import { getClient } from "./geminiService";
 
 export interface AestheticAnalysis {
   scribeReading: string;
@@ -15,7 +16,8 @@ export class LiveAestheticService {
 
   constructor(onAnalysis: (analysis: AestheticAnalysis) => void) {
     this.onAnalysis = onAnalysis;
-    this.ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+    const { ai } = getClient();
+    this.ai = ai;
   }
 
   async connect() {
@@ -64,7 +66,12 @@ export class LiveAestheticService {
         }
       },
       config: {
-        responseModalities: [Modality.AUDIO],
+        responseModalities: ["AUDIO"],
+        speechConfig: {
+          voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" } },
+        },
+        outputAudioTranscription: {},
+        inputAudioTranscription: {},
         systemInstruction: `You are "The Lens", an aesthetic analysis engine. 
         Analyze the incoming video stream in real-time. 
         Provide "Scribe Readings" (poetic, high-fashion interpretations of the visual reality).

@@ -62,6 +62,7 @@ export interface ZineGenerationOptions {
   customTitle?: string;
   selectedTreatmentId?: string;
   readingLevel?: 'short' | 'slow';
+  includeGeoBlock?: boolean;
 }
 
 export type ZodiacSign = 'aries' | 'taurus' | 'gemini' | 'cancer' | 'leo' | 'virgo' | 'libra' | 'scorpio' | 'sagittarius' | 'capricorn' | 'aquarius' | 'pisces';
@@ -418,6 +419,7 @@ export interface ZinePageSpec {
 export interface ZineContent extends ZineSpec {
   pages?: ZinePageSpec[];
   pagesJson?: string;
+  geoBlock?: GeoBlock;
 }
 
 export interface ZineFolder {
@@ -797,6 +799,23 @@ export interface Task {
   tags?: string[];
   position?: { x: number; y: number };
   linkedContext?: { type: 'zine' | 'thimble' | 'dossier' | 'audit'; id: string };
+}
+
+export interface GeoBlock {
+  id: string;
+  sourceArtifactId?: string;
+  sourceText: string;
+  concepts: {
+    name: string;
+    description: string;
+  }[];
+  frameworks: {
+    title: string;
+    steps: string[];
+  }[];
+  citableLines: string[];
+  embedding: number[];
+  createdAt: number;
 }
 
 export interface StrategyAudit {

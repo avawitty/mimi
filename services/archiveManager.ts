@@ -106,6 +106,20 @@ export const archiveManager = {
     }
   },
 
+  async saveGeoBlock(userId: string, geoBlock: any): Promise<void> {
+    try {
+      const blockRef = doc(db, `users/${userId}/geo_blocks`, geoBlock.id);
+      await setDoc(blockRef, geoBlock);
+      
+      window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+        detail: { message: "GEO Block Indexed in Archive.", type: 'success' } 
+      }));
+    } catch (e) {
+      console.error("MIMI // Failed to save GEO block:", e);
+      throw e;
+    }
+  },
+
   async saveStrategyAudit(userId: string, audit: any): Promise<void> {
     try {
       let processedAudit = { ...audit };

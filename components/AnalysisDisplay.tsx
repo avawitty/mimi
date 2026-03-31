@@ -1096,6 +1096,61 @@ export const AnalysisDisplay: React.FC<{
  </section>
  )}
 
+ {/* 10.6 GEO BLOCK */}
+ {metadata.content.geoBlock && (
+ <section className="min-h-[100dvh] flex flex-col justify-center snap-start bg-nous-base text-nous-text print:min-h-0 print:py-12">
+ <div className="w-full px-6 md:px-24">
+ <SectionHeader label="Structured Output (GEO)" icon={Layers} color={accentColor} />
+ <div className="space-y-12">
+ {metadata.content.geoBlock.concepts && metadata.content.geoBlock.concepts.length > 0 && (
+ <div>
+ <h3 className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle mb-4">Named Concepts</h3>
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+ {metadata.content.geoBlock.concepts.map((concept: any, i: number) => (
+ <div key={i} className="border border-nous-border p-6 bg-nous-base0/5">
+ <h4 className="font-serif italic text-lg text-nous-text mb-2">{concept.name}</h4>
+ <p className="font-mono text-xs text-nous-subtle leading-relaxed">{concept.description}</p>
+ </div>
+ ))}
+ </div>
+ </div>
+ )}
+
+ {metadata.content.geoBlock.frameworks && metadata.content.geoBlock.frameworks.length > 0 && (
+ <div>
+ <h3 className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle mb-4">Frameworks</h3>
+ <div className="space-y-6">
+ {metadata.content.geoBlock.frameworks.map((framework: any, i: number) => (
+ <div key={i} className="border border-nous-border p-6 bg-nous-base0/5">
+ <h4 className="font-serif italic text-lg text-nous-text mb-4">{framework.title}</h4>
+ <ol className="list-decimal list-inside space-y-2 font-mono text-xs text-nous-subtle">
+ {framework.steps.map((step: string, j: number) => (
+ <li key={j} className="leading-relaxed">{step}</li>
+ ))}
+ </ol>
+ </div>
+ ))}
+ </div>
+ </div>
+ )}
+
+ {metadata.content.geoBlock.citableLines && metadata.content.geoBlock.citableLines.length > 0 && (
+ <div>
+ <h3 className="font-sans text-[10px] uppercase tracking-widest text-nous-subtle mb-4">Citable Lines</h3>
+ <div className="space-y-4">
+ {metadata.content.geoBlock.citableLines.map((line: string, i: number) => (
+ <blockquote key={i} className="border-l-2 border-primary pl-4 py-2 font-serif italic text-md text-nous-text">
+ "{line}"
+ </blockquote>
+ ))}
+ </div>
+ </div>
+ )}
+ </div>
+ </div>
+ </section>
+ )}
+
  {/* 11. PROVOCATION + CONTINUUM */}
  <footer className="min-h-[100dvh] flex flex-col items-center justify-center p-12 snap-start print:hidden text-center space-y-16">
  <div className="space-y-6 w-full px-6 md:px-24">

@@ -6,7 +6,7 @@ import {
   PocketItem, TailorLogicDraft, ZineMetadata, SeasonReport, 
   SanctuaryReport, InvestmentReport, TrendSynthesisReport, 
   TailorAuditReport, ProposalSection, Proposal, TasteProfile, ZinePageSpec, ZineGenerationOptions, Treatment,
-  TasteGraphNode, TasteGraphEdge, NarrativeThread, AestheticSignature, AestheticTrajectory, AestheticDNA, ExecutionLayer
+  TasteGraphNode, TasteGraphEdge, NarrativeThread, AestheticSignature, AestheticTrajectory, AestheticDNA, ExecutionLayer, GeoBlock
 } from "../types";
 import { modulateSemioticContext } from "./semioticModulator";
 import { fetchUserZines, fetchLatestLineageEntry } from "./firebaseUtils";
@@ -224,6 +224,87 @@ Return a JSON object conforming to the AestheticTrajectory interface.`;
     console.error("MIMI // Aesthetic Trajectory Calculation Error:", e);
   }
   return null;
+};
+
+export const generateGeoBlock = async (content: string): Promise<GeoBlock | null> => {
+  return await withResilience(async (ai) => {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.1-pro-preview',
+      contents: `You are a Generative Engine Optimization system.
+
+Given the content, extract and restructure it into machine-optimized knowledge units.
+
+1. Identify and name 1–3 core concepts.
+2. Extract or create 1–2 frameworks (step-based or structural models).
+3. Write 1–2 clean definitions (max 2 sentences each).
+4. Generate 2–3 citable lines (tight, quotable, high signal).
+5. Remove ambiguity and reduce fluff.
+
+Do not be poetic unless it improves clarity.
+Prioritize clarity, structure, and reuse.
+
+CONTENT TO STRUCTURE:
+${content}`,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            concepts: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  name: { type: Type.STRING },
+                  description: { type: Type.STRING }
+                },
+                required: ["name", "description"]
+              }
+            },
+            frameworks: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  title: { type: Type.STRING },
+                  steps: {
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING }
+                  }
+                },
+                required: ["title", "steps"]
+              }
+            },
+            citableLines: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING }
+            }
+          },
+          required: ["concepts", "frameworks", "citableLines"]
+        }
+      }
+    });
+
+    const data = JSON.parse(response.text || "{}");
+    
+    // Embed the structured text
+    const structuredText = JSON.stringify(data);
+    const embeddingResponse = await ai.models.embedContent({
+      model: 'gemini-embedding-2-preview',
+      contents: [structuredText],
+    });
+    const embedding = embeddingResponse.embeddings?.[0]?.values || [];
+
+    return {
+      id: crypto.randomUUID(),
+      sourceText: content,
+      concepts: data.concepts || [],
+      frameworks: data.frameworks || [],
+      citableLines: data.citableLines || [],
+      embedding,
+      createdAt: Date.now()
+    };
+  });
 };
 
 export const generateAestheticDNA = async (userInputs: string[]): Promise<AestheticDNA | null> => {

@@ -129,6 +129,18 @@ export const ZineConfiguration: React.FC<ZineConfigurationProps> = ({ zineOption
  className="bg-transparent border-b border-primary/20 /20 text-sm font-sans text-primary text-nous-text focus:outline-none focus:border-primary dark:focus:border-white pb-2 w-full"
  />
  </div>
+ <div className="flex flex-col gap-2 md:col-span-2 mt-4">
+ <label className="flex items-center gap-2 cursor-pointer">
+ <input 
+ type="checkbox" 
+ checked={zineOptions.includeGeoBlock || false}
+ onChange={(e) => setZineOptions({...zineOptions, includeGeoBlock: e.target.checked})}
+ className="accent-primary"
+ />
+ <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary/60 text-nous-text/60">Structured Output (GEO)</span>
+ </label>
+ <p className="text-[9px] text-nous-subtle font-sans ml-5">Append a Generative Engine Optimization block to the output.</p>
+ </div>
  </div>
  </div>
  

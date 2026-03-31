@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { LiveServerMessage, Modality, FunctionDeclaration, Type } from '@google/genai';
+import { LiveServerMessage, FunctionDeclaration } from '@google/genai';
 import { getClient } from '../services/geminiService';
 
 // Audio helpers
@@ -115,7 +115,7 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
         const sessionPromise = ai.live.connect({
           model: 'gemini-3.1-flash-live-preview',
           config: {
-            responseModalities: [Modality.AUDIO],
+            responseModalities: ["AUDIO"],
             systemInstruction: systemInstruction,
             speechConfig: {
               voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } }
@@ -123,21 +123,20 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
             inputAudioTranscription: {},
             outputAudioTranscription: {},
             tools: [
-              { googleSearch: {} },
               {
                 functionDeclarations: [
                   {
                     name: "saveToKnowledgeQueue",
                     description: "Save an insight, reference, or piece of knowledge to the user's Pocket (knowledge queue). Use this when you find something valuable on the web or during conversation that the user should retain.",
                     parameters: {
-                      type: Type.OBJECT,
+                      type: "OBJECT",
                       properties: {
                         content: {
-                          type: Type.STRING,
+                          type: "STRING",
                           description: "The knowledge, insight, or reference to save."
                         },
                         title: {
-                          type: Type.STRING,
+                          type: "STRING",
                           description: "A short, descriptive title for the knowledge."
                         }
                       },
@@ -146,9 +145,7 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
                   }
                 ]
               }
-            ],
-            // @ts-ignore
-            toolConfig: { includeServerSideToolInvocations: true }
+            ]
           },
           callbacks: {
             onopen: async () => {
