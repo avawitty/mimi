@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookOpen, Sparkles, Activity, ArrowRight, Search, Play, FileText, LayoutTemplate, MessageSquare, Loader2 } from 'lucide-react';
+import { BookOpen, Sparkles, Activity, ArrowRight, Search, Play, FileText, LayoutTemplate, MessageSquare, Loader2, History } from 'lucide-react';
 import { askCodex } from '../services/geminiService';
+import { useTheme, AestheticEra } from '../contexts/ThemeContext';
 
 type CodexTab = 'read' | 'use' | 'cases';
 
@@ -189,6 +190,66 @@ const PrincipleCard = ({ principle }: { principle: CodexPrinciple }) => {
   );
 };
 
+const SystemLineage = () => {
+  const { currentEra, setEra } = useTheme();
+
+  const eras: { id: AestheticEra; name: string; description: string }[] = [
+    {
+      id: 'genesis',
+      name: 'Genesis (v1)',
+      description: 'Raw, brutalist, high-contrast. Monospace typography and zero textures. The system in its most unrefined, computational state.'
+    },
+    {
+      id: 'editorial',
+      name: 'Editorial (v2)',
+      description: 'Clean, structured, and typographic. Public Sans and Cormorant Garamond. Focus on legibility and editorial layout without atmospheric interference.'
+    },
+    {
+      id: 'ethereal',
+      name: 'Ethereal (v3)',
+      description: 'The current manifestation. Luminescent text, paper textures, and Geist Variable. A blend of the digital and the physical.'
+    }
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.15 }}
+      className="mb-12 bg-nous-surface border border-nous-border p-6"
+    >
+      <div className="flex items-center gap-3 mb-6">
+        <History size={16} className="text-nous-text" />
+        <h2 className="font-mono text-[10px] uppercase tracking-widest text-nous-text">System Lineage</h2>
+      </div>
+      <p className="font-serif text-sm text-nous-subtle mb-6">
+        Mimi is a living artifact. The interface itself is a case study in aesthetic evolution. Select an era to resurrect its structural DNA across the entire application.
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {eras.map(era => (
+          <button
+            key={era.id}
+            onClick={() => setEra(era.id)}
+            className={`text-left p-4 border transition-all ${
+              currentEra === era.id 
+                ? 'border-nous-text bg-nous-text/5' 
+                : 'border-nous-border hover:border-nous-text/50'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-sans text-sm font-medium text-nous-text">{era.name}</h3>
+              {currentEra === era.id && <span className="w-2 h-2 rounded-full bg-nous-text" />}
+            </div>
+            <p className="font-serif text-xs text-nous-subtle leading-relaxed">
+              {era.description}
+            </p>
+          </button>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
 export const CodexView: React.FC = () => {
   const [askQuery, setAskQuery] = useState('');
   const [askResponse, setAskResponse] = useState<string | null>(null);
@@ -301,6 +362,9 @@ export const CodexView: React.FC = () => {
             )}
           </AnimatePresence>
         </motion.div>
+
+        {/* System Lineage */}
+        <SystemLineage />
 
         {/* Principles */}
         <motion.div

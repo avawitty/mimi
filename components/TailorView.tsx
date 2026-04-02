@@ -1249,26 +1249,27 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </div>
  </header>
 
- {/* --- VIEW MODE: BLUEPRINT DASHBOARD --- */}
+ {/* --- MAIN CONTENT AREA --- */}
+ <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+ 
+ {/* LEFT COL: BLUEPRINT OR EDITOR */}
+ <div className="md:col-span-8">
  <AnimatePresence mode="wait">
- {viewMode === 'blueprint' && (
+ {viewMode === 'blueprint' ? (
  <motion.div 
  key="blueprint"
  initial={{ opacity: 0, y: 10 }}
  animate={{ opacity: 1, y: 0 }}
  exit={{ opacity: 0, y: -10 }}
- className="grid grid-cols-1 md:grid-cols-12 gap-8"
+ className="grid grid-cols-1 md:grid-cols-2 gap-6"
  >
- {/* LEFT COL: THE SPECS */}
- <div className="md:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-
  {/* POSITIONING CARD */}
- <BlueprintCard label="Persona Positioning"subLabel="REF: POS-01"onClick={() => openEditor('positioning')} className="md:col-span-2">
+ <BlueprintCard label="Persona Positioning" subLabel="REF: POS-01" onClick={() => openEditor('positioning')} className="md:col-span-2">
  <div className="space-y-6">
  <div className="space-y-1">
  <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">Primary Reference</span>
  <p className="font-serif italic text-2xl md:text-3xl text-nous-text text-nous-text leading-tight">
- {draft.positioningCore.anchors.culturalReferences[0] ||"Undefined Anchor"}
+ {draft.positioningCore.anchors.culturalReferences[0] || "Undefined Anchor"}
  </p>
  </div>
  <div className="flex flex-wrap gap-2">
@@ -1305,15 +1306,15 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </BlueprintCard>
 
  {/* CHROMATIC CARD */}
- <BlueprintCard label="Chromatic Logic"subLabel="REF: CR-05"onClick={() => openEditor('chromatic')}>
+ <BlueprintCard label="Chromatic Logic" subLabel="REF: CR-05" onClick={() => openEditor('chromatic')}>
  <div className="space-y-4">
  <div className="flex gap-2">
- <div className="w-12 h-12 rounded-none border border-black/10"style={{ backgroundColor: draft.expressionEngine.chromaticRegistry.baseNeutral }} />
- <div className="w-12 h-12 rounded-none border border-black/10"style={{ backgroundColor: draft.expressionEngine.chromaticRegistry.accentSignal }} />
+ <div className="w-12 h-12 rounded-none border border-black/10" style={{ backgroundColor: draft.expressionEngine.chromaticRegistry.baseNeutral }} />
+ <div className="w-12 h-12 rounded-none border border-black/10" style={{ backgroundColor: draft.expressionEngine.chromaticRegistry.accentSignal }} />
  </div>
  <div className="flex flex-wrap gap-2">
  {draft.expressionEngine.chromaticRegistry.primaryPalette.slice(0, 4).map((c, i) => (
- <div key={i} className="w-6 h-6 rounded-none border border-black/5"style={{ backgroundColor: c.hex }} title={c.name} />
+ <div key={i} className="w-6 h-6 rounded-none border border-black/5" style={{ backgroundColor: c.hex }} title={c.name} />
  ))}
  </div>
  <p className="font-mono text-[9px] text-nous-subtle uppercase tracking-tight">
@@ -1323,10 +1324,10 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </BlueprintCard>
 
  {/* TYPOGRAPHY CARD */}
- <BlueprintCard label="Typographic DNA"subLabel="REF: TY-88"onClick={() => openEditor('aesthetic')}>
+ <BlueprintCard label="Typographic DNA" subLabel="REF: TY-88" onClick={() => openEditor('aesthetic')}>
  <div className="space-y-2 py-2">
  <span className="block font-sans text-[7px] uppercase tracking-widest text-nous-subtle">Primary Typeface</span>
- <p className="text-3xl"style={{ fontFamily: draft.expressionEngine.typographyIntent.styleDescription || 'serif' }}>
+ <p className="text-3xl" style={{ fontFamily: draft.expressionEngine.typographyIntent.styleDescription || 'serif' }}>
  {draft.expressionEngine.typographyIntent.styleDescription || 'Default Serif'}
  </p>
  <p className="font-serif italic text-sm text-nous-subtle">The quick brown fox jumps over the lazy dog.</p>
@@ -1334,7 +1335,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </BlueprintCard>
 
  {/* AESTHETIC CORE */}
- <BlueprintCard label="Visual Physics"subLabel="REF: PHY-09"onClick={() => openEditor('aesthetic')} className="md:col-span-2">
+ <BlueprintCard label="Visual Physics" subLabel="REF: PHY-09" onClick={() => openEditor('aesthetic')} className="md:col-span-2">
  <div className="grid grid-cols-2 gap-8">
  <div className="space-y-2">
  <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">Silhouette</span>
@@ -1342,7 +1343,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </div>
  <div className="space-y-2">
  <span className="font-sans text-[7px] uppercase tracking-widest text-nous-subtle">Era Focus</span>
- <p className="font-serif italic text-xl">{draft.positioningCore.aestheticCore.eraBias ||"Undefined"}</p>
+ <p className="font-serif italic text-xl">{draft.positioningCore.aestheticCore.eraBias || "Undefined"}</p>
  </div>
  <div className="space-y-2">
  <GlossaryTooltip 
@@ -1368,7 +1369,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </BlueprintCard>
 
  {/* BRAND KIT CARD */}
- <BlueprintCard label="Brand Identity"subLabel="REF: BR-01"onClick={() => openEditor('brand')} className="md:col-span-2">
+ <BlueprintCard label="Brand Identity" subLabel="REF: BR-01" onClick={() => openEditor('brand')} className="md:col-span-2">
  <div className="flex items-center gap-8">
  <div className="w-24 h-24 bg-nous-base border border-nous-border rounded-none flex items-center justify-center overflow-hidden">
  {draft.expressionEngine.brandIdentity?.logo ? (
@@ -1394,7 +1395,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </div>
  <div className="flex gap-2">
  {draft.expressionEngine.brandIdentity?.palette.map((hex, i) => (
- <div key={i} className="w-6 h-6 rounded-none border border-black/10"style={{ backgroundColor: hex }} />
+ <div key={i} className="w-6 h-6 rounded-none border border-black/10" style={{ backgroundColor: hex }} />
  ))}
  </div>
  </div>
@@ -1402,7 +1403,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </BlueprintCard>
 
  {/* VOICE CARD */}
- <BlueprintCard label="Narrative Voice"subLabel="REF: VC-22"onClick={() => openEditor('voice')}>
+ <BlueprintCard label="Narrative Voice" subLabel="REF: VC-22" onClick={() => openEditor('voice')}>
  <div className="space-y-4">
  <div className="flex flex-wrap gap-2">
  <span className="px-3 py-1 bg-nous-base border border-nous-border rounded-none font-sans text-[7px] uppercase font-black">{draft.expressionEngine.narrativeVoice.emotionalTemperature}</span>
@@ -1433,83 +1434,28 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </BlueprintCard>
 
  {/* SETTINGS CARD */}
- <BlueprintCard label="Mask Protocol"subLabel="SYS: ADMIN"onClick={() => openEditor('settings')}>
+ <BlueprintCard label="Mask Protocol" subLabel="SYS: ADMIN" onClick={() => openEditor('settings')}>
  <div className="flex items-center gap-3 text-nous-subtle">
  <Settings size={16} />
  <span className="font-sans text-[9px] uppercase tracking-widest font-black">Configure Identity</span>
  </div>
  </BlueprintCard>
- </div>
-
- {/* RIGHT COL: THE AUDIT */}
- <div className="md:col-span-4 flex flex-col gap-6">
- {/* Visual Manifest Preview */}
- <div className="bg-nous-base border border-nous-border p-6 rounded-none space-y-4">
- {/* Inside the RIGHT COL: THE AUDIT (Replacing the top Aesthetic Preview header) */}
- <div className="flex items-center justify-between border-b border-dashed border-nous-border pb-2">
- <span className="font-sans text-[7px] uppercase tracking-[0.3em] font-black text-nous-subtle">Aesthetic Analysis</span>
- <button 
- onClick={handleScryDirectives} 
- disabled={isAuditing}
- className="font-sans text-[7px] uppercase tracking-widest text-nous-text hover:text-nous-subtle flex items-center gap-1 transition-colors"
- >
- {isAuditing ? <Loader2 size={10} className="animate-spin"/> : <Radar size={10} />}
- Auto-Scry Directives
- </button>
- </div>
- {draft && activePersonaId && (
- <TailorPreview draft={draft} activePersonaId={activePersonaId} apiKey={activePersona?.apiKey} />
- )}
- <p className="font-serif italic text-[10px] text-nous-subtle leading-tight">
- A synthetic representation of your current aesthetic DNA.
- </p>
- </div>
-
- <div className="bg-nous-base dark:bg border border-nous-border p-8 h-full flex flex-col justify-between rounded-none">
- <div className="space-y-6">
- <div className="space-y-2">
- <div className="flex items-center gap-3 text-nous-text">
- <ShieldCheck size={24} />
- <span className="font-sans text-[9px] uppercase tracking-[0.4em] font-black">Alignment Protocol</span>
- {draft.draftStatus === 'provisional' && (
- <span className="px-2 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-none font-mono text-[8px] uppercase tracking-widest ml-auto">Unaligned</span>
- )}
- </div>
- <p className="font-serif italic text-sm text-nous-subtle leading-relaxed">
- Changes are local until aligned. Committing writes this logic to your active mask.
- </p>
- </div>
- <div className="space-y-3">
- <button onClick={handleAlign} disabled={isSaving} className="w-full py-4 bg-nous-text text-nous-base rounded-none font-sans text-[10px] uppercase tracking-[0.4em] font-black active:scale-95 transition-all flex items-center justify-center gap-3">
- {isSaving ? <Loader2 size={12} className="animate-spin"/> : <Check size={12} />}
- Align Logic
- </button>
- </div>
- </div>
- <div className="pt-8 border-t border-black/5 /5 opacity-40">
- <p className="font-mono text-[8px] uppercase tracking-widest text-center">Last Aligned: {new Date(draft.lastTailored).toLocaleDateString()}</p>
- </div>
- </div>
- </div>
  </motion.div>
- )}
-
- {/* --- VIEW MODE: EDITING FORMS --- */}
- {viewMode === 'edit' && (
+ ) : (
  <motion.div 
  key="editor"
  initial={{ opacity: 0, x: 20 }}
  animate={{ opacity: 1, x: 0 }}
  exit={{ opacity: 0, x: -20 }}
- className="bg-nous-base border border-nous-border rounded-none flex flex-col md:flex-row overflow-hidden min-h-[70vh]"
+ className="bg-nous-base border border-transparent md:border-nous-border rounded-none flex flex-col md:flex-row overflow-hidden min-h-[70vh]"
  >
  {/* SIDEBAR NAV */}
- <nav className="w-full md:w-64 bg-nous-base /20 border-b md:border-b-0 md:border-r border-nous-border p-6 flex flex-row md:flex-col gap-2 overflow-x-auto no-scrollbar md:overflow-visible shrink-0">
+ <nav className="w-full md:w-48 lg:w-56 bg-nous-base md:border-r border-nous-border p-6 flex flex-row md:flex-col gap-2 overflow-x-auto no-scrollbar md:overflow-visible shrink-0">
  {['positioning', 'celestial', 'aesthetic', 'chromatic', 'voice', 'vectors', 'shards', 'brand', 'drift', 'settings'].map(step => (
  <button
  key={step}
  onClick={() => setActiveStep(step as any)}
- className={`text-left px-4 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center justify-between whitespace-nowrap ${activeStep === step ? 'bg-nous-base text-nous-text text-nous-text border border-black/5 /5' : 'text-nous-subtle hover:text-nous-subtle'}`}
+ className={`text-left px-4 py-3 rounded-none font-sans text-[9px] uppercase tracking-widest font-black transition-all flex items-center justify-between whitespace-nowrap ${activeStep === step ? 'bg-nous-base text-nous-text border border-black/5' : 'text-nous-subtle hover:text-nous-text'}`}
  >
  {step} {activeStep === step && <ChevronRight size={12} />}
  </button>
@@ -1517,7 +1463,7 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </nav>
 
  {/* FORM CONTENT */}
- <div className="flex-1 p-8 md:p-16 overflow-y-auto no-scrollbar bg dark:bg">
+ <div className="flex-1 p-8 md:p-12 overflow-y-auto no-scrollbar bg-nous-base">
  <AnimatePresence mode="wait">
  <motion.div 
  key={activeStep}
@@ -1527,8 +1473,8 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  className="space-y-12 max-w-2xl mx-auto"
  >
  {/* HEADER */}
- <div className="space-y-2 border-b border-black/5 /5 pb-8">
- <h3 className="font-serif text-4xl italic tracking-tighter text-nous-text text-nous-text capitalize">{activeStep.replace(/([A-Z])/g, ' $1').trim()}.</h3>
+ <div className="space-y-2 pb-8">
+ <h3 className="font-serif text-4xl italic tracking-tighter text-nous-text capitalize">{activeStep.replace(/([A-Z])/g, ' $1').trim()}.</h3>
  <p className="font-sans text-[9px] uppercase tracking-widest text-nous-subtle font-black">Define the parameters of your world.</p>
  </div>
 
@@ -2793,9 +2739,13 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </motion.div>
  </AnimatePresence>
  </div>
+ </motion.div>
+ )}
+ </AnimatePresence>
+ </div>
 
- {/* ALIGN FOOTER */}
- <div className="p-8 border-t md:border-t-0 md:border-l border-nous-border bg-nous-base /20 flex flex-col shrink-0 md:w-80 lg:w-96 overflow-y-auto no-scrollbar">
+ {/* RIGHT COL: PERSISTENT AESTHETIC ANALYSIS */}
+ <div className="md:col-span-4 space-y-8">
  <div className="space-y-8">
  {/* Aesthetic Preview */}
  <div className="space-y-3">
@@ -2839,9 +2789,8 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </button>
  </div>
  </div>
- </motion.div>
- )}
- </AnimatePresence>
+ </div>
+ </div>
 
  <AnimatePresence>
  {showAuditOverlay && auditReport && (
@@ -2859,7 +2808,6 @@ export const TailorView: React.FC<{ initialOverrides?: any, onOverridesConsumed?
  </AnimatePresence>
 
  <input type="file"ref={fileInputRef} onChange={handleShardUpload} className="hidden"multiple accept="image/*"/>
- </div>
  </div>
  );
 };

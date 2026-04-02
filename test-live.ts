@@ -50,8 +50,7 @@ MANDATE: You have access to Google Search. You MUST use it to pull real-time inf
               }
             ]
           }
-        ],
-        toolConfig: { includeServerSideToolInvocations: true } as any,
+        ]
       }
     });
     console.log("Connected");

@@ -13,22 +13,9 @@ import { doc, updateDoc } from 'firebase/firestore';
 const TONE_STYLES: Record<string, { 
  wrapper: string, border: string, text: string, accent: string, aspect: string, grainOpacity: string, overlayColor: string, dark: any
 }> = {
- 'Cinematic Witness': { 
- wrapper: 'bg', border: 'border-nous-border', text: 'text-nous-text', accent: 'text-nous-subtle', aspect: 'aspect-video', grainOpacity: 'opacity-[0.08]', overlayColor: 'bg-white/70', 
- dark: { wrapper: 'bg', border: 'border-white/5', text: 'text', accent: 'text-nous-subtle', overlayColor: 'bg-nous-base/80' } 
- },
- 'Editorial Stillness': { 
- wrapper: 'bg', border: 'border-nous-border', text: 'text', accent: 'text', aspect: 'aspect-[3/4]', grainOpacity: 'opacity-[0.05]', overlayColor: 'bg/80', 
- dark: { wrapper: 'bg-black', border: 'border-white/10', text: 'text-nous-text', accent: 'text-nous-subtle', overlayColor: 'bg-black/90' } 
- },
- 'chic': { 
- wrapper: 'bg', border: 'border-nous-border', text: 'text-nous-text', accent: 'text-nous-subtle', aspect: 'aspect-[3/4]', grainOpacity: 'opacity-[0.05]', overlayColor: 'bg/80', 
- dark: { wrapper: 'bg', border: 'border-white/10', text: 'text-nous-text', accent: 'text-nous-subtle', overlayColor: 'bg-black/90' } 
- },
- // ... (Other tones use defaults or mapped logic) ...
  'default': {
- wrapper: 'bg-white', border: 'border-nous-border', text: 'text-black', accent: 'text-nous-subtle', aspect: 'aspect-[3/4]', grainOpacity: 'opacity-[0.03]', overlayColor: 'bg-white/90',
- dark: { wrapper: 'bg-nous-base', border: 'border-white/10', text: 'text-white', accent: 'text-nous-subtle', overlayColor: 'bg-black/80' }
+ wrapper: 'bg-zinc-950', border: 'border-pink-500/30', text: 'text-pink-50', accent: 'text-pink-400', aspect: 'aspect-[3/4]', grainOpacity: 'opacity-[0.15]', overlayColor: 'bg-zinc-950/90',
+ dark: { wrapper: 'bg-zinc-950', border: 'border-pink-500/30', text: 'text-pink-50', accent: 'text-pink-400', overlayColor: 'bg-zinc-950/90' }
  }
 };
 
@@ -50,13 +37,26 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  const [editPrompt, setEditPrompt] = useState('');
  const [isEditing, setIsEditing] = useState(false);
  const [isRegenerating, setIsRegenerating] = useState(false);
+ const [isRevealed, setIsRevealed] = useState(false);
  const [currentImageUrl, setCurrentImageUrl] = useState(zine.coverImageUrl || zine.content?.hero_image_url);
 
  const handleEdit = async () => {
  if (!currentImageUrl || !editPrompt || !user) return;
  setIsEditing(true);
  try {
- const newImage = await applyAestheticRefraction(currentImageUrl, editPrompt, profile);
+ let base64Image = currentImageUrl;
+ if (currentImageUrl.startsWith('http')) {
+   const response = await fetch(currentImageUrl);
+   const blob = await response.blob();
+   base64Image = await new Promise((resolve, reject) => {
+     const reader = new FileReader();
+     reader.onloadend = () => resolve(reader.result as string);
+     reader.onerror = reject;
+     reader.readAsDataURL(blob);
+   });
+ }
+
+ const newImage = await applyAestheticRefraction(base64Image as string, editPrompt, profile);
  setCurrentImageUrl(newImage);
  setShowEditModal(false);
  setEditPrompt('');
@@ -72,6 +72,40 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  console.error("Edit Failed", err);
  } finally {
  setIsEditing(false);
+ }
+ };
+
+ const handleMix = async (e: React.MouseEvent) => {
+ e.stopPropagation();
+ if (!currentImageUrl || !user) return;
+ setIsRegenerating(true);
+ try {
+ let base64Image = currentImageUrl;
+ if (currentImageUrl.startsWith('http')) {
+   const response = await fetch(currentImageUrl);
+   const blob = await response.blob();
+   base64Image = await new Promise((resolve, reject) => {
+     const reader = new FileReader();
+     reader.onloadend = () => resolve(reader.result as string);
+     reader.onerror = reject;
+     reader.readAsDataURL(blob);
+   });
+ }
+
+ const newImage = await applyAestheticRefraction(base64Image as string, "Surprise me with a completely different aesthetic interpretation, abstract and surreal.", profile);
+ setCurrentImageUrl(newImage);
+ 
+ const { archiveManager } = await import('../services/archiveManager');
+ const uploadedUrl = await archiveManager.uploadMedia(user.uid, newImage, `zine_artifacts/${zine.id}_${Date.now()}`);
+ await updateDoc(doc(db, 'zines', zine.id), { coverImageUrl: uploadedUrl });
+ 
+ window.dispatchEvent(new CustomEvent('mimi:registry_alert', { 
+ detail: { message:"Artifact Mixed.", icon: <Shuffle size={14} /> } 
+ }));
+ } catch (err) {
+ console.error("Mix Failed", err);
+ } finally {
+ setIsRegenerating(false);
  }
  };
 
@@ -96,7 +130,7 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  }
  };
  
- const baseStyles = TONE_STYLES[zine.tone] || TONE_STYLES['default'];
+ const baseStyles = TONE_STYLES['default'];
 
  const styles = useMemo(() => {
  if (currentPalette.isDark && baseStyles.dark) {
@@ -162,6 +196,13 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  {/* TEXTURE LAYER */}
  <div className={`absolute inset-0 pointer-events-none ${styles.grainOpacity} bg-[url('https://www.transparenttextures.com/patterns/noise.png')] z-0 mix-blend-overlay`} />
  
+ {/* BINDER HOLES */}
+ <div className="absolute top-0 bottom-0 left-3 w-4 flex flex-col justify-evenly py-12 z-40 pointer-events-none opacity-60">
+ {[1, 2, 3, 4, 5].map(i => (
+ <div key={i} className="w-3.5 h-3.5 rounded-full bg-nous-base dark:bg-black border border-nous-border/50 shadow-inner" />
+ ))}
+ </div>
+
  {/* TAPE BINDING (Top) */}
  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-32 h-6 bg-white/40 /10 backdrop-blur-sm border border-white/20 transform -rotate-2 z-40"style={{ mixBlendMode: 'overlay' }} />
  
@@ -169,20 +210,43 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  <div className="absolute -bottom-4 -right-4 w-24 h-8 bg-white/40 /10 backdrop-blur-sm border border-white/20 transform -rotate-45 z-40"style={{ mixBlendMode: 'overlay' }} />
 
  {/* IMAGE LAYER (Masonry: Image is visible by default, not just on hover) */}
- {(zine.coverImageUrl || zine.content?.hero_image_url) && (
- <div className={`relative w-full ${isMasonry ? 'h-auto' : 'absolute inset-0 opacity-0 group-hover:opacity-100'} transition-opacity duration-[1.5s] z-0 overflow-hidden`}>
+ {currentImageUrl ? (
+ <div className={`relative w-full ${isMasonry ? 'h-auto' : 'absolute inset-0'} transition-opacity duration-[1.5s] z-0 overflow-hidden`}>
  <img 
  src={currentImageUrl} 
  loading="lazy"
  decoding="async"
- className={`w-full h-full object-cover transition-all duration-[2s] ${isMasonry ? 'grayscale hover:grayscale-0' : 'grayscale opacity-20'}`}
+ className={`w-full h-full object-cover transition-all duration-[2s] ${isRevealed ? 'grayscale-0 opacity-100' : 'grayscale opacity-0 blur-md scale-110'}`}
  alt=""
  />
  
+ {!isRevealed && (
+ <div className="absolute inset-0 flex items-center justify-center z-20 bg-zinc-950/80 backdrop-blur-sm transition-opacity duration-500">
+ <button 
+ onClick={(e) => { e.stopPropagation(); setIsRevealed(true); }}
+ className="px-8 py-4 bg-pink-500/20 border border-pink-500/50 text-pink-100 font-serif text-lg italic hover:bg-pink-500/40 transition-colors flex items-center gap-3 shadow-[0_0_20px_rgba(236,72,153,0.3)] rounded-full"
+ >
+ <Sparkles size={18} className="text-pink-400" />
+ Reveal Fortune
+ </button>
+ </div>
+ )}
+
  {/* MASONRY: OVERLAY GRADIENT */}
- {isMasonry && (
+ {isMasonry && isRevealed && (
  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity"/>
  )}
+ </div>
+ ) : (
+ <div className={`absolute inset-0 flex items-center justify-center z-20 transition-opacity duration-500`}>
+ <button 
+ onClick={(e) => { e.stopPropagation(); handleRegenerate(); }}
+ disabled={isRegenerating}
+ className="px-8 py-4 bg-pink-500/20 border border-pink-500/50 text-pink-100 font-serif text-lg italic hover:bg-pink-500/40 transition-colors flex items-center gap-3 shadow-[0_0_20px_rgba(236,72,153,0.3)] rounded-full"
+ >
+ {isRegenerating ? <RotateCcw className="animate-spin text-pink-400" size={18} /> : <Sparkles size={18} className="text-pink-400" />}
+ {isRegenerating ? 'Scrying...' : 'Generate Fortune'}
+ </button>
  </div>
  )}
  
@@ -193,7 +257,7 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  <button onClick={(e) => { e.stopPropagation(); setShowEditModal(true); }} className="p-2 rounded-none backdrop-blur-md bg-white/10 text-white hover:bg-white hover:text-black"title="Edit">
  <Edit2 size={12} />
  </button>
- <button onClick={(e) => { e.stopPropagation(); /* TODO: Implement Mix */ }} className="p-2 rounded-none backdrop-blur-md bg-white/10 text-white hover:bg-white hover:text-black"title="Mix">
+ <button onClick={handleMix} className="p-2 rounded-none backdrop-blur-md bg-white/10 text-white hover:bg-white hover:text-black"title="Mix">
  <Shuffle size={12} />
  </button>
  <button onClick={(e) => { e.stopPropagation(); handleRegenerate(); }} className={`p-2 rounded-none backdrop-blur-md ${isRegenerating ? 'bg-nous-text text-nous-base ' : 'bg-white/10 text-white hover:bg-white hover:text-black'} `} title="Regenerate">
@@ -219,22 +283,23 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
 
  {/* EDIT MODAL */}
  {showEditModal && (
- <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center p-4"onClick={(e) => e.stopPropagation()}>
- <div className="bg-white p-6 rounded-none w-full max-w-sm">
+ <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"onClick={(e) => { e.stopPropagation(); setShowEditModal(false); }}>
+ <div className="bg-nous-base p-6 rounded-none w-full max-w-sm border border-nous-border" onClick={(e) => e.stopPropagation()}>
  <div className="flex justify-between items-center mb-4">
- <h3 className="text-sm font-mono uppercase tracking-widest">Edit Image</h3>
- <button onClick={() => setShowEditModal(false)}><X size={16} /></button>
+ <h3 className="text-sm font-mono uppercase tracking-widest text-nous-text">Edit Image</h3>
+ <button onClick={() => setShowEditModal(false)} className="text-nous-text hover:text-nous-subtle"><X size={16} /></button>
  </div>
  <textarea 
  value={editPrompt} 
  onChange={(e) => setEditPrompt(e.target.value)}
  placeholder="e.g., add grain, make dress red..."
- className="w-full p-2 mb-4 bg-nous-base rounded-none text-sm"
+ className="w-full p-3 mb-4 bg-transparent border border-nous-border text-nous-text rounded-none text-sm focus:outline-none focus:ring-1 focus:ring-nous-text"
+ rows={3}
  />
  <button 
  onClick={handleEdit}
- disabled={isEditing}
- className="w-full py-2 bg-nous-text text-nous-base rounded-none text-xs font-bold uppercase tracking-widest"
+ disabled={isEditing || !editPrompt}
+ className="w-full py-3 bg-nous-text text-nous-base rounded-none text-xs font-bold uppercase tracking-widest disabled:opacity-50 hover:bg-nous-subtle transition-colors"
  >
  {isEditing ? 'Refracting...' : 'Apply Edit'}
  </button>
@@ -260,42 +325,42 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  <div className={`relative z-10 flex flex-col justify-between ${isMasonry ? 'absolute inset-0 p-6' : 'h-full p-6'}`}>
  
  {/* TOP: DOSSIER HEADER */}
- <div className="flex justify-between items-start border-b border-nous-border/30 /30 pb-4 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+ <div className="flex justify-between items-start border-b border-pink-500/30 pb-4 mb-4 opacity-100 transition-opacity duration-700">
  <div className="flex flex-col gap-1">
- <span className={`font-mono text-[8px] uppercase tracking-widest opacity-60 ${styles.text}`}>
+ <span className={`font-mono text-xs uppercase tracking-widest opacity-80 ${styles.text}`}>
  ARTIFACT // {zine.id.substring(0, 8)}
  </span>
- <span className={`font-mono text-[7px] uppercase tracking-widest opacity-40 ${styles.text}`}>
+ <span className={`font-mono text-[10px] uppercase tracking-widest opacity-60 ${styles.text}`}>
  {new Date(zine.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
  </span>
  </div>
  <div className="flex flex-col items-end gap-1">
- <span className={`font-sans text-[7px] uppercase tracking-[0.3em] font-black ${styles.accent}`}>
+ <span className={`font-sans text-xs uppercase tracking-[0.3em] font-black ${styles.accent}`}>
  {zine.tone}
  </span>
- <span className={`font-mono text-[6px] uppercase tracking-widest opacity-40 ${styles.text}`}>
+ <span className={`font-mono text-[10px] uppercase tracking-widest opacity-60 ${styles.text}`}>
  SYS.VER // 2.0
  </span>
  </div>
  </div>
 
  {/* CENTER: TITLE & ORACULAR MIRROR */}
- <div className={`flex-1 flex flex-col justify-center ${isMasonry ? 'items-start text-left' : 'items-center text-center'} space-y-6`}>
- <h2 className={`${headlineFont} ${isMasonry ? 'text-3xl text-white' : `text-4xl md:text-5xl ${styles.text}`} italic leading-[0.9] tracking-tighter transition-colors duration-1000`}>
+ <div className={`flex-1 flex flex-col justify-center ${isMasonry ? 'items-start text-left' : 'items-center text-center'} space-y-6 pl-8 pr-4`}>
+ <h2 className={`${headlineFont} ${isMasonry ? 'text-4xl md:text-5xl text-pink-50' : `text-5xl md:text-6xl ${styles.text}`} italic leading-[1.1] tracking-tighter transition-colors duration-1000 drop-shadow-[0_0_10px_rgba(236,72,153,0.5)]`}>
  {zine.content?.headlines?.[0] || zine.title ||"Untitled"}
  </h2>
  
- {isHovered && !isMasonry && (
+ {!isMasonry && (
  <motion.div 
  initial={{ opacity: 0, y: 10 }} 
  animate={{ opacity: 1, y: 0 }}
  className="flex flex-col items-center gap-3"
  >
- <div className="w-8 h-px bg-stone-300/50 dark:bg-stone-700/50"/>
- <p className={`font-serif italic text-sm opacity-80 max-w-[280px] leading-relaxed ${styles.text}`}>
-"{zine.content?.oracular_mirror || zine.content?.the_reading ||"The mirror is silent."}"
+ <div className="w-12 h-px bg-pink-500/50"/>
+ <p className={`font-serif italic text-lg opacity-90 max-w-[320px] leading-relaxed ${styles.text}`}>
+ "{zine.content?.oracular_mirror || zine.content?.the_reading ||"The mirror is silent."}"
  </p>
- <div className="w-8 h-px bg-stone-300/50 dark:bg-stone-700/50"/>
+ <div className="w-12 h-px bg-pink-500/50"/>
  </motion.div>
  )}
  
@@ -309,30 +374,30 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
 
  {/* BOTTOM: AUTHOR & METRICS */}
  {!isMasonry && (
- <div className="flex justify-between items-end pt-4 border-t border-nous-border/30 /30 opacity-0 group-hover:opacity-100 transition-opacity duration-700 mt-auto">
+ <div className="flex justify-between items-end pt-4 border-t border-pink-500/30 opacity-100 transition-opacity duration-700 mt-auto">
  <div className="flex flex-col gap-1">
- <span className={`font-mono text-[6px] uppercase tracking-widest opacity-40 ${styles.text}`}>
+ <span className={`font-mono text-[10px] uppercase tracking-widest opacity-60 ${styles.text}`}>
  OPERATIVE
  </span>
- <span className={`font-sans text-[8px] uppercase tracking-[0.2em] font-bold ${styles.text}`}>
+ <span className={`font-sans text-sm uppercase tracking-[0.2em] font-bold ${styles.text}`}>
  @{zine.userHandle || 'Ghost'}
  </span>
  </div>
  
  <div className="flex gap-4">
  <div className="flex flex-col items-end gap-1">
- <span className={`font-mono text-[6px] uppercase tracking-widest opacity-40 ${styles.text}`}>
+ <span className={`font-mono text-[10px] uppercase tracking-widest opacity-60 ${styles.text}`}>
  ENTROPY
  </span>
- <span className={`font-mono text-[8px] ${styles.text}`}>
+ <span className={`font-mono text-xs ${styles.text}`}>
  {(Math.random() * 10).toFixed(2)}
  </span>
  </div>
  <div className="flex flex-col items-end gap-1">
- <span className={`font-mono text-[6px] uppercase tracking-widest opacity-40 ${styles.text}`}>
+ <span className={`font-mono text-[10px] uppercase tracking-widest opacity-60 ${styles.text}`}>
  RESONANCE
  </span>
- <span className={`font-mono text-[8px] ${styles.text}`}>
+ <span className={`font-mono text-xs ${styles.text}`}>
  {(Math.random() * 100).toFixed(1)}%
  </span>
  </div>
@@ -343,7 +408,7 @@ export const ZineCard: React.FC<ZineCardProps> = React.memo(({ zine, onClick, cu
  </div>
  
  {/* BOTTOM BORDER HOVER */}
- <div className={`h-0.5 w-full bg-nous-base scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left`} />
+ <div className={`h-1 w-full bg-pink-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left shadow-[0_0_10px_rgba(236,72,153,0.8)]`} />
  </motion.div>
  );
 });

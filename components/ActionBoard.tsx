@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Target, Plus, Trash2, Link2, Clock, CheckCircle2, Circle, X, CalendarDays, ListChecks, LayoutGrid, AlertCircle } from 'lucide-react';
 import { useUser } from '../contexts/UserContext';
 import { fetchTasks, updateTask, deleteTask, saveTask } from '../services/firebaseUtils';
 import { Task } from '../types';
-import { Check, Clock, Plus, Trash2, X, CalendarDays, ListChecks, Target, AlertCircle, Loader2, LayoutGrid, Link2 } from 'lucide-react';
 import { LoadingSkeleton } from './LoadingSkeleton';
 
 export const ActionBoard = () => {
@@ -216,7 +216,7 @@ export const ActionBoard = () => {
 
  <div className="flex-1 relative z-10 overflow-hidden">
  {viewMode === 'canvas' ? (
- <div className="absolute inset-0 overflow-hidden bg-nous-base"onWheel={handleWheel}>
+ <div className="absolute inset-0 overflow-hidden bg-nous-base" onWheel={handleWheel}>
  <motion.div
  ref={canvasRef}
  drag
@@ -240,7 +240,7 @@ export const ActionBoard = () => {
  y: task.position?.y ?? 5000 + Math.random() * 200 
  }}
  style={{ position: 'absolute' }}
- className={`w-64 p-4 border rounded-none cursor-grab active:cursor-grabbing ${task.completed ? 'bg-nous-base/50 border-nous-border/50' : 'bg-nous-base border-nous-border hover:border-nous-border /50'}`}
+ className={`w-64 p-4 border rounded-none cursor-grab active:cursor-grabbing ${task.completed ? 'bg-nous-base/50 border-nous-border/50' : 'bg-nous-base border-nous-border hover:border-nous-border/50'}`}
  >
  <div className="flex items-start gap-3">
  <button 
@@ -584,6 +584,6 @@ export const ActionBoard = () => {
  </div>
  )}
  </div>
-</div>
+ </div>
  );
 };

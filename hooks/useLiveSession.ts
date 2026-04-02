@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { LiveServerMessage, FunctionDeclaration } from '@google/genai';
+import { LiveServerMessage, FunctionDeclaration, Modality, Type } from '@google/genai';
 import { getClient } from '../services/geminiService';
 
 // Audio helpers
@@ -115,7 +115,7 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
         const sessionPromise = ai.live.connect({
           model: 'gemini-3.1-flash-live-preview',
           config: {
-            responseModalities: ["AUDIO"],
+            responseModalities: [Modality.AUDIO],
             systemInstruction: systemInstruction,
             speechConfig: {
               voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } }
@@ -129,14 +129,14 @@ export const useLiveSession = (systemInstruction: string, voiceName: string = 'K
                     name: "saveToKnowledgeQueue",
                     description: "Save an insight, reference, or piece of knowledge to the user's Pocket (knowledge queue). Use this when you find something valuable on the web or during conversation that the user should retain.",
                     parameters: {
-                      type: "OBJECT",
+                      type: Type.OBJECT,
                       properties: {
                         content: {
-                          type: "STRING",
+                          type: Type.STRING,
                           description: "The knowledge, insight, or reference to save."
                         },
                         title: {
-                          type: "STRING",
+                          type: Type.STRING,
                           description: "A short, descriptive title for the knowledge."
                         }
                       },
