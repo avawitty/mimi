@@ -73,6 +73,7 @@ const CheckoutSuccessView = lazy(() => import('./components/CheckoutSuccessView'
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Sparkles, LayoutGrid, User, Menu, X, ChevronDown, Newspaper, LogOut, ShieldAlert, Zap, Camera, Key, Radio, Activity as ActivityIcon, Archive, Moon, Sun, Scissors, FlaskConical, Eye, Radar, Compass, Info, Cpu, ShieldCheck, Briefcase, BookOpen, Volume2, VolumeX, Target, Link2, Layers, History, Settings, Loader2 } from 'lucide-react';
 import { NotificationsPanel } from './components/NotificationsPanel';
+import { Analytics } from '@vercel/analytics/react';
 
 // ... (Rest of existing subcomponents: BinderRing, NavigationDrawer, DatabaseVoid) ...
 // BINDER RING COMPONENT
@@ -1018,8 +1019,7 @@ export const App: React.FC = () => {
  <MobileNavigation currentView={viewMode} setViewMode={setViewMode} profile={profile} />
  </main>
  </div>
+ <Analytics />
  </div>
  );
 };
-
-
